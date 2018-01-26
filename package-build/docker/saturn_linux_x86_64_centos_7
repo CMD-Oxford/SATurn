@@ -1,0 +1,20 @@
+
+FROM centos:7 
+
+MAINTAINER ddamerell53@gmail.com
+
+RUN useradd saturn
+
+ADD linux_x86_64.tar.gz /home/saturn/
+
+ADD startsaturn.sh /home/saturn/saturn_linux_x86_64/
+
+RUN chown saturn:saturn /home/saturn/saturn_linux_x86_64/startsaturn.sh
+
+RUN chmod u+x /home/saturn/saturn_linux_x86_64/startsaturn.sh
+
+#ADD entrypoint.sh /
+
+#RUN chmod u+x /entrypoint.sh
+
+#ENTRYPOINT ["/entrypoint.sh"]
