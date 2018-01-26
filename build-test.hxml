@@ -1,0 +1,13 @@
+-main TestMain
+-lib munit
+-lib hamcrest
+-lib jQueryExtern
+-lib compiletime
+--macro include('saturn.core.domain')
+-D js-classic
+-D CLIENT_SIDE
+-cp src
+-cp test
+-js build/js_test.js
+
+

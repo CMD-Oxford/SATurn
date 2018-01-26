@@ -1,0 +1,92 @@
+-cp src
+-lib jQueryExtern
+-js build/public/static/js/SaturnClient.js
+--macro include('saturn.core.domain')
+--macro include('saturn.core.domain.oppf')
+--macro include('saturn.core.annotations')
+--macro include('saturn.core.scarab')
+--macro include('saturn.workflow')
+--macro include('saturn.db.query_lang')
+--macro include('saturn.client.programs.phylo5')
+--macro include('saturn.db.provider.hooks')
+-D js-classic
+-D  js-unflatten
+-lib compiletime
+-D CLIENT_SIDE
+-D WORKSPACE_CLIENT_APP
+-main saturn.app.SaturnClient
+--next
+
+-cp src
+-lib jQueryExtern
+-js build/public/static/js/ClientCore.js
+--macro include('saturn.db.query_lang')
+--macro include('saturn.db.provider.hooks')
+-D js-classic
+-D  js-unflatten
+-dce full
+-lib compiletime
+-D CLIENT_SIDE
+-main saturn.client.core.ClientCore
+
+--next
+-cp src
+-js build/SaturnServer.js
+-lib continuation
+-lib nodejs
+-D js-classic
+-D  js-unflatten
+-lib compiletime
+-D SERVER_SIDE
+-D POSTGRES
+-D MYSQL
+-D SQLITE
+-D NODE
+-D NCBI_EUTILS
+-D ORACLE
+--macro include('saturn.core.domain')
+--macro include('saturn.core.domain.oppf')
+--macro include('saturn.core.scarab')
+--macro include('saturn.db.mapping')
+--macro include('saturn.server.plugins')
+--macro include('saturn.server.plugins.socket')
+--macro include('saturn.db.provider')
+--macro include('saturn.db.query_lang')
+--macro include('saturn.workflow')
+--macro include('saturn.db.provider.hooks')
+-main saturn.app.SaturnServer
+
+--next
+-cp src
+-js build/Run.js
+-lib continuation
+-lib nodejs
+-lib compiletime
+-D js-classic
+-D SCRIPT_ENGINE
+-D NODE
+--macro include('saturn.core.domain')
+--macro include('saturn.core.scarab')
+--macro include('saturn.db.mapping')
+--macro include('saturn.db.provider')
+--macro include('saturn.db.provider.hooks')
+--macro include('saturn.scripts')
+
+-main saturn.scripts.Run
+
+--next
+-cp src
+-js build/chemireg.js
+-lib continuation
+-lib nodejs
+-lib compiletime
+-D SERVER_SIDE
+-D NODE_LATEST
+-D NODE
+--macro include('saturn.db.mapping.templates')
+--macro include('saturn.server.plugins.core')
+--macro include('saturn.server.plugins.socket.core')
+--macro include('saturn.db.provider')
+--macro include('saturn.db.query_lang')
+--macro include('saturn.db.provider.hooks')
+-main saturn.app.SaturnServer

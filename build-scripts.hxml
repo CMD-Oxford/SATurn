@@ -1,0 +1,16 @@
+-cp src
+-js build/Run.js
+-lib continuation
+-lib nodejs
+-lib compiletime
+-D js-classic
+-D SCRIPT_ENGINE
+-D NODE
+--macro include('saturn.core.domain')
+--macro include('saturn.db.query_lang')
+--macro include('saturn.core.scarab')
+--macro include('saturn.db.mapping')
+--macro include('saturn.db.provider')
+--macro include('saturn.scripts')
+
+-main saturn.scripts.Run

@@ -1,0 +1,10 @@
+-cp src
+-D PYTHON
+-lib continuation
+-python P:\GIT_REPOS\python_scripts\src\SATurn.py
+--macro include('saturn.core.domain')
+--macro include('saturn.db.mapping')
+--macro include('saturn.db.query_lang')
+--macro include('saturn.db.provider.hooks')
+-main saturn.app.PythonExport
+-cmd python P:\GIT_REPOS\python_scripts\src\SATurnFixer.py
