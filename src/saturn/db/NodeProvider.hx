@@ -101,7 +101,12 @@ class NodeProvider extends DefaultProvider{
                                         }
                                     }
                                 }
+
+                            }else{
+
                             }
+
+                            ClientCore.getClientCore().providerUp();
                         }
                     });
                 }

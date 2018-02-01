@@ -115,7 +115,8 @@ class SGC {
                 ],
                 'options'=>[
                     'id_pattern' => '-c',
-                    'alias' => 'Constructs',
+                    'alias' => 'Construct',
+                    'file.new.label'=>'Construct',
                     'icon' => 'dna_conical_16.png',
                     'auto_activate' => '3',
                     'actions' => [
@@ -226,6 +227,7 @@ class SGC {
                 'options'=>[
                     'id_pattern' => '-a',
                     'alias' => 'Allele',
+                    'file.new.label'=>'Allele',
                     'icon' => 'dna_conical_16.png',
                     'auto_activate' => '3',
                     'actions' => [
@@ -266,7 +268,9 @@ class SGC {
                         'saturn.client.programs.ProteinSequenceEditor' => true
                     ],
                     'alias' => 'Entry Clone',
+                    'file.new.label'=>'Entry Clone',
                     'icon' => 'dna_conical_16.png',
+                    'auto_activate' => '3',
                     'actions' => [
                         'search_bar' => [
                             'translation' => [
@@ -282,7 +286,8 @@ class SGC {
                     'name' => 'ENTRY_CLONE'
                 ],
                 'model'=>[
-                    'Entry Clone ID' => 'entryCloneId'
+                    'Entry Clone ID' => 'entryCloneId',
+                    'Target ID' => 'target.targetId'
                 ],
                 'fields.synthetic' =>[
                     'target' => [ 'field' => 'targetId', 'class' => 'saturn.core.domain.SgcTarget', 'fk_field' => 'id' ]
@@ -309,7 +314,8 @@ class SGC {
                     'Enzyme Name'=>'enzymeName'
                 ],
                 'options'=>[
-                    'alias'=>'Restriction site'
+                    'alias'=>'Restriction site',
+                    'file.new.label'=>'Restriction Site',
                 ],
                 'search' => [
                     'enzymeName'=>null
@@ -353,6 +359,7 @@ class SGC {
                 'options'=>[
                     'auto_activate'=> '3',
                     'alias' => 'Vector',
+                    'file.new.label'=>'Vector'
                 ],
                 'model' => [
                     'Name' => 'vectorId',
@@ -388,6 +395,7 @@ class SGC {
                 ],
                 'options'=>[
                     'alias' => 'Forward Primer',
+                    'file.new.label'=>'Forward Primer',
                     'icon' => 'dna_conical_16.png'
                 ],
                 'model'=>[
@@ -416,6 +424,7 @@ class SGC {
                 ],
                 'options'=>[
                     'alias' => 'Reverse Primer',
+                    'file.new.label'=>'Reverse Primer',
                     'icon' => 'dna_conical_16.png'
                 ],
                 'model'=>[
@@ -440,7 +449,7 @@ class SGC {
                     'name' => 'PURIFICATION'
                 ],
                 'programs'=>[
-                    'saturn.client.programs.DNASequenceEditor' => true
+                    'saturn.client.programs.EmptyViewer' => true
                 ],
                 'fields.synthetic' =>[
                     'expression' => [ 'field' => 'expressionId', 'class' => 'saturn.core.domain.SgcExpression', 'fk_field' => 'id' ]
@@ -466,7 +475,7 @@ class SGC {
                     'name' => 'CLONE'
                 ],
                 'programs'=>[
-                    'saturn.client.programs.DNASequenceEditor' => true
+                    'saturn.client.programs.EmptyViewer' => true
                 ],
                 'fields.synthetic' =>[
                     'construct' => [ 'field' => 'constructId', 'class' => 'saturn.core.domain.SgcConstruct', 'fk_field' => 'id' ]
@@ -492,7 +501,7 @@ class SGC {
                     'name' => 'EXPRESSION'
                 ],
                 'programs'=>[
-                    'saturn.client.programs.DNASequenceEditor' => true
+                    'saturn.client.programs.EmptyViewer' => true
                 ],
                 'fields.synthetic' =>[
                     'clone' => [ 'field' => 'cloneId', 'class' => 'saturn.core.domain.SgcClone', 'fk_field' => 'id' ]
@@ -530,6 +539,9 @@ class SGC {
                     'Protein Sequence' => 'proteinSeq',
                     '__HIDDEN__PKEY__' => 'id'
                 ],
+                'programs'=>[
+                    'saturn.client.programs.DNASequenceEditor' => true
+                ],
                 'fields.synthetic' =>[
                     'proteinSequenceObj' => ['field' => 'proteinSeq', 'class'=>'saturn.core.Protein', 'fk_field'=> null]
                 ],
@@ -540,14 +552,15 @@ class SGC {
                 'options' => [
                     'id_pattern' => '.*',
                     'alias' => 'Targets',
+                    'file.new.label'=>'Target',
                     'icon' => 'protein_16.png',
                     'actions' => [
-                        'search_bar' => [
+                        /*'search_bar' => [
                             'wonka' => [
                                 'user_suffix' => 'Wonka',
                                 'function' => 'saturn.core.domain.SgcTarget.loadWonka'
                             ]
-                        ]
+                        ]*/
                     ],
                     'auto_activate' => '3'
                 ]
@@ -622,6 +635,7 @@ class SGC {
                 'options' => [
                     'icon' => 'dna_conical_16.png',
                     'alias' => 'Construct Plate',
+                    'file.new.label'=>'Construct Plate',
                     'id_pattern' => 'cp-',
                     'strip_id_prefix' => true,
                     'actions' => [
@@ -633,9 +647,15 @@ class SGC {
                         ]
                     ]
                 ],
+                'programs'=>[
+                    'saturn.client.programs.EmptyViewer' => true
+                ],
                 'search'=>[
                     'plateName' => true
-                ]
+                ],
+                'model' => [
+                    'Plate Name' => 'plateName'
+                 ]
             ],
             'saturn.core.domain.SgcAllelePlate'=>[
                 'fields'=>[
@@ -654,6 +674,7 @@ class SGC {
                 'options' => [
                     'icon' => 'dna_conical_16.png',
                     'alias' => 'Allele Plate',
+                    'file.new.label' => 'Allele Plate',
                     'id_pattern' => 'ap-',
                     'strip_id_prefix' => true,
                     'actions' => [
@@ -669,7 +690,13 @@ class SGC {
 
                 'search'=>[
                     'plateName' => true
-                 ]
+                 ],
+                'model' => [
+                    'Plate Name' => 'plateName'
+                ],
+                'programs'=>[
+                    'saturn.client.programs.EmptyViewer' => true
+                ],
             ],
             'saturn.core.domain.SgcDNA'=>[
                 'fields'=>[
@@ -702,7 +729,8 @@ class SGC {
                 ],
                 'options' => [
                     'icon' => 'dna_conical_16.png',
-                    'alias' => 'Notes',
+                    'alias' => 'ELN Pages',
+                    'file.new.label' => 'ELN Page',
                     'id_pattern' => 'wiki-',
                     'strip_id_prefix' => true
                 ],
@@ -977,18 +1005,30 @@ class SGC {
                     'icon'=>'structure_16.png'
                 ]
             ],
-            'saturn.core.TextFile' =>[
+            'saturn.core.domain.TextFile' =>[
                 'fields'=>[
-                    'name' => 'NAME'
+                    'id' => 'PKEY',
+                    'name' => 'NAME',
+                    'value'=> 'VALUE'
                 ],
                 'indexes'=>[
-                    'name' => true
+                    'name' => false,
+                    'id' => true
                 ],
                 'programs'=>[
                     'saturn.client.programs.TextEditor' => true
                 ],
                 'options' =>[
-                    'alias' => 'File'
+                    'alias' => 'File',
+                    'file.new.label'=> 'Script',
+                    'icon' => 'dna_conical_16.png'
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'SCRIPTS'
+                ],
+                'search'=>[
+                    'name' => true
                 ]
             ],
             'saturn.core.BasicTable' =>[
@@ -1191,6 +1231,59 @@ class SGC {
                     'USERNAME'=>'insert.username'
                 ],'fields.synthetic' =>[
                     'user' => [ 'field' => 'userName', 'class' => 'saturn.core.User', 'fk_field' => 'username' ]
+                ]
+            ],
+            'saturn.core.domain.ABITrace' =>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'name' => 'NAME',
+                    'traceDataJson'=> 'TRACE_JSON'
+                ],
+                'indexes'=>[
+                    'name' => false,
+                    'id' => true
+                ],
+                'programs'=>[
+                    'saturn.client.programs.ABITraceViewer' => true
+                ],
+                'options' =>[
+                    'alias' => 'Trace Data',
+                    'icon' => 'dna_conical_16.png',
+                    'workspace_wrapper' => 'saturn.client.workspace.ABITraceWO'
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'TRACES'
+                ],
+                'search'=>[
+                    'name' => true
+                ]
+            ],
+            'saturn.core.domain.Alignment' =>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'name' => 'NAME',
+                    'content'=> 'CONTENT',
+                    'url'=> 'URL'
+                ],
+                'indexes'=>[
+                    'name' => false,
+                    'id' => true
+                ],
+                'programs'=>[
+                    'saturn.client.programs.AlignmentViewer' => true
+                ],
+                'options' =>[
+                    'alias' => 'Alignments',
+                    'icon' => 'dna_conical_16.png',
+                    'workspace_wrapper' => 'saturn.client.workspace.AlignmentWorkspaceObject'
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'ALIGNMENTS'
+                ],
+                'search'=>[
+                    'name' => true
                 ]
             ]
         ];

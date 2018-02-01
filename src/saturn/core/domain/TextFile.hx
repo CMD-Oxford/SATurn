@@ -7,14 +7,28 @@
 * copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 */
 
-package saturn.core;
+package saturn.core.domain;
 
-class GatewayPrimer extends Primer{
-	var recomb
-	
-	public function new() {
-		
-	}
-	
-	
+class TextFile {
+    public var id : Int;
+    public var name : String;
+
+    public var autoRun : Bool = false;
+    public var value : String;
+
+    public function new(){
+        setup();
+    }
+
+    public function setup(){
+
+    }
+
+    public function getName() : String {
+        return this.name;
+    }
+
+    public function setText(content : String){
+        value = content;
+    }
 }

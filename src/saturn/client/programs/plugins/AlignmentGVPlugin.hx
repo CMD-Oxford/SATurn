@@ -17,7 +17,7 @@ import saturn.client.workspace.ProteinWorkspaceObject;
 import saturn.core.DNA;
 import saturn.client.workspace.DNAWorkspaceObject;
 import saturn.core.ClustalOmegaParser;
-import saturn.client.workspace.Alignment;
+import saturn.core.domain.Alignment;
 import saturn.client.workspace.AlignmentWorkspaceObject;
 import saturn.client.ProgramPlugin.BaseProgramPlugin;
 import saturn.client.core.CommonCore;

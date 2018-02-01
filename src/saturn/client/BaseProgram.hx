@@ -241,12 +241,13 @@ class BaseProgram implements Program implements OutlineListener {
         var folderId = '_folder_' +folderName;
 
         var modelNode = rootNode.findChild('id', folderId, false);
-        if(field == busKey){
-            modelNode.set('id', '_folder_' + value);
-        }
 
         if(modelNode == null){
             return;
+        }
+
+        if(field == busKey){
+            modelNode.set('id', '_folder_' + value);
         }
 
         var children : Array<Dynamic> =  modelNode.childNodes;
@@ -275,6 +276,7 @@ class BaseProgram implements Program implements OutlineListener {
         var entity = getEntity();
 
         var model = getProvider().getModel(Type.getClass(entity));
+
         var busKey = model.getFirstKey();
 
         var folderName = Reflect.field(entity, busKey);
@@ -296,7 +298,12 @@ class BaseProgram implements Program implements OutlineListener {
             var modelField = model.convertUserFieldName(label);
 
             if(modelField != null){
-                updateModelField(entity, modelField, childNode.data.text);
+                var psueodSyntheticField = model.getPseudoSyntheticObjectName(modelField);
+                if(psueodSyntheticField != null){
+                    Reflect.field(entity, psueodSyntheticField).setValue(childNode.data.text);
+                }else{
+                    updateModelField(entity, modelField, childNode.data.text);
+                }
             }
         }
     }

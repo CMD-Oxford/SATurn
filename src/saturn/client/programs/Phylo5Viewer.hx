@@ -17,7 +17,7 @@ import bindings.Ext;
 import saturn.client.workspace.Workspace;
 import saturn.client.workspace.Workspace.WorkspaceListener;
 
-import saturn.client.workspace.Alignment;
+import saturn.core.domain.Alignment;
 import saturn.client.workspace.Phylo5WorkspaceObject;
 import saturn.client.workspace.DNAWorkspaceObject;
 import saturn.client.workspace.ProteinWorkspaceObject;

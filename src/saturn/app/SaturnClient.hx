@@ -43,7 +43,7 @@ import saturn.client.core.CommonCore;
 import saturn.db.mapping.SQLiteMapping;
 import saturn.core.FastaEntity;
 import saturn.client.workspace.AlignmentWorkspaceObject;
-import saturn.client.workspace.Alignment;
+import saturn.core.domain.Alignment;
 import js.Browser;
 import saturn.core.domain.TiddlyWiki;
 import saturn.client.workspace.TableHelperWO;
@@ -119,6 +119,7 @@ import saturn.client.programs.WONKA;
 
 import saturn.db.Model.SearchDef;
 import saturn.client.programs.BasicTableViewer;
+import saturn.client.programs.EmptyViewer;
 
 import saturn.client.programs.ConstructDesigner;
 //<IMPORTS>
@@ -131,8 +132,6 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         var inScarab = false;
 
         var client : SaturnClient = new SaturnClient('SATurn Framework','Workspace', 'Notifications', 'Outline', 'Editor', 'Search', false);
-
-
 
         WorkspaceApplication.setApplication(client);
     }
@@ -236,12 +235,12 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerPlugin(ProteinSequenceEditor,SVGDomainAnnotationPlugin);
         this.getProgramRegistry().registerPlugin(ProteinSequenceEditor,SSAnnotationPlugin);
         this.getProgramRegistry().registerPlugin(ProteinSequenceEditor,TMHMMAnnotationPlugin);
-        this.getProgramRegistry().registerPlugin(ProteinSequenceEditor,DisoPredAnnotationPlugin);
+        //this.getProgramRegistry().registerPlugin(ProteinSequenceEditor,DisoPredAnnotationPlugin);
         this.getProgramRegistry().registerPlugin(GridVarViewer, FASTAGridVarPlugin);
 
         this.getProgramRegistry().registerPlugin(PDBViewer, ThreeDMolViewer);
-        this.getProgramRegistry().registerPlugin(PDBViewer, IViewPlugin);
-        this.getProgramRegistry().registerPlugin(PDBViewer, ActiveICMPlugin);
+        //this.getProgramRegistry().registerPlugin(PDBViewer, IViewPlugin);
+        //this.getProgramRegistry().registerPlugin(PDBViewer, ActiveICMPlugin);
         this.getProgramRegistry().registerPlugin(PDBViewer, GLmolViewerPlugin);
 
 
@@ -255,22 +254,22 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(DNASequenceEditor, true);
         this.getProgramRegistry().registerProgram(AlignmentViewer, true);
         this.getProgramRegistry().registerProgram(ABITraceViewer, true);
-        this.getProgramRegistry().registerProgram(PurificationHelper, true);
+        //this.getProgramRegistry().registerProgram(PurificationHelper, true);
 
         this.getProgramRegistry().registerProgram(ConstructDesigner, true);
         this.getProgramRegistry().registerProgram(MultiConstructHelper,true);
         this.getProgramRegistry().registerProgram(MultiAlleleHelper,true);
         this.getProgramRegistry().registerProgram(Phylo5Viewer, true);
-        this.getProgramRegistry().registerProgram(SHRNADesigner, true);
+        //this.getProgramRegistry().registerProgram(SHRNADesigner, true);
         this.getProgramRegistry().registerProgram(TableHelper, true);
 
         this.getProgramRegistry().registerProgram(GridVarViewer, true);
         this.getProgramRegistry().registerProgram(PDBViewer, true);
-        this.getProgramRegistry().registerProgram(WONKA, true);
-        this.getProgramRegistry().registerProgram(CompoundViewer, true);
+        //this.getProgramRegistry().registerProgram(WONKA, true);
+        //this.getProgramRegistry().registerProgram(CompoundViewer, true);
         this.getProgramRegistry().registerProgram(HomePage, true);
         this.getProgramRegistry().registerProgram(TextEditor, true);
-        this.getProgramRegistry().registerProgram(ScarabELNViewer, true);
+        //this.getProgramRegistry().registerProgram(ScarabELNViewer, true);
         this.getProgramRegistry().registerProgram(TiddlyWikiViewer, true);
 
 
@@ -786,9 +785,6 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                         storeList.push( { icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein)', id : i++, targetId: target.targetId, type : 'Constructs Protein Align', group: group } );
                         storeList.push( { icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein - No Tag)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag Align' , group: group});
 
-
-                        storeList.push( { icon: 'wonka_16.png', title : 'Assay Summary ' + target.targetId, id : i++, targetId: target.targetId, type : 'Assay Summary', group: group } );
-                        storeList.push( { icon: 'wonka_16.png', title : 'WONKA ' + target.targetId, id : i++, targetId: target.targetId, type : 'WONKA', group: group } );
                     }
                 }
 

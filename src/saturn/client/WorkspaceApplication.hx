@@ -90,6 +90,8 @@ class WorkspaceApplication {
 	}
 	
     function new(applicationTitle : String, navigationTitle : String, southTitle : String, detailsTitle : String, tabContainerTitle : String, searchBarTitle : String, nakedMode : Bool) {
+        WorkspaceApplication.setApplication(this);
+
 		this.nakedMode = nakedMode;
 
         theClipBoard = new ClipBoard();
@@ -98,7 +100,6 @@ class WorkspaceApplication {
 		searchBarListeners = new Array<SearchBarListener>();
 		outlineListeners = new Array<OutlineListener>();
 
-        
         theProgramRegistry = new ProgramRegistry();
         
         this.applicationTitle = applicationTitle;
@@ -124,9 +125,18 @@ class WorkspaceApplication {
         js.Browser.window.onerror = onError;
 
         clientCore = ClientCore.startClientCore();
+        clientCore.onProviderUp(onProviderUp);
+
+
+        clientCore.setShowMessage(showMessage);
+        clientCore.refreshSession(null);
+
+
+    }
+
+    public function onProviderUp(){
         clientCore.addUpdateListener(updateProgress);
         clientCore.addRefreshListener(refreshSession);
-        clientCore.setShowMessage(showMessage);
 
         createProgressWindow();
 
@@ -437,11 +447,11 @@ class WorkspaceApplication {
             getQuickLaunchBar().add(quickLaunchItem);
         }
 
-        ClientCore.getClientCore().refreshSession(function(err : String){
+        /*ClientCore.getClientCore().refreshSession(function(err : String){
             if(err != null){
                 debug(err);
             }
-        });
+        });*/
 
     }
     
@@ -511,11 +521,20 @@ class WorkspaceApplication {
 
             var clazz : Class<Dynamic> = Type.resolveClass(clazzName);
 
-            var fl: Dynamic = Reflect.field(clazz, "getNewMenuText");
+            //var fl: Dynamic = Reflect.field(clazz, "getNewMenuText");
 
-            if(fl != null){
-                var newText : String = Reflect.callMethod(clazz, fl, []);
+            var newText : String = null;
 
+            //if(fl != null){
+            //    newText = Reflect.callMethod(clazz, fl, []);
+            //}else{
+                var model = getProvider().getModel(clazz);
+                if(model != null){
+                    newText = model.getFileNewLabel();
+                }
+            //}
+
+            if(newText != null){
                 menuTextToShortName.set(newText, shortName);
 
                 menuItems.push(newText);

@@ -349,8 +349,9 @@ class ConstructDesignTable extends Table{
             reversePrimers.push(reversePrimer);
         }
 
-        bFetch.getByIds(sites, SgcRestrictionSite, '__IGNORE_ME__', null);
         bFetch.getByIds(vectors, SgcVector, '__IGNORE_ME__', null);
+        bFetch.getByIds(sites, SgcRestrictionSite, '__IGNORE_ME__', null);
+
         bFetch.getByIds(entryClones, SgcEntryClone, '__IGNORE_ME__', null);
         bFetch.getByIds(alleles, SgcAllele, '__IGNORE_ME__', null);
         bFetch.getByIds(constructs, SgcConstruct, '__IGNORE_ME__', null);

@@ -40,6 +40,10 @@ class SgcTarget extends DNA{
 
         sequenceField = 'dnaSeq';
 
+        if(proteinSequenceObj == null){
+            proteinSequenceObj = new Protein(null);
+        }
+
         addProtein('Translation', proteinSequenceObj);
     }
 

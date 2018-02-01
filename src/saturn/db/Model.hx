@@ -20,6 +20,7 @@ class Model {
 
     var idRegEx : EReg;
     var stripIdPrefix : Bool;
+    var file_new_label : String;
 
     var searchMap : Map<String, EReg>;
     var ftsColumns : Map<String, SearchDef>;
@@ -121,6 +122,10 @@ class Model {
                 flags = new Map<String, Bool>();
             }
 
+            if(options.exists('file.new.label')){
+                file_new_label = options.get('file.new.label');
+            }
+
             if(options.exists('auto_activate')){
                 autoActivate = Std.parseInt(options.get('auto_activate'));
             }
@@ -213,6 +218,10 @@ class Model {
         if(alias == null || alias == ''){
             alias = theName;
         }
+    }
+
+    public function getFileNewLabel(): String{
+        return file_new_label;
     }
 
     public function isProgramSaveAs(clazzName : String) : Bool{
@@ -518,6 +527,22 @@ class Model {
         }else{
             return false;
         }
+    }
+
+    public function getPseudoSyntheticObjectName(fieldName : String){
+        if(theModel.exists('fields.synthetic')){
+            for(objName in theModel.get('fields.synthetic').keys()){
+                if(theModel.get('fields.synthetic').get(objName).get('fk_field') == null){
+                    var boundField = theModel.get('fields.synthetic').get(objName).get('field');
+
+                    if(fieldName == boundField){
+                        return objName;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     public function getSyntheticallyBoundField(syntheticFieldName : String){

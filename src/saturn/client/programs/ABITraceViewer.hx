@@ -25,7 +25,7 @@ import saturn.client.WorkspaceApplication;
 import saturn.client.programs.SimpleExtJSProgram;
 import saturn.util.StringUtils;
 
-import saturn.client.workspace.ABITrace;
+import saturn.core.domain.ABITrace;
 import saturn.client.workspace.ABITraceWO;
 
 import saturn.client.workspace.Workspace.WorkspaceObject;
@@ -39,7 +39,7 @@ import bindings.Ext;
 import js.Lib;
 import js.html.ArrayBuffer;
 
-import saturn.client.workspace.Alignment;
+import saturn.core.domain.Alignment;
 
 class ABITraceViewer extends SimpleExtJSProgram{
 	static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ ABITraceWO ];
@@ -1346,7 +1346,7 @@ class ABITraceViewer extends SimpleExtJSProgram{
 
     }
 
-    public function render(traceData : ABITrace,?i:Int =0){
+    public function render(traceData : ABITrace, ?i:Int =0){
         theComponent.removeCls('x-trace-background');
 
         if(lastPosition > theLastXPosition){
@@ -1753,6 +1753,13 @@ class ABITraceViewer extends SimpleExtJSProgram{
                 tooltip: {dismissDelay: 10000, text: 'View DNA sequencing traces'}
             }
         ];
+    }
+
+    override public function saveObject(cb : String->Void){
+        var wo = getWorkspaceObject();
+        wo.getObject().setName(wo.getName());
+
+        super.saveObject(cb);
     }
 }
 

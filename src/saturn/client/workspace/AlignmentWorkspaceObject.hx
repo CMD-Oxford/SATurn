@@ -10,6 +10,7 @@
 package saturn.client.workspace;
 
 import saturn.client.workspace.Workspace;
+import saturn.core.domain.Alignment;
 
 class AlignmentWorkspaceObject extends WorkspaceObjectBase<Alignment>{
     public static var FILE_IMPORT_FORMATS : Array<String> = ['aln', 'pfam_aln'];

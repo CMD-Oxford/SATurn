@@ -7,10 +7,14 @@
 * copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 */
 
-package saturn.client.workspace;
+package saturn.core.domain;
 
+import haxe.Json;
 import saturn.util.StringUtils;
 class ABITrace {
+    public var id : Int;
+    public var name : String;
+
     public var CH1 : Array<Float>;
     public var CH2 : Array<Float>;
     public var CH3 : Array<Float>;
@@ -24,7 +28,13 @@ class ABITrace {
 
     public var alignment : saturn.core.Alignment;
 
+    public var traceDataJson : String;
+
     public function new(){
+        setup();
+    }
+
+    public function setup(){
         CH1 = new Array<Float>();
         CH2 = new Array<Float>();
         CH3 = new Array<Float>();
@@ -34,6 +44,10 @@ class ABITrace {
         ALN_LABELS = new Array<String>();
         ANNOTATIONS = new Array<String>();
         alignment = null;
+
+        if(traceDataJson != null){
+            setData(Json.parse(traceDataJson));
+        }
     }
 
     public function isEmpty() : Bool{
@@ -47,6 +61,8 @@ class ABITrace {
         CH4 = traceData.CH4;
         LABELS = traceData.LABELS;
         SEQ = traceData.SEQ;
+
+        traceDataJson = Json.stringify(traceData);
     }
 
     public function getSequence() : String {
@@ -172,5 +188,9 @@ class ABITrace {
 
     public function getReadingCount(){
         return CH1.length;
+    }
+
+    public function setName(name : String){
+        this.name = name;
     }
 }

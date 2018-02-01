@@ -684,6 +684,10 @@ class SimpleExtJSProgram extends BaseProgram implements BuildingBlock implements
     public function addModelToOutline(obj : Dynamic, clearAll : Bool, folderName : String = null){
         var dataStore :Dynamic = getApplication().getOutlineDataStore('MODELS');
 
+        if(dataStore == null){
+            return;
+        }
+
         var rootNode : Dynamic = dataStore.getRootNode();
 
         if(clearAll){
@@ -768,10 +772,12 @@ class SimpleExtJSProgram extends BaseProgram implements BuildingBlock implements
 
                         var syn_obj = Reflect.field(obj, syntheticField);
 
-                        var program = getWorkspace().getProgramForObject(syn_obj.uuid);
+                        if(syn_obj != null){
+                            var program = getWorkspace().getProgramForObject(syn_obj.uuid);
 
-                        if(program != null){
-                            Reflect.setField(obj, field, syn_obj.getValue());
+                            if(program != null){
+                                Reflect.setField(obj, field, syn_obj.getValue());
+                            }
                         }
                     }
                 }

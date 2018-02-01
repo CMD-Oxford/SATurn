@@ -166,7 +166,8 @@ class TargetSummary {
             'Purified': {val: 7, colour: 'orange'},
             'In xtal trials': {val: 5, colour: 'blue'},
             'Diffraction criteria met': {val: 4, colour: 'red'},
-            'Deposited': {val: 3, colour: 'purple'}
+            'Deposited': {val: 3, colour: 'purple'},
+            'Unknown':{val: 1, colour:'grey'}
         };
 
         for(i in 1...gridVar.dataTableDefinition.columnDefs.length){

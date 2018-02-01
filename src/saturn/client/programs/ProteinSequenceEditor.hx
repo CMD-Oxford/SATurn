@@ -144,7 +144,7 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
         getApplication().getToolBar().add(blastButton);
 
         viewMenu.add({
-            text : 'PSIPred Report',
+            text : 'Domain report',
             handler : function(){
                 var name = 'PSIPred '+getActiveObject(ProteinWorkspaceObject).getName()+' 1 - '+self.sequence.length;
                 psiPredSequence(sequence, name);
@@ -152,7 +152,7 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
         });
 
         viewMenu.add({
-            text : 'TMHMM Report',
+            text : 'Transmembrane Report',
             handler : function(){
                 var name = 'TMHMM '+getActiveObject(ProteinWorkspaceObject).getName()+' 1 - '+self.sequence.length;
                 tmhmmSequence(sequence, name);

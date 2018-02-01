@@ -78,7 +78,7 @@ class FamaPublic {
                 'alias' => 'Proteins'
             ]
         ],
-        'saturn.core.TextFile' =>[
+        'saturn.core.domain.TextFile' =>[
             'fields'=>[
                 'name' => 'NAME'
             ],

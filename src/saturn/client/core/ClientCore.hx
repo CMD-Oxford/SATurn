@@ -40,6 +40,7 @@ class ClientCore implements ConversationHelper{
     var loginListeners : Array<Dynamic->Void>;
     var logoutListeners : Array<Void->Void>;
     var debugLogger : Dynamic;
+    var providerUpListener : Void->Void;
 
     static var clientCore : ClientCore;
 
@@ -146,7 +147,10 @@ class ClientCore implements ConversationHelper{
                         listener(user);
                     }
                 }
-                cb(err);
+
+                if(cb != null){
+                    cb(err);
+                }
             });
 
             /*for(listener in refreshListeners){
@@ -162,7 +166,9 @@ class ClientCore implements ConversationHelper{
                 listener();
             }
 
-            cb(null);
+            if(cb != null){
+                cb(null);
+            }
         }
     }
 
@@ -503,8 +509,6 @@ class ClientCore implements ConversationHelper{
         return clientCore;
     }
 
-
-
     public static function getClientCore() : ClientCore{
         return clientCore;
     }
@@ -515,5 +519,19 @@ class ClientCore implements ConversationHelper{
 
     public static function main(){
         startClientCore();
+    }
+
+    public function onProviderUp(cb : Void->Void) : Void {
+        providerUpListener = cb;
+    }
+
+    public function providerUp(){
+        if(providerUpListener != null){
+            var a = providerUpListener;
+
+            providerUpListener = null;
+
+            a();
+        }
     }
 }

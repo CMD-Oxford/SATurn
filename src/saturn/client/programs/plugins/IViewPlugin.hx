@@ -61,13 +61,13 @@ class IViewPlugin extends AbstractPDBRendererPlugin {
         var head = js.Browser.document.head;
 
         var scripts = [
-            'iview/three.min.js',
-            'iview/AnaglyphEffect.js',
-            'iview/ParallaxBarrierEffect.js',
-            'iview/OculusRiftEffect.js',
-            'iview/StereoEffect.js',
-            'iview/iview.js',
-            'iview/surface.min.js'
+            'js/iview/three.min.js',
+            'js/iview/AnaglyphEffect.js',
+            'js/iview/ParallaxBarrierEffect.js',
+            'js/iview/OculusRiftEffect.js',
+            'js/iview/StereoEffect.js',
+            'js/iview/iview.js',
+            'js/iview/surface.min.js'
         ];
 
         for(script in scripts){

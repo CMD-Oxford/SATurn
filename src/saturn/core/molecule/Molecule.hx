@@ -392,6 +392,10 @@ class Molecule {
         return null;
     }
 
+    public function setValue(value : String){
+        setSequence(value);
+    }
+
     public function _setFloatAttribute(attributeName : String, val : Float){
         floatAttributes.set(attributeName,val);
     }

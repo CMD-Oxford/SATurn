@@ -46,10 +46,10 @@ class ABIConverter  extends QueuePlugin{
         var nodePath = js.Node.path.dirname(Node.__filename);
 
         var progName = this.saturn.getPythonPath();
-        var args = ['bin/ABIConverter.py', binary_info.path, json_info.path];
+        var args = ['bin/deployed_bin/ABIConverter.py', binary_info.path, json_info.path];
 
         if(Node.os.platform() == 'win32'){
-            progName = 'bin/ABIConverter.exe';
+            progName = 'bin/deployed_bin/ABIConverter.exe';
             args = [binary_info.path, json_info.path];
         }
 

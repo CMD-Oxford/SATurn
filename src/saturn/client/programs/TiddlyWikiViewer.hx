@@ -103,11 +103,13 @@ class TiddlyWikiViewer extends SimpleExtJSProgram{
                         obj.content = template.content;
 
                         //Ask user for new page ID (in the future we might automatically generate
-                        getApplication().userValuePrompt('Wiki ID', 'Enter Wiki ID', function(pageId){
+                        getApplication().userValuePrompt('Wiki ID', 'Enter ELN ID', function(pageId){
                             //We get when the user enters an ID and clicks OK
 
                             //Add wiki ID to newly created TiddlyWiki object
                             obj.pageId = pageId;
+
+                            getWorkspace().renameWorkspaceObject(getActiveObjectId(), pageId);
 
                             //Get data provider
                             var provider = getApplication().getProvider();

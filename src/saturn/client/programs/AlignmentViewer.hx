@@ -17,6 +17,7 @@ import saturn.client.programs.plugins.AlignmentGVPlugin;
 import saturn.core.GridVar;
 import saturn.client.workspace.GridVarWO;
 import saturn.client.programs.SimpleExtJSProgram;
+import saturn.core.domain.Alignment;
 
 import bindings.Ext;
 
@@ -25,7 +26,7 @@ import saturn.client.WorkspaceApplication;
 import saturn.client.workspace.Workspace;
 import saturn.client.workspace.Workspace.WorkspaceListener;
 
-import saturn.client.workspace.Alignment;
+import saturn.core.domain.Alignment;
 import saturn.client.workspace.DNAWorkspaceObject;
 import saturn.client.workspace.ProteinWorkspaceObject;
 
@@ -401,10 +402,17 @@ class AlignmentViewer extends SimpleExtJSProgram  {
                 html:'Alignment<br/>Viewer',
                 cls: 'quickLaunchButton',
                 handler: function(){
-                    WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(new saturn.client.workspace.Alignment(), "MSA"), true);
+                    WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(new saturn.core.domain.Alignment(), "MSA"), true);
                 },
                 tooltip: {dismissDelay: 10000, text: 'Alignment viewer.<br/>Run CLUSTAL against DNA or Protein sequences.'}
             }
         ];
+    }
+
+    override public function saveObject(cb : String->Void){
+        var wo = getWorkspaceObject();
+        wo.getObject().setName(wo.getName());
+
+        super.saveObject(cb);
     }
 }

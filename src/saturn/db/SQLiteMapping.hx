@@ -24,7 +24,7 @@ class SQLiteMapping {
      *             schema =>
      *             name =>
      */
-    public static var models : Map<String,Map<String,Map<String,Dynamic>>> = [
+    public static var models  = [
         'saturn.core.domain.SgcConstruct'=>[
             'fields'=>[
                 'constructId' => 'CONSTRUCT_ID',
@@ -78,6 +78,14 @@ class SQLiteMapping {
             'table_info' => [
                 'schema' => 'SGC',
                 'name' => 'CONSTRUCT'
+            ],
+            'programs'=>[
+                'saturn.client.programs.DNASequenceEditor' => true
+            ],
+            'options'=>[
+                'id_pattern' => '-c',
+                'alias' => 'Constructs',
+                'file.new.label'=>'Construct'
             ]
         ],
         'saturn.core.domain.SgcAllele'=>[
@@ -147,6 +155,11 @@ class SQLiteMapping {
             'table_info' => [
                 'schema' => 'SGC',
                 'name' => 'ALLELE'
+            ],
+            'options'=>[
+                'id_pattern' => '-a',
+                'alias' => 'Alleles',
+                'file.new.label'=>'Allele'
             ]
         ],
         'saturn.core.domain.SgcRestrictionSite'=>[
@@ -334,6 +347,21 @@ class SQLiteMapping {
                 'polymorph_key' => 'POLYMORPH_TYPE',
                 'value' => 'ENTRY_CLONE'
             ]
-    ]
+    ],
+        'saturn.core.DNA' =>[
+            'fields'=>[
+                'moleculeName' => 'NAME'
+            ],
+            'indexes'=>[
+                'moleculeName' => true
+            ],
+            'programs'=>[
+                'saturn.client.programs.DNASequenceEditor' => false
+            ],
+            'options' =>[
+                'alias' => 'DNA',
+                'icon'=>'dna_conical_16.png'
+            ]
+        ],
     ];
 }

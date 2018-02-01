@@ -7,7 +7,7 @@
 * copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 */
 
-package saturn.client.workspace;
+package saturn.core.domain;
 
 class Alignment {
     var objectIds : Map<String, Bool>;
@@ -15,6 +15,9 @@ class Alignment {
     var alignmentURL : String;
 
     var content : String;
+
+    var name : String;
+    var id : Int;
 
     public function new(){
         emptyInit();
@@ -70,5 +73,9 @@ class Alignment {
 
     public function getAlignmentContent() : String{
         return this.content;
+    }
+
+    public function setName(name : String){
+        this.name = name;
     }
 }

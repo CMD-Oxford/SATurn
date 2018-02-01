@@ -26,7 +26,7 @@ class PDBRetrievalPlugin extends QueuePlugin{
     @:cps public function fetch_pdb(job : Dynamic, done) : Void{
         var pdb_id = job.data.pdbId;
 
-        Node.require('needle').get('http://www.rcsb.org/pdb/files/' + pdb_id.toUpperCase() + '.pdb', function(error,response) {
+        Node.require('needle').get('http://files.rcsb.org/view/' + pdb_id.toUpperCase() + '.pdb', function(error,response) {
             if(error == null && response.statusCode == 200){
                 Node.console.info('Sending response');
 

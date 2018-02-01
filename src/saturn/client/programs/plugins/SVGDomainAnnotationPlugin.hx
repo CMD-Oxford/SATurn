@@ -49,7 +49,7 @@ class SVGDomainAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implem
 		super.onFocus();
 
         getProgram().getApplication().getViewMenu().add({
-            text: 'HMMer report',
+            text: 'Domain report',
             handler: function(){
                 displayRawAnnotationData('PFAM');
             }
@@ -67,7 +67,7 @@ class SVGDomainAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implem
         super.setProgram(program);
         program.addSequenceChangeListener(this);
 
-        annotationId = program.addAnnotation('Pfam');
+        annotationId = program.addAnnotation('Domains');
         program.setAnnotationClass('Pfam',SVGAnnotationBlock);
 
         program.setAnnotationPosition(annotationId, AnnotationPosition.TOP);

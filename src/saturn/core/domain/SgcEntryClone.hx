@@ -37,7 +37,11 @@ class SgcEntryClone extends DNA{
     public function setup(){
         setSequence(dnaSeq);
 
-        proteinSequenceObj = new Protein(getFrameTranslation(GeneticCodes.STANDARD, Frame.ONE));
+        if(dnaSeq != null && dnaSeq != '' && dnaSeq.length > 2){
+            proteinSequenceObj = new Protein(getFrameTranslation(GeneticCodes.STANDARD, Frame.ONE));
+        }else{
+            proteinSequenceObj = new Protein(null);
+        }
 
         proteinSequenceObj.setDNA(this);
 
@@ -49,7 +53,7 @@ class SgcEntryClone extends DNA{
 
         dnaSeq = sequence;
 
-        if(proteinSequenceObj != null){
+        if(proteinSequenceObj != null && dnaSeq != null && dnaSeq != '' && dnaSeq.length > 2){
             proteinSequenceObj.setSequence(getFrameTranslation(GeneticCodes.STANDARD, Frame.ONE));
         }
     }

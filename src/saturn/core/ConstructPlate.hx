@@ -20,8 +20,7 @@ class ConstructPlate {
 		return theName;
 	}
 	
-	public function setName(name : String) : Void } {
+	public function setName(name : String) : Void {
 		theName = name;
-		this.
 	}
 }

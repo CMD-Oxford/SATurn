@@ -10,6 +10,7 @@
 package saturn.client.workspace;
 
 import saturn.client.workspace.Workspace;
+import saturn.core.domain.ABITrace;
 
 import haxe.Serializer;
 import haxe.Unserializer;

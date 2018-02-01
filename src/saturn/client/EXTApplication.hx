@@ -87,6 +87,10 @@ class EXTApplication extends WorkspaceApplication{
 
     public function new(applicationTitle : String, navigationTitle : String, southTitle : String, detailsTitle : String, tabContainerTitle : String, searchBarTitle : String, nakedMode : Bool){
         super(applicationTitle, navigationTitle, southTitle, detailsTitle, tabContainerTitle, searchBarTitle, nakedMode);
+    }
+
+    override public function onProviderUp(){
+        super.onProviderUp();
 
         enableOutlineDD = false;
 
@@ -224,13 +228,13 @@ class EXTApplication extends WorkspaceApplication{
             tooltip: {dismissDelay: 10000, text: 'Close workspace'}
         });
 
-        appToolBar.add({
+        /*appToolBar.add({
             iconCls :'x-btn-single-small',
             handler: function(){
                 setMode(ScreenMode.SINGLE_APP);
             },
             tooltip: {dismissDelay: 10000, text: 'Enter single app mode'}
-        });
+        });*/
 
         northContainer.add(appToolBar);
     }
@@ -782,13 +786,6 @@ class EXTApplication extends WorkspaceApplication{
         });
 
         databaseMenu.add({
-            text : 'ELN',
-            handler: function(){
-                showELN();
-            }
-        });
-
-        databaseMenu.add({
             text: 'Alias active',
             handler: function(){
                 userValuePrompt('Alias Active', 'Enter global variable name', function(name){
@@ -797,13 +794,6 @@ class EXTApplication extends WorkspaceApplication{
                     Reflect.setField(d, name, getActiveProgram());
                 }, null);
             }
-        });
-
-        databaseMenu.add({
-            text : 'Send test email',
-            handler: function(){
-                BioinformaticsServicesClient.getClient().sendTestEmail();
-        }
         });
 
         helpMenu = Ext.create('Ext.menu.Menu', {margin: '0 0 10 0','z-index': 1000000});

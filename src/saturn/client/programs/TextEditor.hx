@@ -15,16 +15,13 @@ import saturn.client.workspace.Workspace;
 import saturn.client.programs.SimpleExtJSProgram;
 
 //TODO: Depreciated WO
-import saturn.client.workspace.TextFileWO;
+import saturn.core.domain.TextFile;
 
 import saturn.client.workspace.Workspace.WorkspaceObject;
 
 import bindings.Ext;
 
 class TextEditor extends SimpleExtJSProgram{
-    //TODO: Depreciated WO
-    static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ TextFileWO ];
-
     var theComponent : Dynamic;
     var editor : Dynamic;
 
@@ -256,6 +253,14 @@ class TextEditor extends SimpleExtJSProgram{
         return theComponent;
     }
 
+    override public function saveObject(cb : String->Void){
+        var entity = getEntity();
+
+        entity.setText(getText());
+
+        super.saveObject(cb);
+    }
+
     public static function getQuickLaunchItems() : Array<Dynamic>{
         return [
             {
@@ -263,7 +268,7 @@ class TextEditor extends SimpleExtJSProgram{
                 text:'Editor',
                 cls: 'quickLaunchButton',
                 handler: function(){
-                    WorkspaceApplication.getApplication().getWorkspace().addObject(new TextFileWO(null, null), true);
+                    WorkspaceApplication.getApplication().getWorkspace().addObject(new TextFile(), true);
                 }
             }
         ];

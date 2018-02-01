@@ -9,7 +9,7 @@
 
 package saturn.client.workspace;
 
-import saturn.core.TextFile;
+import saturn.core.domain.TextFile;
 import saturn.client.workspace.Workspace;
 
 class TextFileWO extends WorkspaceObjectBase<TextFile>{

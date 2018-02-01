@@ -43,7 +43,6 @@ class SGCSQLite extends SGC{
                 'model' => [
                     'Target ID' => 'targetId',
                     'Genbank ID' => 'gi',
-                    'DNA Sequence' => 'dnaSeq',
                     'Protein Sequence' => 'proteinSeq',
                     '__HIDDEN__PKEY__' => 'id'
                 ],
@@ -60,6 +59,7 @@ class SGCSQLite extends SGC{
                 'options' => [
                     'id_pattern' => '.*',
                     'alias' => 'Target',
+                    'file.new.label'=>'Target',
                     'icon' => 'dna_conical_16.png',
                     'actions' => [
                         'search_bar' => [

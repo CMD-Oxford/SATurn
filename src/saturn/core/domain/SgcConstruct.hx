@@ -50,6 +50,14 @@ class SgcConstruct extends DNA{
 
         sequenceField = 'dnaSeq';
 
+        if(proteinSequenceObj == null){
+            proteinSequenceObj = new Protein(null);
+        }
+
+        if(proteinSequenceNoTagObj == null){
+            proteinSequenceNoTagObj = new Protein(null);
+        }
+
         addProtein('Translation', proteinSequenceObj);
 
         addProtein('Translation No Tag', proteinSequenceNoTagObj);
@@ -76,5 +84,9 @@ class SgcConstruct extends DNA{
     public function loadProteinNoTag(cb){
         proteinSequenceNoTagObj.setName(constructId + ' (Protein No Tag)');
         cb(proteinSequenceNoTagObj);
+    }
+
+    public static function getNewMenuText(){
+        return 'Construct';
     }
 }
