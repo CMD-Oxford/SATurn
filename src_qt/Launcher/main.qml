@@ -110,7 +110,7 @@ ApplicationWindow {
 
         Component.onCompleted: {
             WebEngine.defaultProfile.downloadRequested.connect(downloadme);
-            webview.settings.LocalContentCanAccessRemoteUrls = true;
+            webview.settings.localContentCanAccessRemoteUrls = true;
         }
 
         function downloadme(download){

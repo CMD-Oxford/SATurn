@@ -45,6 +45,7 @@ class EXTApplication extends WorkspaceApplication{
     var fileMenu : Dynamic;
     var exportMenu : Dynamic;
     var importMenu : Dynamic;
+    var updateMenu : Dynamic;
     var workspaceExportMenu : Dynamic;
     var editMenu : Dynamic;
 	var openMenu : Dynamic;
@@ -728,6 +729,15 @@ class EXTApplication extends WorkspaceApplication{
             cls:'menu-item-FILE'
         });
 
+        updateMenu = Ext.create('Ext.menu.Menu', {margin: '0 0 10 0','z-index': 1000000});
+
+        fileMenu.add({
+            text:'Update',
+            iconCls: 'bmenu',  // <-- icon
+            menu: updateMenu, // assign menu by instance
+            cls:'menu-item-FILE'
+        });
+
         editMenu = Ext.create('Ext.menu.Menu', {
 			margin: '0 0 10 0','z-index': 1000000});
 
@@ -935,6 +945,10 @@ class EXTApplication extends WorkspaceApplication{
 
     override public function getImportMenu() {
         return importMenu;
+    }
+
+    override public function getUpdateMenu() {
+        return updateMenu;
     }
 
     override public function getWorkspaceExportMenu() : Dynamic {

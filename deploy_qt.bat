@@ -1,0 +1,1 @@
+C:\Qt5_10\5.10.0\msvc2017_64\bin\windeployqt.exe --qmldir

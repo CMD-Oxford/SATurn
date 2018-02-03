@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.5.0, 2018-02-01T07:17:40. -->
+<!-- Written by QtCreator 4.5.0, 2018-02-03T13:20:22. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -290,7 +290,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:C:/Users/ddamerell/GIT_REPOS/Farm/saturn_2017/src_qt/Launcher/Saturn.pro</value>
     <value type="bool" key="QmakeProjectManager.QmakeRunConfiguration.UseLibrarySearchPath">true</value>
-    <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments">C:\Users\ddamerell\GIT_REPOS\Farm\saturn_2017\build  http://localhost:8091 ALL</value>
+    <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments">C:\Users\ddamerell\GIT_REPOS\Farm\saturn_2017\build __DEFAULT__ http://localhost:8091 ALL --disable-web-security</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">Saturn.pro</value>
     <value type="bool" key="Qt4ProjectManager.Qt4RunConfiguration.UseDyldImageSuffix">false</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.UserWorkingDirectory"></value>

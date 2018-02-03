@@ -466,7 +466,7 @@ class PDBViewer extends SimpleExtJSProgram{
                 handler: function(){
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new StructureModelWO(null, null), true);
                 },
-                tooltip: {dismissDelay: 10000, text: 'View PDB structures or ICB files'}
+                tooltip: {dismissDelay: 10000, text: 'View PDB structures'}
             }
         ];
     }

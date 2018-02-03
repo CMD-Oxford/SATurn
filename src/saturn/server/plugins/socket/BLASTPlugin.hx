@@ -99,7 +99,7 @@ class BLASTPlugin extends QueuePlugin {
             }
         }
 
-        var proc : NodeChildProcess = Node.child_process.spawn('bin/'+blastSettings.prog,args);
+        var proc : NodeChildProcess = Node.child_process.spawn('bin/deployed_bin/'+blastSettings.prog,args);
 
         proc.stderr.on('data', function(error){
 

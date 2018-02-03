@@ -644,6 +644,10 @@ class WorkspaceApplication {
         return null;
     }
 
+    public function getUpdateMenu() : Dynamic {
+        return null;
+    }
+
     public function getWorkspaceExportMenu() : Dynamic {
         return null;
     }
@@ -1000,7 +1004,7 @@ class WorkspaceApplication {
                         showMsgIds.push(msgId);
                     }
                 }
-            }else if(msg == '_clustal_' || msg == '_thmm_' || msg == '_blast_' || msg == '_phylo_' || msg == '_psipred_'){
+            }else if(msg == '_clustal_' || msg == '_thmm_' || msg == '_blast_' || msg == '_phylo_' || msg == '_psipred_' || msg == '_blast_updater_'){
                 showMsgIds.push(msgId);
             }
         }

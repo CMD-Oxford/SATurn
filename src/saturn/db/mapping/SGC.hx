@@ -455,8 +455,17 @@ class SGC {
                     'expression' => [ 'field' => 'expressionId', 'class' => 'saturn.core.domain.SgcExpression', 'fk_field' => 'id' ]
                 ],
                 'model'=>[
-                    'Purification ID' => 'purificationId'
-                ]
+                    'Purification ID' => 'purificationId',
+                    'Expression ID' => 'expressionId',
+                    'ELN ID'=> 'elnId',
+                    'Comments' => 'comments'
+                ],
+                'options'=>[
+                    'alias' => 'Purifications',
+                    'file.new.label'=>'Purification',
+                    'icon' => 'dna_conical_16.png',
+                    'auto_activate'=> '3'
+                ],
             ],
             'saturn.core.domain.SgcClone'=>[
                 'fields'=>[
@@ -470,6 +479,12 @@ class SGC {
                     'cloneId'=>false,
                     'id'=>true
                 ],
+                'options'=>[
+                    'alias' => 'Clones',
+                    'file.new.label'=>'Clone',
+                    'icon' => 'dna_conical_16.png',
+                    'auto_activate'=> '3'
+                ],
                 'table_info' => [
                     'schema' => 'SGC',
                     'name' => 'CLONE'
@@ -481,7 +496,10 @@ class SGC {
                     'construct' => [ 'field' => 'constructId', 'class' => 'saturn.core.domain.SgcConstruct', 'fk_field' => 'id' ]
                 ],
                 'model'=>[
-                    'Clone ID' => 'cloneId'
+                    'Clone ID' => 'cloneId',
+                    'Construct ID' => 'construct.constructId',
+                    'ELN ID'=> 'elnId',
+                    'Comments' => 'comments'
                 ]
             ],
             'saturn.core.domain.SgcExpression'=>[
@@ -506,8 +524,17 @@ class SGC {
                 'fields.synthetic' =>[
                     'clone' => [ 'field' => 'cloneId', 'class' => 'saturn.core.domain.SgcClone', 'fk_field' => 'id' ]
                 ],
+                'options'=>[
+                    'alias' => 'Expressions',
+                    'file.new.label'=>'Expression',
+                    'icon' => 'dna_conical_16.png',
+                    'auto_activate'=> '3'
+                ],
                 'model'=>[
-                    'Expression ID' => 'expressionId'
+                    'Expression ID' => 'expressionId',
+                    'Clone ID' => 'clone.cloneId',
+                    'ELN ID'=>'elnId',
+                    'Comments'=>'comments'
                 ]
             ],
             'saturn.core.domain.SgcTarget'=>[
@@ -728,7 +755,7 @@ class SGC {
                     'name' => 'TIDDLY_WIKI'
                 ],
                 'options' => [
-                    'icon' => 'dna_conical_16.png',
+                    'icon' => 'eln_16.png',
                     'alias' => 'ELN Pages',
                     'file.new.label' => 'ELN Page',
                     'id_pattern' => 'wiki-',
@@ -1019,7 +1046,7 @@ class SGC {
                     'saturn.client.programs.TextEditor' => true
                 ],
                 'options' =>[
-                    'alias' => 'File',
+                    'alias' => 'Scripts',
                     'file.new.label'=> 'Script',
                     'icon' => 'dna_conical_16.png'
                 ],

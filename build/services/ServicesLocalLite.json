@@ -6,18 +6,72 @@
                 "BLAST_DB" : {
                     "pos": 1,
                     "allowedValues": {
-                        "PDB" :{
-                            "dbtype": "prot",
-                            "dbpath": "databases/pdb.fasta",
-                            "prog" : "blastp"
-                        },"UniProt (Swiss-Prot)" :{
+                      "Constructs (DNA)" :{
+                        "dbtype": "nucl",
+                        "dbpath": "databases/constructs_nucleotide.fasta",
+                        "prog": "blastn"
+                      },
+                      "PDB" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/pdb_annotated.fasta",
+                        "prog": "blastp"
+                      },
+                      "Targets (DNA)" :{
+                        "dbtype": "nucl",
+                        "dbpath": "databases/targets_nucleotide.fasta",
+                        "prog": "blastn"
+                      },
+                      "Entry Clones (DNA)" :{
+                        "dbtype": "nucl",
+                        "dbpath": "databases/entryclones_nucleotide.fasta",
+                        "prog": "blastn"
+                      },
+                      "Entry Clones (Protein)" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/entryclones_protein.fasta",
+                        "prog": "blastp"
+                      },
+                      "Vectors (DNA)":{
+                        "dbtype": "nucl",
+                        "dbpath": "/db/blast/vectors_nucleotide.fasta",
+                        "prog" : "blastn"
+                      },
+                      "Targets (Protein)" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/targets_protein.fasta",
+                        "prog": "blastp"
+                      },
+                      "Targets (Nucleotide)" :{
+                        "dbtype": "nucl",
+                        "dbpath": "databases/targets_nucleotide.fasta",
+                        "prog": "blastn"
+                      },
+                      "MGC" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/mgc_aa",
+                        "prog": "blastp"
+                      },
+                      "Human Proteome (RefSeq)" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/human.protein.faa",
+                        "prog": "blastp"
+                      },
+                      "Constructs (Protein)" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/constructs_protein.fasta",
+                        "prog": "blastp"
+                      },
+                      "Constructs (Protein No Tag)" :{
+                        "dbtype": "prot",
+                        "dbpath": "databases/constructs_protein_no_tag.fasta",
+                        "prog": "blastp"
+                      },"UniProt (Swiss-Prot)" :{
                             "dbtype": "prot",
                             "dbpath": "databases/uniprot_sprot.fasta",
                             "prog" : "blastp"
                         }
                     }
-                },
-                "fasta" : {
+                },"fasta" : {
                     "pos" : 2
                 }
             }
@@ -36,6 +90,7 @@
       {"clazz": "saturn.server.plugins.socket.THMMPlugin", "namespaces": [{"name": "_thmm_"}]},
       {"clazz": "saturn.server.plugins.socket.PSIPREDPlugin", "namespaces": [{"name": "_psipred_"}]},
       {"clazz": "saturn.server.plugins.socket.DisoPredPlugin", "namespaces": [{"name": "_disopred_"}]},
+      {"clazz": "saturn.server.plugins.socket.BLASTDBUpdater", "namespaces": [{"name": "_blast_updater_"}]},
         {
             "clazz": "saturn.server.plugins.socket.FileUploader",
             "namespaces": [{"name": "_uploader_"}],

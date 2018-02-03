@@ -895,12 +895,12 @@ class MultiConstructHelper extends TableHelper{
         return [
             {
                 iconCls :'x-btn-conical-dna',
-                html:'Construct<br/>Entry',
+                html:'Construct<br/>Plate',
                 cls: 'quickLaunchButton',
                 handler: function(){
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new MultiConstructHelperWO(null, 'Constructs'), true);
                 },
-                tooltip: {dismissDelay: 10000, text: 'Edit existing constructs or enter new ones. (requires login)'}
+                tooltip: {dismissDelay: 10000, text: 'Edit existing constructs or enter new ones.'}
             }
         ];
     }

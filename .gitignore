@@ -95,3 +95,7 @@ build/node.stderr
 build/chemireg.js
 build.7z
 build/node.stdout
+src/TIDDLY_WIKI.csv
+node.stdout
+node.stderr
+build.zip

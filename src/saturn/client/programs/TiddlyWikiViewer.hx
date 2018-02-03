@@ -140,8 +140,7 @@ class TiddlyWikiViewer extends SimpleExtJSProgram{
                             //TODO: Update the label directly as a full reload can take time
                             getApplication().getWorkspace().reloadWorkspace();
                         }, function(){
-                            //We get here if the user clicks "Cancel" when entering a ID for the wiki
-                            //TODO: clean up gracefully from this
+                            getWorkspace().removeObject(objectId);
                         });
                     }
                 });
@@ -277,13 +276,13 @@ class TiddlyWikiViewer extends SimpleExtJSProgram{
     public static function getQuickLaunchItems() : Array<Dynamic>{
         return [
         {
-            iconCls :'x-btn-copy',
-            html:'Notes',
+            iconCls :'x-btn-eln',
+            html:'ELN',
             cls: 'quickLaunchButton',
             handler: function(){
                 WorkspaceApplication.getApplication().getWorkspace().addObject(new TiddlyWiki(), true);
             },
-            tooltip: {dismissDelay: 10000, text: 'Add notes to workspace'}
+            tooltip: {dismissDelay: 10000, text: 'Create ELN page'}
         }
         ];
     }

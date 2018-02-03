@@ -149,7 +149,7 @@ class HomePage extends SimpleExtJSProgram{
         return [
             {
                 iconCls :'x-btn-playground',
-                text:'Playground',
+                text:'Examples',
                 cls: 'quickLaunchButton',
                 handler: function(){
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new HomeWO(null, null), true);

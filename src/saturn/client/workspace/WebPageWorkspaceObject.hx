@@ -30,4 +30,8 @@ class WebPageWorkspaceObject extends WorkspaceObjectBase<WebPage>{
     public static function getNewMenuText() : String {
         return "Web Page";
     }
+
+    public static function getDefaultFolderName() : String{
+        return "Web Pages";
+    }
 }

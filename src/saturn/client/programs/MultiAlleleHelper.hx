@@ -694,12 +694,12 @@ class MultiAlleleHelper extends TableHelper{
         return [
             {
                 iconCls :'x-btn-conical-dna',
-                html:'Allele<br/>Entry',
+                html:'PCR<br/>Plate',
                 cls: 'quickLaunchButton',
                 handler: function(){
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new MultiAlleleHelperWO(null, 'Alleles'), true);
                 },
-                tooltip: {dismissDelay: 10000, text: 'Edit existing alleles or enter new ones. (requires login)'}
+                tooltip: {dismissDelay: 10000, text: 'Edit existing PCR products or enter new ones.'}
             }
         ];
     }

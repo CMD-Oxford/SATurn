@@ -21,7 +21,7 @@ class HomeWO extends WorkspaceObjectBase<Home>{
         }
 
         if(name == null){
-            name="Playground";
+            name="Home";
         }
 
         iconPath = '/static/js/images/playground_16.png';
@@ -30,7 +30,7 @@ class HomeWO extends WorkspaceObjectBase<Home>{
     }
 
     public static function getNewMenuText() : String {
-        return "Playground";
+        return "Home";
     }
 
     public static function getDefaultFolderName() : String{

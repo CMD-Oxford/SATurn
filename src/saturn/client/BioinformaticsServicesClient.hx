@@ -112,6 +112,10 @@ class BioinformaticsServicesClient {
         helper.sendRequest('_abi_', {abiFile: abiContents}, cb);
     }
 
+    public function sendBLASTDBUpdateRequest(databaseName : String, cb:Dynamic->String->Void){
+        helper.sendRequest('_blast_updater_', {database: databaseName}, cb);
+    }
+
     public function upload(icbContents : String, extension : String ,cb:Dynamic->String->Void){
         helper.sendRequest('_uploader_.upload', {fileContents: icbContents, extension: extension}, cb);
     }

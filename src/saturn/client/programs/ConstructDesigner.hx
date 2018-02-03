@@ -243,7 +243,8 @@ class ConstructDesigner extends BasicTableViewer {
         return [
             {
                 iconCls :'x-btn-conical-dna',
-                text: 'Construct Designer',
+                html:'Construct<br/>Designer',
+                tooltip: {dismissDelay: 10000, text: 'Manually specify start and end construct boundaries to design constructs'},
                 cls: 'quickLaunchButton',
                 menu: Ext.create('Ext.menu.Menu',{
                     items: {

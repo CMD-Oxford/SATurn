@@ -166,6 +166,66 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         dwin.LabPage = saturn.core.scarab.LabPage;
 
         debug('Saturn loaded');
+
+        var databases = [
+            'construct_protein'=>'Update Construct Protein BLASTDB',
+            'construct_protein_no_tag'=>'Update Construct Protein (No Tag) BLASTDB',
+            'construct_nucleotide'=>'Update Construct Nucleotide BLASTDB',
+            'allele_nucleotide'=>'Update PCR Products Nucleotide BLASTDB',
+            'allele_protein'=>'Update PCR Products Protein BLASTDB',
+            'entryclone_nucleotide'=>'Update Entry Clone Nucleotide BLASTDB',
+            'entryclone_protein'=>'Update Entry Clone Protein BLASTDB',
+            'target_nucleotide'=>'Update Target Nucleotide BLASTDB',
+            'target_protein'=>'Update Target Protein BLASTDB',
+            'vector_nucleotide'=>'Update Vector Nucleotide BLASTDB'
+        ];
+
+
+
+        getUpdateMenu().add({
+            text: 'All Local BLASTDBs',
+            handler: function(){
+                var databaseNames = [];
+                for(databaseName in databases.keys()){
+                    databaseNames.push(databaseName);
+                }
+
+                var next = null;
+
+                next = function(){
+                    var databaseName = databaseNames.pop();
+
+                    BioinformaticsServicesClient.getClient().sendBLASTDBUpdateRequest(databaseName, function(response, error){
+                        if(error != null){
+                            showMessage('BLASTDB update failed on ' + databaseName, error);
+                        }
+
+                        if(databaseNames.length == 0){
+                            showMessage('BLAST Updates','BLASTDB updates completed');
+                        }else{
+                            next();
+                        }
+                    });
+                };
+
+                next();
+            }
+        });
+
+        for(databaseName in databases.keys()){
+            getUpdateMenu().add({
+                text: databases.get(databaseName),
+                handler: function(){
+                    BioinformaticsServicesClient.getClient().sendBLASTDBUpdateRequest(databaseName, function(response, error){
+                        if(error != null){
+                            showMessage('BLASTDB update failed', error);
+                        }else{
+                            showMessage('BLASTDB updated', 'BLASTDB updated');
+                        }
+                    });
+                }
+            });
+        }
     }
 
     override function createMenuBar(){
@@ -249,6 +309,7 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         /**
         * Register default programs
         **/
+
         this.getProgramRegistry().registerProgram(WebPageViewer, true);
         this.getProgramRegistry().registerProgram(ProteinSequenceEditor, true);
         this.getProgramRegistry().registerProgram(DNASequenceEditor, true);
@@ -257,8 +318,9 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         //this.getProgramRegistry().registerProgram(PurificationHelper, true);
 
         this.getProgramRegistry().registerProgram(ConstructDesigner, true);
-        this.getProgramRegistry().registerProgram(MultiConstructHelper,true);
         this.getProgramRegistry().registerProgram(MultiAlleleHelper,true);
+        this.getProgramRegistry().registerProgram(MultiConstructHelper,true);
+
         this.getProgramRegistry().registerProgram(Phylo5Viewer, true);
         //this.getProgramRegistry().registerProgram(SHRNADesigner, true);
         this.getProgramRegistry().registerProgram(TableHelper, true);
@@ -267,13 +329,15 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(PDBViewer, true);
         //this.getProgramRegistry().registerProgram(WONKA, true);
         //this.getProgramRegistry().registerProgram(CompoundViewer, true);
-        this.getProgramRegistry().registerProgram(HomePage, true);
+
         this.getProgramRegistry().registerProgram(TextEditor, true);
         //this.getProgramRegistry().registerProgram(ScarabELNViewer, true);
         this.getProgramRegistry().registerProgram(TiddlyWikiViewer, true);
 
 
         this.getProgramRegistry().registerProgram(BasicTableViewer, true);
+
+        this.getProgramRegistry().registerProgram(HomePage, true);
 
 
 		//<LOAD_PROGRAMS>

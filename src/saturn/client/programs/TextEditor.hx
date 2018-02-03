@@ -265,11 +265,12 @@ class TextEditor extends SimpleExtJSProgram{
         return [
             {
                 iconCls :'x-btn-copy',
-                text:'Editor',
+                text:'Script',
                 cls: 'quickLaunchButton',
                 handler: function(){
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new TextFile(), true);
-                }
+                },
+                tooltip: {dismissDelay: 10000, text: 'Create a new script'}
             }
         ];
     }
