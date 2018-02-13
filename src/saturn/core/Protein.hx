@@ -55,6 +55,40 @@ class Protein extends Molecule{
         'Y'=>-1.3
     ];
 
+    //Lookup for pKa values for each amino acid used in pI calc
+
+    var lu_pKa = [
+        'D'=>3.9,
+        'E'=>4.4,
+        'H'=>6.8,
+        'Y'=>9.6,
+        'K'=>10.4,
+        'R'=>13.5,
+        'C'=>8.3,
+        'N-Term'=>8,
+        'C-Term'=>3.6
+    ];
+
+    //Lookup for pKa values for each amino acid used in pI calc
+
+    var lu_charge = [
+        'D'=>-1,
+        'E'=>-1,
+        'H'=>1,
+        'Y'=>-1,
+        'K'=>1,
+        'R'=>1,
+        'C'=>-1,
+        'N-Term'=>1,
+        'C-Term'=>-1
+    ];
+
+    //Set threshold for pI calculation (i.e. the pH where charge falls between 0.5 and -0.5) and min and max pH
+
+    var threshold : Float = 0.5;
+    var min_pH : Float = 3;
+    var max_pH: Float = 13;
+
     override public function setSequence(sequence : String){
         super.setSequence(sequence);
 
@@ -82,14 +116,6 @@ class Protein extends Molecule{
                 d.proteinSequenceUpdated(this.sequence);
             }
         }
-    }
-
-    public function getPkA() : Float {
-        var pka : Float = 0.;
-
-
-
-        return pka;
     }
 
     public function getHydrophobicity() : Float{
@@ -271,4 +297,67 @@ class Protein extends Molecule{
             }
         });
     }
+
+    //calculate individual aa charge
+
+    public function getAminoAcidCharge(aa : String, mid_pH : Float): Float {
+        var aminoAcid = aa;
+        var pH = mid_pH;
+        var ratio = 1/(1+Math.pow(10,(pH - lu_pKa.get(aminoAcid))));
+        if (lu_charge.get(aminoAcid) == 1)
+            return ratio;
+        else
+            return ratio - 1;
+    };
+
+    //calculate whole protein charge at pH set by Var pH
+
+    /**
+    *  getProteinCharge calculates the whole protein at pH set by.....
+    **/
+    public function getProteinCharge(mid_pH : Float): Float {
+        var seqLength = this.sequence.length;
+        var proteinSequence = this.sequence;
+
+        var aa = 'N-Term';
+        var proteinCharge = getAminoAcidCharge(aa, mid_pH);
+
+        aa = 'C-Term';
+        proteinCharge += getAminoAcidCharge(aa, mid_pH);
+
+        for(i in 0...seqLength){
+            aa = proteinSequence.substr(i,1);
+
+            if(this.lu_pKa.exists(aa)){
+                proteinCharge += getAminoAcidCharge(aa, mid_pH);
+            }
+        };
+
+        return proteinCharge;
+    };
+
+    //calculate pI,
+
+    public function getpI(): Float {
+        var proteinSequence = this.sequence;
+
+        while (true){
+            var mid_pH = 0.5 * (max_pH + min_pH);
+            var proteinCharge = getProteinCharge(mid_pH);
+
+            if (proteinCharge > threshold){
+                min_pH = mid_pH;
+            }else if (proteinCharge < -threshold){
+                max_pH = mid_pH;
+            }else{
+                return mid_pH;
+            }
+        }
+    }
 }
+
+
+
+
+
+

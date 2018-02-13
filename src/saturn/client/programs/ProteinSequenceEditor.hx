@@ -475,9 +475,11 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
                 id : folderName + " : HP"
             });
 
-            if(folderName == 'Selected'){
-
-            }
+            currentStats.appendChild({
+                text : "pI : ",
+                leaf : true,
+                id : folderName + " : pI"
+            });
 		}
 
         Ext.resumeLayouts(true);
@@ -533,6 +535,17 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
                 node.set('text',"HP : "+hp);
                 node.commit();
             }
+
+            node  = dataStore.getNodeById('Current' + " : pI");
+            if(node != null){
+                var pI = 0.;
+                if(sequence.length > 0){
+                    pI = MathUtils.sigFigs(new Protein(sequence).getpI(),2);
+                }
+
+                node.set('text',"pI : "+pI);
+                node.commit();
+            }
         }
 
         node = dataStore.getNodeById('Selected' + " : Length");
@@ -565,10 +578,35 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
 
                     node.set('text',"HP : "+hp);
                     node.commit();
+
+                    node  = dataStore.getNodeById('Selected' + " : pI");
+
+                    var pI = 0.;
+                    if(selSeq.length > 0){
+                        pI = MathUtils.sigFigs(new Protein(selSeq).getpI(),2);
+                    }
+
+                    node.set('text',"pI : "+pI);
+                    node.commit();
                 }
             }
         }
     }
+	
+	override
+	public function saveAll() : Void {
+        var wo : Dynamic = getActiveObject(ProteinWorkspaceObject);
+
+        var prot : Protein;
+
+        if(Std.is(wo, saturn.core.Protein)){
+            prot = wo;
+        }else{
+            prot = wo.object;
+        }
+		
+		prot.setSequence(sequence);
+	}
 	
 	override
 	public function openFile(file : Dynamic, asNew : Bool, ?asNewOpenProgram : Bool = true) : Void {
