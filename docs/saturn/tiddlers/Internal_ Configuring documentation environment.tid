@@ -1,5 +1,5 @@
 created: 20180301144712753
-modified: 20180301145452663
+modified: 20180301154113252
 title: Internal: Configuring documentation environment
 type: text/vnd.tiddlywiki
 
@@ -14,4 +14,4 @@ type: text/vnd.tiddlywiki
 # Navigate to http://localhost:8080 to edit documentation
 # To rebuild the documentation for SATurn run
 #>tiddlywiki saturn --build index
-#>outputs to docs/saturn/output/index.html
+#>outputs to docs/index.html
