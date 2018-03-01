@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>common.saturn</DisplayName>
+    <Description>Provides all platform neutral SATurn components</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+    <Licenses>
+        <License name="SATurn Core" file="LICENSE" />
+		<License name="Third party JS libraries" file="LICENSE_THIRD_PARTY" />
+    </Licenses>
+    <Default>true</Default>
+	
+</Package>

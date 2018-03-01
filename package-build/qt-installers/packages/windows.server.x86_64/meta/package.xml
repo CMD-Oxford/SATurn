@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>windows.server.x86_64</DisplayName>
+    <Description>Provides NodeJS and Redis environment for SATurn</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+	<Default>true</Default>
+    <Licenses>
+        <License name="NodeJS" file="LICENSE_NODEJS" />
+        <License name="Redis" file="LICENSE_REDIS" />
+        <License name="Node Libraries" file="NODE_LICENSES" />
+    </Licenses>
+</Package>

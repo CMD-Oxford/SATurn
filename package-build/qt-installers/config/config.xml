@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>SATurn</Name>
+    <Version>1.0.0</Version>
+    <Title>SATurn Installer</Title>
+    <Publisher>SGC</Publisher>
+    <StartMenuDir>SATurn</StartMenuDir>
+    <TargetDir>@HomeDir@/SATurn</TargetDir>
+	<Logo>logo.png</Logo>
+    <RunProgram>@TargetDir@/build/qt/Saturn.exe</RunProgram>
+    <RunProgramArguments>
+        <Argument>@TargetDir@/build</Argument>
+        <Argument>http://localhost:8091</Argument>
+		<Argument>ALL</Argument>
+		<Argument>--disable-web-security</Argument>
+    </RunProgramArguments>
+    <RunProgramDescription>SATurn</RunProgramDescription>
+</Installer>
