@@ -1,0 +1,17 @@
+created: 20180301144712753
+modified: 20180301145452663
+title: Internal: Configuring documentation environment
+type: text/vnd.tiddlywiki
+
+# Install [[NodeJS|https://nodejs.org/en/]]
+# Install [[Yarn|https://yarnpkg.com/en/]]
+# Install TiddlyWiki
+#>yarn global add tiddlywiki@5.1.4
+# Install theme template
+#>cd docs<br/>git clone https://github.com/ddamerell53/tw5-material-theme.git<br/>mv tw5-material-theme saturn
+# Run TiddlyWiki server
+#>tiddlywiki saturn --server
+# Navigate to http://localhost:8080 to edit documentation
+# To rebuild the documentation for SATurn run
+#>tiddlywiki saturn --build index
+#>outputs to docs/saturn/output/index.html
