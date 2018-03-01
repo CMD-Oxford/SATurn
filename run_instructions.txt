@@ -1,0 +1,15 @@
+#1 Open IntelliJ terminal/console
+#2 cd build/bin
+#3 rundebugsaturn.bat
+#4 Then go to localhost:8091 in your web-browser
+
+To refresh code running in the web-browser
+
+#1 Press F12
+#2 Hold-down the page refresh button and click "Empty cache & hard reload"
+
+To refresh code running on the server
+
+#1 Type Ctrl+C into the terminal running the server along with "Y + Enter"
+#2 cd bin
+#3 rundebugsaturn.bat

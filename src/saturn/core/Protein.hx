@@ -1,6 +1,6 @@
 /*
 * SATURN (Sequence Analysis Tool - Ultima regula natura)
-* Written in 2018 by David Damerell <david.damerell@sgc.ox.ac.uk>, Claire Strain-Damerell <claire.damerell@sgc.ox.ac.uk>, Brian Marsden <brian.marsden@sgc.ox.ac.uk>
+* Written in 2018 by David Damerell <david.damerell@sgc.ox.ac.uk>, Claire Strain-Damerell <claire.damerell@sgc.ox.ac.uk>, Stephen Joyce <stephen.joyce@ndorms.ox.ac.uk, Brian Marsden <brian.marsden@sgc.ox.ac.uk>
 *
 * To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this
 * software to the public domain worldwide. This software is distributed without any warranty. You should have received a
@@ -55,6 +55,58 @@ class Protein extends Molecule{
         'Y'=>-1.3
     ];
 
+    /**
+    * Lookup for pKa values for each amino acid used in pI calc.
+    * Reference: Bjellqvist, B., Hughes, G. J., Pasquali, C., Paquet, N., Ravier, F., Sanchez, J.-C., Frutiger, S. and Hochstrasser, D. (1993), The focusing positions of polypeptides in immobilized pH gradients can be predicted from their amino acid sequences. ELECTROPHORESIS, 14: 1023–1031. doi:10.1002/elps.11501401163
+    **/
+
+    var lu_pKa = [
+    'D'=>4.05,
+    'E'=>4.45,
+    'H'=>5.98,
+    'Y'=>10,
+    'K'=>10.4,
+    'R'=>12.5,
+    'C'=>9,
+    'N-Term'=>8,
+    'C-Term'=>3.55
+];
+
+    /**
+    * Lookup for pKa values for each amino acid used in pI calc
+    **/
+
+    var lu_charge = [
+        'D'=>-1,
+        'E'=>-1,
+        'H'=>1,
+        'Y'=>-1,
+        'K'=>1,
+        'R'=>1,
+        'C'=>-1,
+        'N-Term'=>1,
+        'C-Term'=>-1
+    ];
+
+    /**
+    *Lookup for extinction coefficient values values for each amino acid used in Extinction Coefficienct Caluclation
+    *Reference: Pace, C. N., Vajdos, F., Fee, L., Grimsley, G., & Gray, T. (1995). How to measure and predict the molar absorption coefficient of a protein. Protein Science : A Publication of the Protein Society, 4(11), 2411–2423.
+    **/
+
+    var lu_extinction = [
+        'Y'=>1490,
+        'W'=>5500,
+        'C'=>125, /**Cystine not Cysteine**/
+    ];
+
+    /**
+    * Set threshold for pI calculation (i.e. the pH where charge falls between 0.5 and -0.5) and the min and max pH values
+    **/
+
+    var threshold : Float = 0.1;
+    var min_pH : Float = 3;
+    var max_pH: Float = 13;
+
     override public function setSequence(sequence : String){
         super.setSequence(sequence);
 
@@ -82,14 +134,6 @@ class Protein extends Molecule{
                 d.proteinSequenceUpdated(this.sequence);
             }
         }
-    }
-
-    public function getPkA() : Float {
-        var pka : Float = 0.;
-
-
-
-        return pka;
     }
 
     public function getHydrophobicity() : Float{
@@ -271,4 +315,129 @@ class Protein extends Molecule{
             }
         });
     }
+
+    /**
+    getaminoAcidCharge calculates the charge of an amino acid
+    **/
+
+    public function getAminoAcidCharge(aa : String, mid_pH : Float): Float {
+        var aminoAcid = aa;
+        var pH = mid_pH;
+        var ratio = 1/(1+Math.pow(10,(pH - lu_pKa.get(aminoAcid))));
+        if (lu_charge.get(aminoAcid) == 1)
+            return ratio;
+        else
+            return ratio - 1;
+    };
+
+    /**
+    *  getProteinCharge calculates the whole protein at a certain pH
+    **/
+
+    public function getProteinCharge(mid_pH : Float): Float {
+        var seqLength = this.sequence.length;
+        var proteinSequence = this.sequence;
+
+        var aa = 'N-Term';
+        var proteinCharge = getAminoAcidCharge(aa, mid_pH);
+
+        aa = 'C-Term';
+        proteinCharge += getAminoAcidCharge(aa, mid_pH);
+
+        for(i in 0...seqLength){
+            aa = proteinSequence.substr(i,1);
+
+            if(this.lu_pKa.exists(aa)){
+                proteinCharge += getAminoAcidCharge(aa, mid_pH);
+            }
+        };
+
+        return proteinCharge;
+    };
+
+    /**
+    getpI Calculates the pI of a protein, calculates the pH when charge falls between -threshold and +threshold.
+    **/
+
+    public function getpI(): Float {
+        var proteinSequence = this.sequence;
+
+        while (true){
+            var mid_pH = 0.5 * (max_pH + min_pH);
+            var proteinCharge = getProteinCharge(mid_pH);
+
+            if (proteinCharge > threshold){
+                min_pH = mid_pH;
+            }else if (proteinCharge < -threshold){
+                max_pH = mid_pH;
+            }else{
+                return mid_pH;
+            }
+        }
+    }
+
+    /**
+    getExtinctionNonReduced calculates the extinction coefficient of a protein, assuming that all pairs of cystein residues form disulphide bonds.
+    Reference: Source: Pace, C. N., Vajdos, F., Fee, L., Grimsley, G., & Gray, T. (1995). How to measure and predict the molar absorption coefficient of a protein. Protein Science : A Publication of the Protein Society, 4(11), 2411–2423.
+    **/
+
+    public function getExtinctionNonReduced(): Float {
+        var proteinSequence = this.sequence;
+        var seqLength = this.sequence.length;
+        var aa : String;
+        var extinctionNonReduced : Float = 0.0;
+        var numberCysteines : Float = 0.0;
+        var pairsCysteins : Float = 0.0;
+
+        for(i in 0...seqLength){
+            aa = proteinSequence.substr(i,1);
+
+            if(this.lu_extinction.exists(aa) && aa != 'C'){
+                extinctionNonReduced += lu_extinction.get(aa);
+            }
+
+            if(aa == 'C'){
+                numberCysteines += 1;
+            }
+        };
+
+        if ((numberCysteines%2) == 0) {
+            pairsCysteins = (numberCysteines)/2;
+        }
+        else {
+            pairsCysteins = ((numberCysteines)/2)-0.5;
+            }
+
+        extinctionNonReduced += pairsCysteins*lu_extinction.get('C');
+
+        return extinctionNonReduced;
+    }
+
+    /**
+    getExtinctionNonReduced calculates the extinction coefficient of a protein, assuming that no disulphide bonds are formed
+    Reference: Source: Pace, C. N., Vajdos, F., Fee, L., Grimsley, G., & Gray, T. (1995). How to measure and predict the molar absorption coefficient of a protein. Protein Science : A Publication of the Protein Society, 4(11), 2411–2423.
+    **/
+
+    public function getExtinctionReduced(): Float {
+        var proteinSequence = this.sequence;
+        var seqLength = this.sequence.length;
+        var aa : String;
+        var extinctionReduced : Float = 0.0;
+
+        for(i in 0...seqLength){
+            aa = proteinSequence.substr(i,1);
+
+            if(this.lu_extinction.exists(aa) && aa != 'C') {
+                extinctionReduced += lu_extinction.get(aa);
+            }
+        };
+
+        return extinctionReduced;
+    }
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 /*
 * SATURN (Sequence Analysis Tool - Ultima regula natura)
-* Written in 2018 by David Damerell <david.damerell@sgc.ox.ac.uk>, Claire Strain-Damerell <claire.damerell@sgc.ox.ac.uk>, Brian Marsden <brian.marsden@sgc.ox.ac.uk>
+* Written in 2018 by David Damerell <david.damerell@sgc.ox.ac.uk>, Claire Strain-Damerell <claire.damerell@sgc.ox.ac.uk>, Stephen Joyce <stephen.joyce@ndorms.ox.ac.uk, Brian Marsden <brian.marsden@sgc.ox.ac.uk>
 *
 * To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this
 * software to the public domain worldwide. This software is distributed without any warranty. You should have received a
@@ -475,9 +475,23 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
                 id : folderName + " : HP"
             });
 
-            if(folderName == 'Selected'){
+            currentStats.appendChild({
+                text : "pI : ",
+                leaf : true,
+                id : folderName + " : pI"
+            });
 
-            }
+            currentStats.appendChild({
+                text : "E (R) : ",
+                leaf : true,
+                id : folderName + " : E (R)",
+            });
+
+            currentStats.appendChild({
+                text : "E (NR) : ",
+                leaf : true,
+                id : folderName + " : E (NR)",
+            });
 		}
 
         Ext.resumeLayouts(true);
@@ -533,6 +547,39 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
                 node.set('text',"HP : "+hp);
                 node.commit();
             }
+
+            node  = dataStore.getNodeById('Current' + " : pI");
+            if(node != null){
+                var pI = 0.;
+                if(sequence.length > 0){
+                    pI = MathUtils.sigFigs(new Protein(sequence).getpI(),2);
+                }
+
+                node.set('text',"pI : "+pI);
+                node.commit();
+            }
+
+            node  = dataStore.getNodeById('Current' + " : E (R)");
+            if(node != null){
+                var E = 0.;
+                if(sequence.length > 0){
+                    E = MathUtils.sigFigs(new Protein(sequence).getExtinctionReduced(),2);
+                }
+
+                node.set('text',"E (R): "+E);
+                node.commit();
+            }
+
+            node  = dataStore.getNodeById('Current' + " : E (NR)");
+            if(node != null){
+                var E = 0.;
+                if(sequence.length > 0){
+                    E = MathUtils.sigFigs(new Protein(sequence).getExtinctionNonReduced(),2);
+                }
+
+                node.set('text',"E (NR): "+E);
+                node.commit();
+            }
         }
 
         node = dataStore.getNodeById('Selected' + " : Length");
@@ -564,6 +611,36 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
                     }
 
                     node.set('text',"HP : "+hp);
+                    node.commit();
+
+                    node  = dataStore.getNodeById('Selected' + " : pI");
+
+                    var pI = 0.;
+                    if(selSeq.length > 0){
+                        pI = MathUtils.sigFigs(new Protein(selSeq).getpI(),2);
+                    }
+
+                    node.set('text',"pI : "+pI);
+                    node.commit();
+
+                    node  = dataStore.getNodeById('Selected' + " : E (R)");
+
+                    var E = 0.;
+                    if(selSeq.length > 0){
+                        E = MathUtils.sigFigs(new Protein(selSeq).getExtinctionReduced(),2);
+                    }
+
+                    node.set('text',"E (R): "+E);
+                    node.commit();
+
+                    node  = dataStore.getNodeById('Selected' + " : E (NR)");
+
+                    var E = 0.;
+                    if(selSeq.length > 0){
+                        E = MathUtils.sigFigs(new Protein(selSeq).getExtinctionNonReduced(),2);
+                    }
+
+                    node.set('text',"E (NR): "+E);
                     node.commit();
                 }
             }
