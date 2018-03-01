@@ -43,7 +43,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 " />
 <link id="faviconLink" rel="shortcut icon" href="favicon.ico">
-<title>My TiddlyWiki — a non-linear personal web notebook</title>
+<title>SATurn — Modular Bioinformatics Framework</title>
 <!--~~ This is a Tiddlywiki file. The points of interest in the file are marked with this pattern ~~--><!--~~ Raw markup ~~-->
 
 </head>
@@ -123,9 +123,15 @@ Error message and password prompt
 
 <li>$:/core</li>
 
+<li>$:/DefaultTiddlers</li>
+
 <li>$:/isEncrypted</li>
 
 <li>$:/palette</li>
+
+<li>$:/SiteSubtitle</li>
+
+<li>$:/SiteTitle</li>
 
 <li>$:/StoryList</li>
 
@@ -137,7 +143,13 @@ Error message and password prompt
 
 <li>$:/themes/tiddlywiki/vanilla</li>
 
+<li>Internal: Building standalone packages</li>
+
 <li>Internal: Configuring documentation environment</li>
+
+<li>Internal: Developer Guide</li>
+
+<li>Welcome</li>
 
 </ul>
 </p>
@@ -5151,13 +5163,22 @@ exports.startup = function() {
     }
 }</pre>
 </div>
+<div created="20180301161331079" modified="20180301161335015" title="$:/DefaultTiddlers" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>Welcome</pre>
+</div>
 <div title="$:/isEncrypted" revision="0" bag="default">
 <pre>no</pre>
 </div>
 <div title="$:/palette" revision="0" bag="default">
 <pre>$:/themes/bcse/material/palettes/Indigo</pre>
 </div>
-<div list="GettingStarted" title="$:/StoryList" revision="1" bag="default">
+<div created="20180301161538609" modified="20180301161609667" title="$:/SiteSubtitle" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>Modular Bioinformatics Framework</pre>
+</div>
+<div created="20180301161531035" modified="20180301161535659" title="$:/SiteTitle" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>SATurn</pre>
+</div>
+<div list="Welcome" title="$:/StoryList" revision="1" bag="default">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json" revision="0" bag="default">
@@ -5442,6 +5463,18 @@ exports.startup = function() {
     }
 }</pre>
 </div>
+<div created="20180301155717796" modified="20180301160926366" title="Internal: Building standalone packages" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>The [[QT Installer Framework|http://doc.qt.io/qtinstallerframework/index.html]] is used to build standalone installer packages.  Before rebuilding the installers make sure that the packages in package-build/qt-installers/packages are current.  In particular make sure that you have updated the following files
+
+&gt;cp build/SaturnServer.js packag-build/qt-installers/packages/common.saturn/data/build/SaturnServer.js
+&gt;cp build/public/static/js/SaturnClient.js packag-build/qt-installers/packages/common.saturn/data/build/public/static/js/SaturnClient.js
+
+! Windows Packages
+&gt;cd package-build/qt-installers/
+&gt;build.bat
+
+The installer will be generated here: package-build/qt-installers/SATurn.exe</pre>
+</div>
 <div created="20180301144712753" modified="20180301154113252" title="Internal: Configuring documentation environment" type="text/vnd.tiddlywiki" revision="0" bag="default">
 <pre># Install [[NodeJS|https://nodejs.org/en/]]
 # Install [[Yarn|https://yarnpkg.com/en/]]
@@ -5455,6 +5488,13 @@ exports.startup = function() {
 # To rebuild the documentation for SATurn run
 #&gt;tiddlywiki saturn --build index
 #&gt;outputs to docs/index.html</pre>
+</div>
+<div created="20180301161035796" modified="20180301161209221" title="Internal: Developer Guide" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>#[[Internal: Configuring documentation environment]]
+#[[Internal: Building standalone packages]]</pre>
+</div>
+<div created="20180301161348796" modified="20180301161518217" title="Welcome" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>Developing SATurn in [[Start Here|Internal: Developer Guide]]</pre>
 </div>
 
 </div>
