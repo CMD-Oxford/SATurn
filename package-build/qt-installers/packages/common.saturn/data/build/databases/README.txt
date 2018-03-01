@@ -1,0 +1,1 @@
+Databases should be stored in this directory (i.e. BLAST databases)
