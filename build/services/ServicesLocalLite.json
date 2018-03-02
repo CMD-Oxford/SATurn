@@ -79,6 +79,7 @@
     },
     "port" : 8091,
     "redis_port" : 6379,
+	"hostname": "127.0.0.1",
     "origins" : "http://localhost:*/",
      "index_page":"/static/SaturnClient.html",
     "socket_plugins": [

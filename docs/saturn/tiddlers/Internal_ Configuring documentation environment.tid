@@ -1,5 +1,5 @@
 created: 20180301144712753
-modified: 20180301154113252
+modified: 20180302100054314
 title: Internal: Configuring documentation environment
 type: text/vnd.tiddlywiki
 
@@ -7,7 +7,7 @@ type: text/vnd.tiddlywiki
 # Install [[Yarn|https://yarnpkg.com/en/]]
 # Install TiddlyWiki
 #>yarn global add tiddlywiki@5.1.4
-# Install theme template
+# Install theme template (only required if rebuilding from scratch)
 #>cd docs<br/>git clone https://github.com/ddamerell53/tw5-material-theme.git<br/>mv tw5-material-theme saturn
 # Run TiddlyWiki server
 #>tiddlywiki saturn --server

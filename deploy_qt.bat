@@ -1,1 +1,2 @@
-C:\Qt5_10\5.10.0\msvc2017_64\bin\windeployqt.exe --qmldir
+C:\Qt5_10\5.10.0\msvc2017_64\bin\windeployqt.exe --qmldir src_qt/Launcher src_qt/build-Saturn-Desktop_Qt_5_10_0_MSVC2017_64bit-Release/release/Saturn.exe
+robocopy /E  src_qt\build-Saturn-Desktop_Qt_5_10_0_MSVC2017_64bit-Release\release\ build\qt

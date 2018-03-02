@@ -143,11 +143,17 @@ Error message and password prompt
 
 <li>$:/themes/tiddlywiki/vanilla</li>
 
+<li>Internal: Building QT application</li>
+
 <li>Internal: Building standalone packages</li>
+
+<li>Internal: Configuring development environment</li>
 
 <li>Internal: Configuring documentation environment</li>
 
 <li>Internal: Developer Guide</li>
+
+<li>qt_creator_compile_buttons.png</li>
 
 <li>Welcome</li>
 
@@ -5463,6 +5469,20 @@ exports.startup = function() {
     }
 }</pre>
 </div>
+<div created="20180302080521543" modified="20180302083947682" title="Internal: Building QT application" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>! Windows
+# Install Microsoft Visual Studio 2017 (Community editor is fine)
+#&gt;SaturnDeveloper.exe/developer_tools/VisualStudioBootStrap.exe
+# Install QT for MSVC 2017 and be sure to include QT WebEngine and QT Creator
+#&gt;SaturnDeveloper.exe/developer_tools/qt-unified-windows-x86-3.0.2-online.exe
+# Open QT Creator
+#&gt;File-&gt;Open Project&lt;br/&gt;Navigate to saturn/src_qt/Launcher/Saturn.pro
+# Switch to the &quot;Release&quot; build &amp; click on the green play button to compile
+#&gt;[img[qt_creator_compile_buttons.png]]
+# Create deployable version
+#&gt;deploy_qt.bat&lt;br/&gt;(copies deployable version to build/qt along with all required QT libraries)
+</pre>
+</div>
 <div created="20180301155717796" modified="20180301160926366" title="Internal: Building standalone packages" type="text/vnd.tiddlywiki" revision="0" bag="default">
 <pre>The [[QT Installer Framework|http://doc.qt.io/qtinstallerframework/index.html]] is used to build standalone installer packages.  Before rebuilding the installers make sure that the packages in package-build/qt-installers/packages are current.  In particular make sure that you have updated the following files
 
@@ -5475,12 +5495,42 @@ exports.startup = function() {
 
 The installer will be generated here: package-build/qt-installers/SATurn.exe</pre>
 </div>
-<div created="20180301144712753" modified="20180301154113252" title="Internal: Configuring documentation environment" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<div created="20180302100631488" modified="20180302103255552" title="Internal: Configuring development environment" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>&lt;font color='red'&gt;Before following these instructions please consider whether you need the full SATurn development environment configured. For example you can create Python extensions without needing the full environment installed&lt;/font&gt;
+
+! Windows
+The full SATurn development environment is fairly complicated to install from scratch which is why we provide the package SaturnDeveloper.exe which includes an almost complete environment which you can use to make changes to SATurn and build deployment packages to give to people
+
+# Download SATurnDeveloper.exe and install to a location you have write access to
+# Configure environment variables&lt;br/&gt;File-&gt;Explorer-&gt;Right Click (This PC)-&gt;Advanced System Settings-&gt;EnvironmentVariables
+##Add Haxe &amp; Neko to PATH
+##&gt;$SATURN\HaxeToolkit\haxe&lt;br/&gt;$SATURN\HaxeToolkit\neko
+## Create NEKO_INSTPATH environment variable
+##&gt;NEKO_INSTPATH =&gt; C:\HaxeToolkit\neko
+## Create NEKOPATH environment variable
+##&gt;NEKOPATH C:\HaxeToolkit\neko
+# Install IntelliJ
+#&gt;developer_tools/ideaIC-2017.3.4.exe
+# Add the Haxe plugin to IntelliJ
+#&gt;File-&gt;Settings-&gt;Plugin-&gt;Browse Repositories&lt;br/&gt;Install the Haxe plugin
+# Open the SATurn project in IntelliJ
+#&gt; File-&gt;Open&lt;br/&gt;Navigate to the folder you extracted SATurn to
+# Test Haxe transpile within IntelliJ
+#&gt;Ctrl+F9
+
+If you plan to build packages to distribute to people then you will also need to install the following.
+
+# Install developer_tools/VisualStudioBootStrap.exe
+# Install developer_tools/qt-unified-windows-x86-3.0.2-online.exe
+#&gt;Install 5.10 for MSVC 2017 with QWebEngine and QT Creator
+# Install developer_tools/QtInstallerFramework-win-x86.exe</pre>
+</div>
+<div created="20180301144712753" modified="20180302100054314" title="Internal: Configuring documentation environment" type="text/vnd.tiddlywiki" revision="0" bag="default">
 <pre># Install [[NodeJS|https://nodejs.org/en/]]
 # Install [[Yarn|https://yarnpkg.com/en/]]
 # Install TiddlyWiki
 #&gt;yarn global add tiddlywiki@5.1.4
-# Install theme template
+# Install theme template (only required if rebuilding from scratch)
 #&gt;cd docs&lt;br/&gt;git clone https://github.com/ddamerell53/tw5-material-theme.git&lt;br/&gt;mv tw5-material-theme saturn
 # Run TiddlyWiki server
 #&gt;tiddlywiki saturn --server
@@ -5489,12 +5539,17 @@ The installer will be generated here: package-build/qt-installers/SATurn.exe</pr
 #&gt;tiddlywiki saturn --build index
 #&gt;outputs to docs/index.html</pre>
 </div>
-<div created="20180301161035796" modified="20180301161209221" title="Internal: Developer Guide" type="text/vnd.tiddlywiki" revision="0" bag="default">
-<pre>#[[Internal: Configuring documentation environment]]
-#[[Internal: Building standalone packages]]</pre>
+<div created="20180301161035796" modified="20180302100603489" title="Internal: Developer Guide" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>#[[Configuring development environment|Internal: Configuring development environment]]
+#[[Configuring documentation environment|Internal: Configuring documentation environment]]
+#[[Building standalone packages|Internal: Building standalone packages]]
+#[[Building QT application|Internal: Building QT application]]</pre>
 </div>
-<div created="20180301161348796" modified="20180301161518217" title="Welcome" type="text/vnd.tiddlywiki" revision="0" bag="default">
-<pre>Developing SATurn in [[Start Here|Internal: Developer Guide]]</pre>
+<div created="20180302082505037" modified="20180302082516677" title="qt_creator_compile_buttons.png" type="image/png" revision="0" bag="default">
+<pre>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</pre>
+</div>
+<div created="20180301161348796" modified="20180301222103911" title="Welcome" type="text/vnd.tiddlywiki" revision="0" bag="default">
+<pre>SATurn developer?  [[Start Here|Internal: Developer Guide]]</pre>
 </div>
 
 </div>

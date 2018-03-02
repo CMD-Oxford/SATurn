@@ -54,7 +54,11 @@ int main(int argc, char *argv[]){
         QProcess *redis = new QProcess();
         redis->setWorkingDirectory(redisDir);
         redis->setProcessChannelMode(QProcess::ForwardedChannels);
-        redis->start(redisProgram);
+
+        QStringList redisArguments;
+        redisArguments << redisDir + "\\redis.conf";
+
+        redis->start(redisProgram, redisArguments);
 
         //Start NodeJS
         QString nodeDir = baseDir + "\\bin\\node";

@@ -77,7 +77,7 @@ class SaturnServer {
     }
 
     public function getHostname() : String{
-        return '127.0.0.1';
+        return getServerConfig().hostname;
     }
 
     public function getServerConfig() : Dynamic {
@@ -135,7 +135,7 @@ class SaturnServer {
             beforeListen();
         }
 
-        server.listen(port, function () {
+        server.listen(port, serverConfig.hostname, function () {
             debug('Server listening at ' + server.url);
         });
 
