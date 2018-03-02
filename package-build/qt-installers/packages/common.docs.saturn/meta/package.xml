@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>common.docs.saturn</DisplayName>
+    <Description>Provides all platform doc SATurn components</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+    <Default>true</Default>
+	
+</Package>

@@ -2,6 +2,7 @@
 ::yarn licenses generate-disclaimer > ..\..\NODE_LICENSES
 ::robocopy /E ..\..\..\build packages\SATurn\data\build
 robocopy /E ..\..\build packages\common.saturn\data\build /xd "bin" "qt" "node_modules"
+robocopy /E ..\..\docs packages\common.docs.saturn\data\docs
 robocopy /E ..\..\build\qt packages\windows.qt.x86_64\data\build\qt
 robocopy /E ..\..\build\bin\node packages\windows.server.x86_64\data\build\bin\node
 robocopy /E ..\..\build\bin\redis packages\windows.server.x86_64\data\build\bin\redis
