@@ -1,0 +1,33 @@
+created: 20180302100631488
+modified: 20180302103255552
+title: Internal: Configuring development environment
+type: text/vnd.tiddlywiki
+
+<font color='red'>Before following these instructions please consider whether you need the full SATurn development environment configured. For example you can create Python extensions without needing the full environment installed</font>
+
+! Windows
+The full SATurn development environment is fairly complicated to install from scratch which is why we provide the package SaturnDeveloper.exe which includes an almost complete environment which you can use to make changes to SATurn and build deployment packages to give to people
+
+# Download SATurnDeveloper.exe and install to a location you have write access to
+# Configure environment variables<br/>File->Explorer->Right Click (This PC)->Advanced System Settings->EnvironmentVariables
+##Add Haxe & Neko to PATH
+##>$SATURN\HaxeToolkit\haxe<br/>$SATURN\HaxeToolkit\neko
+## Create NEKO_INSTPATH environment variable
+##>NEKO_INSTPATH => C:\HaxeToolkit\neko
+## Create NEKOPATH environment variable
+##>NEKOPATH C:\HaxeToolkit\neko
+# Install IntelliJ
+#>developer_tools/ideaIC-2017.3.4.exe
+# Add the Haxe plugin to IntelliJ
+#>File->Settings->Plugin->Browse Repositories<br/>Install the Haxe plugin
+# Open the SATurn project in IntelliJ
+#> File->Open<br/>Navigate to the folder you extracted SATurn to
+# Test Haxe transpile within IntelliJ
+#>Ctrl+F9
+
+If you plan to build packages to distribute to people then you will also need to install the following.
+
+# Install developer_tools/VisualStudioBootStrap.exe
+# Install developer_tools/qt-unified-windows-x86-3.0.2-online.exe
+#>Install 5.10 for MSVC 2017 with QWebEngine and QT Creator
+# Install developer_tools/QtInstallerFramework-win-x86.exe

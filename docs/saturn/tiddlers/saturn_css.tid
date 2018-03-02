@@ -1,0 +1,47 @@
+created: 20180302131133460
+modified: 20180302134119266
+tags: $:/tags/Stylesheet
+title: saturn_css
+type: text/vnd.tiddlywiki
+
+.welcome_title_img {
+    float: right; margin-left: 20px; 
+}
+
+.welcome_content {
+    float: left; min-width: 150px; 
+    max-width:48%;
+}
+
+.welcome_content_text {
+    text-align: justify;
+    margin-top: 10px;
+    
+}
+
+@media only screen and (max-width: 1150px) {
+    .welcome_title_img {
+         float: initial; margin-left: 20px; 
+         width:50%;
+     }
+
+    .welcome_content {
+         float: initial; min-width: 150px;
+         max-width:initial;
+     }
+
+    .welcome_content_text {
+          
+    }
+}
+
+.welcome_button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white !important;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}

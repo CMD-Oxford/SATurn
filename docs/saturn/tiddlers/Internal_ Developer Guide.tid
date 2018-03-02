@@ -1,0 +1,9 @@
+created: 20180301161035796
+modified: 20180302100603489
+title: Internal: Developer Guide
+type: text/vnd.tiddlywiki
+
+#[[Configuring development environment|Internal: Configuring development environment]]
+#[[Configuring documentation environment|Internal: Configuring documentation environment]]
+#[[Building standalone packages|Internal: Building standalone packages]]
+#[[Building QT application|Internal: Building QT application]]

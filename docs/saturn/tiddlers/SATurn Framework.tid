@@ -1,0 +1,40 @@
+created: 20180301161348796
+modified: 20180302134442928
+title: SATurn Framework
+type: text/vnd.tiddlywiki
+
+<div class="welcome_content">
+<$link to="User Guide" class="welcome_button">User Guide</$link>
+<$link to="Internal: Developer Guide" class="welcome_button">Developer Guide</$link><br/>
+<div style="margin-top:10px">
+<a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.4/SATurn.exe">Windows x86_64</a>
+ <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.4/SATurnDeveloper.exe">Windows-Dev x86_64</a>
+</div>
+<div class="welcome_content_text">
+SATurn is a modular, open-source, bioinformatics platform, designed to specifically address the problems of maintenance and longevity commonly associated with the development of simple tools funded by academic research grants.  Applications developed in SATurn can be deployed as web-based tools, standalone applications, or hybrid tools which have the benefits of both.  Within the Structural Genomics Consortium we have utilized SATurn to create a bioinformatics portal which is visited by a diverse group of scientists including those interested in structural biology, clon-ing, & chemical biology.
+
+<h2>Key Features</h2>
+<ul>
+<li>Import / Export DNA & Protein sequences</li> 
+<li>View common protein sequence annotations (i.e. secondary structure)</li>
+<li>Translate & Edit DNA sequences</li>
+<li>BLAST sequences against in-house databases</li>
+<li>Generate multiple sequence alignments and phylogenetic trees</li>
+<li>View protein structures</li>
+<li>View compound structures</li>
+<li>View ABI trace files (automatic alignment and mutation detection)</li>
+<li>View glycan structures</li>
+<li>Script editor built into interface</li>
+</ul>
+<h2>Platform</h2>
+<ul>
+<li>HTML5 compliant (no plugins required)</li>
+<li>Available either as a standalone application or a hosted install</li>
+<li>Written in the Haxe programming language</li>
+<li>Extendable using either JavaScript or Haxe</li>
+<li>SATurn core code is released under CC0</li>
+</ul>
+</div>
+</div>
+[img width=50% class="welcome_title_img" [img_saturn_main_screenshot.png]]
+<div style="clear:both"/>

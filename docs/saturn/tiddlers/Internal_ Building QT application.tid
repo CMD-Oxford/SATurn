@@ -1,0 +1,16 @@
+created: 20180302080521543
+modified: 20180302083947682
+title: Internal: Building QT application
+type: text/vnd.tiddlywiki
+
+! Windows
+# Install Microsoft Visual Studio 2017 (Community editor is fine)
+#>SaturnDeveloper.exe/developer_tools/VisualStudioBootStrap.exe
+# Install QT for MSVC 2017 and be sure to include QT WebEngine and QT Creator
+#>SaturnDeveloper.exe/developer_tools/qt-unified-windows-x86-3.0.2-online.exe
+# Open QT Creator
+#>File->Open Project<br/>Navigate to saturn/src_qt/Launcher/Saturn.pro
+# Switch to the "Release" build & click on the green play button to compile
+#>[img[qt_creator_compile_buttons.png]]
+# Create deployable version
+#>deploy_qt.bat<br/>(copies deployable version to build/qt along with all required QT libraries)

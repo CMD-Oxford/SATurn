@@ -1,0 +1,15 @@
+created: 20180301155717796
+modified: 20180301160926366
+title: Internal: Building standalone packages
+type: text/vnd.tiddlywiki
+
+The [[QT Installer Framework|http://doc.qt.io/qtinstallerframework/index.html]] is used to build standalone installer packages.  Before rebuilding the installers make sure that the packages in package-build/qt-installers/packages are current.  In particular make sure that you have updated the following files
+
+>cp build/SaturnServer.js packag-build/qt-installers/packages/common.saturn/data/build/SaturnServer.js
+>cp build/public/static/js/SaturnClient.js packag-build/qt-installers/packages/common.saturn/data/build/public/static/js/SaturnClient.js
+
+! Windows Packages
+>cd package-build/qt-installers/
+>build.bat
+
+The installer will be generated here: package-build/qt-installers/SATurn.exe
