@@ -1,0 +1,32 @@
+created: 20180305135140865
+modified: 20180305135144062
+title: Loading FASTA Copy / Paste
+type: text/vnd.tiddlywiki
+
+SATurn allows you to copy/paste FASTA directly onto either the Protein or DNA sequence editor window
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Copy FASTA (Ctrl + C)''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_fasta.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Launch new sequence editor''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_protein_editor_launch.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Left-click on sequence line and paste (Ctrl+V)''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_tp53_paste.png]]</td>
+  </tr>
+ </tbody>
+</table>

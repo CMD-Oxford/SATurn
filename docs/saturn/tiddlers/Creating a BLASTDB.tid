@@ -1,0 +1,12 @@
+created: 20180305110322934
+modified: 20180305110730755
+title: Creating a BLASTDB
+type: text/vnd.tiddlywiki
+
+SATurn includes the tool "makeblastdb" to convert FASTA files into BLAST index files.  To create a new BLAST DB or update an existing one follow the instructions below.
+
+# Save your sequences into a FASTA file (DNA or Protein) (see [[FASTA file format]])
+# Open a terminal and navigate to the SATurn installation directory (see [[Opening a Terminal]])
+# Run the following command
+#>bin/deployed_bin/makeblastdb.exe' -in my_sequences.fasta -dbtype nuc
+#>dbtype: "nucl" for DNA and "prot" for Protein

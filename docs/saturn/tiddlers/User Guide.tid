@@ -1,0 +1,11 @@
+created: 20180305103039051
+modified: 20180305104942982
+title: User Guide
+type: text/vnd.tiddlywiki
+
+# [[BLAST]]
+## [[Performing a simple BLAST]]
+## [[Configuring BLAST databases]]
+## [[Updating local BLAST databases]]
+# [[Clustal]]
+## [[Aligning sequences]]

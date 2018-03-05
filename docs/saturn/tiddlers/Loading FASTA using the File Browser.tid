@@ -1,0 +1,32 @@
+created: 20180305135204187
+modified: 20180305135205093
+title: Loading FASTA using the File Browser
+type: text/vnd.tiddlywiki
+
+When using the SATurn desktop application you can also open FASTA files by navigating to them using your systems native File Browser
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click File->Open->Open File''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_file_browser_fasta.png]]</td>
+  </tr>
+  <tr>
+     <td>''1. Click File->Open->Open File''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_file_open_browser.png]]</td>
+  </tr>
+  <tr>
+     <td>''Sequences after loading''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_drag_and_drop_fasta_after.png]]</td>
+  </tr>
+ </tbody>
+</table>

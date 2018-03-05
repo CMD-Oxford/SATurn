@@ -1,0 +1,35 @@
+created: 20180305112559444
+modified: 20180305130110846
+title: Retrieving from UniProtKB or NCBI
+type: text/vnd.tiddlywiki
+
+SATurn can automatically retrieve sequences based on UniProtKB accessions or NCBI gene IDs (latter is broken because of an API change on the NCBI web-site)
+
+!! Instructions
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on the Protein Editor button''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_protein_editor_launch.png]]</td>
+   </tr>
+    <tr>
+     <td>''2. Enter UniProtKB accession or the NCBI Gene ID''<br/>(comma separated list)</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_uniprot_search_term.png]]</td>
+  </tr>
+ <tr>
+     <td>''3. Click fetch NCBI Gene or UniProtKB''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_uniprot_fetch_menu.png]]</td>
+  </tr>
+ </tbody>
+</table>

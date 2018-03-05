@@ -1,0 +1,28 @@
+created: 20180305135154579
+modified: 20180305135156124
+title: Loading FASTA Drag / Drop
+type: text/vnd.tiddlywiki
+
+You can drag/drop a FASTA file containing multiple sequences onto the SATurn workspace panel
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Drag and drop a FASTA file onto the workspace panel''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_drag_drop_fasta.png]]</td>
+  </tr>
+ <tr>
+     <td>''Sequences after loading''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_drag_and_drop_fasta_after.png]]</td>
+  </tr>
+ </tbody>
+</table>

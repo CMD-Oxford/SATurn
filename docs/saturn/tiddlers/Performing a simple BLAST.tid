@@ -1,0 +1,27 @@
+created: 20180305103728877
+modified: 20180305104732547
+title: Performing a simple BLAST
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1.Load a Protein or DNA sequence (see [[Loading Sequences]])''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_p53_protein_editor.png]]</td>
+  </tr>
+  <tr>
+     <td>''2.Click on BLAST and select the required database (see [[Configuring BLAST databases]])''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_p53_blast_options.png]]</td>
+  </tr>
+ </tbody>
+</table>

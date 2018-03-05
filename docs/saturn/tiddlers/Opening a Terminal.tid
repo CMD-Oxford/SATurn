@@ -1,0 +1,11 @@
+created: 20180305110754987
+modified: 20180305110841779
+title: Opening a Terminal
+type: text/vnd.tiddlywiki
+
+!! Windows
+# Click on Start (Windows logo on start menu)
+# Type CMD
+# Click on CMD.exe
+# Navigate to SATurn installation directory
+#> cd $saturn_dir

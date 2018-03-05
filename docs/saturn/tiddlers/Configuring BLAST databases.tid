@@ -1,0 +1,21 @@
+created: 20180305104954778
+modified: 20180305110211882
+title: Configuring BLAST databases
+type: text/vnd.tiddlywiki
+
+BLAST databases are configured in the start-up configuration of SATurn.  To add or remove BLAST databases follow the instructions below and restart the SATurn application.
+
+!! Adding a BLAST database
+# Open $SATURN/build/services/ServicesLocalLite.json in your editor of choice
+# Find the BLAST_DB configuration section and add a block as shown below
+#>``  "Constructs (DNA)" :{
+       "dbtype": "nucl",
+       "dbpath": "databases/constructs_nucleotide.fasta",
+       "prog": "blastn"
+    }``
+#>dbtype: "nucl" for DNA or "prot" for Protein<br/>prog: "blastn" for DNA or "blastp" for Protein<br/>dbpath: file path to BLASTDB (see [[Creating a BLASTDB]]) - can be relative
+
+!! Remove a BLAST database
+# Open $SATURN/build/services/ServicesLocalLite.json in your editor of choice
+# Find the BLAST_DB configuration section and add a block as shown below
+# Remove the block for the database you want to remove
