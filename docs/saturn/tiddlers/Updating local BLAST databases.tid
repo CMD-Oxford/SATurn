@@ -1,0 +1,8 @@
+created: 20180305143235139
+modified: 20180305143641391
+title: Updating local BLAST databases
+type: text/vnd.tiddlywiki
+
+When you BLAST a Protein or DNA sequence you will notice that some of the BLAST databases are for entities (Constructs, Alleles, Vectors, Primers, Entry Clones, Targets) stored within the SATurn database.  When you update one of these entities in the SATurn database the BLAST databases aren't automatically updated as this process can be quite slow if you have many sequences.
+
+To update these internal BLAST databases you can click on File->Update->All Local BLAST DBs

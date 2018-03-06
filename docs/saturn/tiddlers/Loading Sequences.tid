@@ -1,5 +1,5 @@
 created: 20180305112216534
-modified: 20180305112347925
+modified: 20180305152131576
 title: Loading Sequences
 type: text/vnd.tiddlywiki
 
@@ -7,3 +7,4 @@ type: text/vnd.tiddlywiki
 # [[Retrieving from UniProtKB or NCBI]]
 # [[Loading from FASTA]]
 # [[Loading with Copy/Paste]]
+# [[Inverse complement an alignment]]

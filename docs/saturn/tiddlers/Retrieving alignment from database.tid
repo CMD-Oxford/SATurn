@@ -1,0 +1,28 @@
+created: 20180305150811386
+modified: 20180305151204015
+title: Retrieving alignment from database
+type: text/vnd.tiddlywiki
+
+Alignments can be retrieved from the SATurn database as follows - [[Saving Alignments to database]]
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+   <tr>
+     <td>''1. Type the alignment name into the search box''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_retrieving_an_alignment.png]]</td>
+  </tr>
+<tr>
+     <td>''2. Select the alignment from the drop-down to open''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_from_database.png]]</td>
+  </tr>
+ </tbody>
+</table>

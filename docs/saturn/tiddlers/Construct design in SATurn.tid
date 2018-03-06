@@ -1,0 +1,80 @@
+created: 20180306083648346
+modified: 20180306155728585
+title: Construct design in SATurn
+type: text/vnd.tiddlywiki
+
+!Introduction
+SATurn has been designed to simplify the type of medium/high throughput cloning conducted at the [[SGC|https://www.thesgc.org]] which involves creating various different constructs of the same gene with varying: construct boundaries, N/C terminal tags, point mutations, deletions, insertions, and vector combinations with the aim of obtaining protein for use in: crystallization, electron microscopy, biophysical and cell based assays.  SATurn isn't meant to replace tools like [[SnapGene|http://www.snapgene.com/]] or [[VectorNTI|https://www.thermofisher.com/uk/en/home/life-science/cloning/vector-nti-software.html]] but rather to complement these tools by making highly repetitive tasks easier with regards to construct design.
+
+The basic construct design workflow is shown below note however that the SATurn [[Construct Designer]]  tool simplifies this process by generating many of the entities shown below automatically once you have selected construct boundaries.  
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th >
+    Workflow
+   </th>
+   <th>
+   SATurn Entity Name
+   </th>
+   <th style="width:50%">
+    Description
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>1. Select gene</td>
+     <td>[[Gene]]</td>
+     <td>Select the gene of interest that you wish to work on</td>
+  </tr>
+  <tr>
+     <td>2.  Select isoform</td>
+     <td>[[Target]]</td>
+     <td>Specific isoform you wish to work on</td>
+  </tr>
+  <tr>
+     <td>3.  Select entry clone</td>
+     <td>[[Entry clone]]</td>
+     <td>Template DNA for PCR</td>
+  </tr>
+  <tr>
+     <td>4. Select construct boundaries</td>
+     <td></td>
+     <td></td>
+  </tr>
+  <tr>
+     <td>5. Enter primers</td>
+     <td>[[Forward / Reverse Primers]]</td>
+     <td></td>
+  </tr> 
+  <tr>
+     <td>6. Enter PCR product</td>
+     <td>[[Allele]]</td>
+     <td>SATurn adopts the SGC nomenclature of calling the DNA we are inserting into a vector an Allele</td>
+  </tr>
+  <tr>
+     <td>7. Select vector</td>
+     <td>[[Vector]]</td>
+     <td></td>
+  </tr>
+  <tr>
+     <td>8.  Enter construct</td>
+     <td>[[Construct]]</td>
+     <td>Ligation product of [[Vector]] and [[Allele]]</td>
+  </tr>
+ </tbody>
+</table>
+
+Note that within the SATurn database: a construct is connected to an allele and vector,  an allele to an entry clone and forward/reverse primers, and an entry clone to a target.  
+
+! Designing constructs
+
+#Constructs and all the entities required to create them can be generated and saved into the SATurn database using the File->New menu.  
+# However it is easier to use the construct designer tool in SATurn to generate these for you.  
+# In SATurn PCR products are stored on PCR Plates and constructs on Construct Plates.
+# The Construct Designer tool can be used to: automatically create alleles, primers, constructs and associate these with plates
+# 
+
+
+<$link to="Construct Designer" class="welcome_button">Construct Designer Tool</$link>
+<$link to="Manually Designing" class="welcome_button">Manually Designing</$link>

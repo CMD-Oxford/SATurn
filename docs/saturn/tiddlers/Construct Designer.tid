@@ -1,0 +1,9 @@
+created: 20180306095314171
+modified: 20180306142324991
+title: Construct Designer
+type: text/vnd.tiddlywiki
+
+The following guide documents how to design constructs using the SATurn construct designer tool.<br/><br/><font color="red">Before proceeding please make sure that you have already entered the following: vectors, restriction sites, entry clones, and targets by following this [[Guide|Cloning prerequisites]]</font>.
+
+# [[Creating a new construct plate]]
+# [[Adding constructs by sequence selection]]

@@ -1,0 +1,40 @@
+created: 20180306115141863
+modified: 20180306115856533
+title: Restriction Sites
+type: text/vnd.tiddlywiki
+
+! Entering a restriction site
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on File->New->Restriction Site''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_file_new_restriction_site.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Right-click and click on Rename Object''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_restriction_site_rename.png]]</td>
+  </tr>
+ <tr>
+     <td>''3. Enter the required name and click on OK''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_restriction_site_rename_dialog.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Enter restriction sequence with a star to indicate the cut position''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_restriction_site_enter_sequence.png]]</td>
+  </tr>
+<tr>
+     <td>''5. Click on save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_button.png]]</td>
+  </tr>
+ </tbody>
+</table>

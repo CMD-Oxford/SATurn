@@ -1,0 +1,44 @@
+created: 20180306100129443
+modified: 20180306115023237
+title: Vectors
+type: text/vnd.tiddlywiki
+
+! Entering a vector
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on File->New->Vector''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_vector_insert_file_new.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Right-click on Vector and rename''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_vector_insert_rename_right_click.png]]</td>
+  </tr>
+ <tr>
+     <td>''3. Rename vector''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_insert_new_vector_rename.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Enter vector sequence''<br/>You only need to enter the sequence surrounding the multiple cloning site</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_vector_insert_enter_sequence.png]]</td>
+  </tr>
+<tr>
+     <td>''5. Enter required fields (see [[Vector Fields]] for further details)''<br/>Restriction sites must already have been entered (see [[here|Restriction Sites]])</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_vector_insert_required_fields.png]]</td>
+  </tr>
+<tr>
+     <td>''6. Press save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_button.png]]</td>
+  </tr>
+ </tbody>
+</table>

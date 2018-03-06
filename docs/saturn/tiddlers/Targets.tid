@@ -1,0 +1,44 @@
+created: 20180306115927440
+modified: 20180306120921109
+title: Targets
+type: text/vnd.tiddlywiki
+
+! Entering a target
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on File->New->Target''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_new_target.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Right-click and click on Rename Object''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_rename_target.png]]</td>
+  </tr>
+ <tr>
+     <td>''3. Enter the required name and click on OK''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_target_rename_dialog.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Enter DNA sequence into sequence editor''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_target_enter_sequence.png]]</td>
+  </tr>
+<tr>
+     <td>''5. Enter Protein sequence into sequence field''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_target_protein_sequence.png]]</td>
+  </tr>
+<tr>
+     <td>''6. Click on Save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_button.png]]</td>
+  </tr>
+ </tbody>
+</table>

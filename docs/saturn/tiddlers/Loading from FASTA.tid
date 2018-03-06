@@ -1,8 +1,10 @@
 created: 20180305130202358
-modified: 20180305135124941
+modified: 20180305135921953
 title: Loading from FASTA
 type: text/vnd.tiddlywiki
 
-# [[Copy / Paste |Loading FASTA Copy / Paste]]
-# [[Drag / Drop |Loading FASTA Drag / Drop]]
-# [[File Browser|Loading FASTA using the File Browser]]
+FASTA content can be loaded via the methods explained below
+
+<$link to="Loading FASTA using the File Browser" class="welcome_button">File Browser</$link>
+<$link to="Loading FASTA Copy / Paste" class="welcome_button">Copy / Paste</$link>
+<$link to="Loading FASTA Drag / Drop" class="welcome_button">Drag / Drop</$link>

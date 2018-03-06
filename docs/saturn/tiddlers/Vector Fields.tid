@@ -1,0 +1,67 @@
+created: 20180306110056482
+modified: 20180306115108845
+title: Vector Fields
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:20%">
+    Field
+   </th>
+   <th>
+    Description
+   </th>
+   <th>
+    Required
+   </th>
+   <th>
+    Example
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>Protease</td>
+     <td>Name of protease to cleave purified product with (free text)</td>
+     <td>Optional</td>
+     <td>TEV protease</td>
+  </tr>
+  <tr>
+     <td>Protease cut sequence</td>
+     <td>Protease cut sequence, with a star for cut position</td>
+     <td>Required, if you want SATurn to calculate cut construct sequences automatically </td>
+     <td>ENLYFQ*</td>
+  </tr>
+ <tr>
+     <td>Protease product</td>
+     <td>Direction of the cut product you are interested in relative to the protease cleavage site</td>
+     <td>Required, if you want SATurn to calculate cut construct sequences automatically </td>
+     <td>DOWNSTREAM | UPSTREAM</td>
+  </tr>
+  <tr>
+     <td>Restriction site 1</td>
+     <td>Restriction site to cut vector with (for Lic cloning follow this [[guide|Lic Support]]).  Restriction sites must already have been entered into the database (see the instructions [[here|Restriction Sites]])</td>
+     <td>Required to generate ligated products / constructs</td>
+     <td>Lic5</td>
+  </tr>
+ <tr>
+     <td>Restriction site 2</td>
+     <td>Restriction site to cut vector with (for Lic cloning follow this [[guide|Lic Support]]). Restriction sites must already have been entered into the database (see the instructions [[here|Restriction Sites]])</td>
+     <td>Required to generate ligated products / constructs</td>
+     <td>Lic3</td>
+  </tr>
+  <tr>
+     <td>Forward extension</td>
+     <td>Extension to add to forward primer to be compatible with vector / restriction site</td>
+     <td>Required for the construct designer to generate compatible primers automatically</td>
+     <td>TACTTCCAATCCATG</td>
+  </tr>
+<tr>
+     <td>Reverse extension</td>
+     <td>Extension to add to reverse primer to be compatible with vector / restriction site</td>
+     <td>Required for the construct designer to generate compatible primers automatically</td>
+     <td>TATCCACCTTTACTGTCA</td>
+  </tr>
+ </tbody>
+</table>

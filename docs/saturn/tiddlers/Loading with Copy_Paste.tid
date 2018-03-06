@@ -1,0 +1,32 @@
+created: 20180305140748075
+modified: 20180305143203526
+title: Loading with Copy/Paste
+type: text/vnd.tiddlywiki
+
+You can paste sequences directly onto the Protein/DNA editors.  You can paste FASTA formated sequences or raw sequence strings from elsewhere.  Numbers and spaces will be removed from sequences automatically.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on the Protein/DNA Editor button''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_protein_editor_launch.png]]</td>
+   </tr>
+   <tr>
+     <td>''2. Copy sequence''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_copied_numbered_sequence.png]]</td>
+   </tr>
+    <tr>
+     <td>''3. Click on editor line and paste (Ctrl+V)''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_pasted_numbered_sequence.png]]</td>
+   </tr>
+ </tbody>
+</table>

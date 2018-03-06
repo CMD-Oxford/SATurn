@@ -1,0 +1,36 @@
+created: 20180305150107426
+modified: 20180305150650608
+title: Saving Alignment to database
+type: text/vnd.tiddlywiki
+
+Alignments can be saved to the SATurn database as follows - [[Retrieving alignments from database]]
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+   <tr>
+     <td>''1. Performing an Alignment''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_update.png]]</td>
+  </tr>
+ <tr>
+     <td>''2. Right-click on alignment and select Rename''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_rename_alignment.png]]</td>
+  </tr>
+   <tr>
+     <td>''4. Enter a new name and click OK''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_rename_entry.png]]</td>
+  </tr>
+  <tr>
+     <td>''3. Click on Save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_alignment.png]]</td>
+  </tr>
+ </tbody>
+</table>

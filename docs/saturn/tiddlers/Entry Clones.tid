@@ -1,0 +1,44 @@
+created: 20180306125201466
+modified: 20180306130706454
+title: Entry Clones
+type: text/vnd.tiddlywiki
+
+! Entering a entry clones
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on File->New->Entry Clone''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_file_new_entry_clone.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Right-click on Entry Clone and rename''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_rename_entry_clone_menu.png]]</td>
+  </tr>
+ <tr>
+     <td>''3. Enter the new entry clone name and click on OK''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_rename_entry_clone.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Enter the entry clone DNA sequence''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_enter_entry_clone_sequence.png]]</td>
+  </tr>
+<tr>
+     <td>''5. Set the target name''<br/> (required for the [[target menu items|Target Menu Actions]] to work for all entities connected to this entry clone)</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_entry_clone_set_target_name.png]]</td>
+  </tr>
+<tr>
+     <td>''6. Click on save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_button.png]]</td>
+  </tr>
+ </tbody>
+</table>

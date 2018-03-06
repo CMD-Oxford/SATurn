@@ -1,0 +1,31 @@
+created: 20180305151557579
+modified: 20180305151754400
+title: Deleting alignment from database
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+   <tr>
+     <td>''1. Type the alignment name into the search box''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_retrieving_an_alignment.png]]</td>
+  </tr>
+<tr>
+     <td>''2. Select the alignment from the drop-down to open''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_from_database.png]]</td>
+  </tr>
+<tr>
+      <td>''3. Click on Delete''</td>
+      <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_delete.png]]</td>
+  </tr>
+ </tbody>
+</table>
