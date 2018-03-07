@@ -1,0 +1,8 @@
+created: 20180307152101322
+modified: 20180307153902592
+title: Viewing DNA properties
+type: text/vnd.tiddlywiki
+
+To view properties such as %GC, Length, and melting temperature you just need to open the DNA sequence in the editor and these are shown on the right-hand side.  These properties are also shown for any sequence you have highlighted.
+
+[img[image_dna_editor_properties.png]]
