@@ -1,0 +1,27 @@
+created: 20180307105054978
+modified: 20180307105632797
+title: Extracting translations
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click File->Import''<br/>Then select one of the six translations</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_import_translation.png]]</td>
+  </tr>
+  <tr>
+     <td>Frame 1 translation</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_after_translation_import.png]]</td>
+  </tr>
+ </tbody>
+</table>

@@ -1,5 +1,5 @@
 created: 20180305103039051
-modified: 20180305153516095
+modified: 20180307124517220
 title: User Guide
 type: text/vnd.tiddlywiki
 
@@ -15,6 +15,27 @@ type: text/vnd.tiddlywiki
 ## [[Retrieving from UniProtKB or NCBI]]
 ## [[Loading from FASTA]]
 ## [[Loading with Copy/Paste]]
+# [[DNA Sequence Editor]]
+## Translations
+### [[Viewing translations]]
+### [[Extracting translations]]
+### [[Extracting part of a translation]]
+### [[Viewing translation numbering]]
+## [[Viewing properties]]
+## [[Viewing as FASTA]]
+## Finding sequences
+### [[Exact match]]
+### [[Regular expression]]
+### [[By numbered region]]
+### [[By exact position]]
+### [[By inverse complement]]
+### [[Missmatch search]]
+## Customizing view
+### [[Changing sequence block size]]
+### [[Changing number of blocks per line]]
+### [[Introducing an offset]]
+### [[Introducing a frame offset]]
+# [[Protein Sequence Editor]]
 # [[BLAST Sequence]]
 ## [[Performing a simple BLAST]]
 ## [[Configuring BLAST databases]]

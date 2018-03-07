@@ -1,0 +1,45 @@
+created: 20180307090639032
+modified: 20180307090640028
+title: Creating a new construct
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on Construct Designer''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_designer_highlighted.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Enter plate name''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_enter_plate_name.png]]</td>
+  </tr>
+  <tr>
+     <td>''3. Enter required information for construct''<br/>Vector Name<br/>Entry Clone ID<br/>Restriction site 1<br/>Restriction site 2<br/>Construct start position<br/>Construct stop position</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_designer_plate_fields.png]]</td>
+  </tr>
+ <tr>
+     <td>''4. Click on prepare''<br/>This will calculate primers and generate automatic IDs for your alleles and constructs </td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_prepare.png]]</td>
+  </tr>
+ <tr>
+     <td>Prepared construct</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_designer_after_prepared.png]]</td>
+  </tr>
+ <tr>
+     <td>''5. Click on save''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_save_button.png]]</td>
+  </tr>
+
+
+ </tbody>
+</table>

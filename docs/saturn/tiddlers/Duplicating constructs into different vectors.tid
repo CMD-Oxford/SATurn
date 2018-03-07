@@ -1,0 +1,45 @@
+created: 20180307091708238
+modified: 20180307092615837
+title: Duplicating constructs into different vectors
+type: text/vnd.tiddlywiki
+
+One common task we do in the SGC is to express the same construct boundaries in different vectors.  To make this process simpler in SATurn you can select as many constructs as you want and generate duplicates with a different vector name.
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Select the rows you wish to duplicate with a different vecto''r</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_designer_select_one.png]]</td>
+  </tr>
+<tr>
+     <td>''2. Click on Duplicate & Change Vector''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_duplicate_and_change_vector.png]]</td>
+  </tr>
+<tr>
+     <td>''3. Enter the name of the new vector''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_change_vector_name.png]]</td>
+  </tr>
+<tr>
+     <td>After duplication</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_designer_after_duplication.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Then click on Prepare to generate new IDs''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_prepare.png]]</td>
+  </tr>
+<tr>
+     <td>After preparing</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_after_duplicate_and_prepare.png]]</td>
+  </tr>
+ </tbody>
+</table>

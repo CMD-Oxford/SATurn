@@ -1,0 +1,26 @@
+created: 20180307111213817
+modified: 20180307111348278
+title: Exact match
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Into the search box enter the sequence you are looking for''<br/>All matches will be highlighted in green</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_find_exact.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+

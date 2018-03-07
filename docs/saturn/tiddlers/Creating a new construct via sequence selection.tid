@@ -1,0 +1,36 @@
+created: 20180307090719094
+modified: 20180307091030035
+title: Creating a new construct via sequence selection
+type: text/vnd.tiddlywiki
+
+The following explains how to add a construct to a construct designer window using the sequence selection feature of the protein sequence editor.  Once you have selected the start / stop positions using this feature you will then need to follow the instructions  [[here|Creating a new construct]] to complete creating your new construct.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1.Load the entry clone translation''<br/>(to add  entry clones follow these  [[instructions|Entry Clones]])</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_find_entry_clone.png]]</td>
+  </tr>
+  <tr>
+     <td>Entry clone translation</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_entry_clone_loaded.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Select region of interest and right-click and select Add to plate->New Plate''<br/>If you already have a construct designer windows open these will show up as additional options in the Add to plate menu.  Remember that you can rename a construct designer window by right-clicking on it in the workspace tree</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_entry_clone_select_region.png]]</td>
+  </tr>
+  <tr>
+     <td>''3. Construct added to plate''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_plate_one_entry_clone.png]]</td>
+  </tr>
+ </tbody>
+</table>

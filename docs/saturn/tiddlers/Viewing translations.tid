@@ -1,0 +1,73 @@
+created: 20180307103248438
+modified: 20180307104833389
+title: Viewing translations
+type: text/vnd.tiddlywiki
+
+!!Viewing a single translation
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click View->Annotations''<br/>Then select one of the six translations</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_translation_menu.png]]</td>
+  </tr>
+ <tr>
+     <td>Single translation shown</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_one_translation.png]]</td>
+  </tr>
+ </tbody>
+</table>
+
+!! Hiding translation
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click View->Annotations''<br/>Then select one of the six translations to hide</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_hide_translation.png]]</td>
+  </tr>
+ </tbody>
+</table>
+
+!! Showing all translations
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click View->Show Annotations''<br/>To hide all annotations click on View->Hide Annotations</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_show_all_translations.png]]</td>
+  </tr>
+ </tbody>
+</table>
+
+
+
+
+

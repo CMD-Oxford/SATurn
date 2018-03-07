@@ -1,0 +1,29 @@
+created: 20180307112643658
+modified: 20180307113100874
+title: Missmatch search
+type: text/vnd.tiddlywiki
+
+SATurn supports fuzzy matching via it's support for regular expressions but you can also do a simple search with a sequence with a number of allowed miss-matches.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Into the search box enter the sequence to search prefixed with the number of missmatches you want to allow''<br/>All matches will be highlighted in green</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_search_fuzzy.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
+

@@ -1,0 +1,55 @@
+created: 20180307093650638
+modified: 20180307100401988
+title: Viewing plates & making changes
+type: text/vnd.tiddlywiki
+
+Constructs created using the construct designer tool can't yet be updated using the same tool (although this is planned for the future).  For now you must use the PCR Plate and Construct Plate helpers.
+
+To load up entire plates you first search for them in the main SATurn search window 
+
+[img[image_search_plates.png]]
+
+Clicking on either the PCR Plate or the Construct Plate will load the corresponding helper and show you all the corresponding entities for that plate.  Using the tool you can update any of the fields save the changes to the database and have SATurn recalculate sequences and other properties which SATurn automatically calculates. 
+
+You can also use these tools to make changes to specific constructs or PCR products.
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+<tr>
+     <td>''1. Click on the required helper''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_plate_helpers.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Copy IDs from Excel or other source''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_excel_copy_construct_ids.png]]</td>
+  </tr>
+<tr>
+     <td>''3. Click on the first cell and paste Ctrl+V''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_helper_first_cell.png]]</td>
+  </tr>
+<tr>
+     <td>After paste</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_plate_after_paste.png]]</td>
+  </tr>
+<tr>
+     <td>''4. Click on Fetch All''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_fetch_all.png]]</td>
+  </tr>
+<tr>
+     <td>After Fetch All<br/>At this point you can update fields, click on save and click on calculate</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_construct_plate_after_fetch.png]]</td>
+  </tr>
+ </tbody>
+</table>
+
+

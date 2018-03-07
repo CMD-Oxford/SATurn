@@ -1,0 +1,38 @@
+created: 20180307125010239
+modified: 20180307125552805
+title: Introducing a frame offset
+type: text/vnd.tiddlywiki
+
+Sometimes you will load sequences into SATurn which are sub-sequences of a larger sequence (i.e. Gene).  Under this scenario the numbering shown in SATurn will be relative to the loaded sequence and not the original full length sequence.  So you can use the number of the full length translation sequence SATurn allows you to set a sequence offset to restore the numbering of the full length translation sequence.  You can do this as follows. 
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Edit->Offset''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_frame_offset.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Enter offset''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_frame_translation_offset_dialog.png]]</td>
+  </tr>
+  <tr>
+     <td>Note frame offset</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_translation_offset.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
+
+

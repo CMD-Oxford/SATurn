@@ -1,9 +1,20 @@
 created: 20180306095314171
-modified: 20180306142324991
+modified: 20180307093652103
 title: Construct Designer
 type: text/vnd.tiddlywiki
 
-The following guide documents how to design constructs using the SATurn construct designer tool.<br/><br/><font color="red">Before proceeding please make sure that you have already entered the following: vectors, restriction sites, entry clones, and targets by following this [[Guide|Cloning prerequisites]]</font>.
+The construct designer can automatically generate and store in the SATurn database: primers, pcr products, and constructs - by providing an entry clone ID (i.e. template DNA), construct boundaries, and vector of choice.  The designer provides a spreadsheet view of your proposed constructs allowing you to create multiple constructs for as many genes / targets as you wish simultaneously.  You can either provide the construct boundaries by manually specifying the start / end amino acid positions or by opening up the translation of your entry clone in the protein sequence editor and selecting the region you wish to generate a construct of.  
 
-# [[Creating a new construct plate]]
-# [[Adding constructs by sequence selection]]
+Before using the construct design tool you must make sure that you have already entered all the vectors, restriction sites, entry clones and targets you wish to use.  This can be a time-consuming process but at least for vectors and restriction sites is something that only needs to be done occasionally.   For more information on entering these please see this  [[Guide|Cloning prerequisites]]
+
+The construct design tool requires that you group your constructs into plates which you can name via the "Plate Name" field, within the same construct designer window you can specify different plate names for different constructs although we wouldn't recommend it.  Once you save constructs using the tool all of your PCR products will be associated with a PCR plate of the same name specified, and all of your constructs with a construct plate of the same name specified.  To make changes to a PCR product and or construct you have to load up those entities using the PCR Plate and Construct Plate helpers - for more information see this [[Guide|Viewing plates & making changes]].
+
+<font color="red">Construct plans aren't yet savable to the SATurn database to be able to close SATurn and resume designing constructs within the same construct plan you will need to save the SATurn workspace. <br/><br/>
+
+See [[Saving a SATurn workspace]] for more details</font>
+
+! Guides
+
+# [[Creating a new construct]]
+# [[Creating a new construct via sequence selection]]
+# [[Duplicating constructs into different vectors]]

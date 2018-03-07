@@ -1,0 +1,32 @@
+created: 20180307105833393
+modified: 20180307110307285
+title: Extracting part of a translation
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Turn on the frame of interest and select the amino region you are interested in''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_selecting_part_translation.png]]</td>
+  </tr>
+<tr>
+     <td>''2. Right-click and select New Protein From Selected''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_extract_part_of_translation.png]]</td>
+  </tr>
+<tr>
+     <td>Extracted protein</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_translation_part_extracted.png]]</td>
+  </tr>
+
+ </tbody>
+</table>

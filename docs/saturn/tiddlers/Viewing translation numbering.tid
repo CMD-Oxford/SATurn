@@ -1,0 +1,25 @@
+created: 20180307110747562
+modified: 20180307110904277
+title: Viewing translation numbering
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Select the region of interest''<br/>SATurn will show you the selection amino acid sequence in the notification panel along with the start and end position of the region you have selected within the translation</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_viewing_translation_numbering.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+

@@ -1,0 +1,38 @@
+created: 20180307123940888
+modified: 20180307124359148
+title: Changing number of blocks per line
+type: text/vnd.tiddlywiki
+
+By default both sequence editors show sequences in columns of 20 characters called blocks and show 5 blocks per row.  You can change the number of blocks per row as follows.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Edit->Block per line''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_blocks_per_line_menu.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Enter number of blocks''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_blocks_per_line_dialog.png]]</td>
+  </tr>
+  <tr>
+     <td>2 blocks per line</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_blocks_per_line_2.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
+
+

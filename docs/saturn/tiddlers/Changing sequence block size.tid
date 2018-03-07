@@ -1,0 +1,38 @@
+created: 20180307123501548
+modified: 20180307123925507
+title: Changing sequence block size
+type: text/vnd.tiddlywiki
+
+By default both sequence editors show sequences in columns of 20 characters.  You can change this as follows.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Edit->Block size''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_blocks_per_line.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Enter block size''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_blocks_size_dialog.png]]</td>
+  </tr>
+  <tr>
+     <td>10 characters per-block</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_block_size_10.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
+
+

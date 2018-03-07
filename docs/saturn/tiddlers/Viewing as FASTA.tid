@@ -1,0 +1,36 @@
+created: 20180307125740192
+modified: 20180307130113428
+title: Viewing as FASTA
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Click on FASTA''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_fasta_button.png]]</td>
+  </tr>
+  <tr>
+     <td>FASTA view</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_fasta_view.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Click on Editor to switch back''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_editor_button.png]]</td>
+  </tr>
+ </tbody>
+</table>
+
+
+
+
+

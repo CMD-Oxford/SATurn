@@ -1,0 +1,26 @@
+created: 20180307112320482
+modified: 20180307112440622
+title: By inverse complement
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Into the search box enter the inverse complement sequence prefixed with a lower-case r''<br/>All matches will be highlighted in green</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_inverse_complement_search.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+

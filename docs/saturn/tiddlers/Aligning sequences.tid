@@ -1,0 +1,35 @@
+created: 20180307114126775
+modified: 20180307114641587
+title: Aligning sequences
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Load Protein or DNA sequences (See [[Loading Sequences]])''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_sequences_loaded.png]]</td>
+  </tr>
+  <tr>
+     <td>''2.Click on the Alignment Viewer button''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_viewer_button.png]]</td>
+  </tr>
+<tr>
+     <td>''2. Import sequences into alignment tree''<br/><ul><li>Click on Import Protein or Import DNA to import all loaded DNA or Protein sequences</li><li>You can also drag specific sequences onto the "Sequences" folder or folders of sequences</li></ul></td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_import_protein_alignment.png]]</td>
+  </tr>
+<tr>
+     <td>''Click on Update to generate the alignment''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_alignment_update.png]]</td>
+  </tr>
+ </tbody>
+</table>

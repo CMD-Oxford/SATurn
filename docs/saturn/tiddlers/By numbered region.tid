@@ -1,0 +1,26 @@
+created: 20180307111711642
+modified: 20180307112125894
+title: By numbered region
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Into the search box enter the region you are looking for in the form of Start-End''<br/>The region will be highlighted in green.</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_numbered_region_search.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+

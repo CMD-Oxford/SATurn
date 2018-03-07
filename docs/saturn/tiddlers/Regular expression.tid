@@ -1,0 +1,27 @@
+created: 20180307111408609
+modified: 20180307111643709
+title: Regular expression
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Into the search box enter the regular expression you are looking for''<br/>All matches will be highlighted in green.
+  The search box accepts all standard regular [[expression constructs|https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions]]</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_regular_expression_match.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+

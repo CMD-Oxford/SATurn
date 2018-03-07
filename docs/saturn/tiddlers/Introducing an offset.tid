@@ -1,0 +1,38 @@
+created: 20180307124529888
+modified: 20180307124955996
+title: Introducing an offset
+type: text/vnd.tiddlywiki
+
+Sometimes you will load sequences into SATurn which are sub-sequences of a larger sequence (i.e. Gene).  Under this scenario the numbering shown in SATurn will be relative to the loaded sequence and not the original full length sequence.  So you can use the number of the full length sequence SATurn allows you to set a sequence offset to restore the numbering of the full length sequence.  You can do this as follows. 
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Edit->Offset''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_frame_offset_menu.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Enter offset''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_frame_offset_dialog.png]]</td>
+  </tr>
+  <tr>
+     <td>Offset sequence</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_offset_sequence.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
+
+

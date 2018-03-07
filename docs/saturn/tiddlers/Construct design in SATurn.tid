@@ -1,12 +1,12 @@
 created: 20180306083648346
-modified: 20180306155728585
+modified: 20180307095211772
 title: Construct design in SATurn
 type: text/vnd.tiddlywiki
 
 !Introduction
-SATurn has been designed to simplify the type of medium/high throughput cloning conducted at the [[SGC|https://www.thesgc.org]] which involves creating various different constructs of the same gene with varying: construct boundaries, N/C terminal tags, point mutations, deletions, insertions, and vector combinations with the aim of obtaining protein for use in: crystallization, electron microscopy, biophysical and cell based assays.  SATurn isn't meant to replace tools like [[SnapGene|http://www.snapgene.com/]] or [[VectorNTI|https://www.thermofisher.com/uk/en/home/life-science/cloning/vector-nti-software.html]] but rather to complement these tools by making highly repetitive tasks easier with regards to construct design.
+SATurn has been designed to simplify the type of medium/high throughput plate-based cloning conducted at the [[SGC|https://www.thesgc.org]] which involves creating various different constructs of the same gene with varying: construct boundaries, N/C terminal tags, point mutations, deletions, insertions, and vector combinations with the aim of obtaining protein for use in: crystallization, electron microscopy, biophysical and cell based assays.  SATurn isn't meant to replace tools like [[SnapGene|http://www.snapgene.com/]] or [[VectorNTI|https://www.thermofisher.com/uk/en/home/life-science/cloning/vector-nti-software.html]] but rather to complement these tools by making highly repetitive tasks easier with regards to construct design and downstream analysis and to provide a degree of validation before experiments are conducted.  To put this into context the SGC has designed 165,000 constructs over the period 2004 - 2018.
 
-The basic construct design workflow is shown below note however that the SATurn [[Construct Designer]]  tool simplifies this process by generating many of the entities shown below automatically once you have selected construct boundaries.  
+The basic construct design workflow everybody is familiar with is shown below along with the names we use in SATurn to refer to the various cloning entities.  
 <table style="width:100%">
  <thead>
   <tr>
@@ -64,17 +64,9 @@ The basic construct design workflow is shown below note however that the SATurn 
   </tr>
  </tbody>
 </table>
-
 Note that within the SATurn database: a construct is connected to an allele and vector,  an allele to an entry clone and forward/reverse primers, and an entry clone to a target.  
 
-! Designing constructs
+SATurn allows you to save all of the above cloning entities into it's database which can either be created one-by-one or automatically by using the construct design tool which requires only that you specify the start/end positions of the construct along with the entry clone name and vector to use.
 
-#Constructs and all the entities required to create them can be generated and saved into the SATurn database using the File->New menu.  
-# However it is easier to use the construct designer tool in SATurn to generate these for you.  
-# In SATurn PCR products are stored on PCR Plates and constructs on Construct Plates.
-# The Construct Designer tool can be used to: automatically create alleles, primers, constructs and associate these with plates
-# 
+<$link to="Construct Designer" class="welcome_button">Creating constructs</$link>  <$link to="Viewing plates & making changes" class="welcome_button">Viewing plates & making changes</$link>
 
-
-<$link to="Construct Designer" class="welcome_button">Construct Designer Tool</$link>
-<$link to="Manually Designing" class="welcome_button">Manually Designing</$link>
