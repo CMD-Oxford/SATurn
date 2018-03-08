@@ -1,0 +1,27 @@
+created: 20180308145121334
+modified: 20180308153719250
+title: Loading a trace with drag and drop
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Drag and drop file onto workspace panel''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_drag_and_drop.png]]</td>
+  </tr>
+  <tr>
+     <td>Displays trace</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_trace.png]]</td>
+  </tr>
+ </tbody>
+</table>

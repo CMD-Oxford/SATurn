@@ -1,5 +1,5 @@
 created: 20180305103039051
-modified: 20180307154457566
+modified: 20180308153914137
 title: User Guide
 type: text/vnd.tiddlywiki
 
@@ -21,8 +21,10 @@ type: text/vnd.tiddlywiki
 ### [[Extracting translations]]
 ### [[Extracting part of a translation]]
 ### [[Viewing translation numbering]]
-## [[Viewing properties]]
+## [[Viewing DNA properties]]
 ## [[Viewing as FASTA]]
+## [[Exporting as FASTA file]]
+## [[Opening FASTA file|Loading FASTA using the File Browser]]
 ## Finding sequences
 ### [[Exact match]]
 ### [[Regular expression]]
@@ -30,11 +32,13 @@ type: text/vnd.tiddlywiki
 ### [[By exact position]]
 ### [[By inverse complement]]
 ### [[Missmatch search]]
+## [[Extracting a sequence]]
 ## Customizing view
 ### [[Changing sequence block size]]
 ### [[Changing number of blocks per line]]
 ### [[Introducing an offset]]
 ### [[Introducing a frame offset]]
+## [[Inverse / Complement]]
 # [[Protein Sequence Editor]]
 # [[BLAST Sequence]]
 ## [[Performing a simple BLAST]]
@@ -49,6 +53,14 @@ type: text/vnd.tiddlywiki
 ## [[Deleting alignment from database]]
 ## [[Retrieving alignment from database]]
 ## [[Inverse complement an alignment]]
+# [[Sequencing Viewer]]
+## Opening traces
+### [[File Explorer|Opening a trace with File Explorer]]
+### [[Drag and drop|Loading a trace with drag and drop]]
+### [[With a zip file|Loading traces from a zip file]]
+## Aligning to trace
+### [[BLAST sequences within SATurn database|BLAST trace sequence against SATurn database]]
+### [[Drag and drop sequence to align|Drag and drop sequence to align trace against]]
 # [[Scripting]]
 ## [[Overview]]
 ## [[Retrieving entities from the SATurn database]]

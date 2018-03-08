@@ -1,0 +1,27 @@
+created: 20180308143728066
+modified: 20180308155022347
+title: Opening a trace with File Explorer
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. File->Open->Open File''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_sequence_editor_open_file.png]]</td>
+  </tr>
+  <tr>
+     <td>Displays Trace</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_trace.png]]</td>
+  </tr>
+ </tbody>
+</table>

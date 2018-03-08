@@ -1,0 +1,32 @@
+created: 20180308080546045
+modified: 20180308080954640
+title: Extracting a sequence
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Select the region you wish to extract''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_selection.png]]</td>
+  </tr>
+ <tr>
+     <td>''2. Right-click and select New From Selected''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_new_from_selected_item.png]]</td>
+  </tr>
+<tr>
+     <td>Extracted DNA sequence is shown loaded as a new object</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_extract_selected.png]]</td>
+  </tr>
+ </tbody>
+</table>
+

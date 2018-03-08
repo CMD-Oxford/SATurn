@@ -1,0 +1,27 @@
+created: 20180308081953933
+modified: 20180308082325305
+title: Exporting as FASTA file
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1.File->Export->FASTA''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_export_to_fasta_file.png]]</td>
+  </tr>
+  <tr>
+     <td>''2.Enter path and name of FASTA file''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_export_fasta.png]]</td>
+  </tr>
+ </tbody>
+</table>

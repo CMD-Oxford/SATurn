@@ -1,0 +1,14 @@
+created: 20180308092659163
+modified: 20180308092954881
+title: Debugging standalone package
+type: text/vnd.tiddlywiki
+
+# Launch SATurn with the Chrome Developer Tools hook enabled
+#>$SATURN/build/Saturn_dev.bat
+# Open Chrome and navigate to the following address
+#>http://localhost:9000/
+# Click on the only link to enter developer tools
+
+# Note that to do the equivalent of a hard reset to clear the cache in the  QT window you will need to click on 
+#>Network->Disable Cache
+# Then right-click in the QT window and reload the page

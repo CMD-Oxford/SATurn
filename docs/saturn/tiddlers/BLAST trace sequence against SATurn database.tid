@@ -1,0 +1,31 @@
+created: 20180308154252492
+modified: 20180308155003969
+title: BLAST trace sequence against SATurn database
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Open trace and click on BLAST''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_blast_button.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Select file''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_align_blast_to_trace.png]]</td>
+  </tr>
+  <tr>
+     <td>Displays sequence aligned to trace along with differences highlighted in the annotation menu tree item</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_align_blast_to_trace_highlighted.png]]</td>
+  </tr>
+ </tbody>
+</table>

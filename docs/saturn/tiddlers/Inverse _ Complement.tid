@@ -1,0 +1,31 @@
+created: 20180308081428947
+modified: 20180308081623841
+title: Inverse / Complement
+type: text/vnd.tiddlywiki
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Select one of the options: Inverse Complement, Complement, or Inverse''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_inverse_complement.png]]</td>
+  </tr>
+  <tr>
+     <td>Inverse complemented sequence</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_dna_editor_inverse_complement_performed.png]]</td>
+  </tr>
+
+ </tbody>
+</table>
+
+
+
