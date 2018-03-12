@@ -501,13 +501,15 @@ class Workspace implements BuildingBlock{
 		}else {
 			// When a program already exists
 			
-			// Set the active Program
+			// Set the active ProgramF
 			haxeApp.setActiveProgram(program);
+
+            Ext.resumeLayouts(false);
 			
 			// Set the active WorkspaceObject associated with the Program
 			// Calls like this might be dropped if we drop the idea of multiple
 			// WorkspaceObjects being associated with the same Program instance
-			program.setActiveObject(objectId);
+			//program.setActiveObject(objectId);
 		}
 	}
 
