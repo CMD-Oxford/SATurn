@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Hongjian Li">
+  <meta name="description" content="iview: an interactive WebGL visualizer for protein-ligand complex">
+  <title>iview: an interactive WebGL visualizer for protein-ligand complex</title>
+  <link rel="stylesheet" href="/bootstrap.min.css">
+  <link rel="stylesheet" href="/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="/index.css">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-57-precomposed.png">
+  <script>
+    var _gaq=[['_setAccount','UA-20604862-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+</head>
+<body>
+  <a class="sr-only" href="#content">Skip navigation</a>
+  <a href="//github.com/HongjianLi/istar" class="ribbon"></a>
+  <header class="navbar navbar-inverse navbar-static-top" role="banner">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+      <nav class="collapse navbar-collapse" role="navigation">
+        <ul class="nav navbar-nav">
+          <li>
+            <a href="/"><img src="/logo.png" alt="istar logo">istar: software as a service</a>
+          </li>
+          <li>
+            <a href="/idock"><img src="/idock/logo.png" alt="idock logo">idock: protein-ligand docking</a>
+          </li>
+          <li>
+            <a href="/usr"><img src="/usr/logo.png" alt="idock logo">usr: ultrafast shape recognition</a>
+          </li>
+          <li class="active">
+            <a href="/iview"><img src="/iview/logo.png" alt="iview logo">iview: interactive WebGL visualizer</a>
+          </li>
+          <li>
+            <a href="/igrep"><img src="/igrep/logo.png" alt="igrep logo">igrep: DNA sequence matching</a>
+          </li>
+          <li>
+            <a href="/icuda"><img src="/icuda/logo.png" alt="icuda logo">icuda: introduction to CUDA</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <div class="jumbotron" id="content" role="main">
+    <div class="container">
+      <h1><img src="logo.png" alt="logo" class="logo">iview</h1>
+      <p>an interactive WebGL visualizer for protein-ligand complex</p>
+    </div>
+  </div>
+  <div class="container">
+    <div>
+      <div class="row">
+        <div class="col-md-12">
+          <canvas id="iview">Your browser does not support WebGL.</canvas>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Camera</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="camera">
+                <label class="btn btn-primary active">
+                  <input type="radio">perspective
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">orthographic
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Background</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="background">
+                <label class="btn btn-primary active">
+                  <input type="radio">black
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">grey
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">white
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Color by</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="colorBy">
+                <label class="btn btn-primary active">
+                  <input type="radio">spectrum
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">chain
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">secondary structure
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">B factor
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">residue
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">polarity
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">atom
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Display primary structure as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="primaryStructure">
+                <label class="btn btn-primary">
+                  <input type="radio">lines
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">stick
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">ball & stick
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">sphere
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">nothing
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Display secondary structure as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="secondaryStructure">
+                <label class="btn btn-primary">
+                  <input type="radio">ribbon
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">strand
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">cylinder & plate
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">C alpha trace
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">B factor tube
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">nothing
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8">
+          <div class="form-group">
+            <label>Display protein surface as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="surface">
+                <label class="btn btn-primary">
+                  <input type="radio">Van der Waals surface
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">solvent excluded surface
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">solvent accessible surface
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">molecular surface
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">nothing
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Surface opacity</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="opacity">
+                <label class="btn btn-primary">
+                  <input type="radio">1.0
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">0.9
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">0.8
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">0.7
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">0.6
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">0.5
+                </label>
+              </div>
+             </div>
+          </div>
+        </div>
+        <div class="col-md-1">
+          <div class="form-group">
+            <label>Wireframe</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="wireframe">
+                <label class="btn btn-primary">
+                  <input type="radio">yes
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">no
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Display ligands as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="ligands">
+                <label class="btn btn-primary">
+                  <input type="radio">line
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">stick
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">ball & stick
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">sphere
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label>Display ions as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="ions">
+                <label class="btn btn-primary">
+                  <input type="radio">sphere
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">dot
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label>Display waters as</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="waters">
+                <label class="btn btn-primary">
+                  <input type="radio">sphere
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">dot
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-1">
+          <div class="form-group">
+            <label>Display labels</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="labels">
+                <label class="btn btn-primary">
+                  <input type="radio">yes
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">no
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Effect</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="effect">
+                <label class="btn btn-primary">
+                  <input type="radio">anaglyph
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">parallax barrier
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">oculus rift
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">stereo
+                </label>
+                <label class="btn btn-primary active">
+                  <input type="radio">none
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Manipulation mode</label>
+            <div>
+              <div class="btn-group btn-group-sm btn-group-justified" data-toggle="buttons" id="mode">
+                <label class="btn btn-primary active">
+                  <input type="radio">rotate
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">translate
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">zoom
+                </label>
+                <label class="btn btn-primary">
+                  <input type="radio">slab
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <p>iview is based on the following components</p>
+          <ul>
+            <li>3D molecular viewer <a href="https://github.com/biochem-fan/GLmol">GLmol</a> by biochem_fan</li>
+            <li>JavaScript 3D library <a href="http://threejs.org">three.js</a> by mrdoob</li>
+            <li>Surface construction <a href="http://zhanglab.ccmb.med.umich.edu/EDTSurf">EDTSurf</a> by Dong Xu and Yang Zhang</li>
+            <li><a href="http://webglmol.sourceforge.jp/surface.html">JavaScript port of EDTSurf</a> by biochem_fan</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <p>iview supports the following keyings</p>
+          <ul>
+            <li>Default: rotate</li>
+            <li>Ctrl: translate</li>
+            <li>Shift: zoom</li>
+            <li>Ctrl + shift: slab</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+	      <p>iview supports the following functions</p>
+          <ul>
+            <li>Load PDB from <a href="http://www.pdb.org">http://www.pdb.org</a>/pdb/files/<input id="loadPDB" placeholder="4MBS" class="form-control" style="display: inline; width: 52px">.pdb <button class="btn btn-sm btn-primary" id="OK">OK</button></li>
+            <li>Load PDB from file <input id="loadFile" type="file" class="form-control" style="display: inline; width: 69%"></li>
+            <li><button class="btn btn-primary btn-sm" id="exportCanvas"><span class="glyphicon glyphicon-picture"></span> Export canvas to png</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <p>Hongjian Li, Kwong-Sak Leung, Takanori Nakane and Man-Hon Wong. iview: an interactive WebGL visualizer for protein-ligand complex. <em>BMC Bioinformatics</em>, 15(1):56, 2014. <a href="http://dx.doi.org/10.1186/1471-2105-15-56">DOI: 10.1186/1471-2105-15-56</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer role="contentinfo">
+    <div class="container">
+      <p><a href="http://www.cuhk.edu.hk"><img src="/cuhk.jpg" alt="CUHK logo"></a>&copy; 2012-2014 Chinese University of Hong Kong. Platform designed by <a href="http://www.cse.cuhk.edu.hk/~hjli">Hongjian Li</a>. Code licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>. Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.<a href="http://validator.w3.org/check?uri=referer"><img src="/HTML5_Badge_512.png" alt="HTML5 logo"></a></p>
+    </div>
+  </footer>
+  <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="/bootstrap.min.js"></script>
+  <script src="three.min.js"></script>
+  <script src="AnaglyphEffect.js"></script>
+  <script src="ParallaxBarrierEffect.js"></script>
+  <script src="OculusRiftEffect.js"></script>
+  <script src="StereoEffect.js"></script>
+  <script src="iview.js"></script>
+  <script src="surface.min.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

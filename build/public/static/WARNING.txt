@@ -1,0 +1,1 @@
+Files placed into this directory will be served by NodeJS

@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;border:0;margin:0;">
+    <head>
+        <title>Vaadin embedded GlycanBuilder applet</title>
+        <script type="text/javascript">
+            var vaadin = {
+                vaadinConfigurations: {
+                    'glycanbuilder' :{
+                        appUri:'/GlycanBuilder',
+                        pathInfo: '/GlycanBuilder',
+                        themeUri: '/GlycanBuilder/VAADIN/themes/ucdb_2011theme',
+                        versionInfo : {vaadinVersion:"6.0.0-INTERNAL-NONVERSIONED-DEBUG-BUILD",applicationVersion:"NONVERSIONED"},
+                        standalone: false
+                    }
+                }
+            };
+
+            var updateHeight = function(){
+                var vaadinDiv = document.getElementById('glycanbuilder');
+
+                vaadinDiv.style.height = (vaadinDiv.parentNode.offsetHeight ) + 'px';
+            }
+
+            var callBack=[];
+            callBack.run=function(response){alert(response);}
+
+            var triggerRepaint;
+
+            triggerRepaint = function(){
+                var canvasList = document.getElementsByClassName('v-canvas');
+
+                if(canvasList.length != 2 ){
+                    console.log('Waiting');
+                    setTimeout(triggerRepaint, 1000);
+                }else{
+                    console.log('Running')
+
+                    var c = canvasList[1];
+
+                    var m = document.createEvent('MouseEvents');
+                    m.initMouseEvent('mousedown', true, true, window, 1, 12, 300, 7, 300, false, false, true, false, 0, null );
+                    c.dispatchEvent(m);
+
+                    var m2 = document.createEvent('MouseEvents');
+                    m2.initMouseEvent('mouseup', true, true, window, 1, 12, 300, 7, 300, false, false, true, false, 0, null );
+                    c.dispatchEvent(m2);
+
+                    window.glycanCanvasReady = true;
+                }
+            }
+
+            triggerRepaint();
+        </script>
+        <script language='javascript' src='/GlycanBuilder/VAADIN/widgetsets/ac.uk.icl.dell.vaadin.glycanbuilder.widgetset.GlycanbuilderWidgetset/ac.uk.icl.dell.vaadin.glycanbuilder.widgetset.GlycanbuilderWidgetset.nocache.js'></script>
+        <link rel="stylesheet" type="text/css" href="/GlycanBuilder/VAADIN/themes/ucdb_2011theme/styles.css"/>
+    </head>
+    <body style="margin:0px; height:100%" onload="updateHeight()">
+        <iframe id="__gwt_historyFrame" style="width:0;height:0;border:0;overflow:hidden" src="javascript:false"></iframe>
+
+        <div id="glycanbuilder" style="width:100%;border:0px;margin 0 0 0 0px;" class="v-app v-theme-ucdb2011theme v-app-IGGApplication"></div>
+    </body>
+</html>

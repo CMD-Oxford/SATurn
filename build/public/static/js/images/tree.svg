@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="166.06"
+   version="1.1"
+   width="101.96"
+   style="overflow:hidden"
+   id="svg6198"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="tree.svg"
+   inkscape:export-filename="C:\Users\ddamerell\Farm\GIT_REPOS\molbio\build\public\static\js\images\tree_100.png"
+   inkscape:export-xdpi="93.412056"
+   inkscape:export-ydpi="93.412056">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1858"
+     inkscape:window-height="1178"
+     id="namedview6244"
+     showgrid="false"
+     inkscape:zoom="2.0815876"
+     inkscape:cx="73.294881"
+     inkscape:cy="112.23791"
+     inkscape:window-x="54"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg6198"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata6246">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <desc
+     id="desc6200">Created with Raphaël 2.1.0</desc>
+  <defs
+     id="defs6202">
+    <clipPath
+       id="clipPath">
+      <path
+         d="M 406,363 394,325"
+         style="fill:none;stroke:#000080;stroke-width:3;stroke-linejoin:round;stroke-opacity:1"
+         id="path6230"
+         inkscape:connector-curvature="0" />
+    </clipPath>
+    <filter
+       y="-0.5"
+       x="-0.5"
+       width="2"
+       height="2"
+       id="filter"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur7046"
+         stdDeviation="5.0" />
+    </filter>
+    <filter
+       id="filter7091"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7093"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7095"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7097"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7099"
+         in2="result8"
+         in="result9"
+         mode="darken"
+         result="fbSourceGraphic" />
+      <feColorMatrix
+         result="fbSourceGraphicAlpha"
+         in="fbSourceGraphic"
+         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
+         id="feColorMatrix7117" />
+      <feOffset
+         id="feOffset7119"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="fbSourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7121"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7123"
+         in2="result8"
+         result="result9"
+         in="fbSourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7125"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7127"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7129"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7131"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7133"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7135"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7137"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7139"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7141"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7143"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7145"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7147"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7149"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7151"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7153"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7155"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7157"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7159"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7161"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7163"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7165"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7167"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7169"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7171"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7173"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7175"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7177"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7179"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7181"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7183"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7185"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+    <filter
+       id="filter7187"
+       inkscape:label="Fuzzy Glow"
+       inkscape:menu="Shadows and Glows"
+       inkscape:menu-tooltip="Overlays a semi-transparent shifted copy to a blurred one"
+       color-interpolation-filters="sRGB">
+      <feOffset
+         id="feOffset7189"
+         dx="4"
+         dy="4"
+         result="result11"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur7191"
+         stdDeviation="4"
+         result="result8" />
+      <feComposite
+         id="feComposite7193"
+         in2="result8"
+         result="result9"
+         in="SourceGraphic"
+         operator="in" />
+      <feBlend
+         id="feBlend7195"
+         in2="result8"
+         in="result9"
+         mode="darken" />
+    </filter>
+  </defs>
+  <path
+     d="m 59.78,121.58 32,23"
+     style="fill:none;stroke:#0000ff;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7187)"
+     id="path6205"
+     inkscape:connector-curvature="0" />
+  <rect
+     x="88.716034"
+     y="139.74348"
+     width="34.18227"
+     height="28.534033"
+     r="5"
+     rx="5"
+     ry="5"
+     style="fill:none;stroke:#000000;display:none"
+     id="rect6210" />
+  <path
+     d="m 59.78,121.58 -13,37"
+     style="fill:none;stroke:#000080;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7177)"
+     id="path6212"
+     inkscape:connector-curvature="0" />
+  <rect
+     x="30.242586"
+     y="157.1935"
+     width="21.489882"
+     height="35.748741"
+     r="5"
+     rx="5"
+     ry="5"
+     style="fill:none;stroke:#000000;display:none"
+     id="rect6217" />
+  <path
+     d="m 59.78,121.58 -12,-39"
+     style="fill:none;stroke:#000080;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7167)"
+     id="path6219"
+     inkscape:connector-curvature="0" />
+  <path
+     d="m 47.78,82.58 -39.9999999,1"
+     style="fill:none;stroke:#0000ff;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7157)"
+     id="path6221"
+     inkscape:connector-curvature="0" />
+  <rect
+     x="-26.779692"
+     y="77.830704"
+     width="34.202694"
+     height="11.607602"
+     r="5"
+     rx="5"
+     ry="5"
+     style="fill:none;stroke:#000000;display:none"
+     id="rect6226" />
+  <path
+     d="m 47.78,82.58 13,-37"
+     style="fill:none;stroke:#000080;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7147)"
+     id="path6228"
+     inkscape:connector-curvature="0" />
+  <path
+     d="M 60.78,45.58 48.78,7.5800001"
+     style="fill:none;stroke:#000080;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7137)"
+     id="path7056"
+     inkscape:connector-curvature="0" />
+  <rect
+     x="32.759338"
+     y="-26.801287"
+     width="20.987888"
+     height="35.754799"
+     r="5"
+     rx="5"
+     ry="5"
+     style="fill:none;stroke:#000000;display:none"
+     id="rect6235" />
+  <path
+     d="m 60.78,45.58 34,-22"
+     style="fill:none;stroke:#0000ff;stroke-width:6.30000019;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter7127)"
+     id="path6237"
+     inkscape:connector-curvature="0" />
+  <rect
+     x="91.721893"
+     y="-6.2577076"
+     width="46.55695"
+     height="34.786186"
+     r="5"
+     rx="5"
+     ry="5"
+     style="fill:none;stroke:#000000;display:none"
+     id="rect6242" />
+  <g
+     id="g7061"
+     clip-path="url(#clipPath)"
+     style="stroke-width:6.30000019;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter7091)"
+     transform="translate(-345.22,-317.42)">
+    <g
+       id="g7063"
+       style="stroke-width:6.30000019;stroke-miterlimit:4;stroke-dasharray:none">
+      <path
+         d="M 406,363 394,325"
+         style="fill:none;stroke:#000000;stroke-width:6.30000019;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter)"
+         id="path7065"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>
