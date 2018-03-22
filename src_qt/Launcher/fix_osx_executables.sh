@@ -1,11 +1,13 @@
 #!/bin/sh
 
-#cd ../build-Saturn-Desktop_Qt_5_10_1_clang_64bit-Release
+cd ../build-Saturn-Desktop_Qt_5_10_1_clang_64bit-Release
 
-#cp -r ../build-filereader-Desktop_Qt_5_10_1_clang_64bit-Release/File/ Saturn.app/Contents/MacOS
-#~/Qt/5.10.1/clang_64/bin/macdeployqt Saturn.app/ -executable=Saturn.app/Contents/MacOS/Saturn -qmldir=../Launcher/ -verbose=3
+cp -r ../build-filereader-Desktop_Qt_5_10_1_clang_64bit-Release/File/ Saturn.app/Contents/MacOS
+~/Qt/5.10.1/clang_64/bin/macdeployqt Saturn.app/ -executable=Saturn.app/Contents/MacOS/Saturn -qmldir=../Launcher/ -verbose=3
 
 install_name_tool -change @rpath/QtWebEngineWidgets.framework/Versions/5/QtWebEngineWidgets @executable_path/../frameworks/QtWebEngineWidgets.framework/Versions/5/QtWebEngineWidgets Saturn.app/Contents/MacOS/Saturn
+
+install_name_tool -change @rpath/QtPrintSupport.framework/Versions/5/QtPrintSupport @executable_path/../frameworks/QtPrintSupport.framework/Versions/5/QtPrintSupport Saturn.app/Contents/MacOS/Saturn
 
 install_name_tool -change @rpath/QtWebEngineCore.framework/Versions/5/QtWebEngineCore @executable_path/../frameworks/QtWebEngineCore.framework/Versions/5/QtWebEngineCore Saturn.app/Contents/MacOS/Saturn
 
@@ -74,3 +76,5 @@ install_name_tool -change @rpath/QtGui.framework/Versions/5/QtGui @executable_pa
 install_name_tool -change @rpath/QtWebEngine.framework/Versions/5/QtWebEngine @executable_path/../../../../../QtWebEngine.framework/Versions/5/QtWebEngine Saturn.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess
 
 install_name_tool -change @rpath/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../../../../../QtWidgets.framework/Versions/5/QtWidgets Saturn.app/Contents/Frameworks/QtWebEngineCore.framework/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess
+
+cp -r Saturn.app ../../build/qt/ 
