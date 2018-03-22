@@ -1,0 +1,14 @@
+FileReader - An example C++ plugin for QML that reads a local file.
+
+Basic Usage
+===========
+$ qmake
+$ make
+$ qmlscene -I . app.qml
+
+More information
+================
+http://rschroll.github.io/beru/2013/08/14/reading-files-with-a-c%2B%2B-plugin-in-qml.html
+
+Robert Schroll
+rschroll@gmail.com
