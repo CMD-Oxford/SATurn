@@ -45,8 +45,13 @@ int main(int argc, char *argv[]){
         qDebug() << "Base Directory: " << baseDir;
 
         // Start Redis
-        QString redisDir = baseDir + "\\bin\\redis";
-        QString redisProgram = redisDir + "\\redis-server.exe";
+        QString redisDir = baseDir + "/bin/redis";
+
+        #ifdef Q_OS_MACX
+            QString redisProgram = redisDir + "/src/redis-server";
+        #elif Q_OS_WIN
+            QString redisProgram = redisDir + "/redis-server.exe";
+        #endif
 
         qDebug() << "Redis directory: " << redisDir;
         qDebug() << "Redis executable: " << redisProgram;
@@ -56,16 +61,20 @@ int main(int argc, char *argv[]){
         redis->setProcessChannelMode(QProcess::ForwardedChannels);
 
         QStringList redisArguments;
-        redisArguments << redisDir + "\\redis.conf";
+        redisArguments << redisDir + "/redis.conf";
 
         redis->start(redisProgram, redisArguments);
 
         //Start NodeJS
-        QString nodeDir = baseDir + "\\bin\\node";
-        QString nodeProgram = nodeDir + "\\node.exe";
+        QString nodeDir = baseDir + "/bin/node";
+        #ifdef Q_OS_MACX
+             QString nodeProgram = nodeDir + "/bin/node";
+        #elif Q_OS_WIN
+            QString nodeProgram = nodeDir + "/node.exe";
+        #endif
         QStringList nodeArguments;
         nodeArguments << "SaturnServer.js";
-        nodeArguments << "services\\ServicesLocalLite.json";
+        nodeArguments << "services/ServicesLocalLite.json";
 
         qDebug() << "Node directory: " << nodeDir;
         qDebug() << "Node executable" << nodeProgram;
@@ -73,7 +82,7 @@ int main(int argc, char *argv[]){
         qDebug() << "Debug Mode " << debugMode;
 
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("NODE_PATH", nodeDir + "\\node_modules");
+        env.insert("NODE_PATH", nodeDir + "/node_modules");
         env.insert("DEBUG", debugMode);
 
         //Node needs this set otherwise you might get an errorno 203 thrown
@@ -83,8 +92,8 @@ int main(int argc, char *argv[]){
         node->setProcessEnvironment(env);
         node->setWorkingDirectory(baseDir);
        // node->setProcessChannelMode(QProcess::ForwardedChannels);
-        node->setStandardOutputFile(baseDir + "\\node.stdout");
-        node->setStandardErrorFile(baseDir + "\\node.stderr");
+        node->setStandardOutputFile(baseDir + "/node.stdout");
+        node->setStandardErrorFile(baseDir + "/node.stderr");
         node->start(nodeProgram, nodeArguments);
 
         QThread::sleep(2);
