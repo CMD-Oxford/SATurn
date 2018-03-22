@@ -1,0 +1,31 @@
+created: 20180313133950588
+modified: 20180313134351669
+title: Importing called sequence
+type: text/vnd.tiddlywiki
+
+You can import the called sequence into SATurn as follows
+
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Load the trace and click on Edit->Import trace sequence''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_import_trace_sequence.png]]</td>
+  </tr>
+  <tr>
+     <td>Imported trace sequence</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_imported_trace_sequence.png]]</td>
+  </tr>
+
+
+ </tbody>
+</table>

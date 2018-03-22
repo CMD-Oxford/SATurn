@@ -1,8 +1,15 @@
 created: 20180305103039051
-modified: 20180308153914137
+modified: 20180314154646326
 title: User Guide
 type: text/vnd.tiddlywiki
 
+SATurn is both the name of the application development framework (see the [[Internal: Developer Guide]] section for more information) and the name of the bioinformatics web-portal which we created for use at the SGC to assist with construct design.  This guide documents how to use the bioinformatics web-portal.  SATurn can be deployed as a standalone desktop application, remote web-portal, or a hybrid which uses both components.  This guide assumes that you are using the standalone version of SATurn which is installed locally and uses an SQLite database for storage - although most of the manual is correct regardless of how you use SATurn.
+
+Note that in the SGC we use an Oracle database for storage and a commercial LIMS system called Scarab to manage a diverse set of samples which span everything from clone and protein purification to performing assays on Human tissue samples.  In the SGC SATurn and Scarab talk to the same Oracle database.
+
+# SATurn
+## [[SATurn interface]]
+## [[SATurn database]]
 # Construct Design
 ## [[Construct design in SATurn]]
 ## [[Cloning Entities]]
@@ -59,8 +66,11 @@ type: text/vnd.tiddlywiki
 ### [[Drag and drop|Loading a trace with drag and drop]]
 ### [[With a zip file|Loading traces from a zip file]]
 ## Aligning to trace
-### [[BLAST sequences within SATurn database|BLAST trace sequence against SATurn database]]
-### [[Drag and drop sequence to align|Drag and drop sequence to align trace against]]
+### [[Align using BLAST hit|BLAST trace sequence against SATurn database]]
+### [[Viewing raw Clustal alignment|Viewing raw trace Clustal alignment]]
+## [[Trim / Clip trace|Trimming a sequencing trace]]
+## [[Exporting as image]]
+## [[Importing called sequence]]
 # [[Scripting]]
 ## [[Overview]]
 ## [[Retrieving entities from the SATurn database]]
