@@ -3,6 +3,8 @@
 cd ../build-Saturn-Desktop_Qt_5_10_1_clang_64bit-Release
 
 cp -r ../build-filereader-Desktop_Qt_5_10_1_clang_64bit-Release/File/ Saturn.app/Contents/MacOS
+cp -r ../Launcher/File/qmldir Saturn.app/Contents/MacOS/File/
+
 ~/Qt/5.10.1/clang_64/bin/macdeployqt Saturn.app/ -executable=Saturn.app/Contents/MacOS/Saturn -qmldir=../Launcher/ -verbose=3
 
 install_name_tool -change @rpath/QtWebEngineWidgets.framework/Versions/5/QtWebEngineWidgets @executable_path/../frameworks/QtWebEngineWidgets.framework/Versions/5/QtWebEngineWidgets Saturn.app/Contents/MacOS/Saturn

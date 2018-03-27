@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
         node->setStandardErrorFile(baseDir + "/node.stderr");
         node->start(nodeProgram, nodeArguments);
 
-        QThread::sleep(2);
+        QThread::sleep(4);
     }
     //Looks like current QT binaries are too old for below
     //QWebEngineSettings::globalSettings()->setAttribute(QWebEngineSettings::Q, enable);

@@ -1,0 +1,1 @@
+Service configuration files should be stored into this directory

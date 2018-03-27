@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>osx.haxe.x86_64</DisplayName>
+    <Description>Haxe for OSX x86_64</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+	<Default>true</Default>
+    <Licenses>
+        <License name="Haxe Compiler" file="LICENSE_COMPILER" />
+        <License name="Haxe Standard Library" file="LICENSE_STD_LIBRARY" />
+        <License name="Haxe/NEKO" file="LICENSE_NEKO" />
+    </Licenses>
+</Package>

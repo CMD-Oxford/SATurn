@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>osx.developer_tools.x86_64</DisplayName>
+    <Description>Developer tools for OSXs</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+	<Default>true</Default>
+</Package>

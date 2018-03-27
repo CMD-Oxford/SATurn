@@ -24,12 +24,18 @@ ApplicationWindow {
 
     FileDialog {
         id: fileDialog
-        title: "Please choose a file"
+        title: "Please choose a File"
         WebChannel.id: "fileDialog"
         folder: shortcuts.home
         onAccepted: {
-            var fileName = fileDialog.fileUrls.toString()
-            fileName = fileName.replace('file:///','');
+            var fileName = fileDialog.fileUrls.toString();
+
+            if(Qt.platform.os === "windows"){
+                fileName = fileName.replace('file:///','');
+            }else{
+                fileName = fileName.replace('file://','');
+            }
+
             fileSelected(fileName)
         }
 
@@ -140,7 +146,12 @@ ApplicationWindow {
                 folder: shortcuts.home
                 onAccepted: {
                     var fileName = fileUrls.toString()
-                    fileName = fileName.replace('file:///','');
+                    if(Qt.platform.os === "windows"){
+                        fileName = fileName.replace('file:///','');
+                    }else{
+                        fileName = fileName.replace('file://','');
+                    }
+
                     fileSelected(fileName)
                 }
 
@@ -163,9 +174,14 @@ ApplicationWindow {
             nameFilters: [  "All files (*)" ]
                     selectedNameFilter: "All files (*)"
             onAccepted: {
-                var destPath = fileDialog2.fileUrls.toString()
-                destPath = destPath.replace('file:///','');
+                var destPath = fileDialog2.fileUrls.toString();
                 //var destPath = fileDialog2.fileUrls.toString();
+
+                if(Qt.platform.os === "windows"){
+                    destPath = destPath.replace('file:///','');
+                }else{
+                    destPath = destPath.replace('file://','');
+                }
 
                 downloadMessage.text = "Downloaded " + destPath
                 downloadMessage.visible = true
@@ -199,7 +215,13 @@ ApplicationWindow {
             onDropped: {
                 drop.acceptProposedAction()
                 var fileName = drop.urls.toString();
-                fileName = fileName.replace('file:///','');
+
+                if(Qt.platform.os === "windows"){
+                    fileName = fileName.replace('file:///','');
+                }else{
+                    fileName = fileName.replace('file://','');
+                }
+
                 webview.runJavaScript('WK.openFile(new saturn.core.FileShim("'+fileName+'","'+filereader.read_b64(fileName)+'"),true);')  // Assuming you've defined
                 /*var request = new XMLHttpRequest()
                 request.open('GET', fileName)
