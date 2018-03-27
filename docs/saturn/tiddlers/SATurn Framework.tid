@@ -1,5 +1,5 @@
 created: 20180301161348796
-modified: 20180302134442928
+modified: 20180327193316305
 title: SATurn Framework
 type: text/vnd.tiddlywiki
 
@@ -7,8 +7,9 @@ type: text/vnd.tiddlywiki
 <$link to="User Guide" class="welcome_button">User Guide</$link>
 <$link to="Internal: Developer Guide" class="welcome_button">Developer Guide</$link><br/>
 <div style="margin-top:10px">
-<a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.4/SATurn.exe">Windows x86_64</a>
- <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.4/SATurnDeveloper.exe">Windows-Dev x86_64</a>
+<a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurn.exe">Windows</a>
+ <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurnOSX.app.zip">OSX</a>
+ <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurnDeveloper.exe">Windows-Dev x86_64</a>
 </div>
 <div class="welcome_content_text">
 SATurn is a modular, open-source, bioinformatics platform, designed to specifically address the problems of maintenance and longevity commonly associated with the development of simple tools funded by academic research grants.  Applications developed in SATurn can be deployed as web-based tools, standalone applications, or hybrid tools which have the benefits of both.  Within the Structural Genomics Consortium we have utilized SATurn to create a bioinformatics portal which is visited by a diverse group of scientists including those interested in structural biology, clon-ing, & chemical biology.
