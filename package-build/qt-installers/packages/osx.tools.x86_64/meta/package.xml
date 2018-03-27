@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>osx.tools.x86_64</DisplayName>
+    <Description>Provides common Bioinformatics tools (BLAST, Clustal, etc.)</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+	<Default>true</Default>
+    <Licenses>
+        <License name="Bioinformatics Tools" file="LICENSE" />
+    </Licenses>
+</Package>

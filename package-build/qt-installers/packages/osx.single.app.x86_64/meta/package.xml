@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>osx.single.app.x86_64</DisplayName>
+    <Description>Provides the standalone SATurn interface</Description>
+    <Version>1.0</Version>
+    <ReleaseDate>2018-02-21</ReleaseDate>
+	<Default>true</Default>
+    <Licenses>
+	<License name="SATurn License" file="LICENSE" />
+	<License name="QT License" file="LICENSE_QT" />
+	<License name="NodeJS License" file="LICENSE_NODEJS" />
+	<License name="Redis License" file="LICENSE_REDIS" />
+	<License name="JavaScript Licenses" file="LICENSE_THIRD_PARTY" />
+	<License name="NodeJS Library Licenses" file="NODE_LICENSES" />
+	<License name="Bioinformatics Tools Licenses" file="TOOLS_LICENSE" />
+    </Licenses>
+</Package>
