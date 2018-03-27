@@ -1,0 +1,24 @@
+created: 20180313133425081
+modified: 20180313133908348
+title: Exporting as image
+type: text/vnd.tiddlywiki
+
+You can export the current trace view as either a PNG or SVG.  Note that alignments and trimming are preserved in the exported image.
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. Prepare trace and click on Export to PNG or Export to SVG''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_export_buttons.png]]</td>
+  </tr>
+ </tbody>
+</table>

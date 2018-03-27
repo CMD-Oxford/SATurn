@@ -1,7 +1,9 @@
 created: 20180302080521543
-modified: 20180302083947682
+modified: 20180322155055225
 title: Internal: Building QT application
 type: text/vnd.tiddlywiki
+
+The instructions below guide you through the process of building the QT application which launches the standalone version of SATurn and provides the interface through which the web-portal is shown to the user.
 
 ! Windows
 # Install Microsoft Visual Studio 2017 (Community editor is fine)
@@ -14,3 +16,22 @@ type: text/vnd.tiddlywiki
 #>[img[qt_creator_compile_buttons.png]]
 # Create deployable version
 #>deploy_qt.bat<br/>(copies deployable version to build/qt along with all required QT libraries)
+! OSX
+# Install the latest version of XCode
+# Install QT 5.10.1 (be sure to select the QtWebEngine during install)
+#>If you install a different version of QT some of the links in saturn/src_qt_Launcher_fix_osx_executables.sh will need updated
+!! Build QML File Helper
+# Open QT Creator
+# Load File Helper project
+#>File->Open Project<br/>Navigate to saturn/src_qt/FileReader/filereader.pro
+# Click on configure for QT 5.10.1 Desktop
+# Build->Build Project (be sure to be in release and not debug mode)
+!! Build SATurn Launcher
+#>File->Open Project<br/>Navigate to saturn/src_qt/Launcher/Saturn.pro
+# When prompted configure for QT 5.10.0
+# Build->Build Project (be sure to be in release and not debug mode
+# Run the following post-fix script
+#> saturn/src_qt/Launcher/fix_osx_executables.sh
+#To test the build run the following
+#>cd saturn/build/qt
+#>Saturn.app/Contents/MacOS/Saturn __DEFAULT__ http://localhost:8091 ALL --disable-web-security

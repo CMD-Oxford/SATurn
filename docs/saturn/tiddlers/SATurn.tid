@@ -1,0 +1,8 @@
+created: 20180313135540077
+modified: 20180314082539672
+title: SATurn
+type: text/vnd.tiddlywiki
+
+SATurn is both the name of the application development framework (see the [[Internal: Developer Guide]] section for more information) and the name of the bioinformatics web-portal which we created for use at the SGC.  Within the SGC we store all of our samples within an Oracle database using a LIMS system called Scarab.  We have deployed a version of the SATurn bioinformatics portal on our internal servers which is connected to our Oracle database which users access via their web-browsers to perform construct design and basic bioinformatics tasks.  
+
+We have created a standalone version of this bioinformatics portal which can be installed onto 

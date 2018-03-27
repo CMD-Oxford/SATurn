@@ -1,5 +1,5 @@
 created: 20180306083648346
-modified: 20180307095211772
+modified: 20180313135212037
 title: Construct design in SATurn
 type: text/vnd.tiddlywiki
 
@@ -16,6 +16,9 @@ The basic construct design workflow everybody is familiar with is shown below al
    <th>
    SATurn Entity Name
    </th>
+   <th>
+   ID Example
+   </th>
    <th style="width:50%">
     Description
    </th>
@@ -25,46 +28,54 @@ The basic construct design workflow everybody is familiar with is shown below al
   <tr>
      <td>1. Select gene</td>
      <td>[[Gene]]</td>
+     <td></td>
      <td>Select the gene of interest that you wish to work on</td>
   </tr>
   <tr>
      <td>2.  Select isoform</td>
      <td>[[Target]]</td>
+     <td>BRD1A</td>
      <td>Specific isoform you wish to work on</td>
   </tr>
   <tr>
      <td>3.  Select entry clone</td>
      <td>[[Entry clone]]</td>
+     <td>BRDA1-s001</td>
      <td>Template DNA for PCR</td>
   </tr>
   <tr>
      <td>4. Select construct boundaries</td>
      <td></td>
      <td></td>
+     <td></td>
   </tr>
   <tr>
      <td>5. Enter primers</td>
      <td>[[Forward / Reverse Primers]]</td>
+     <td>BRDA1-f001/r001</td>
      <td></td>
   </tr> 
   <tr>
      <td>6. Enter PCR product</td>
      <td>[[Allele]]</td>
+     <td>BRDA1-a001</td>
      <td>SATurn adopts the SGC nomenclature of calling the DNA we are inserting into a vector an Allele</td>
   </tr>
   <tr>
      <td>7. Select vector</td>
      <td>[[Vector]]</td>
      <td></td>
+     <td></td>
   </tr>
   <tr>
      <td>8.  Enter construct</td>
      <td>[[Construct]]</td>
+     <td>BRDA1-c001</td>
      <td>Ligation product of [[Vector]] and [[Allele]]</td>
   </tr>
  </tbody>
 </table>
-Note that within the SATurn database: a construct is connected to an allele and vector,  an allele to an entry clone and forward/reverse primers, and an entry clone to a target.  
+Note that within the SATurn database: a construct is connected to an allele and vector,  an allele to an entry clone and forward/reverse primers, and an entry clone to a target.  Within the SGC all of our sample IDs start with the target ID which is formed from the gene symbol plus a single sequential character to indicate the isoform.  After the target ID all samples have a "-" then a single character which is specific to the sample type (see above table) followed by a zero padded sequential integer.  So for example the first entry clone for BRD1A is BRD1A-s001 and the second BRD1A-s002.
 
 SATurn allows you to save all of the above cloning entities into it's database which can either be created one-by-one or automatically by using the construct design tool which requires only that you specify the start/end positions of the construct along with the entry clone name and vector to use.
 

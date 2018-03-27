@@ -1,0 +1,34 @@
+created: 20180313132520265
+modified: 20180313133300486
+title: Viewing raw trace Clustal alignment
+type: text/vnd.tiddlywiki
+
+To trim / cut a trace you can do the following
+<table style="width:100%">
+ <thead>
+  <tr>
+   <th style="width:40%">
+    Step
+   </th>
+   <th>
+    Preview
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>''1. [[BLAST trace|BLAST trace sequence against SATurn database]]''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_blast_button.png]]</td>
+  </tr>
+  <tr>
+     <td>''2. Right-click sequence and select Run Clustal''</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_align_clustal.png]]</td>
+  </tr>
+  <tr>
+     <td>Clustal alignment</td>
+     <td style="text-align:center;padding-top:4px;padding-bottom:4px;">[img[image_trace_viewer_alignment.png]]</td>
+  </tr>
+
+
+ </tbody>
+</table>
