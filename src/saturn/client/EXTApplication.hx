@@ -811,69 +811,46 @@ class EXTApplication extends WorkspaceApplication{
         helpMenu.add({
             text : 'About',
             handler : function(){
-                var items = new Array<Dynamic>();
-
-                var hItems : Array<Dynamic> = [
-                    {
-                        xtype: 'imagecomponent',
-                        src: '/static/js/images/saturn.png',
-                        width: 50,
-                        height: 72,
-                        title: 'Saturn'
-                    },
-                    {
-                        xtype: 'label',
-                        text: 'SATURN v 1.0'
-                    }
-                ];
-
-                items.push({
-                    xtype:'container',
-                    layout: {
-                        type: 'hbox',
-                        align: 'center'
-                    },
-                    items: hItems
-                });
-
-                items.push({
-                    xtype: 'panel',
-                    items: [
-                        {
-                            xtype: 'component',
-                            html: '<div>License: GPL version 3 (copyright SGC 2014)<br/><br/>David Damerell<br/>Brian Marsden<br/>Claire Strain-Damerell</div>'
-                        }
-                    ]
-                });
-
-                var dataItems = new Array<Dynamic>();
-                for(clazz in getProgramRegistry().getProgramList()){
-                    dataItems.push({plugin: Type.getClassName(clazz)});
-                }
-
                 Ext.create('Ext.window.Window', {
                     title: 'About',
                     modal : true,
-                    layout : { type : 'vbox', align : 'stretch', padding: '2px' },
-                    items: items
-                }).show();
 
-                //showMessage('About','License: GPL version 3<br/>Authors: David Damerell<br/>Brian Marsden<br/>Claire Strain-Damerell');
+                    html: '<div style="margin-left:5px;margin-right:5px">'+
+                    '<h1><img style="vertical-align:middle;margin-left: -5" src="/static/js/images/saturn.png"></img><a target="_blank" href="https://ddamerell53.github.io/SATurn/">SATurn</a></h1>'+
+                    '<h2>Contributors</h2>'+
+                    'David Damerell<br/>Claire Strain-Damerell<br/>Stephen Joyce<br/>Narayanan Krishnan<br/>Brian Marsden<br/>' +
+                    '<h2>SATurn License</h2>' +
+                    'The SATurn source code is released under the Creative Commons CC0 license which you can find <a target="_blank" href="/static/licenses/LICENSE">here</a><br/>' +
+                    '<h2>Third-party License</h2>'+
+                    'SATurn uses third-party programs and libraries which come with their own licenses which can be found below<br/><br/>'+
+                    '<b>By using or distributing SATurn you must comply with all licenses</b><br/><ul>'+
+                    '<li><a target="_blank" href="/static/licenses/LICENSE_NODEJS">NodeJS (web-server)</a></li>'+
+                    '<li><a target="_blank" href="/static/licenses/LICENSE_BIOINFORMATICS">Bioinformatics Tools (Clustal, BLAST, etc.)</a></li>' +
+                    '<li><a target="_blank" href="/static/licenses/LICENSE_THIRD_PARTY">Third-party JavaScript libraries (ExtJS, etc.)</a></li>' +
+                    '<li><a target="_blank" href="/static/licenses/NODE_LICENSES">Third-party NodeJS libraries</a></li>' +
+                    '<li><a target="_blank" href="/static/licenses/LICENSE_REDIS">Redis License</a></li></ul><br/></div>',
+                    height:'500px'
+                }).show();
             }
         });
 
         helpMenu.add({
-            text: 'Manual',
+            text: 'Online Manual',
             handler: function(){
-                var guide = new WebPage();
+                js.Browser.window.open(
+                    'https://ddamerell53.github.io/SATurn/',
+                    '_blank'
+                );
+            }
+        });
 
-                guide.setURL('http://athena:8090/MolBioGuide.html');
-
-                var wo = new WebPageWorkspaceObject(guide,'Guide');
-
-                var wk = getWorkspace();
-
-                wk.addObject(wo,true);
+        helpMenu.add({
+            text: 'Local Manual',
+            handler: function(){
+                js.Browser.window.open(
+                    '/static/manual/index.html',
+                    '_blank'
+                );
             }
         });
 
