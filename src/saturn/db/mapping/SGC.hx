@@ -263,6 +263,7 @@ class SGC {
                     'entryCloneId' => true
                 ],
                 'options'=>[
+                    'id_pattern' => '-s',
                     'canSave'=>[
                         'saturn.client.programs.DNASequenceEditor' => true,
                         'saturn.client.programs.ProteinSequenceEditor' => true
@@ -1071,7 +1072,8 @@ class SGC {
                     'saturn.client.programs.ConstructDesigner' => false
                 ],
                 'options' => [
-                    'alias' => 'Construct Design'
+                    'alias' => 'Construct Plan',
+                    'icon'=>'dna_conical_16.png'
                 ]
             ],
 
@@ -1118,7 +1120,8 @@ class SGC {
                     'inchi' => 'INCHI',
                     'smiles' => 'SMILES',
                     'datestamp' => 'DATESTAMP',
-                    'person' => 'PERSON'
+                    'person' => 'PERSON',
+                    'oldSGCGLobalId' => 'OLD_SGCGLOBAL_ID'
                 ],
                 'indexes'=>[
                     'compoundId' => false,
@@ -1128,14 +1131,14 @@ class SGC {
                     'compoundId'  => null,
                     'shortCompoundId' => null,
                     'supplierId' => null,
-                    'supplier' => null
+                    'supplier' => null,
+                    'oldSGCGlobalId'=>null
                 ],
                 'table_info' => [
                     'schema' => 'SGC',
                     'name' => 'SGCCOMPOUND'
                 ],
                 'options' => [
-                    'id_pattern' => '^\\w{5}\\d{4}',
                     'workspace_wrapper' => 'saturn.client.workspace.CompoundWO',
                     'icon' => 'compound_16.png',
                     'alias' => 'Compounds',

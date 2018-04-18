@@ -25,7 +25,7 @@ using saturn.core.Util;
 import saturn.core.Util.*;
 
 class HMMer extends Unit<HMMerResponse, HMMerConfig>{
-    var hmmPath = 'bin/hmmer';
+    var hmmPath = 'bin/deployed_bin/hmmer';
     var hmmSearchPath : String;
 
     public function new(config : HMMerConfig, cb : HMMerResponse->Void) {
@@ -75,12 +75,15 @@ class HMMer extends Unit<HMMerResponse, HMMerConfig>{
                             debug(args.join(','));
 
                             exec(this.hmmSearchPath, args, function(code : Int){
+                                debug('Hello World');
                                 if(code != 0){
+                                    debug('Error');
                                     response.setError('An error has occurred running HMMSearch');
 
                                     done();
                                 }else{
                                     if(config.isRemote()){
+
                                         #if NODE
                                         SaturnServer.makeStaticAvailable(path_table, function(err : String, path: String){
                                             if(err == null){

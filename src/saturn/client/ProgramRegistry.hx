@@ -158,8 +158,8 @@ class ProgramRegistry {
     }
 	
 	public function getDefaultProgramByFileExtension( fileExtension : String) {
-		if (fileExtensionToDefaultProgram.exists(fileExtension)) {
-			return fileExtensionToDefaultProgram.get(fileExtension);
+		if (fileExtensionToDefaultProgram.exists(fileExtension.toLowerCase())) {
+			return fileExtensionToDefaultProgram.get(fileExtension.toLowerCase());
 		}else {
 			return null;
 		}

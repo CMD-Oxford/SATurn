@@ -34,7 +34,7 @@ class PfamSupplier extends AnnotationSupplier{
 
         config.setFastaContent('>' + molecule.getMoleculeName() + '\n' + molecule.getSequence());
 
-        config.setHMMPath('database/Pfam-A.hmm');
+        config.setHMMPath('databases/Pfam-A.hmm');
 
         chain.add('saturn.workflow.HMMer.query', config);
 

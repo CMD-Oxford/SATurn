@@ -45,9 +45,8 @@ class ABIConverter  extends QueuePlugin{
 
         var nodePath = js.Node.path.dirname(Node.__filename);
 
-        var progName = this.saturn.getPythonPath();
-        var args = ['bin/deployed_bin/ABIConverter.py', binary_info.path, json_info.path];
-
+        var progName = 'bin/deployed_bin/ABIConverter';
+        var args = [binary_info.path, json_info.path];
         if(Node.os.platform() == 'win32'){
             progName = 'bin/deployed_bin/ABIConverter.exe';
             args = [binary_info.path, json_info.path];
@@ -56,11 +55,11 @@ class ABIConverter  extends QueuePlugin{
         var proc : NodeChildProcess = Node.child_process.spawn(progName,args);
 
         proc.stderr.on('data', function(error){
-            Node.console.log(error.toString());
+            //Node.console.log(error.toString());
         });
 
         proc.stdout.on('data', function(error){
-            Node.console.log(error.toString());
+            //Node.console.log(error.toString());
         });
 
         var code = @await proc.on('close');

@@ -9,7 +9,7 @@
 
 package saturn.core;
 
-#if CLIENT_SITE || SERVER_SIDE || SCRIPT_ENGINE
+#if (CLIENT_SIDE || SERVER_SIDE || SCRIPT_ENGINE)
 import js.html.ArrayBuffer;
 import js.html.Uint8Array;
 #end
@@ -32,7 +32,7 @@ class FileShim {
     }
 
     public function getAsArrayBuffer() : Dynamic{
-        #if CLIENT_SITE || SERVER_SIDE || SCRIPT_ENGINE
+        #if (CLIENT_SIDE || SERVER_SIDE || SCRIPT_ENGINE)
         var bstr = js.Browser.window.atob(this.base64);
         var buffer = new Uint8Array(bstr.length);
         for (i in 0...bstr.length) {

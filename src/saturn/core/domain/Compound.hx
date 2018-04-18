@@ -42,6 +42,8 @@ class Compound {
 
     public function new(){
         datestamp = new Date(1,2,3,4,5,6);
+
+        compoundId = 'Compound';
     }
 
 

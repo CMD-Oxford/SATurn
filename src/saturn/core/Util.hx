@@ -108,8 +108,16 @@ class Util {
         });
 
         proc.on('close', function(code){
+            debug('Closed');
             cb(code);
         });
+
+        proc.on('error', function(error){
+            debug(error);
+            cb(-1);
+        });
+
+        debug('Hello X');
         #elseif CLIENT_SIDE
         Util.getNewExternalProcess(function(process){
             process.start(program, args);

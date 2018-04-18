@@ -52,7 +52,7 @@ class PSIPREDPlugin extends QueuePlugin {
         var outputFileName =  inputFileName+'.horiz';
 
         var cmd = './runpsipred_single';
-        var dir = 'bin/psipred/unix';
+        var dir = 'bin/deployed_bin/psipred/unix';
 
         if(Node.os.platform() == 'win32'){
             cmd = 'runpsipred_single.bat';
