@@ -13,7 +13,7 @@ import saturn.core.domain.Compound;
 import saturn.client.workspace.Workspace;
 
 class CompoundWO extends WorkspaceObjectBase<Compound>{
-    public static var FILE_IMPORT_FORMATS : Array<String> = [];
+    public static var FILE_IMPORT_FORMATS : Array<String> = ['sdf'];
 
     public function new(object : Dynamic, name : String){
         if(object == null){

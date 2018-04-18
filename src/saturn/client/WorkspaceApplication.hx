@@ -299,9 +299,9 @@ class WorkspaceApplication {
 				//clearSouthPanel();
 
 
-				
+
 				theActiveProgram = program;
-				
+
 				if(WorkspaceApplication.getApplication().isNaked() == false){
 					getTabContainer().setActiveTab(tab);
 				}
@@ -1192,6 +1192,10 @@ class WorkspaceApplication {
                     var dialog = rawQtChannel.objects.fileDialog;
 
                     dialog.fileSelected.connect(function(filePath) {
+                        if(js.Browser.navigator.userAgent.indexOf('Windows') > -1){
+                            filePath = '/' + filePath;
+                        }
+
                         if(qtSaveFileContents == null){
                             rawQtChannel.objects.HostFileReader.read_b64(filePath, function(contents){
                                 var file = new FileShim(filePath, contents);

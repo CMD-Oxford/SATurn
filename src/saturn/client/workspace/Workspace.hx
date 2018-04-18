@@ -984,7 +984,12 @@ class Workspace implements BuildingBlock{
 
         nameToObjectUUID.remove(object.getName());
 
-        var clazz = Type.getClass(object);
+        var entity = object;
+        if(Std.is(object, WorkspaceObject) ){
+            entity = object.getObject();
+        }
+
+        var clazz = Type.getClass(entity);
         if(clazz != null){
             var model = WorkspaceApplication.getApplication().getProvider().getModel(clazz);
 
@@ -994,7 +999,7 @@ class Workspace implements BuildingBlock{
                 if(id_field != null){
                     WorkspaceApplication.getApplication().getActiveProgram().setModelOutlineValue(id_field, newName);
 
-                    Reflect.setField(object, id_field, newName);
+                    Reflect.setField(entity, id_field, newName);
                 }
             }
         }

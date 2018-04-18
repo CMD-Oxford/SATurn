@@ -167,6 +167,63 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
         debug('Saturn loaded');
 
+
+    }
+
+    override function createMenuBar(){
+        super.createMenuBar();
+
+        getResourcesMenu().add({
+            text : 'Clear compound image cache',
+            handler: function(){
+                clearCompoundImageCache();
+            }
+        });
+
+        var exportMenu = getWorkspaceExportMenu();
+
+        exportMenu.add({
+            text : 'Protein -> FASTA',
+            handler: function() {
+                var workspace = getWorkspace();
+
+                var strBuf = new StringBuf();
+
+                var woProteins : Array<ProteinWorkspaceObject> = workspace.getAllObjects(ProteinWorkspaceObject);
+                for(woProtein in woProteins){
+                    var protein : Protein = woProtein.getObject();
+
+                    var name = woProtein.getName();
+                    name = StringTools.replace(name, ' (Protein)', '');
+
+                    strBuf.add(FastaEntity.formatFastaFile(name, protein.getSequence()));
+                }
+
+                saveTextFile(strBuf.toString(),'Workspace_Proteins.fasta');
+            }
+        });
+
+        exportMenu.add({
+            text : 'DNA -> FASTA',
+            handler: function() {
+                var workspace = getWorkspace();
+
+                var strBuf = new StringBuf();
+
+                var woDNA : Array<DNAWorkspaceObject<DNA>> = workspace.getAllObjects(DNAWorkspaceObject);
+                for(woDNA in woDNA){
+                    var dna : DNA = woDNA.getObject();
+
+                    var name = woDNA.getName();
+                    name = StringTools.replace(name, ' (DNA)', '');
+
+                    strBuf.add(FastaEntity.formatFastaFile(name, dna.getSequence()));
+                }
+
+                saveTextFile(strBuf.toString(),'Workspace_DNA.fasta');
+            }
+        });
+
         var databases = [
             'construct_protein'=>'Update Construct Protein BLASTDB',
             'construct_protein_no_tag'=>'Update Construct Protein (No Tag) BLASTDB',
@@ -228,61 +285,6 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         }
     }
 
-    override function createMenuBar(){
-        super.createMenuBar();
-
-        getResourcesMenu().add({
-            text : 'Clear compound image cache',
-            handler: function(){
-                clearCompoundImageCache();
-            }
-        });
-
-        var exportMenu = getWorkspaceExportMenu();
-
-        exportMenu.add({
-            text : 'Protein -> FASTA',
-            handler: function() {
-                var workspace = getWorkspace();
-
-                var strBuf = new StringBuf();
-
-                var woProteins : Array<ProteinWorkspaceObject> = workspace.getAllObjects(ProteinWorkspaceObject);
-                for(woProtein in woProteins){
-                    var protein : Protein = woProtein.getObject();
-
-                    var name = woProtein.getName();
-                    name = StringTools.replace(name, ' (Protein)', '');
-
-                    strBuf.add(FastaEntity.formatFastaFile(name, protein.getSequence()));
-                }
-
-                saveTextFile(strBuf.toString(),'Workspace_Proteins.fasta');
-            }
-        });
-
-        exportMenu.add({
-            text : 'DNA -> FASTA',
-            handler: function() {
-                var workspace = getWorkspace();
-
-                var strBuf = new StringBuf();
-
-                var woDNA : Array<DNAWorkspaceObject<DNA>> = workspace.getAllObjects(DNAWorkspaceObject);
-                for(woDNA in woDNA){
-                    var dna : DNA = woDNA.getObject();
-
-                    var name = woDNA.getName();
-                    name = StringTools.replace(name, ' (DNA)', '');
-
-                    strBuf.add(FastaEntity.formatFastaFile(name, dna.getSequence()));
-                }
-
-                saveTextFile(strBuf.toString(),'Workspace_DNA.fasta');
-            }
-        });
-    }
-
     /**
     * registerPrograms registers are default plugins and programs
     **/
@@ -336,6 +338,8 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
 
         this.getProgramRegistry().registerProgram(BasicTableViewer, true);
+
+        this.getProgramRegistry().registerProgram(CompoundViewer, true);
 
         this.getProgramRegistry().registerProgram(HomePage, true);
 

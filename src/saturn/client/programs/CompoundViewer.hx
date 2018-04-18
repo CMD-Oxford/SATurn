@@ -17,6 +17,7 @@ import saturn.client.workspace.CompoundWO;
 import saturn.client.workspace.Workspace.WorkspaceObject;
 
 import bindings.Ext;
+import saturn.client.core.CommonCore;
 
 class CompoundViewer extends SimpleExtJSProgram{
     static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ CompoundWO ];
@@ -24,31 +25,52 @@ class CompoundViewer extends SimpleExtJSProgram{
     var theComponent : Dynamic;
     var molEditor : Dynamic;
 
+    var editor : CompoundEditor;
+
     var loaded : Bool = false;
 
-    public function new(){
+    var up = false;
+    var lastSmilesImport = null;
+
+    public function new(editor : CompoundEditor){
+        if(editor == null){
+            this.editor = CompoundEditor.Ketcher;
+        }else{
+            this.editor = editor;
+        }
+
         super();
     }
 
     override public function emptyInit() {
         super.emptyInit();
 
+
+
+        var tagType = null;
+
+        if(CompoundEditor.Molsoft == this.editor){
+            tagType = 'div';
+        }else if(CompoundEditor.Ketcher == this.editor){
+            tagType = 'iframe';
+        }
+
         theComponent = Ext.create('Ext.panel.Panel', {
             width:'100%',
             height: '95%',
             autoScroll : true,
             region:'center',
-            layout : {
+            /*layout : {
                 type: 'hbox',
                 align: 'middle',
                 pack: 'center'
-            },
+            },*/
             items : [
                 {
                     xtype : "component",
                     region: "north",
                     autoEl : {
-                        tag : "div"
+                        tag : tagType
 
                     },
                     listeners : {
@@ -76,33 +98,76 @@ class CompoundViewer extends SimpleExtJSProgram{
 
         var id = dom.id;
 
-        molEditor = untyped __js__('new MolEdit.ChemicalView("",id, 600, 400 )');
+        if(editor == CompoundEditor.Molsoft){
+            molEditor = untyped __js__('new MolEdit.ChemicalView("",id, 600, 400 )');
 
-        var applyStyle = null;
+            var applyStyle = null;
 
-        applyStyle = function(){
-            var tableElems : Dynamic = dom.getElementsByTagName('table');
+            applyStyle = function(){
+                var tableElems : Dynamic = dom.getElementsByTagName('table');
 
-            if(tableElems != null && tableElems.length > 0){
-                tableElems[0].style.margin = '0 auto';
-            }else{
-                haxe.Timer.delay(applyStyle, 1000);
+                if(tableElems != null && tableElems.length > 0){
+                    tableElems[0].style.margin = '0 auto';
+                }else{
+                    haxe.Timer.delay(applyStyle, 1000);
+                }
+            };
+
+            applyStyle();
+
+            up = true;
+
+            if(getObject() != null){
+                render();
             }
-        };
+        }else if(editor == CompoundEditor.Ketcher){
+            var iframe :Dynamic = dom;
 
-        applyStyle();
+            //iframe.setAttribute('id', 'ifketcher');
+            iframe.setAttribute('src', 'js/ketcher/ketcher.html');
+            iframe.setAttribute('width', '100%');
+            iframe.setAttribute('height', '100%');
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.position = 'absolute';
+            iframe.style.border = 'none';
+
+            var waitForLoad = null;
+
+            waitForLoad = function(){
+                var ui = null;
+                if (untyped __js__("'contentDocument' in iframe")){
+                    molEditor = iframe.contentWindow.ketcher;
+                    ui = iframe.contentWindow.ui;
+                }else{
+                    var d_document :Dynamic = js.Browser.document;
+                    molEditor = iframe.window.ketcher;
+                    ui = iframe.window.ui;
+                }
+
+                if(ui != null && ui.initialized == true){
+                    up = true;
+
+                    if(getObject() != null){
+                        haxe.Timer.delay(render, 100);
+                        //render();
+                    }
+                }else{
+                    haxe.Timer.delay(waitForLoad, 100);
+                }
+            };
+
+            waitForLoad();
+        }
+
+
     }
 
     override
     public function onFocus(){
         super.onFocus();
 
-        getApplication().getEditMenu().add({
-            text : "Click me",
-            handler : function(){
-                getApplication().showMessage('Menu','You clicked me!');
-            }
-        });
+        getApplication().enableProgramSearchField(true);
 
         getApplication().hideMiddleSouthPanel();
 
@@ -128,7 +193,7 @@ class CompoundViewer extends SimpleExtJSProgram{
 
         setTitle(w0.getName());
 
-        if(getActiveObjectObject() != null){
+        if(getActiveObjectObject() != null && up){
             render();
         }
     }
@@ -139,10 +204,18 @@ class CompoundViewer extends SimpleExtJSProgram{
         var compound :Compound = getActiveObjectObject();
 
         if(compound.sdf != null){
-            molEditor.importFromString(compound.sdf);
+            setCompoundInEditor(compound.sdf);
         }
 
         addModelToOutline(compound, true);
+    }
+
+    public function setCompoundInEditor(molBlock : String){
+        if(this.editor == CompoundEditor.Molsoft){
+            molEditor.importFromString(molBlock);
+        }else if(this.editor == CompoundEditor.Ketcher){
+            molEditor.setMolecule(molBlock);
+        }
     }
 
     override public function setTitle(title : String){
@@ -170,8 +243,117 @@ class CompoundViewer extends SimpleExtJSProgram{
     override public function saveWait(cb){
         var obj = getActiveObjectObject();
 
-        obj.sdf = molEditor.getMolfile();
+        obj.sdf = getMolBlockFromEditor();
 
         cb();
     }
+
+    public function getMolBlockFromEditor(){
+        if(this.editor == CompoundEditor.Molsoft){
+            return  molEditor.getMolfile();
+        }else if(this.editor == CompoundEditor.Ketcher){
+            return molEditor.getMolfile();
+        }else{
+            return null;
+        }
+    }
+
+    override public function openFile(file : Dynamic, asNew : Bool, ? asNewOpenProgram : Bool = true) : Void{
+        parseFile(file, function(contents){
+
+        },asNewOpenProgram);
+    }
+
+    public static function parseFile(file : Dynamic, ?cb=null, ?asNewOpenProgram : Bool = true){
+        var extension = CommonCore.getFileExtension(file.name);
+        if(extension == 'sdf'){
+            CommonCore.getFileAsText(file, function(contents){
+                if(contents != null){
+                    var molBlock = '';
+                    var rdkit = untyped __js__('RDKit');
+
+                    var lines = contents.split('\n');
+                    var endOfMol = '$' + '$' + '$' + '$';
+
+                    var auto_open = true;
+
+                    for(line in lines){
+                        molBlock += line + '\n';
+                        if(line.indexOf(endOfMol) >= 0){
+                            var compound = new Compound();
+                            compound.sdf = molBlock;
+
+                            var name = 'Unknown';
+
+                            var mol = rdkit.Molecule.MolBlockToMol(compound.sdf);
+
+                            var molLines = compound.sdf.split('\n');
+                            var property_reg  = ~/>\s+<(.+)>/;
+                            var property = null;
+
+                            for(molLine in molLines){
+                                if(property != null){
+                                    mol.setProp(property, molLine);
+
+                                    //Hard-coded
+                                    if(property == 'CompoundID' || property == 'ID' || property == 'SupplierID'){
+                                        name = molLine;
+                                    }
+
+                                    property = null;
+                                }else if(property_reg.match(molLine)){
+                                    property = property_reg.matched(1);
+                                }
+                            }
+
+                            compound.smiles = mol.toSmiles();
+
+                            WorkspaceApplication.getApplication().getWorkspace().addObject(new CompoundWO(compound, name), auto_open);
+
+                            auto_open = false;
+
+                            molBlock = '';
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    override public function search(str : String) : Void{
+        super.search(str);
+
+        if(str != null && str != '' && lastSmilesImport != str){
+            lastSmilesImport = str;
+            var rdkit = untyped __js__('RDKit');
+
+            var mol = rdkit.Molecule.fromSmiles(str);
+
+            if(mol != null){
+                mol.compute2DCoords();
+                var molBlock = mol.toMolfile();
+
+                getObject().sdf = molBlock;
+
+                setCompoundInEditor(molBlock);
+            }
+        }
+    }
+
+    override public function saveObject(cb : String->Void){
+        var molBlock = getMolBlockFromEditor();
+        var compound = getObject();
+        compound.sdf = molBlock;
+
+        var rdkit = untyped __js__('RDKit');
+        var mol = rdkit.Molecule.MolBlockToMol(compound.sdf);
+        compound.smiles = mol.toSmiles();
+
+        super.saveObject(cb);
+    }
+}
+
+enum CompoundEditor{
+    Molsoft;
+    Ketcher;
 }
