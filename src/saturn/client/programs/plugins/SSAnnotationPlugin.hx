@@ -47,7 +47,7 @@ class SSAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implements Se
 
         program.addSequenceChangeListener(this);
 
-        annotationPos = program.addAnnotation('Secondary Structure');
+        annotationPos = program.addAnnotation('SS');
 
         program.setAnnotationClass('SS',AnnotationEditorBlockDiv);
     }

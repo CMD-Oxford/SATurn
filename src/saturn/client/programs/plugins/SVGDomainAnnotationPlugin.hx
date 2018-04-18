@@ -68,7 +68,7 @@ class SVGDomainAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implem
         program.addSequenceChangeListener(this);
 
         annotationId = program.addAnnotation('Domains');
-        program.setAnnotationClass('Pfam',SVGAnnotationBlock);
+        program.setAnnotationClass('Domains',SVGAnnotationBlock);
 
         program.setAnnotationPosition(annotationId, AnnotationPosition.TOP);
     }
@@ -77,7 +77,7 @@ class SVGDomainAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implem
         bgStyle = 'rgb(255,255,255)';
         var program : SequenceEditor = getProgram();
 
-        var blocks : Array<AnnotationEditorBlock> = program.getAnnotationBlocks('Pfam');
+        var blocks : Array<AnnotationEditorBlock> = program.getAnnotationBlocks('Domains');
 
         if(domains == null){
             for(block in blocks){
