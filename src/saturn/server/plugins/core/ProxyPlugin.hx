@@ -9,6 +9,7 @@
 
 package saturn.server.plugins.core;
 
+import js.html.Node;
 import haxe.Json;
 import StringTools;
 import saturn.app.SaturnServer;
@@ -68,6 +69,23 @@ class ProxyPlugin extends BaseServerPlugin{
         for(route in Reflect.fields(config.routes)){
             var routeConfig = Reflect.field(config.routes, route);
             debug('Routing ' + route + ' to ' + routeConfig.target);
+
+            if(routeConfig.prestart != null){
+
+                var proc : NodeChildProcess = Node.child_process.spawn(routeConfig.prestart,routeConfig.args, {env:Node.process.env ,cwd:routeConfig.cwd});
+
+                proc.stderr.on('data', function(error){
+                    debug(error);
+                });
+
+                proc.stdout.on('data', function(error){
+                    debug(error);
+                });
+
+                proc.on('exit', function(){
+                    debug('Exited');
+                });
+            }
 
             if(routeConfig.GET){
                 debug('Adding GET proxy');

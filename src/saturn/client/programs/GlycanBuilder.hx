@@ -286,7 +286,7 @@ class GlycanBuilder extends SimpleExtJSProgram{
                     var glycan = new Glycan();
                     glycan.content = contents;
                     glycan.contentType = 'glycoct_condensed';
-                    
+
                     WorkspaceApplication.getApplication().getWorkspace().addObject(new GlycanWO(glycan, name), true);
                 }
             });

@@ -196,7 +196,10 @@
             "/GlycanBuilder/.*" :{
               "target": "http://localhost:8080/",
               "GET": true,
-              "POST": true
+              "POST": true,
+              "prestart": "cmd",
+              "args":["/c","start", "C:\/Users\/ddamerell\/AppData\/Local\/GlycanBuilder\/bin\/catalina.bat", "start"],
+              "cwd":"C:\/Users\/ddamerell\/AppData\/Local\/GlycanBuilder"
             }
          }
        }
