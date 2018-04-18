@@ -1172,6 +1172,41 @@ class SGC {
                     'saturn.client.programs.CompoundViewer' => true
                 ]
             ],
+            'saturn.core.domain.Glycan'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'glycanId' => 'GLYCANID',
+                    'content' => 'CONTENT',
+                    'contentType' => 'CONTENT_TYPE',
+                    'description' => 'DESCRIPTION'
+                ],
+                'indexes'=>[
+                    'glycanId' => false,
+                    'id'=>true
+                ],
+                'search' => [
+                    'glycanId'  => null
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'GLYCAN'
+                ],
+                'options' => [
+                    'workspace_wrapper' => 'saturn.client.workspace.GlycanWO',
+                    'icon' => 'glycan_16.png',
+                    'alias' => 'Glycans',
+
+                ],
+                'model' => [
+                    'Glycan ID' => 'glycanId',
+                    'Description' => 'description',
+                    'content' => 'content',
+                    'contentType' => 'contentType'
+                ],
+                'programs'=>[
+                    'saturn.client.programs.GlycanBuilder' => true
+                ]
+            ],
             'saturn.app.SaturnClient'=>[
                 'options'=>[
                     'flags' =>[

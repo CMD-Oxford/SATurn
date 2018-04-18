@@ -192,12 +192,12 @@
                     "password_in_token": true
         },{
           "clazz": "saturn.server.plugins.core.ProxyPlugin",
-          "routes": {
-             "/GlycanBuilder.*" :{
-               "target": "http://localhost:8090/",
-             "GET": true,
-             "POST": true
-           }
+          "routes":{
+            "/GlycanBuilder/.*" :{
+              "target": "http://localhost:8080/",
+              "GET": true,
+              "POST": true
+            }
          }
        }
     ]

@@ -55,14 +55,14 @@ class ProxyPlugin extends BaseServerPlugin{
         })');
 
         // Create Proxy server
-        proxy = httpProxy.createProxyServer({agent:agent}); //{agent: agent}
+        proxy = httpProxy.createProxyServer({agent:agent,changeOrigin:true}); //{agent: agent}
 
         // Get SaturnServer instance
         var server = getSaturnServer().getServer();
 
         var restify : Dynamic = Node.require('restify');
 
-        server.use(wrapMiddleware(restify.plugins.bodyParser({mapParams: true})));
+        //server.use(wrapMiddleware(restify.plugins.bodyParser({mapParams: true})));
 
         // Iterate routes to proxy from configuration
         for(route in Reflect.fields(config.routes)){
@@ -71,6 +71,7 @@ class ProxyPlugin extends BaseServerPlugin{
 
             if(routeConfig.GET){
                 debug('Adding GET proxy');
+
                 server.get(route, function(req, res) {
                     debug('Request: ' + req.getPath());
                     proxyRequest(req, res, routeConfig.target);
@@ -106,6 +107,8 @@ class ProxyPlugin extends BaseServerPlugin{
     * target: Target address
     **/
     private function proxyRequest(req, res, target){
+        //target = target + '/' + req.getPath();
+        //debug('Target ' + target);
         proxy.web(req, res, { target: target });
     }
 
@@ -113,12 +116,12 @@ class ProxyPlugin extends BaseServerPlugin{
     private function wrapMiddleware(middleware : Dynamic) {
         return function(req, res, next) {
             //var regex : EReg = ~/^\/GlycanBuilder.*$/;
-
             // Hard coded for now as regex on each request is too slow for a proxy
             if(StringTools.startsWith(req.path(),'/GlycanBuilder')){
+                debug('Skipping ' + req.getPath());
                 next();
             }else {
-
+                debug('Playing ' + req.getPath());
                 if(Std.is(middleware, Array)){
                     middleware[0](req, res, function() {
                         middleware[1](req, res, next);

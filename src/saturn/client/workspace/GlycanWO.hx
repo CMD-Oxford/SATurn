@@ -9,11 +9,11 @@
 
 package saturn.client.workspace;
 
-import saturn.core.Glycan;
+import saturn.core.domain.Glycan;
 import saturn.client.workspace.Workspace;
 
 class GlycanWO extends WorkspaceObjectBase<Glycan>{
-    public static var FILE_IMPORT_FORMATS : Array<String> = [];
+    public static var FILE_IMPORT_FORMATS : Array<String> = ['glycoct_condensed'];
 
     public function new(object : Dynamic, name : String){
         if(object == null){

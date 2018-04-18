@@ -9,18 +9,32 @@
 
 package saturn.client.programs;
 
+import haxe.ds.HashMap;
 import saturn.client.programs.SimpleExtJSProgram;
 
-import saturn.core.Glycan;
+import saturn.core.domain.Glycan;
 import saturn.client.workspace.GlycanWO;
 
 import saturn.client.workspace.Workspace.WorkspaceObject;
 import saturn.util.StringUtils;
 
+import saturn.client.core.CommonCore;
+
 import bindings.Ext;
 
+/**
+* GlycanBuilder is a wrapper for the Vaadin/Java GlycanBuilder application.
+*
+* This class expects to be able to communicate with GlycanBuilder on the same host and port as the SATurn server is
+* listening on.  In the SATurn server service configuration file you will find a proxy directive which causes the
+* NodeJS SATurn server to proxy requests to where you have configured GlycanBuilder to run from.
+*
+**/
 class GlycanBuilder extends SimpleExtJSProgram{
     static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ GlycanWO ];
+
+    // Used to store commands which we are trying to run before GlycanBuilder has been initialised
+    var storedCommands : Array<Array<Dynamic>> = new Array<Array<Dynamic>>();
 
     var theComponent : Dynamic;
 
@@ -30,6 +44,8 @@ class GlycanBuilder extends SimpleExtJSProgram{
 
     override public function emptyInit() {
         super.emptyInit();
+
+        var url = js.Browser.window.location.protocol + '//'+js.Browser.window.location.hostname+':'+js.Browser.window.location.port + '/GlycanBuilder/GlycanBuilder.html';
 
         theComponent = Ext.create('Ext.panel.Panel', {
             width:'100%',
@@ -42,7 +58,7 @@ class GlycanBuilder extends SimpleExtJSProgram{
                     region: "north",
                     autoEl : {
                         tag : "iframe",
-                        src : "http://localhost:8090/static/GlycanBuilder.html",
+                        src : url,
                         width : "100%",
                         style: {
                             height : "100%"
@@ -60,18 +76,73 @@ class GlycanBuilder extends SimpleExtJSProgram{
 
     override public function initialiseDOMComponent() {
         super.initialiseDOMComponent();
+
+        // To communicate with the GlycanBuilder application we need a special object to be made available by the application
+        // pokeCanvas causes this special object to be made available to us
+        pokeCanvas(function(error : String){
+            if(error != null){
+                getApplication().showMessage('Error', error);
+            }else{
+                // Run any stacked commands
+                if(storedCommands.length > 0){
+                    while(storedCommands.length>0){
+                        var unit = storedCommands.pop();
+                        runCanvasCommand(unit[0],unit[1] );
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+    * pokeCanvas causes the GlycanBuilder canvas to make a special object available to us which we can use to
+    * communicate with the canvas to import and export structures
+    **/
+    public function pokeCanvas(cb : String->Void){
+        var giframe = getComponent().getEl().down('iframe').dom;
+        var clicked = false;
+
+        // There's a bug in the GlycanBuilder canvas which means that the special object we require to communicate with
+        // isn't created unless GlycanBuilder has rendered the canvas once.  For now we trigger the rendering by
+        // clicking the select-all button with JavaScript
+        var checkCanvas = null;
+        checkCanvas = function(){
+            if(giframe != null){
+                var giDocument = giframe.contentDocument;
+
+                var matchingItems :Array<Dynamic> = giDocument.querySelectorAll("[src='/GlycanBuilder/VAADIN/themes/ucdb_2011theme/icons/selectall.png']");
+
+                if(matchingItems.length > 0){
+                    var imgElement = matchingItems[0];
+                    var selectAllButton = imgElement.parentElement;
+                    if(!clicked){
+                        selectAllButton.click();
+                        clicked = true;
+                    }
+
+                    if(giframe.contentWindow.glycanCanvas != null){
+                        cb(null); return;
+                    }
+                }
+            }
+
+            haxe.Timer.delay(checkCanvas, 100);
+        }
+
+        checkCanvas();
     }
 
     override
     public function onFocus(){
         super.onFocus();
 
-        getApplication().getEditMenu().add({
-            text : "Click me",
-            handler : function(){
-                getApplication().showMessage('Menu','You clicked me!');
-            }
-        });
+        getApplication().installOutlineTree('MODELS',true, false, 'WorkspaceObject', 'GRID');
+
+        if(getActiveObjectId() != null){
+            var glycan :Glycan = getActiveObjectObject();
+
+            addModelToOutline(glycan, true);
+        }
 
         getApplication().hideMiddleSouthPanel();
     }
@@ -93,6 +164,14 @@ class GlycanBuilder extends SimpleExtJSProgram{
     **/
     public function runCanvasCommand(command, cb){
         var hook = getCanvasHook();
+
+        if(hook == null){
+            storedCommands.push([command,cb]);
+            return;
+        }
+
+        // if first load you need to trick the canvas into building the canvas
+        //var elems = document.querySelectorAll('[src]') find img with selectall then get button parent and click it
 
         var gcb = [];
         untyped {
@@ -141,22 +220,9 @@ class GlycanBuilder extends SimpleExtJSProgram{
     * content: Glycan string
     **/
     public function loadContent(contentType : String, content : String){
-        var load = null;
+        runCanvasCommand('import~'+contentType + '~' + content, function(res){
 
-        load = function(){
-            if(!canvasLoaded()){
-                haxe.Timer.delay(function(){
-                    load();
-                },1000);
-            }else{
-                js.Browser.window.console.log('Loading glycans');
-                runCanvasCommand('import~'+contentType + '~' + content, function(res){
-
-                });
-            }
-        };
-
-        load();
+        });
     }
 
     override public function setTitle(title : String){
@@ -192,5 +258,38 @@ class GlycanBuilder extends SimpleExtJSProgram{
 
             cb();
         });
+    }
+
+    override public function saveAsync(cb : String->Void){
+        var glycan = getObject();
+
+        getCanvasContents(function(res){
+            glycan.content = res;
+            glycan.contentType = 'glycoct_condensed';
+
+            cb(null);
+        });
+    }
+
+    override public function openFile(file : Dynamic, asNew : Bool, ? asNewOpenProgram : Bool = true) : Void{
+        parseFile(file, function(contents){
+
+        },asNewOpenProgram);
+    }
+
+    public static function parseFile(file : Dynamic, ?cb=null, ?asNewOpenProgram : Bool = true){
+        var extension = CommonCore.getFileExtension(file.name);
+        if(extension == 'glycoct_condensed'){
+            CommonCore.getFileAsText(file, function(contents){
+                if(contents != null){
+                    var name = 'Glycan';
+                    var glycan = new Glycan();
+                    glycan.content = contents;
+                    glycan.contentType = 'glycoct_condensed';
+                    
+                    WorkspaceApplication.getApplication().getWorkspace().addObject(new GlycanWO(glycan, name), true);
+                }
+            });
+        }
     }
 }

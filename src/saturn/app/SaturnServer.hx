@@ -113,7 +113,7 @@ class SaturnServer {
         server = restify.createServer(http_config);
 
         //below conflicts with GlycanBuilder
-        server.use(restify.plugins.bodyParser({mapParams: true}));
+        //server.use(restify.plugins.bodyParser({mapParams: true}));
 
         installPlugins();
 

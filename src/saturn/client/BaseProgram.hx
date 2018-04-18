@@ -465,25 +465,37 @@ class BaseProgram implements Program implements OutlineListener {
 
         syncModelFromOutline();
 
-        getProvider().save(object, function(err : String){
-            if(err == null){
-                getProvider().attach([object], false,function(err : String){
+        saveAsync(function(err : String){
+            if(err != null){
+                getApplication().showMessage('Error', err);
+            }else{
+
+
+                getProvider().save(object, function(err : String){
                     if(err == null){
-                        var dataStore = getApplication().getOutlineDataStore('MODELS');
+                        getProvider().attach([object], false,function(err : String){
+                            if(err == null){
+                                var dataStore = getApplication().getOutlineDataStore('MODELS');
 
-                        if(dataStore != null){
-                            dataStore.commitChanges();
-                        }
+                                if(dataStore != null){
+                                    dataStore.commitChanges();
+                                }
 
-                        cb(null);
-                    }else{
-                        cb(err);
+                                cb(null);
+                            }else{
+                                cb(err);
+                            }
+                        });
                     }
-                });
-            }
 
-            cb(err);
-        }, true);
+                    cb(err);
+                }, true);
+            }
+        });
+    }
+
+    public function saveAsync(cb : String->Void){
+        cb(null);
     }
 
     public function saveObjectAsGUI(model : Model){

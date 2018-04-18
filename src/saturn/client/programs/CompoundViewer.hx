@@ -45,8 +45,6 @@ class CompoundViewer extends SimpleExtJSProgram{
     override public function emptyInit() {
         super.emptyInit();
 
-
-
         var tagType = null;
 
         if(CompoundEditor.Molsoft == this.editor){

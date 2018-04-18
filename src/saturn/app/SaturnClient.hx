@@ -340,6 +340,7 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(BasicTableViewer, true);
 
         this.getProgramRegistry().registerProgram(CompoundViewer, true);
+        this.getProgramRegistry().registerProgram(GlycanBuilder, true);
 
         this.getProgramRegistry().registerProgram(HomePage, true);
 
