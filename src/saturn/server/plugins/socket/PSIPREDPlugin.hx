@@ -53,64 +53,85 @@ class PSIPREDPlugin extends QueuePlugin {
 
         var cmd = './runpsipred_single';
         var dir = 'bin/deployed_bin/psipred/unix';
+        var full_command = dir + '/runpsipred_single';
 
         if(Node.os.platform() == 'win32'){
             cmd = 'runpsipred_single.bat';
             dir = 'bin\\deployed_bin\\psipred\\win\\';
+
+            full_command = dir +  cmd;
         }
 
-        debug_psipred('Running PSIPred');
+        var fs_lib = Node.require('fs');
 
-        var proc : NodeChildProcess = Node.child_process.spawn(cmd,[inputFileName],{cwd:dir});
-
-        proc.stderr.on('data', function(error){
-            Node.console.log(error.toString());
-        });
-
-        proc.stdout.on('data', function(error){
-            Node.console.log(error.toString());
-        });
-
-        var code= @await proc.on('close');
-
-        if(code == "0"){
-            debug_psipred('Preparing files for client');
-
-            var serveFileName : String = saturn.getRelativePublicOuputFolder() + '/' + this.saturn.pathLib.basename(outputFileName);
-            var reportServeFileName : String = saturn.getRelativePublicOuputURL() + '/' + this.saturn.pathLib.basename(outputFileName);
-            var err = @await NodeFSExtra.copy(outputFileName, serveFileName);
-
+        fs_lib.access(full_command,fs_lib.constants.F_OK, function(err){
             if(err != null){
-                handleError(job,'An error has occurred making the results file available', done); return;
+                handleError(job,'PSIPred executable not found in ' + full_command +
+                                    '<br/><br/>Follow the instructions <a target="_blank" href="/static/manual/index.html#PSIPred%20Installation">here</a> to install PSIPRED', done); return;
             }
 
-            var err_read, data = @await Node.fs.readFile(serveFileName, null);
-            if(err_read!= null){
-                handleError(job,'An error has occurred opening the results file', done); return;
-            }
+            debug_psipred('Running PSIPred');
 
-            var err_temp, info = @await NodeTemp.open('psiPredQuery');
-            if(err_temp != null){
-                handleError(job,'An error has occurred generating a temporary file for results', done); return;
-            }
+            var proc : NodeChildProcess = Node.child_process.spawn(cmd,[inputFileName],{cwd:dir});
 
-            var buffer : NodeBuffer = new NodeBuffer( '<html><body><pre>'+data+'</pre></body></html>' );
+            proc.stderr.on('data', function(error){
+                Node.console.log(error.toString());
+            });
 
-            var err_write = @await Node.fs.writeFile(info.path,buffer);
-            if(err_write != null){
-                handleError(job,'An error has occurred writing the results file', done); return;
-            }
+            proc.stdout.on('data', function(error){
+                Node.console.log(error.toString());
+            });
 
-            var htmlResultsFile : String = saturn.getRelativePublicOuputFolder() + '/' + this.saturn.pathLib.basename(info.path) + '.html';
-            var reportHtmlResultsFile : String = saturn.getRelativePublicOuputURL() + '/' + this.saturn.pathLib.basename(info.path) + '.html' ;
+            proc.on('close', function(code){
+                if(code == "0"){
+                    debug_psipred('Preparing files for client');
 
-            var err = @await NodeFSExtra.copy(info.path, htmlResultsFile);
+                    var serveFileName : String = saturn.getRelativePublicOuputFolder() + '/' + this.saturn.pathLib.basename(outputFileName);
+                    var reportServeFileName : String = saturn.getRelativePublicOuputURL() + '/' + this.saturn.pathLib.basename(outputFileName);
 
-            debug_psipred('Sending response');
+                    NodeFSExtra.copy(outputFileName, serveFileName, function(err){
+                        if(err != null){
+                            handleError(job,'An error has occurred making the results file available', done); return;
+                        }
 
-            sendJson(job, {htmlPsiPredReport:reportHtmlResultsFile,rawHoriReport:reportServeFileName}, done);
-        }else{
-            handleError(job,'PSIPRED has returned a non-zero exit status: ' + code, done); return;
-        }
+                        Node.fs.readFile(serveFileName, null, function(err_read, data){
+                            if(err_read!= null){
+                                handleError(job,'An error has occurred opening the results file', done); return;
+                            }
+
+                            NodeTemp.open('psiPredQuery', function(err_temp, info){
+                                if(err_temp != null){
+                                    handleError(job,'An error has occurred generating a temporary file for results', done); return;
+                                }
+
+                                var buffer : NodeBuffer = new NodeBuffer( '<html><body><pre>'+data+'</pre></body></html>' );
+
+                                Node.fs.writeFile(info.path,buffer, function(err_write){
+                                    if(err_write != null){
+                                        handleError(job,'An error has occurred writing the results file', done); return;
+                                    }
+
+                                    var htmlResultsFile : String = saturn.getRelativePublicOuputFolder() + '/' + this.saturn.pathLib.basename(info.path) + '.html';
+                                    var reportHtmlResultsFile : String = saturn.getRelativePublicOuputURL() + '/' + this.saturn.pathLib.basename(info.path) + '.html' ;
+
+                                    NodeFSExtra.copy(info.path, htmlResultsFile, function(err){
+                                        debug_psipred('Sending response');
+
+                                        sendJson(job, {htmlPsiPredReport:reportHtmlResultsFile,rawHoriReport:reportServeFileName}, done);
+                                    });
+                                });
+                            });
+
+                        });
+
+                    });
+
+
+                }else{
+                    handleError(job,'PSIPRED has returned a non-zero exit status: ' + code, done); return;
+                }
+            });
+        });
+
     }
 }

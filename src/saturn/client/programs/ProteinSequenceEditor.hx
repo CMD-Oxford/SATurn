@@ -144,7 +144,7 @@ class ProteinSequenceEditor implements SequenceChangeListener extends SequenceEd
         getApplication().getToolBar().add(blastButton);
 
         viewMenu.add({
-            text : 'Domain report',
+            text : 'SS report',
             handler : function(){
                 var name = 'PSIPred '+getActiveObject(ProteinWorkspaceObject).getName()+' 1 - '+self.sequence.length;
                 psiPredSequence(sequence, name);

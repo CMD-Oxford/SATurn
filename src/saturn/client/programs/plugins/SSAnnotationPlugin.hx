@@ -116,6 +116,8 @@ class SSAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implements Se
         }
 
         program.setAnnotationSequence(annotationPos, ssStr);
+
+        program.getApplication().getMiddleSouthPanel().body.update('<b>Secondary structure prediction performed using PSIPred - <a target="_blank" href="http://bioinfadmin.cs.ucl.ac.uk/downloads/psipred/LICENSE">license</a></b>');
     }
 
     public function sequenceChanged(sequence:String):Void {
