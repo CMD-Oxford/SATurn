@@ -9,6 +9,8 @@
 
 package saturn.core.annotations;
 
+import saturn.client.WorkspaceApplication;
+import saturn.client.workspace.Workspace.WorkspaceObject;
 import saturn.core.molecule.Molecule;
 import saturn.core.domain.MoleculeAnnotation;
 import saturn.core.parsers.HmmerParser;
@@ -39,6 +41,11 @@ class PfamSupplier extends AnnotationSupplier{
         chain.add('saturn.workflow.HMMer.query', config);
 
         chain.start(function(error : Dynamic){
+            if(error != null){
+                WorkspaceApplication.getApplication().showMessage('Error', error);
+                return;
+            }
+
             var outputFile = '../' + cast(config.getResponse(), HMMerResponse).getTableOutputPath();
             CommonCore.getContent( outputFile, function(content){
                 var annotations = new Array<MoleculeAnnotation>();

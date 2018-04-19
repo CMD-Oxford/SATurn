@@ -18,6 +18,7 @@ import saturn.core.parsers.HmmerParser;
 import saturn.core.domain.MoleculeAnnotation;
 import saturn.core.parsers.BaseParser;
 import saturn.core.domain.MoleculeAnnotation.Uploader;
+import js.Node;
 #end
 import saturn.core.Util.Stream;
 using saturn.core.Util;
@@ -54,7 +55,37 @@ class HMMer extends Unit<HMMerResponse, HMMerConfig>{
         }
     }
 
+    #if NODE
     public function runHMMSearch(){
+        var fs_lib = Node.require('fs');
+
+        fs_lib.access(hmmSearchPath,fs_lib.constants.F_OK, function(err){
+            if(err != null){
+                response.setError('Hmmer executable not found at ' + hmmSearchPath +
+                '<br/><br/>Follow the instructions <a target="_blank" href="/static/manual/index.html#Hmmer%20Installation">here</a> to install Hmmer');
+
+                done();
+            }else{
+                fs_lib.access(config.getParameter('hmmFilePath'),fs_lib.constants.F_OK, function(err){
+                    if(err != null){
+                        response.setError('Hmmer model not found at' + config.getParameter('hmmFilePath') +
+                        '<br/><br/>Follow the instructions <a target="_blank" href="/static/manual/index.html#Hmmer%20Installation">here</a> to install Hmmer and the models');
+
+                        done();
+                    }else{
+                        _runHMMSearch();
+                    }
+                });
+            }
+        });
+    }
+    #end
+
+    #if NODE
+    public function _runHMMSearch(){
+    #else
+    public function runHMMSearch(){
+    #end
         debug('Running HMMSearch');
 
         var fastaFile = config.getParameter('fastaFilePath');
