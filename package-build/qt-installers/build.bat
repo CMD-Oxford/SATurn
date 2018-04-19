@@ -10,7 +10,7 @@ robocopy /E ..\..\build\bin\deployed_bin packages\windows.tools.x86_64\data\buil
 robocopy /E ..\..\HaxeToolkit packages\windows.haxe.x86_64\data\HaxeToolkit
 robocopy /E ..\..\developer_tools packages\windows.developer_tools.x86_64\data\developer_tools
 
-C:\Qt\QtIFW-3.0.2\bin\binarycreator.exe -c config\config.xml -p packages SATurn.exe --exclude linux.qt.x86_64,common.git.saturn,windows.haxe.x86_64,windows.developer_tools.x86_64,common.docs.saturn
+C:\Qt\QtIFW-3.0.2\bin\binarycreator.exe -c config\config.xml -p packages SATurn.exe --exclude linux.qt.x86_64,common.git.saturn,windows.haxe.x86_64,windows.developer_tools.x86_64,common.docs.saturn,osx.developer_tools.x86_64,osx.haxe.x86_64,osx.qt.x86_64,osx.server.x86_64,osx.single.app.x86_64,osx.tools.x86_64
 cd packages\common.git.saturn
 rmdir data /s /q
 git clone https://github.com/ddamerell53/SATurn.git data

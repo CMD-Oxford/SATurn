@@ -818,7 +818,7 @@ class EXTApplication extends WorkspaceApplication{
                     html: '<div style="margin-left:5px;margin-right:5px">'+
                     '<h1><img style="vertical-align:middle;margin-left: -5" src="/static/js/images/saturn.png"></img><a target="_blank" href="https://ddamerell53.github.io/SATurn/">SATurn</a></h1>'+
                     '<h2>Contributors</h2>'+
-                    'David Damerell<br/>Claire Strain-Damerell<br/>Stephen Joyce<br/>Narayanan Krishnan<br/>Brian Marsden<br/>' +
+                    'David Damerell<br/>Claire Strain-Damerell<br/>Sefa Garsot<br/>Paul Barrett<br/>Stephen Joyce<br/>Narayanan Krishnan<br/>Brian Marsden<br/>' +
                     '<h2>SATurn License</h2>' +
                     'The SATurn source code is released under the Creative Commons CC0 license which you can find <a target="_blank" href="/static/licenses/LICENSE">here</a><br/>' +
                     '<h2>Third-party License</h2>'+

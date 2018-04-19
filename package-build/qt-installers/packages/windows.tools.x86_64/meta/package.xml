@@ -6,6 +6,8 @@
     <ReleaseDate>2018-02-21</ReleaseDate>
 	<Default>true</Default>
     <Licenses>
-        <License name="Bioinformatics Tools" file="LICENSE" />
+        <License name="Bioinformatics Tools" file="LICENSE_BIOINFORMATICS" />
+		<License name="Glycan Builder" file="LICENSE_GLYCAN_BUIDER" />
+		<License name="Tomcat" file="LICENSE_TOMCAT" />
     </Licenses>
 </Package>

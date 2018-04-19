@@ -53,7 +53,7 @@ class TMHMMAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implements
         super.setProgram(program);
         program.addSequenceChangeListener(this);
 
-        annotationId = program.addAnnotation('Transmembrane regions');
+        annotationId = program.addAnnotation('TM');
         program.setAnnotationClass('TMHMM',SVGAnnotationBlock);
 
         program.setAnnotationPosition(annotationId, AnnotationPosition.TOP);
@@ -64,7 +64,7 @@ class TMHMMAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implements
 
         var program : SequenceEditor = getProgram();
 
-        var blocks : Array<AnnotationEditorBlock> = program.getAnnotationBlocks('TMHMM');
+        var blocks : Array<AnnotationEditorBlock> = program.getAnnotationBlocks('TM');
 
         var pos = 0;
 

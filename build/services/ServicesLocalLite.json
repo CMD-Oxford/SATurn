@@ -198,8 +198,8 @@
               "GET": true,
               "POST": true,
               "prestart": "cmd",
-              "args":["/c","start", "C:\/Users\/ddamerell\/AppData\/Local\/GlycanBuilder\/bin\/catalina.bat", "start"],
-              "cwd":"C:\/Users\/ddamerell\/AppData\/Local\/GlycanBuilder"
+              "args":["/c","start", "catalina.bat", "start"],
+              "cwd":"bin\/deployed_bin\/GlycanBuilder\/bin"
             }
          }
        }
