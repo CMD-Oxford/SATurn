@@ -1,0 +1,66 @@
+created: 20180420212205964
+modified: 20180420212513064
+title: Python External Provider Hook
+type: text/vnd.tiddlywiki
+
+!Synopsis 
+Save the following Python to saturn/build/bin/hooks/example_python_hook.py
+
+```python
+import json
+import os
+import sys
+
+if sys.argv < 2:
+  sys.exit('Invalid number of arguments provided')
+  
+input_json_path = sys.argv[len(sys.argv)-2]
+output_json_path = sys.argv[len(sys.argv)-1]
+
+input_json = None
+
+with open(input_json_path, 'r') as f:
+  input_json = json.load(f)
+  
+output_json = {'greeting': 'Hello ' + input_json['name']}
+
+with open(output_json_path, 'w') as fw:
+    fw.write(json.dumps(output_json))
+
+```
+
+Connect the Python script to the web-service by adding the following block to the Provider configuration within Services.json.  You can decide whether to execute this via NodeJS or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.
+
+```json
+{
+  "name": "saturn.db.provider.hooks.ExternalJsonHook:PythonExample",
+  "class": "ssaturn.db.provider.hooks.ExternalJsonHook",
+  "method": "run",
+  "program": "python",
+  "arguments": ["bin/hooks/example_python_hook.py"]
+}
+```
+
+You can call your Python script from the client by copying the following code into the SATurn code editor
+
+```javascript
+saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.db.provider.hooks.ExternalJsonHook:PythonExample', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0]);
+        }
+
+        flush();
+    }
+);
+```
+
+
+
+

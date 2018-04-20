@@ -1,0 +1,10 @@
+created: 20180420130114711
+modified: 20180420130214031
+title: PSIPred Installation
+type: text/vnd.tiddlywiki
+
+Please download PSIPred from http://bioinfadmin.cs.ucl.ac.uk/downloads/psipred/
+
+Windows users will need to compile from source using Visual Studio
+
+Please place the PSIPred executables into build/deployedbin/psipred

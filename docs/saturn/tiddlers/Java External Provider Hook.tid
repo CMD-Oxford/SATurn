@@ -1,0 +1,101 @@
+created: 20180420213013984
+modified: 20180420213056800
+title: Java External Provider Hook
+type: text/vnd.tiddlywiki
+
+!Synopsis 
+Save the following Java to saturn/build/bin/hooks/JavaExample.java and compile it with this command
+
+```dos
+javac -cp gson-2.7.jar;. JavaExample.java
+```
+
+Make sure gson-2.7.jar is in build/bin/hooks and if it is missing download from: http://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/
+
+```java
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+
+class JavaExample {
+  public static void main(String[] args){
+    if(args.length < 2){
+      System.out.println("Invalid number of arguments");
+      System.exit(-1);
+    }
+
+    String inputFile = args[args.length-2];
+    String outputFile = args[args.length-1];
+
+    System.out.println("Input file: " + inputFile);
+    System.out.println("Output file: " + outputFile);
+    
+    try{
+      FileReader reader = new FileReader(inputFile);
+      Gson gson = new Gson();
+      JsonElement json = gson.fromJson(reader, JsonElement.class);
+      
+      JsonObject jsonObject = json.getAsJsonObject();
+      
+      String name = jsonObject.get("name").getAsString();
+      
+      System.out.println(name);
+      
+      JsonObject jsonOutputObject = new JsonObject();
+      jsonOutputObject.addProperty("greeting", "Hello " + name);
+      jsonOutputObject.addProperty("language", "Java");
+      
+      FileWriter writer = new FileWriter(outputFile);
+      
+      gson.toJson(jsonOutputObject, writer);
+      
+      writer.close();
+    }catch(IOException ex){
+      System.out.println("Invalid input file");
+      System.exit(-1);
+    }
+  }
+}
+
+```
+
+Connect the Java to the web-service by adding the following block to the Provider configuration within Services.json. You can decide whether to execute this via NodeJS or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.
+
+```json
+{
+  "name": "saturn.server.plugins.ExternalJsonPlugin:JavaExample",
+  "class": "saturn.server.plugins.ExternalJsonPlugin",
+  "method": "run",
+  "program": "java",
+  "arguments": ["-cp", "bin/hooks/gson-2.7.jar;bin/hooks/","JavaExample"]
+}
+```
+
+You can call your Javascript from the client by copying the following code into the SATurn code editor
+
+```javascript
+saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.server.plugins.ExternalJsonPlugin:JavaExample', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0]);
+        }
+
+        flush();
+    }
+);
+```
+
+
+
+

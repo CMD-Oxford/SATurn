@@ -1,0 +1,12 @@
+created: 20180420131011991
+modified: 20180420211629435
+title: GlycanBuilder Installation
+type: text/vnd.tiddlywiki
+
+GlycanBuilder is a server-side Java application written in the Vaadin framework.  SATurn includes Tomcat along with GlycanBuilder which is started automatically when you launch SATurn.  If GlycanBuilder doesn't appear to be working the first thing to confirm is that you have set the JAVA_HOME environment variable.  Once you have done this please restart SATurn and try again.
+
+For reference you can find more information on GlycanBuilder here - https://bitbucket.org/daviddamerell/glycanbuilderv/wiki/Home
+
+Note that after starting SATurn you can confirm that GlycanBuilder has been started without using SATurn by navigating to http://localhost:8080/GlycanBuilder.
+
+GlycanBuilder is installed in build/bin/deplyed_bin/GlycanBuilder

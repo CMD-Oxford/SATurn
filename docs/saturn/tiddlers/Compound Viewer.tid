@@ -1,0 +1,23 @@
+created: 20180420214548506
+modified: 20180420215056623
+title: Compound Viewer
+type: text/vnd.tiddlywiki
+
+!Summary
+<div class="welcome_content">
+<div class="welcome_content_text">
+SATurn includes the <a target="_blank" href="http://lifescience.opensource.epam.com/ketcher/">Ketcher</a> compound drawing tool which allows you to quickly view compounds either by drawing them or importing them from SDF or SMILES.  Using this tool you can save compounds into the SATurn database
+<b>SATurn Integration</b>
+
+<ul>
+<li>Drag-and-drop SDF file onto SATurn workspace panel to import compounds</li>
+<li>Import compounds from SMILES by opening a new viewer and enter the SMILES into the right text input box</li>
+<li>Save compounds into the SATurn database</li>
+<li>RDkit is used for SMILES and SDF parsing</li>
+<li>Note that a compound registration platform developed using SATurn can be found <a target="_blank" href="https://github.com/ddamerell53/ChemiRegV2">here</a> </li>
+</ul>
+</div></div>
+[img width=50% class="welcome_title_img" [compoundviewer.png]]
+<div style="clear:both"/>
+
+If GlycanBuilder doesn't appear to be working please see these [[Instructions|GlycanBuilder Installation]]

@@ -1,0 +1,16 @@
+created: 20180420211928368
+modified: 20180420212136183
+title: Connecting external scripts
+type: text/vnd.tiddlywiki
+
+!Summary
+An external provider hook allows you to communicate via JSON with an external program.  This is accomplished via the static method saturn.db.provider.hooks.ExternalJsonHook.run.  ExternalJsonHook.run can pass any arguments you like to an external program but it will always pass the location of two files to your program as the last arguments.  The first of these files contains a serialized version of the JSON you send to ExternalJsonHook.run.  The second is the location of an empty file, which your external program must populate with the serialized JSON it wants to send to back.  After your external program has finished executing ExternalJsonHook.run will parse the returned JSON and pass this to the callback you have provided. 
+
+
+Language instructions
+
+* [[Python|Python External Provider Hook]]
+* [[Perl|Perl External Provider Hook]]
+* [[Java|Java External Provider Hook]]
+
+When you have the SATurn viewer installed you can also directly execute programs on your system.

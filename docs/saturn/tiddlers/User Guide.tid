@@ -1,7 +1,9 @@
 created: 20180305103039051
-modified: 20180314154646326
+modified: 20180420214153819
 title: User Guide
 type: text/vnd.tiddlywiki
+
+<table><tbody><tr><td><b>A good way to start learning how to use SATurn is by clicking on the Examples link at the button of the SATurn window</b></td><td> [img[examples.png]]</td></tr></tbody></table>
 
 SATurn is both the name of the application development framework (see the [[Internal: Developer Guide]] section for more information) and the name of the bioinformatics web-portal which we created for use at the SGC to assist with construct design.  This guide documents how to use the bioinformatics web-portal.  SATurn can be deployed as a standalone desktop application, remote web-portal, or a hybrid which uses both components.  This guide assumes that you are using the standalone version of SATurn which is installed locally and uses an SQLite database for storage - although most of the manual is correct regardless of how you use SATurn.
 
@@ -47,6 +49,11 @@ Note that in the SGC we use an Oracle database for storage and a commercial LIMS
 ### [[Introducing a frame offset]]
 ## [[Inverse / Complement]]
 # [[Protein Sequence Editor]]
+## [[PSIPred Installation]]
+## Customizing view
+### [[Protein Editor: Changing sequence block size]]
+### [[Protein Editor: Changing number of blocks per line]]
+### [[Protein Editor: Introducing an offset]]
 # [[BLAST Sequence]]
 ## [[Performing a simple BLAST]]
 ## [[Configuring BLAST databases]]
@@ -71,8 +78,7 @@ Note that in the SGC we use an Oracle database for storage and a commercial LIMS
 ## [[Trim / Clip trace|Trimming a sequencing trace]]
 ## [[Exporting as image]]
 ## [[Importing called sequence]]
+# [[Compound Viewer]]
+# [[GlycanBuilder]]
 # [[Scripting]]
-## [[Overview]]
-## [[Retrieving entities from the SATurn database]]
-## [[Extending the interface]]
-## [[Python Scripting]]
+## [[Connecting external scripts]]

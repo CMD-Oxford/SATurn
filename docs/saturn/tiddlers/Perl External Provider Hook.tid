@@ -1,0 +1,77 @@
+created: 20180420212904396
+modified: 20180420212944074
+title: Perl External Provider Hook
+type: text/vnd.tiddlywiki
+
+!Synopsis 
+Save the following Perl to saturn/build/bin/hooks/example_perl_hook.pl
+
+```perl
+use JSON;
+
+use strict;
+
+my $argNum = $#ARGV+1;
+
+if($argNum < 2){
+  die("Invalid number of arguments provided: " . $argNum);
+}
+
+print 'ARGS: ' . join('|', @ARGV);
+
+my $inputJsonPath = $ARGV[length(@ARGV)-3];
+my $outputJsonPath = $ARGV[length(@ARGV)-2];
+
+print 'Input file ' . $inputJsonPath;
+
+my $inputJson = undef;
+
+# Read JSON from SATurn
+
+open(JSON_FILE, "<$inputJsonPath") || die "Unable to open $inputJsonPath for reading\n";
+$inputJson = from_json(join('',<JSON_FILE>));
+close(READ);
+  
+# Do something with the JSON from SATurn and generate return JSON
+my %outputJson = (greeting => 'Hello ' . $inputJson->{'name'}, language => 'Perl');
+
+open(OUTPUT_FILE, ">$outputJsonPath") || die "Unable to open $outputJsonPath for writing\n";
+print OUTPUT_FILE encode_json \%outputJson;
+close(OUTPUT_FILE);
+```
+
+Connect the Perl script to the web-service by adding the following block to the Provider configuration within Services.json.  You can decide whether to execute this via NodeJS or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.
+
+```json
+{
+  "name": "saturn.server.plugins.ExternalJsonPlugin:PerlExample",
+  "class": "saturn.server.plugins.ExternalJsonPlugin",
+  "method": "run",
+  "program": "perl",
+  "arguments": ["bin/hooks/example_perl_hook.pl"]
+}
+```
+
+You can call your Perl script from the client by copying the following code into the SATurn code editor
+
+```javascript
+saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.server.plugins.ExternalJsonPlugin:PerlExample', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0]);
+        }
+
+        flush();
+    }
+);
+```
+
+
+
+

@@ -1,0 +1,27 @@
+created: 20180420205210092
+modified: 20180420211318239
+title: GlycanBuilder
+type: text/vnd.tiddlywiki
+
+!Summary
+<div class="welcome_content">
+<div class="welcome_content_text">
+GlycanBuilder is a tool that allows you to draw Glycan structures in CFG or Oxford nomenclature.  SATurn includes the GlycanBuilder tool which allows you to save Glycans into the SATurn database.
+<br/><br/>
+You can learn more about GlycanBuilder <a target="_blank" href="https://bitbucket.org/daviddamerell/glycanbuilderv/wiki/Home">here</a><br/>
+<br/>
+<b>SATurn Integration</b>
+
+<ul>
+<li>Import glycans using the built-in import menu within GlycanBuilder</li>
+<li>Export glycans using the built-in export menu within GlycanBuilder</li>
+<li>Export glycans as images</li>
+<li>Display mass and m/z values (configurable)</li>
+<li>Drag and drop files ending in glycoct_condensed onto the SATurn workspace panel to load</li>
+<li>Note that GlycanBuilder allows multiple glycans to be drawn on a single canvas but SATurn can only save one of these to the database (to be addressed in GlycanBuilder)</li>
+</ul>
+</div></div>
+[img width=50% class="welcome_title_img" [glycanbuilder.png]]
+<div style="clear:both"/>
+
+If GlycanBuilder doesn't appear to be working please see these [[Instructions|GlycanBuilder Installation]]
