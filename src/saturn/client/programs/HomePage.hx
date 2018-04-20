@@ -46,12 +46,12 @@ class HomePage extends SimpleExtJSProgram{
 
         demos = new Map<String,Demo>();
 
-        addDemo({name: 'ABI (96 traces organised into folders - 20MB download slow on VPN)', url: '/static/demo/ABIExample.sat', icon: 'x-btn-trace'});
-        addDemo({name: 'GYG2A progress (construct/target summary)', url: '/static/demo/GYG2A_Progress.sat', icon: 'x-btn-gridvar'});
-        addDemo({name: 'KCNK1A construct alignment (example loads 53 sequences)', url: '/static/demo/KCNK1A-Protein-ALN.sat', icon: 'x-btn-aln'});
+        addDemo({name: 'Sequencing runs', url: '/static/demo/RandomTraces.sat', icon: 'x-btn-trace'});
+        addDemo({name: 'THB progress (construct/target summary)', url: '/static/demo/THB-Summary.sat', icon: 'x-btn-gridvar'});
+        addDemo({name: 'THB construct alignment (example loads 53 sequences)', url: '/static/demo/THB_Alignment.sat', icon: 'x-btn-aln'});
         addDemo({name: 'Glycosyltransferase tree (examples loads 200 sequences)', url: '/static/demo/GTTree.sat', icon: 'x-btn-tree'});
-        addDemo({name: 'JMJD2DA constructs (loads 87 DNA and Protein sequences)', url: '/static/demo/JMJD2DA-Constructs.sat', icon: 'x-btn-structure'});
-        addDemo({name: 'OG-Mut plate examples (loads 4 plates)', url: '/static/demo/OG-Mut-cp.sat', icon: 'x-btn-conical-dna'});
+        addDemo({name: 'THB constructs (loads DNA and Protein sequences)', url: '/static/demo/THB-sequences.sat', icon: 'x-btn-structure'});
+        addDemo({name: 'THB construct plate', url: '/static/demo/THB-cp.sat', icon: 'x-btn-conical-dna'});
         addDemo({name: 'Coding examples', url: '/static/demo/coding.sat', icon: 'x-btn-conical-dna'});
 
         theToolBar = Ext.create('Ext.toolbar.Toolbar',

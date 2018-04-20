@@ -144,8 +144,13 @@ class GlycanBuilder extends SimpleExtJSProgram{
             addModelToOutline(glycan, true);
         }
 
-        getApplication().hideMiddleSouthPanel();
+        //getApplication().hideMiddleSouthPanel();
+
+        getApplication().getMiddleSouthPanel().body.update('<b>Please follow these instructions if GlycanBuilder isn\'t working - <a target="_blank" href="/static/manual/index.html#GlycanBuilder%20Installation">Guide</a></b>');
     }
+    ###
+
+
 
     /**
     * getCanvasContents can be used to get the contents of the Vaadin GlycanCanvas as a string

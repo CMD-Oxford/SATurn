@@ -189,11 +189,10 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
                 var strBuf = new StringBuf();
 
-                var woProteins : Array<ProteinWorkspaceObject> = workspace.getAllObjects(ProteinWorkspaceObject);
-                for(woProtein in woProteins){
-                    var protein : Protein = woProtein.getObject();
+                var woProteins : Array<Protein> = workspace.getAllObjects(Protein);
+                for(protein in woProteins){
 
-                    var name = woProtein.getName();
+                    var name = protein.getName();
                     name = StringTools.replace(name, ' (Protein)', '');
 
                     strBuf.add(FastaEntity.formatFastaFile(name, protein.getSequence()));
@@ -210,11 +209,9 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
                 var strBuf = new StringBuf();
 
-                var woDNA : Array<DNAWorkspaceObject<DNA>> = workspace.getAllObjects(DNAWorkspaceObject);
-                for(woDNA in woDNA){
-                    var dna : DNA = woDNA.getObject();
-
-                    var name = woDNA.getName();
+                var objs : Array<DNA> = workspace.getAllObjects(saturn.core.DNA);
+                for(dna in objs){
+                    var name = dna.getName();
                     name = StringTools.replace(name, ' (DNA)', '');
 
                     strBuf.add(FastaEntity.formatFastaFile(name, dna.getSequence()));
@@ -1078,7 +1075,10 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                     var added = 0;
                     for(construct in constructs){
                         if(construct.proteinSeq != null){
-                            getWorkspace()._addObject(construct.proteinSequenceObj, autoOpen, false, folder);
+                            var protein = construct.proteinSequenceObj;
+                            protein.setName(construct.constructId + ' - Protein');
+
+                            getWorkspace()._addObject(protein, autoOpen, false, folder);
                             autoOpen = false;
 
                             added++;
@@ -1143,7 +1143,9 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                     var added = 0;
                     for(construct in constructs){
                         if(construct.proteinSeq != null){
-                            getWorkspace()._addObject(construct.proteinSequenceNoTagObj, autoOpen, false, folder);
+                            var protein = construct.proteinSequenceNoTagObj;
+                            protein.setName(construct.constructId + ' - Protein No Tag');
+                            getWorkspace()._addObject(protein, autoOpen, false, folder);
                             autoOpen = false;
 
                             added++;

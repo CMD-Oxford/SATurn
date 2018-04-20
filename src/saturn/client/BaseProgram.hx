@@ -376,7 +376,7 @@ class BaseProgram implements Program implements OutlineListener {
         var objectId = theActiveObjectId;
 //theActiveObjectId = null;
 
-//setActiveObject(objectId); //not as futile as it looks
+        setActiveObject(objectId); //not as futile as it looks
 
 
     }

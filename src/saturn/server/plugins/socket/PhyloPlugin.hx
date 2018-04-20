@@ -44,7 +44,15 @@ class PhyloPlugin extends QueuePlugin {
 
         var inputFileName = info.path;
 
-        var proc = Node.child_process.spawn('bin/clustalw2', ["-infile="+inputFileName, '-quiet', '-outfile='+inputFileName+'.aln']);
+        var cmd = null;
+
+        if(Node.os.platform() == 'win32'){
+            cmd = 'bin/deployed_bin/clustalw2.exe';
+        }else{
+            cmd = 'bin/deployed_bin/clustalw2';
+        }
+
+        var proc = Node.child_process.spawn(cmd, ["-infile="+inputFileName, '-quiet', '-outfile='+inputFileName+'.aln']);
 
         proc.on('error', function(err){
             if(err != null){
@@ -64,7 +72,7 @@ class PhyloPlugin extends QueuePlugin {
         if(code == "0"){
             var outputFileName =  inputFileName+'.ph';
 
-            var proc : NodeChildProcess = Node.child_process.spawn('bin/clustalw2', ["-infile=" + inputFileName+'.aln', "-TREE", '-SEED=1000', '-OUTPUTTREE=nj', '-CLUSTERING=NJ']);
+            var proc : NodeChildProcess = Node.child_process.spawn(cmd, ["-infile=" + inputFileName+'.aln', "-TREE", '-SEED=1000', '-OUTPUTTREE=nj', '-CLUSTERING=NJ']);
 
             var code = @await proc.on('close');
             if(code == "0"){

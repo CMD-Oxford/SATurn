@@ -207,8 +207,10 @@ class SimpleExtJSProgram extends BaseProgram implements BuildingBlock implements
         }
 	}
 
-    override public function postRestore() : Void{
-       // restoreDropFolders();
+    override  public function postRestore() : Void {
+        super.postRestore();
+
+        restoreDropFolders();
     }
 	
 	/**

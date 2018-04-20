@@ -266,7 +266,7 @@ class GenericRDBMSProvider extends DefaultProvider{
             if(err != null){
                 callBack(null, err);
             }else{
-                var sql = selectClause + '  WHERE UPPER(' + columnToStringCommand(keyCol) + ') ' + buildSqlInClause(ids.length) + ' ' + selectorSQL;
+                var sql = selectClause + '  WHERE UPPER(' + columnToStringCommand(keyCol) + ') ' + buildSqlInClause(ids.length, 0,'upper') + ' ' + selectorSQL;
 
                 var additionalSQL = generateUserConstraintSQL(clazz);
                 if(additionalSQL != null){

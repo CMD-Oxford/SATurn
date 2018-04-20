@@ -15,4 +15,4 @@ cd packages\common.git.saturn
 rmdir data /s /q
 git clone https://github.com/ddamerell53/SATurn.git data
 cd ..\..\
-C:\Qt\QtIFW-3.0.2\bin\binarycreator.exe -c config\config.xml -p packages SATurnDeveloper.exe --exclude linux.qt.x86_64
+C:\Qt\QtIFW-3.0.2\bin\binarycreator.exe -c config\config.xml -p packages SATurnDeveloper.exe --exclude linux.qt.x86_64,osx.developer_tools.x86_64,osx.haxe.x86_64,osx.qt.x86_64,osx.server.x86_64,osx.single.app.x86_64,osx.tools.x86_64

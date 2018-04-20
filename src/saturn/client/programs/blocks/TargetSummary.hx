@@ -93,6 +93,10 @@ class TargetSummary {
             constructPkeyToConstruct.set(Std.string(construct.id), construct);
         }
 
+        getTargetSequence();
+
+        /*
+        SGC specific below
         var provider :Provider = CommonCore.getDefaultProvider();
         provider.getByValues(values, SgcConstructStatus, 'constructPkey', function(objs : Array<SgcConstructStatus>, err){
             if(err == null){
@@ -104,7 +108,7 @@ class TargetSummary {
             }else{
                 lookupException(err);
             }
-        });
+        });*/
     }
 
     private function generateFASTA(){

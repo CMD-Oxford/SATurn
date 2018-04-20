@@ -494,8 +494,6 @@ class Workspace implements BuildingBlock{
                 registerObjectWith(object, program);
             }
 
-
-			
 			// Set the active WorkspaceObject for the Program
 			//program.setActiveObject(objectId);
 		}else {
@@ -1772,7 +1770,7 @@ class Workspace implements BuildingBlock{
 
             program.setTitle(_getObject(objectId).getName());
 
-            //setActiveObject(objectId);
+            setActiveObject(objectId);
 
             program.postRestore();
         }
@@ -1810,6 +1808,9 @@ class Workspace implements BuildingBlock{
         Ext.resumeLayouts(true);
 
         suspendTreeUpdates(false);
+
+        Ext.suspendLayouts();
+        Ext.resumeLayouts(true);
     }
 
     public function getWorkspaceNames(onSuccess : Dynamic){
