@@ -1,4 +1,4 @@
-#
+#!/opt/conda/bin/python
 # SATURN (Sequence Analysis Tool - Ultima regula natura)
 # Written in 2018 by David Damerell <david.damerell@sgc.ox.ac.uk>, Claire Strain-Damerell <claire.damerell@sgc.ox.ac.uk>, Brian Marsden <brian.marsden@sgc.ox.ac.uk>
 #
