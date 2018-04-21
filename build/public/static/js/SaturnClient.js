@@ -2712,6 +2712,7 @@ saturn.client.WorkspaceApplication.prototype = {
 					_g.rawQtChannel = channel;
 					var dialog = _g.rawQtChannel.objects.fileDialog;
 					dialog.fileSelected.connect(function(filePath) {
+						if(window.navigator.userAgent.indexOf("Windows") > -1) filePath = "/" + filePath;
 						if(_g.qtSaveFileContents == null) _g.rawQtChannel.objects.HostFileReader.read_b64(filePath,function(contents) {
 							var file = new saturn.core.FileShim(filePath,contents);
 							_g.fileHostCB(file);
@@ -3150,26 +3151,13 @@ saturn.client.EXTApplication.prototype = $extend(saturn.client.WorkspaceApplicat
 		}});
 		this.helpMenu = Ext.create("Ext.menu.Menu",{ margin : "0 0 10 0", 'z-index' : 1000000});
 		this.helpMenu.add({ text : "About", handler : function() {
-			var items = [];
-			var hItems = [{ xtype : "imagecomponent", src : "/static/js/images/saturn.png", width : 50, height : 72, title : "Saturn"},{ xtype : "label", text : "SATURN v 1.0"}];
-			items.push({ xtype : "container", layout : { type : "hbox", align : "center"}, items : hItems});
-			items.push({ xtype : "panel", items : [{ xtype : "component", html : "<div>License: GPL version 3 (copyright SGC 2014)<br/><br/>David Damerell<br/>Brian Marsden<br/>Claire Strain-Damerell</div>"}]});
-			var dataItems = [];
-			var _g1 = 0;
-			var _g2 = _g.getProgramRegistry().getProgramList();
-			while(_g1 < _g2.length) {
-				var clazz = _g2[_g1];
-				++_g1;
-				dataItems.push({ plugin : Type.getClassName(clazz)});
-			}
-			Ext.create("Ext.window.Window",{ title : "About", modal : true, layout : { type : "vbox", align : "stretch", padding : "2px"}, items : items}).show();
+			Ext.create("Ext.window.Window",{ title : "About", modal : true, html : "<div style=\"margin-left:5px;margin-right:5px\">" + "<h1><img style=\"vertical-align:middle;margin-left: -5\" src=\"/static/js/images/saturn.png\"></img><a target=\"_blank\" href=\"https://ddamerell53.github.io/SATurn/\">SATurn</a></h1>" + "<h2>Contributors</h2>" + "David Damerell<br/>Claire Strain-Damerell<br/>Sefa Garsot<br/>Paul Barrett<br/>Stephen Joyce<br/>Narayanan Krishnan<br/>Brian Marsden<br/>" + "<h2>SATurn License</h2>" + "The SATurn source code is released under the Creative Commons CC0 license which you can find <a target=\"_blank\" href=\"/static/licenses/LICENSE\">here</a><br/>" + "<h2>Third-party License</h2>" + "SATurn uses third-party programs and libraries which come with their own licenses which can be found below<br/><br/>" + "<b>By using or distributing SATurn you must comply with all licenses</b><br/><ul>" + "<li><a target=\"_blank\" href=\"/static/licenses/LICENSE_NODEJS\">NodeJS (web-server)</a></li>" + "<li><a target=\"_blank\" href=\"/static/licenses/LICENSE_BIOINFORMATICS\">Bioinformatics Tools (Clustal, BLAST, etc.)</a></li>" + "<li><a target=\"_blank\" href=\"/static/licenses/LICENSE_THIRD_PARTY\">Third-party JavaScript libraries (ExtJS, etc.)</a></li>" + "<li><a target=\"_blank\" href=\"/static/licenses/NODE_LICENSES\">Third-party NodeJS libraries</a></li>" + "<li><a target=\"_blank\" href=\"/static/licenses/LICENSE_REDIS\">Redis License</a></li></ul><br/></div>", height : "500px"}).show();
 		}});
-		this.helpMenu.add({ text : "Manual", handler : function() {
-			var guide = new saturn.client.workspace.WebPage();
-			guide.setURL("http://athena:8090/MolBioGuide.html");
-			var wo = new saturn.client.workspace.WebPageWorkspaceObject(guide,"Guide");
-			var wk = _g.getWorkspace();
-			wk.addObject(wo,true);
+		this.helpMenu.add({ text : "Online Manual", handler : function() {
+			window.open("https://ddamerell53.github.io/SATurn/","_blank");
+		}});
+		this.helpMenu.add({ text : "Local Manual", handler : function() {
+			window.open("/static/manual/index.html","_blank");
 		}});
 		this.menuBar.add({ text : "Help", iconCls : "bmenu", menu : this.helpMenu});
 		this.getFileMenu().add({ text : "Close workspace", handler : function() {
@@ -3654,13 +3642,12 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		exportMenu.add({ text : "Protein -> FASTA", handler : function() {
 			var workspace = _g.getWorkspace();
 			var strBuf = new StringBuf();
-			var woProteins = workspace.getAllObjects(saturn.client.workspace.ProteinWorkspaceObject);
+			var woProteins = workspace.getAllObjects(saturn.core.Protein);
 			var _g1 = 0;
 			while(_g1 < woProteins.length) {
-				var woProtein = woProteins[_g1];
+				var protein = woProteins[_g1];
 				++_g1;
-				var protein = woProtein.getObject();
-				var name = woProtein.getName();
+				var name = protein.getName();
 				name = StringTools.replace(name," (Protein)","");
 				strBuf.add(saturn.core.FastaEntity.formatFastaFile(name,protein.getSequence()));
 			}
@@ -3669,13 +3656,12 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		exportMenu.add({ text : "DNA -> FASTA", handler : function() {
 			var workspace1 = _g.getWorkspace();
 			var strBuf1 = new StringBuf();
-			var woDNA = workspace1.getAllObjects(saturn.client.workspace.DNAWorkspaceObject);
+			var objs = workspace1.getAllObjects(saturn.core.DNA);
 			var _g11 = 0;
-			while(_g11 < woDNA.length) {
-				var woDNA1 = woDNA[_g11];
+			while(_g11 < objs.length) {
+				var dna = objs[_g11];
 				++_g11;
-				var dna = woDNA1.getObject();
-				var name1 = woDNA1.getName();
+				var name1 = dna.getName();
 				name1 = StringTools.replace(name1," (DNA)","");
 				strBuf1.add(saturn.core.FastaEntity.formatFastaFile(name1,dna.getSequence()));
 			}
@@ -3750,6 +3736,8 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		this.getProgramRegistry().registerProgram(saturn.client.programs.TextEditor,true);
 		this.getProgramRegistry().registerProgram(saturn.client.programs.TiddlyWikiViewer,true);
 		this.getProgramRegistry().registerProgram(saturn.client.programs.BasicTableViewer,true);
+		this.getProgramRegistry().registerProgram(saturn.client.programs.CompoundViewer,true);
+		this.getProgramRegistry().registerProgram(saturn.client.programs.GlycanBuilder,true);
 		this.getProgramRegistry().registerProgram(saturn.client.programs.HomePage,true);
 		this.addSearchBarListener(this);
 	}
@@ -4259,7 +4247,9 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 					var construct = constructs[_g15];
 					++_g15;
 					if(construct.proteinSeq != null) {
-						_g.getWorkspace()._addObject(construct.proteinSequenceObj,autoOpen5,false,folder4);
+						var protein = construct.proteinSequenceObj;
+						protein.setName(construct.constructId + " - Protein");
+						_g.getWorkspace()._addObject(protein,autoOpen5,false,folder4);
 						autoOpen5 = false;
 						added4++;
 					}
@@ -4297,7 +4287,9 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 					var construct2 = constructs2[_g17];
 					++_g17;
 					if(construct2.proteinSeq != null) {
-						_g.getWorkspace()._addObject(construct2.proteinSequenceNoTagObj,autoOpen7,false,folder6);
+						var protein1 = construct2.proteinSequenceNoTagObj;
+						protein1.setName(construct2.constructId + " - Protein No Tag");
+						_g.getWorkspace()._addObject(protein1,autoOpen7,false,folder6);
 						autoOpen7 = false;
 						added6++;
 					}
@@ -4730,6 +4722,7 @@ saturn.client.BaseProgram.prototype = {
 	}
 	,postRestore: function() {
 		var objectId = this.theActiveObjectId;
+		this.setActiveObject(objectId);
 	}
 	,installWindowListeners: function(window) {
 	}
@@ -4778,16 +4771,21 @@ saturn.client.BaseProgram.prototype = {
 		var _g = this;
 		var object = this.getEntity();
 		this.syncModelFromOutline();
-		this.getProvider().save(object,function(err) {
-			if(err == null) _g.getProvider().attach([object],false,function(err1) {
-				if(err1 == null) {
-					var dataStore = _g.getApplication().getOutlineDataStore("MODELS");
-					if(dataStore != null) dataStore.commitChanges();
-					cb(null);
-				} else cb(err1);
-			});
-			cb(err);
-		},true);
+		this.saveAsync(function(err) {
+			if(err != null) _g.getApplication().showMessage("Error",err); else _g.getProvider().save(object,function(err1) {
+				if(err1 == null) _g.getProvider().attach([object],false,function(err2) {
+					if(err2 == null) {
+						var dataStore = _g.getApplication().getOutlineDataStore("MODELS");
+						if(dataStore != null) dataStore.commitChanges();
+						cb(null);
+					} else cb(err2);
+				});
+				cb(err1);
+			},true);
+		});
+	}
+	,saveAsync: function(cb) {
+		cb(null);
 	}
 	,saveObjectAsGUI: function(model) {
 		this.changeObjectType(model);
@@ -6191,6 +6189,8 @@ saturn.client.programs.SimpleExtJSProgram.prototype = $extend(saturn.client.Base
 		if(!this.delayedActivation) this.restoreDropFolders();
 	}
 	,postRestore: function() {
+		saturn.client.BaseProgram.prototype.postRestore.call(this);
+		this.restoreDropFolders();
 	}
 	,printInfo: function(message) {
 		this.getApplication().printInfo(message);
@@ -10352,8 +10352,11 @@ saturn.client.workspace.CompoundWO.__super__ = saturn.client.workspace.Workspace
 saturn.client.workspace.CompoundWO.prototype = $extend(saturn.client.workspace.WorkspaceObjectBase.prototype,{
 	__class__: saturn.client.workspace.CompoundWO
 });
-saturn.client.programs.CompoundViewer = $hxClasses["saturn.client.programs.CompoundViewer"] = function() {
+saturn.client.programs.CompoundViewer = $hxClasses["saturn.client.programs.CompoundViewer"] = function(editor) {
+	this.lastSmilesImport = null;
+	this.up = false;
 	this.loaded = false;
+	if(editor == null) this.editor = saturn.client.programs.CompoundEditor.Ketcher; else this.editor = editor;
 	saturn.client.programs.SimpleExtJSProgram.call(this);
 };
 saturn.client.programs.CompoundViewer.__name__ = ["saturn","client","programs","CompoundViewer"];
@@ -10362,15 +10365,62 @@ saturn.client.programs.CompoundViewer.getQuickLaunchItems = function() {
 		saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.CompoundWO(null,null),true);
 	}}];
 };
+saturn.client.programs.CompoundViewer.parseFile = function(file,cb,asNewOpenProgram) {
+	if(asNewOpenProgram == null) asNewOpenProgram = true;
+	var extension = saturn.client.core.CommonCore.getFileExtension(file.name);
+	if(extension == "sdf") saturn.client.core.CommonCore.getFileAsText(file,function(contents) {
+		if(contents != null) {
+			var molBlock = "";
+			var rdkit = RDKit;
+			var lines = contents.split("\n");
+			var endOfMol = "$" + "$" + "$" + "$";
+			var auto_open = true;
+			var _g = 0;
+			while(_g < lines.length) {
+				var line = lines[_g];
+				++_g;
+				molBlock += line + "\n";
+				if(line.indexOf(endOfMol) >= 0) {
+					var compound = new saturn.core.domain.Compound();
+					compound.sdf = molBlock;
+					var name = "Unknown";
+					var mol = rdkit.Molecule.MolBlockToMol(compound.sdf);
+					var molLines = compound.sdf.split("\n");
+					var property_reg = new EReg(">\\s+<(.+)>","");
+					var property = null;
+					var _g1 = 0;
+					while(_g1 < molLines.length) {
+						var molLine = molLines[_g1];
+						++_g1;
+						if(property != null) {
+							mol.setProp(property,molLine);
+							if(property == "CompoundID" || property == "ID" || property == "SupplierID") name = molLine;
+							property = null;
+						} else if(property_reg.match(molLine)) property = property_reg.matched(1);
+					}
+					compound.smiles = mol.toSmiles();
+					saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.CompoundWO(compound,name),auto_open);
+					auto_open = false;
+					molBlock = "";
+				}
+			}
+		}
+	});
+};
 saturn.client.programs.CompoundViewer.__super__ = saturn.client.programs.SimpleExtJSProgram;
 saturn.client.programs.CompoundViewer.prototype = $extend(saturn.client.programs.SimpleExtJSProgram.prototype,{
 	theComponent: null
 	,molEditor: null
+	,editor: null
 	,loaded: null
+	,up: null
+	,lastSmilesImport: null
 	,emptyInit: function() {
 		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.emptyInit.call(this);
-		this.theComponent = Ext.create("Ext.panel.Panel",{ width : "100%", height : "95%", autoScroll : true, region : "center", layout : { type : "hbox", align : "middle", pack : "center"}, items : [{ xtype : "component", region : "north", autoEl : { tag : "div"}, listeners : { 'afterrender' : function() {
+		var tagType = null;
+		if(saturn.client.programs.CompoundEditor.Molsoft == this.editor) tagType = "div"; else if(saturn.client.programs.CompoundEditor.Ketcher == this.editor) tagType = "iframe";
+		this.theComponent = Ext.create("Ext.panel.Panel",{ width : "100%", height : "95%", autoScroll : true, region : "center", items : [{ xtype : "component", region : "north", autoEl : { tag : tagType}, listeners : { 'afterrender' : function() {
 			_g.installEditor();
 		}}, flex : 1}], listeners : { 'render' : function() {
 			_g.initialiseDOMComponent();
@@ -10380,22 +10430,50 @@ saturn.client.programs.CompoundViewer.prototype = $extend(saturn.client.programs
 		saturn.client.programs.SimpleExtJSProgram.prototype.initialiseDOMComponent.call(this);
 	}
 	,installEditor: function() {
+		var _g = this;
 		var dom = this.getComponent().down("component").getEl().dom;
 		var id = dom.id;
-		this.molEditor = new MolEdit.ChemicalView("",id, 600, 400 );
-		var applyStyle = null;
-		applyStyle = function() {
-			var tableElems = dom.getElementsByTagName("table");
-			if(tableElems != null && tableElems.length > 0) tableElems[0].style.margin = "0 auto"; else haxe.Timer.delay(applyStyle,1000);
-		};
-		applyStyle();
+		if(this.editor == saturn.client.programs.CompoundEditor.Molsoft) {
+			this.molEditor = new MolEdit.ChemicalView("",id, 600, 400 );
+			var applyStyle = null;
+			applyStyle = function() {
+				var tableElems = dom.getElementsByTagName("table");
+				if(tableElems != null && tableElems.length > 0) tableElems[0].style.margin = "0 auto"; else haxe.Timer.delay(applyStyle,1000);
+			};
+			applyStyle();
+			this.up = true;
+			if(this.getObject() != null) this.render();
+		} else if(this.editor == saturn.client.programs.CompoundEditor.Ketcher) {
+			var iframe = dom;
+			iframe.setAttribute("src","js/ketcher/ketcher.html");
+			iframe.setAttribute("width","100%");
+			iframe.setAttribute("height","100%");
+			iframe.style.width = "100%";
+			iframe.style.height = "100%";
+			iframe.style.position = "absolute";
+			iframe.style.border = "none";
+			var waitForLoad = null;
+			waitForLoad = function() {
+				var ui = null;
+				if('contentDocument' in iframe) {
+					_g.molEditor = iframe.contentWindow.ketcher;
+					ui = iframe.contentWindow.ui;
+				} else {
+					var d_document = window.document;
+					_g.molEditor = iframe.window.ketcher;
+					ui = iframe.window.ui;
+				}
+				if(ui != null && ui.initialized == true) {
+					_g.up = true;
+					if(_g.getObject() != null) haxe.Timer.delay($bind(_g,_g.render),100);
+				} else haxe.Timer.delay(waitForLoad,100);
+			};
+			waitForLoad();
+		}
 	}
 	,onFocus: function() {
-		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.onFocus.call(this);
-		this.getApplication().getEditMenu().add({ text : "Click me", handler : function() {
-			_g.getApplication().showMessage("Menu","You clicked me!");
-		}});
+		this.getApplication().enableProgramSearchField(true);
 		this.getApplication().hideMiddleSouthPanel();
 		this.getApplication().installOutlineTree("MODELS",true,false,"WorkspaceObject","GRID");
 		if(this.getActiveObjectId() != null) {
@@ -10414,13 +10492,16 @@ saturn.client.programs.CompoundViewer.prototype = $extend(saturn.client.programs
 		var obj;
 		obj = js.Boot.__cast(w0.getObject() , saturn.core.domain.Compound);
 		this.setTitle(w0.getName());
-		if(this.getActiveObjectObject() != null) this.render();
+		if(this.getActiveObjectObject() != null && this.up) this.render();
 	}
 	,render: function() {
 		this.loaded = true;
 		var compound = this.getActiveObjectObject();
-		if(compound.sdf != null) this.molEditor.importFromString(compound.sdf);
+		if(compound.sdf != null) this.setCompoundInEditor(compound.sdf);
 		this.addModelToOutline(compound,true);
+	}
+	,setCompoundInEditor: function(molBlock) {
+		if(this.editor == saturn.client.programs.CompoundEditor.Molsoft) this.molEditor.importFromString(molBlock); else if(this.editor == saturn.client.programs.CompoundEditor.Ketcher) this.molEditor.setMolecule(molBlock);
 	}
 	,setTitle: function(title) {
 		this.theComponent.setTitle(title);
@@ -10430,11 +10511,49 @@ saturn.client.programs.CompoundViewer.prototype = $extend(saturn.client.programs
 	}
 	,saveWait: function(cb) {
 		var obj = this.getActiveObjectObject();
-		obj.sdf = this.molEditor.getMolfile();
+		obj.sdf = this.getMolBlockFromEditor();
 		cb();
+	}
+	,getMolBlockFromEditor: function() {
+		if(this.editor == saturn.client.programs.CompoundEditor.Molsoft) return this.molEditor.getMolfile(); else if(this.editor == saturn.client.programs.CompoundEditor.Ketcher) return this.molEditor.getMolfile(); else return null;
+	}
+	,openFile: function(file,asNew,asNewOpenProgram) {
+		if(asNewOpenProgram == null) asNewOpenProgram = true;
+		saturn.client.programs.CompoundViewer.parseFile(file,function(contents) {
+		},asNewOpenProgram);
+	}
+	,search: function(str) {
+		saturn.client.programs.SimpleExtJSProgram.prototype.search.call(this,str);
+		if(str != null && str != "" && this.lastSmilesImport != str) {
+			this.lastSmilesImport = str;
+			var rdkit = RDKit;
+			var mol = rdkit.Molecule.fromSmiles(str);
+			if(mol != null) {
+				mol.compute2DCoords();
+				var molBlock = mol.toMolfile();
+				this.getObject().sdf = molBlock;
+				this.setCompoundInEditor(molBlock);
+			}
+		}
+	}
+	,saveObject: function(cb) {
+		var molBlock = this.getMolBlockFromEditor();
+		var compound = this.getObject();
+		compound.sdf = molBlock;
+		var rdkit = RDKit;
+		var mol = rdkit.Molecule.MolBlockToMol(compound.sdf);
+		compound.smiles = mol.toSmiles();
+		saturn.client.programs.SimpleExtJSProgram.prototype.saveObject.call(this,cb);
 	}
 	,__class__: saturn.client.programs.CompoundViewer
 });
+saturn.client.programs.CompoundEditor = $hxClasses["saturn.client.programs.CompoundEditor"] = { __ename__ : ["saturn","client","programs","CompoundEditor"], __constructs__ : ["Molsoft","Ketcher"] };
+saturn.client.programs.CompoundEditor.Molsoft = ["Molsoft",0];
+saturn.client.programs.CompoundEditor.Molsoft.toString = $estr;
+saturn.client.programs.CompoundEditor.Molsoft.__enum__ = saturn.client.programs.CompoundEditor;
+saturn.client.programs.CompoundEditor.Ketcher = ["Ketcher",1];
+saturn.client.programs.CompoundEditor.Ketcher.toString = $estr;
+saturn.client.programs.CompoundEditor.Ketcher.__enum__ = saturn.client.programs.CompoundEditor;
 saturn.client.workspace.ConsoleWO = $hxClasses["saturn.client.workspace.ConsoleWO"] = function(object,name) {
 	if(object == null) object = { };
 	if(name == null) name = "Console";
@@ -11374,7 +11493,7 @@ saturn.client.programs.EmptyViewer.prototype = $extend(saturn.client.programs.Si
 	,__class__: saturn.client.programs.EmptyViewer
 });
 saturn.client.workspace.GlycanWO = $hxClasses["saturn.client.workspace.GlycanWO"] = function(object,name) {
-	if(object == null) object = new saturn.core.Glycan();
+	if(object == null) object = new saturn.core.domain.Glycan();
 	if(name == null) name = "Glycan";
 	saturn.client.workspace.WorkspaceObjectBase.call(this,object,name);
 };
@@ -11390,6 +11509,7 @@ saturn.client.workspace.GlycanWO.prototype = $extend(saturn.client.workspace.Wor
 	__class__: saturn.client.workspace.GlycanWO
 });
 saturn.client.programs.GlycanBuilder = $hxClasses["saturn.client.programs.GlycanBuilder"] = function() {
+	this.storedCommands = [];
 	saturn.client.programs.SimpleExtJSProgram.call(this);
 };
 saturn.client.programs.GlycanBuilder.__name__ = ["saturn","client","programs","GlycanBuilder"];
@@ -11398,32 +11518,84 @@ saturn.client.programs.GlycanBuilder.getQuickLaunchItems = function() {
 		saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.GlycanWO(null,null),true);
 	}}];
 };
+saturn.client.programs.GlycanBuilder.parseFile = function(file,cb,asNewOpenProgram) {
+	if(asNewOpenProgram == null) asNewOpenProgram = true;
+	var extension = saturn.client.core.CommonCore.getFileExtension(file.name);
+	if(extension == "glycoct_condensed") saturn.client.core.CommonCore.getFileAsText(file,function(contents) {
+		if(contents != null) {
+			var name = "Glycan";
+			var glycan = new saturn.core.domain.Glycan();
+			glycan.content = contents;
+			glycan.contentType = "glycoct_condensed";
+			saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.GlycanWO(glycan,name),true);
+		}
+	});
+};
 saturn.client.programs.GlycanBuilder.__super__ = saturn.client.programs.SimpleExtJSProgram;
 saturn.client.programs.GlycanBuilder.prototype = $extend(saturn.client.programs.SimpleExtJSProgram.prototype,{
-	theComponent: null
+	storedCommands: null
+	,theComponent: null
 	,emptyInit: function() {
 		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.emptyInit.call(this);
-		this.theComponent = Ext.create("Ext.panel.Panel",{ width : "100%", height : "95%", autoScroll : true, layout : "border", items : [{ xtype : "component", region : "north", autoEl : { tag : "iframe", src : "http://localhost:8090/static/GlycanBuilder.html", width : "100%", style : { height : "100%"}}}], listeners : { 'render' : function() {
+		var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/GlycanBuilder/GlycanBuilder.html";
+		this.theComponent = Ext.create("Ext.panel.Panel",{ width : "100%", height : "95%", autoScroll : true, layout : "border", items : [{ xtype : "component", region : "north", autoEl : { tag : "iframe", src : url, width : "100%", style : { height : "100%"}}}], listeners : { 'render' : function() {
 			_g.initialiseDOMComponent();
 		}}});
 	}
 	,initialiseDOMComponent: function() {
+		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.initialiseDOMComponent.call(this);
+		this.pokeCanvas(function(error) {
+			if(error != null) _g.getApplication().showMessage("Error",error); else if(_g.storedCommands.length > 0) while(_g.storedCommands.length > 0) {
+				var unit = _g.storedCommands.pop();
+				_g.runCanvasCommand(unit[0],unit[1]);
+			}
+		});
+	}
+	,pokeCanvas: function(cb) {
+		var giframe = this.getComponent().getEl().down("iframe").dom;
+		var clicked = false;
+		var checkCanvas = null;
+		checkCanvas = function() {
+			if(giframe != null) {
+				var giDocument = giframe.contentDocument;
+				var matchingItems = giDocument.querySelectorAll("[src='/GlycanBuilder/VAADIN/themes/ucdb_2011theme/icons/selectall.png']");
+				if(matchingItems.length > 0) {
+					var imgElement = matchingItems[0];
+					var selectAllButton = imgElement.parentElement;
+					if(!clicked) {
+						selectAllButton.click();
+						clicked = true;
+					}
+					if(giframe.contentWindow.glycanCanvas != null) {
+						cb(null);
+						return;
+					}
+				}
+			}
+			haxe.Timer.delay(checkCanvas,100);
+		};
+		checkCanvas();
 	}
 	,onFocus: function() {
-		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.onFocus.call(this);
-		this.getApplication().getEditMenu().add({ text : "Click me", handler : function() {
-			_g.getApplication().showMessage("Menu","You clicked me!");
-		}});
-		this.getApplication().hideMiddleSouthPanel();
+		this.getApplication().installOutlineTree("MODELS",true,false,"WorkspaceObject","GRID");
+		if(this.getActiveObjectId() != null) {
+			var glycan = this.getActiveObjectObject();
+			this.addModelToOutline(glycan,true);
+		}
+		this.getApplication().getMiddleSouthPanel().body.update("<b>Please follow these instructions if GlycanBuilder isn't working - <a target=\"_blank\" href=\"/static/manual/index.html#GlycanBuilder%20Installation\">Guide</a></b>");
 	}
 	,getCanvasContents: function(cb) {
 		this.runCanvasCommand("export~glycoct_condensed",cb);
 	}
 	,runCanvasCommand: function(command,cb) {
 		var hook = this.getCanvasHook();
+		if(hook == null) {
+			this.storedCommands.push([command,cb]);
+			return;
+		}
 		var gcb = [];
 		gcb.run = function(res) {
 			cb(res);
@@ -11442,23 +11614,13 @@ saturn.client.programs.GlycanBuilder.prototype = $extend(saturn.client.programs.
 		var w0;
 		w0 = js.Boot.__cast(saturn.client.programs.SimpleExtJSProgram.prototype.getActiveObject.call(this,saturn.client.workspace.GlycanWO) , saturn.client.workspace.GlycanWO);
 		var obj;
-		obj = js.Boot.__cast(w0.getObject() , saturn.core.Glycan);
+		obj = js.Boot.__cast(w0.getObject() , saturn.core.domain.Glycan);
 		this.setTitle(w0.getName());
 		if(obj.content != null) this.loadContent(obj.contentType,obj.content);
 	}
 	,loadContent: function(contentType,content) {
-		var _g = this;
-		var load = null;
-		load = function() {
-			if(!_g.canvasLoaded()) haxe.Timer.delay(function() {
-				load();
-			},1000); else {
-				window.console.log("Loading glycans");
-				_g.runCanvasCommand("import~" + contentType + "~" + content,function(res) {
-				});
-			}
-		};
-		load();
+		this.runCanvasCommand("import~" + contentType + "~" + content,function(res) {
+		});
 	}
 	,setTitle: function(title) {
 		this.theComponent.setTitle(title);
@@ -11475,6 +11637,19 @@ saturn.client.programs.GlycanBuilder.prototype = $extend(saturn.client.programs.
 			obj1.contentType = "glycoct_condensed";
 			cb();
 		});
+	}
+	,saveAsync: function(cb) {
+		var glycan = this.getObject();
+		this.getCanvasContents(function(res) {
+			glycan.content = res;
+			glycan.contentType = "glycoct_condensed";
+			cb(null);
+		});
+	}
+	,openFile: function(file,asNew,asNewOpenProgram) {
+		if(asNewOpenProgram == null) asNewOpenProgram = true;
+		saturn.client.programs.GlycanBuilder.parseFile(file,function(contents) {
+		},asNewOpenProgram);
 	}
 	,__class__: saturn.client.programs.GlycanBuilder
 });
@@ -11975,12 +12150,12 @@ saturn.client.programs.HomePage.prototype = $extend(saturn.client.programs.Simpl
 		this.demoNameToUrl = new haxe.ds.StringMap();
 		this.demoNameToUrl.set("ABIExample1","/static/demo/ABIExample.sat");
 		this.demos = new haxe.ds.StringMap();
-		this.addDemo({ name : "ABI (96 traces organised into folders - 20MB download slow on VPN)", url : "/static/demo/ABIExample.sat", icon : "x-btn-trace"});
-		this.addDemo({ name : "GYG2A progress (construct/target summary)", url : "/static/demo/GYG2A_Progress.sat", icon : "x-btn-gridvar"});
-		this.addDemo({ name : "KCNK1A construct alignment (example loads 53 sequences)", url : "/static/demo/KCNK1A-Protein-ALN.sat", icon : "x-btn-aln"});
+		this.addDemo({ name : "Sequencing runs", url : "/static/demo/RandomTraces.sat", icon : "x-btn-trace"});
+		this.addDemo({ name : "THB progress (construct/target summary)", url : "/static/demo/THB-Summary.sat", icon : "x-btn-gridvar"});
+		this.addDemo({ name : "THB construct alignment (example loads 53 sequences)", url : "/static/demo/THB_Alignment.sat", icon : "x-btn-aln"});
 		this.addDemo({ name : "Glycosyltransferase tree (examples loads 200 sequences)", url : "/static/demo/GTTree.sat", icon : "x-btn-tree"});
-		this.addDemo({ name : "JMJD2DA constructs (loads 87 DNA and Protein sequences)", url : "/static/demo/JMJD2DA-Constructs.sat", icon : "x-btn-structure"});
-		this.addDemo({ name : "OG-Mut plate examples (loads 4 plates)", url : "/static/demo/OG-Mut-cp.sat", icon : "x-btn-conical-dna"});
+		this.addDemo({ name : "THB constructs (loads DNA and Protein sequences)", url : "/static/demo/THB-sequences.sat", icon : "x-btn-structure"});
+		this.addDemo({ name : "THB construct plate", url : "/static/demo/THB-cp.sat", icon : "x-btn-conical-dna"});
 		this.addDemo({ name : "Coding examples", url : "/static/demo/coding.sat", icon : "x-btn-conical-dna"});
 		this.theToolBar = Ext.create("Ext.toolbar.Toolbar",{ style : { 'background-color' : "white"}, layout : { type : "vbox"}, height : "100%"});
 		this.theComponent = Ext.create("Ext.panel.Panel",{ height : "100%", width : "100%", listeners : { 'render' : function() {
@@ -14641,7 +14816,7 @@ saturn.client.programs.ProteinSequenceEditor.prototype = $extend(saturn.client.p
 		var blastButton = Ext.create("Ext.button.Button",{ renderTo : Ext.getBody(), text : "BLAST", handler : function() {
 		}, menu : Ext.create("Ext.menu.Menu",{ items : blastItems}), iconCls : "x-btn-blast", cls : "x-btn-split-black-background", tooltip : { dismissDelay : 10000, text : "BLAST against a sequence database"}});
 		this.getApplication().getToolBar().add(blastButton);
-		viewMenu.add({ text : "Domain report", handler : function() {
+		viewMenu.add({ text : "SS report", handler : function() {
 			var name = "PSIPred " + _g2.getActiveObject(saturn.client.workspace.ProteinWorkspaceObject).getName() + " 1 - " + self.sequence.length;
 			_g2.psiPredSequence(_g2.sequence,name);
 		}});
@@ -17380,29 +17555,17 @@ saturn.client.programs.blocks.TargetSummary.prototype = {
 		});
 	}
 	,getConstructStatus: function() {
-		var _g = this;
 		var values = [];
 		var constructPkeyToConstruct = new haxe.ds.StringMap();
-		var _g1 = 0;
-		var _g11 = this.constructs;
-		while(_g1 < _g11.length) {
-			var construct = _g11[_g1];
-			++_g1;
+		var _g = 0;
+		var _g1 = this.constructs;
+		while(_g < _g1.length) {
+			var construct = _g1[_g];
+			++_g;
 			values.push(construct.id == null?"null":"" + construct.id);
 			constructPkeyToConstruct.set(construct.id == null?"null":"" + construct.id,construct);
 		}
-		var provider = saturn.client.core.CommonCore.getDefaultProvider();
-		provider.getByValues(values,saturn.core.domain.SgcConstructStatus,"constructPkey",function(objs,err) {
-			if(err == null) {
-				var _g2 = 0;
-				while(_g2 < objs.length) {
-					var obj = objs[_g2];
-					++_g2;
-					constructPkeyToConstruct.get(obj.constructPkey == null?"null":"" + obj.constructPkey).status = obj.status;
-				}
-				_g.getTargetSequence();
-			} else _g.lookupException(err);
-		});
+		this.getTargetSequence();
 	}
 	,generateFASTA: function() {
 		var objs = [];
@@ -19504,7 +19667,7 @@ saturn.client.programs.plugins.SSAnnotationPlugin.prototype = $extend(saturn.cli
 	,setProgram: function(program) {
 		saturn.client.BaseProgramPlugin.prototype.setProgram.call(this,program);
 		program.addSequenceChangeListener(this);
-		this.annotationPos = program.addAnnotation("Secondary Structure");
+		this.annotationPos = program.addAnnotation("SS");
 		program.setAnnotationClass("SS",saturn.client.programs.sequenceeditor.AnnotationEditorBlockDiv);
 	}
 	,paintFromString: function(ssStr) {
@@ -19552,6 +19715,7 @@ saturn.client.programs.plugins.SSAnnotationPlugin.prototype = $extend(saturn.cli
 			dBlock.setHtml(strBuf_b);
 		}
 		program.setAnnotationSequence(this.annotationPos,ssStr);
+		program.getApplication().getMiddleSouthPanel().body.update("<b>Secondary structure prediction performed using PSIPred - <a target=\"_blank\" href=\"http://bioinfadmin.cs.ucl.ac.uk/downloads/psipred/LICENSE\">license</a></b>");
 	}
 	,sequenceChanged: function(sequence) {
 		var _g = this;
@@ -19622,14 +19786,14 @@ saturn.client.programs.plugins.SVGDomainAnnotationPlugin.prototype = $extend(sat
 		saturn.client.BaseProgramPlugin.prototype.setProgram.call(this,program);
 		program.addSequenceChangeListener(this);
 		this.annotationId = program.addAnnotation("Domains");
-		program.setAnnotationClass("Pfam",saturn.client.programs.sequenceeditor.SVGAnnotationBlock);
+		program.setAnnotationClass("Domains",saturn.client.programs.sequenceeditor.SVGAnnotationBlock);
 		program.setAnnotationPosition(this.annotationId,saturn.client.programs.sequenceeditor.AnnotationPosition.TOP);
 	}
 	,paintDomains: function(domains,sequence) {
 		var _g2 = this;
 		this.bgStyle = "rgb(255,255,255)";
 		var program = this.getProgram();
-		var blocks = program.getAnnotationBlocks("Pfam");
+		var blocks = program.getAnnotationBlocks("Domains");
 		if(domains == null) {
 			var _g = 0;
 			while(_g < blocks.length) {
@@ -19869,7 +20033,7 @@ saturn.client.programs.plugins.TMHMMAnnotationPlugin.prototype = $extend(saturn.
 	,setProgram: function(program) {
 		saturn.client.BaseProgramPlugin.prototype.setProgram.call(this,program);
 		program.addSequenceChangeListener(this);
-		this.annotationId = program.addAnnotation("Transmembrane regions");
+		this.annotationId = program.addAnnotation("TM");
 		program.setAnnotationClass("TMHMM",saturn.client.programs.sequenceeditor.SVGAnnotationBlock);
 		program.setAnnotationPosition(this.annotationId,saturn.client.programs.sequenceeditor.AnnotationPosition.TOP);
 	}
@@ -19877,7 +20041,7 @@ saturn.client.programs.plugins.TMHMMAnnotationPlugin.prototype = $extend(saturn.
 		var _g3 = this;
 		this.bgStyle = "rgb(255,255,255)";
 		var program = this.getProgram();
-		var blocks = program.getAnnotationBlocks("TMHMM");
+		var blocks = program.getAnnotationBlocks("TM");
 		var pos = 0;
 		var yUnit = 5;
 		var _g = 0;
@@ -20997,15 +21161,17 @@ saturn.client.workspace.Workspace.prototype = {
 		newName = this.generateName(newName,1,object.getUUID());
 		var key = object.getName();
 		this.nameToObjectUUID.remove(key);
+		var entity = object;
+		if(js.Boot.__instanceof(object,saturn.client.workspace.WorkspaceObject)) entity = object.getObject();
 		var clazz;
-		if(object == null) clazz = null; else clazz = js.Boot.getClass(object);
+		if(entity == null) clazz = null; else clazz = js.Boot.getClass(entity);
 		if(clazz != null) {
 			var model = saturn.client.WorkspaceApplication.getApplication().getProvider().getModel(clazz);
 			if(model != null) {
 				var id_field = model.getFirstKey();
 				if(id_field != null) {
 					saturn.client.WorkspaceApplication.getApplication().getActiveProgram().setModelOutlineValue(id_field,newName);
-					object[id_field] = newName;
+					entity[id_field] = newName;
 				}
 			}
 		}
@@ -21432,6 +21598,7 @@ saturn.client.workspace.Workspace.prototype = {
 			this.registerObjectWith(this.getObject(objectId),program1);
 			program1._setActiveObject(objectId);
 			program1.setTitle(this._getObject(objectId).getName());
+			this.setActiveObject(objectId);
 			program1.postRestore();
 		}
 		this.setReloading(false);
@@ -21451,6 +21618,8 @@ saturn.client.workspace.Workspace.prototype = {
 		}
 		Ext.resumeLayouts(true);
 		this.suspendTreeUpdates(false);
+		Ext.suspendLayouts();
+		Ext.resumeLayouts(true);
 	}
 	,getWorkspaceNames: function(onSuccess) {
 		this.theWorkspaceDatabase.getWorkspaceNames(onSuccess);
@@ -24493,14 +24662,6 @@ saturn.core.Generator.prototype = {
 	}
 	,__class__: saturn.core.Generator
 };
-saturn.core.Glycan = $hxClasses["saturn.core.Glycan"] = function() {
-};
-saturn.core.Glycan.__name__ = ["saturn","core","Glycan"];
-saturn.core.Glycan.prototype = {
-	content: null
-	,contentType: null
-	,__class__: saturn.core.Glycan
-};
 saturn.core.GridVar = $hxClasses["saturn.core.GridVar"] = function() {
 	this.configCollapse = false;
 	this.fit = true;
@@ -25985,9 +26146,13 @@ saturn.core.annotations.PfamSupplier.prototype = $extend(saturn.core.annotations
 		var chain = new saturn.workflow.Chain();
 		var config = new saturn.workflow.HMMerConfig(saturn.workflow.HMMerProgram.HMMSEARCH);
 		config.setFastaContent(">" + molecule.getMoleculeName() + "\n" + molecule.getSequence());
-		config.setHMMPath("database/Pfam-A.hmm");
+		config.setHMMPath("databases/Pfam-A.hmm");
 		chain.add("saturn.workflow.HMMer.query",config);
 		chain.start(function(error) {
+			if(error != null) {
+				saturn.client.WorkspaceApplication.getApplication().showMessage("Error",error);
+				return;
+			}
 			var outputFile = "../" + (js.Boot.__cast(config.getResponse() , saturn.workflow.HMMerResponse)).getTableOutputPath();
 			saturn.client.core.CommonCore.getContent(outputFile,function(content) {
 				var annotations = [];
@@ -26248,6 +26413,7 @@ saturn.core.domain.Alignment.prototype = {
 };
 saturn.core.domain.Compound = $hxClasses["saturn.core.domain.Compound"] = function() {
 	this.datestamp = new Date(1,2,3,4,5,6);
+	this.compoundId = "Compound";
 };
 saturn.core.domain.Compound.__name__ = ["saturn","core","domain","Compound"];
 saturn.core.domain.Compound.appendMolImage = function(objs,structureField,outputField,format) {
@@ -26459,6 +26625,17 @@ saturn.core.domain.FileProxy.prototype = {
 	path: null
 	,content: null
 	,__class__: saturn.core.domain.FileProxy
+};
+saturn.core.domain.Glycan = $hxClasses["saturn.core.domain.Glycan"] = function() {
+	this.glycanId = "Glycan";
+};
+saturn.core.domain.Glycan.__name__ = ["saturn","core","domain","Glycan"];
+saturn.core.domain.Glycan.prototype = {
+	id: null
+	,glycanId: null
+	,content: null
+	,contentType: null
+	,__class__: saturn.core.domain.Glycan
 };
 saturn.core.domain.Molecule = $hxClasses["saturn.core.domain.Molecule"] = function() {
 };
@@ -32117,6 +32294,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.smiles != null) _g284.setReserved("smiles","SMILES"); else _g284.h["smiles"] = "SMILES";
 		if(__map_reserved.datestamp != null) _g284.setReserved("datestamp","DATESTAMP"); else _g284.h["datestamp"] = "DATESTAMP";
 		if(__map_reserved.person != null) _g284.setReserved("person","PERSON"); else _g284.h["person"] = "PERSON";
+		if(__map_reserved.oldSGCGLobalId != null) _g284.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g284.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
 		value283 = _g284;
 		if(__map_reserved.fields != null) _g283.setReserved("fields",value283); else _g283.h["fields"] = value283;
 		var value284;
@@ -32131,6 +32309,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.shortCompoundId != null) _g286.setReserved("shortCompoundId",null); else _g286.h["shortCompoundId"] = null;
 		if(__map_reserved.supplierId != null) _g286.setReserved("supplierId",null); else _g286.h["supplierId"] = null;
 		if(__map_reserved.supplier != null) _g286.setReserved("supplier",null); else _g286.h["supplier"] = null;
+		if(__map_reserved.oldSGCGlobalId != null) _g286.setReserved("oldSGCGlobalId",null); else _g286.h["oldSGCGlobalId"] = null;
 		value285 = _g286;
 		if(__map_reserved.search != null) _g283.setReserved("search",value285); else _g283.h["search"] = value285;
 		var value286;
@@ -32141,7 +32320,6 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.table_info != null) _g283.setReserved("table_info",value286); else _g283.h["table_info"] = value286;
 		var value287;
 		var _g288 = new haxe.ds.StringMap();
-		if(__map_reserved.id_pattern != null) _g288.setReserved("id_pattern","^\\w{5}\\d{4}"); else _g288.h["id_pattern"] = "^\\w{5}\\d{4}";
 		if(__map_reserved.workspace_wrapper != null) _g288.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g288.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
 		if(__map_reserved.icon != null) _g288.setReserved("icon","compound_16.png"); else _g288.h["icon"] = "compound_16.png";
 		if(__map_reserved.alias != null) _g288.setReserved("alias","Compounds"); else _g288.h["alias"] = "Compounds";
@@ -32191,235 +32369,285 @@ saturn.db.mapping.SGC.prototype = {
 		var _g294 = new haxe.ds.StringMap();
 		var value294;
 		var _g295 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g295.setReserved("id","PKEY"); else _g295.h["id"] = "PKEY";
+		if(__map_reserved.glycanId != null) _g295.setReserved("glycanId","GLYCANID"); else _g295.h["glycanId"] = "GLYCANID";
+		if(__map_reserved.content != null) _g295.setReserved("content","CONTENT"); else _g295.h["content"] = "CONTENT";
+		if(__map_reserved.contentType != null) _g295.setReserved("contentType","CONTENT_TYPE"); else _g295.h["contentType"] = "CONTENT_TYPE";
+		if(__map_reserved.description != null) _g295.setReserved("description","DESCRIPTION"); else _g295.h["description"] = "DESCRIPTION";
+		value294 = _g295;
+		if(__map_reserved.fields != null) _g294.setReserved("fields",value294); else _g294.h["fields"] = value294;
 		var value295;
 		var _g296 = new haxe.ds.StringMap();
-		if(__map_reserved.SGC != null) _g296.setReserved("SGC",true); else _g296.h["SGC"] = true;
+		if(__map_reserved.glycanId != null) _g296.setReserved("glycanId",false); else _g296.h["glycanId"] = false;
+		if(__map_reserved.id != null) _g296.setReserved("id",true); else _g296.h["id"] = true;
 		value295 = _g296;
-		_g295.set("flags",value295);
-		value294 = _g295;
-		if(__map_reserved.options != null) _g294.setReserved("options",value294); else _g294.h["options"] = value294;
-		value293 = _g294;
-		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value293); else _g.h["saturn.app.SaturnClient"] = value293;
+		if(__map_reserved.indexes != null) _g294.setReserved("indexes",value295); else _g294.h["indexes"] = value295;
 		var value296;
 		var _g297 = new haxe.ds.StringMap();
+		if(__map_reserved.glycanId != null) _g297.setReserved("glycanId",null); else _g297.h["glycanId"] = null;
+		value296 = _g297;
+		if(__map_reserved.search != null) _g294.setReserved("search",value296); else _g294.h["search"] = value296;
 		var value297;
 		var _g298 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g298.setReserved("id","PKEY"); else _g298.h["id"] = "PKEY";
-		if(__map_reserved.username != null) _g298.setReserved("username","USERID"); else _g298.h["username"] = "USERID";
-		if(__map_reserved.fullname != null) _g298.setReserved("fullname","FULLNAME"); else _g298.h["fullname"] = "FULLNAME";
+		if(__map_reserved.schema != null) _g298.setReserved("schema","SGC"); else _g298.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g298.setReserved("name","GLYCAN"); else _g298.h["name"] = "GLYCAN";
 		value297 = _g298;
-		if(__map_reserved.fields != null) _g297.setReserved("fields",value297); else _g297.h["fields"] = value297;
+		if(__map_reserved.table_info != null) _g294.setReserved("table_info",value297); else _g294.h["table_info"] = value297;
 		var value298;
 		var _g299 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g299.setReserved("id",true); else _g299.h["id"] = true;
-		if(__map_reserved.username != null) _g299.setReserved("username",false); else _g299.h["username"] = false;
+		if(__map_reserved.workspace_wrapper != null) _g299.setReserved("workspace_wrapper","saturn.client.workspace.GlycanWO"); else _g299.h["workspace_wrapper"] = "saturn.client.workspace.GlycanWO";
+		if(__map_reserved.icon != null) _g299.setReserved("icon","glycan_16.png"); else _g299.h["icon"] = "glycan_16.png";
+		if(__map_reserved.alias != null) _g299.setReserved("alias","Glycans"); else _g299.h["alias"] = "Glycans";
 		value298 = _g299;
-		if(__map_reserved.indexes != null) _g297.setReserved("indexes",value298); else _g297.h["indexes"] = value298;
+		if(__map_reserved.options != null) _g294.setReserved("options",value298); else _g294.h["options"] = value298;
 		var value299;
 		var _g300 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g300.setReserved("schema","HIVE"); else _g300.h["schema"] = "HIVE";
-		if(__map_reserved.name != null) _g300.setReserved("name","USER_DETAILS"); else _g300.h["name"] = "USER_DETAILS";
+		if(__map_reserved["Glycan ID"] != null) _g300.setReserved("Glycan ID","glycanId"); else _g300.h["Glycan ID"] = "glycanId";
+		if(__map_reserved.Description != null) _g300.setReserved("Description","description"); else _g300.h["Description"] = "description";
+		if(__map_reserved.content != null) _g300.setReserved("content","content"); else _g300.h["content"] = "content";
+		if(__map_reserved.contentType != null) _g300.setReserved("contentType","contentType"); else _g300.h["contentType"] = "contentType";
 		value299 = _g300;
-		if(__map_reserved.table_info != null) _g297.setReserved("table_info",value299); else _g297.h["table_info"] = value299;
-		value296 = _g297;
-		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value296); else _g.h["saturn.core.User"] = value296;
+		if(__map_reserved.model != null) _g294.setReserved("model",value299); else _g294.h["model"] = value299;
 		var value300;
 		var _g301 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.GlycanBuilder"] != null) _g301.setReserved("saturn.client.programs.GlycanBuilder",true); else _g301.h["saturn.client.programs.GlycanBuilder"] = true;
+		value300 = _g301;
+		if(__map_reserved.programs != null) _g294.setReserved("programs",value300); else _g294.h["programs"] = value300;
+		value293 = _g294;
+		if(__map_reserved["saturn.core.domain.Glycan"] != null) _g.setReserved("saturn.core.domain.Glycan",value293); else _g.h["saturn.core.domain.Glycan"] = value293;
 		var value301;
 		var _g302 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g302.setReserved("id","PKEY"); else _g302.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g302.setReserved("name","NAME"); else _g302.h["name"] = "NAME";
-		value301 = _g302;
-		if(__map_reserved.fields != null) _g301.setReserved("fields",value301); else _g301.h["fields"] = value301;
 		var value302;
 		var _g303 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g303.setReserved("id",true); else _g303.h["id"] = true;
-		if(__map_reserved.name != null) _g303.setReserved("name",false); else _g303.h["name"] = false;
-		value302 = _g303;
-		if(__map_reserved.index != null) _g301.setReserved("index",value302); else _g301.h["index"] = value302;
 		var value303;
 		var _g304 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g304.setReserved("schema","SGC"); else _g304.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g304.setReserved("name","SATURNPERMISSION"); else _g304.h["name"] = "SATURNPERMISSION";
+		if(__map_reserved.SGC != null) _g304.setReserved("SGC",true); else _g304.h["SGC"] = true;
 		value303 = _g304;
-		if(__map_reserved.table_info != null) _g301.setReserved("table_info",value303); else _g301.h["table_info"] = value303;
-		value300 = _g301;
-		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value300); else _g.h["saturn.core.Permission"] = value300;
+		_g303.set("flags",value303);
+		value302 = _g303;
+		if(__map_reserved.options != null) _g302.setReserved("options",value302); else _g302.h["options"] = value302;
+		value301 = _g302;
+		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value301); else _g.h["saturn.app.SaturnClient"] = value301;
 		var value304;
 		var _g305 = new haxe.ds.StringMap();
 		var value305;
 		var _g306 = new haxe.ds.StringMap();
 		if(__map_reserved.id != null) _g306.setReserved("id","PKEY"); else _g306.h["id"] = "PKEY";
-		if(__map_reserved.permissionId != null) _g306.setReserved("permissionId","PERMISSIONID"); else _g306.h["permissionId"] = "PERMISSIONID";
-		if(__map_reserved.userId != null) _g306.setReserved("userId","USERID"); else _g306.h["userId"] = "USERID";
+		if(__map_reserved.username != null) _g306.setReserved("username","USERID"); else _g306.h["username"] = "USERID";
+		if(__map_reserved.fullname != null) _g306.setReserved("fullname","FULLNAME"); else _g306.h["fullname"] = "FULLNAME";
 		value305 = _g306;
 		if(__map_reserved.fields != null) _g305.setReserved("fields",value305); else _g305.h["fields"] = value305;
 		var value306;
 		var _g307 = new haxe.ds.StringMap();
 		if(__map_reserved.id != null) _g307.setReserved("id",true); else _g307.h["id"] = true;
+		if(__map_reserved.username != null) _g307.setReserved("username",false); else _g307.h["username"] = false;
 		value306 = _g307;
-		if(__map_reserved.index != null) _g305.setReserved("index",value306); else _g305.h["index"] = value306;
+		if(__map_reserved.indexes != null) _g305.setReserved("indexes",value306); else _g305.h["indexes"] = value306;
 		var value307;
 		var _g308 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g308.setReserved("schema","SGC"); else _g308.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g308.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g308.h["name"] = "SATURNUSER_TO_PERMISSION";
+		if(__map_reserved.schema != null) _g308.setReserved("schema","HIVE"); else _g308.h["schema"] = "HIVE";
+		if(__map_reserved.name != null) _g308.setReserved("name","USER_DETAILS"); else _g308.h["name"] = "USER_DETAILS";
 		value307 = _g308;
 		if(__map_reserved.table_info != null) _g305.setReserved("table_info",value307); else _g305.h["table_info"] = value307;
 		value304 = _g305;
-		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value304); else _g.h["saturn.core.UserToPermission"] = value304;
+		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value304); else _g.h["saturn.core.User"] = value304;
 		var value308;
 		var _g309 = new haxe.ds.StringMap();
 		var value309;
 		var _g310 = new haxe.ds.StringMap();
 		if(__map_reserved.id != null) _g310.setReserved("id","PKEY"); else _g310.h["id"] = "PKEY";
-		if(__map_reserved.userName != null) _g310.setReserved("userName","USERNAME"); else _g310.h["userName"] = "USERNAME";
-		if(__map_reserved.isPublic != null) _g310.setReserved("isPublic","ISPUBLIC"); else _g310.h["isPublic"] = "ISPUBLIC";
-		if(__map_reserved.sessionContent != null) _g310.setReserved("sessionContent","SESSIONCONTENTS"); else _g310.h["sessionContent"] = "SESSIONCONTENTS";
-		if(__map_reserved.sessionName != null) _g310.setReserved("sessionName","SESSIONNAME"); else _g310.h["sessionName"] = "SESSIONNAME";
+		if(__map_reserved.name != null) _g310.setReserved("name","NAME"); else _g310.h["name"] = "NAME";
 		value309 = _g310;
 		if(__map_reserved.fields != null) _g309.setReserved("fields",value309); else _g309.h["fields"] = value309;
 		var value310;
 		var _g311 = new haxe.ds.StringMap();
-		if(__map_reserved.sessionName != null) _g311.setReserved("sessionName",false); else _g311.h["sessionName"] = false;
 		if(__map_reserved.id != null) _g311.setReserved("id",true); else _g311.h["id"] = true;
+		if(__map_reserved.name != null) _g311.setReserved("name",false); else _g311.h["name"] = false;
 		value310 = _g311;
-		if(__map_reserved.indexes != null) _g309.setReserved("indexes",value310); else _g309.h["indexes"] = value310;
+		if(__map_reserved.index != null) _g309.setReserved("index",value310); else _g309.h["index"] = value310;
 		var value311;
 		var _g312 = new haxe.ds.StringMap();
-		if(__map_reserved["user.fullname"] != null) _g312.setReserved("user.fullname",null); else _g312.h["user.fullname"] = null;
+		if(__map_reserved.schema != null) _g312.setReserved("schema","SGC"); else _g312.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g312.setReserved("name","SATURNPERMISSION"); else _g312.h["name"] = "SATURNPERMISSION";
 		value311 = _g312;
-		if(__map_reserved.search != null) _g309.setReserved("search",value311); else _g309.h["search"] = value311;
+		if(__map_reserved.table_info != null) _g309.setReserved("table_info",value311); else _g309.h["table_info"] = value311;
+		value308 = _g309;
+		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value308); else _g.h["saturn.core.Permission"] = value308;
 		var value312;
 		var _g313 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g313.setReserved("schema","SGC"); else _g313.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g313.setReserved("name","SATURNSESSION"); else _g313.h["name"] = "SATURNSESSION";
-		value312 = _g313;
-		if(__map_reserved.table_info != null) _g309.setReserved("table_info",value312); else _g309.h["table_info"] = value312;
 		var value313;
 		var _g314 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g314.setReserved("alias","Session"); else _g314.h["alias"] = "Session";
-		if(__map_reserved.auto_activate != null) _g314.setReserved("auto_activate","3"); else _g314.h["auto_activate"] = "3";
+		if(__map_reserved.id != null) _g314.setReserved("id","PKEY"); else _g314.h["id"] = "PKEY";
+		if(__map_reserved.permissionId != null) _g314.setReserved("permissionId","PERMISSIONID"); else _g314.h["permissionId"] = "PERMISSIONID";
+		if(__map_reserved.userId != null) _g314.setReserved("userId","USERID"); else _g314.h["userId"] = "USERID";
+		value313 = _g314;
+		if(__map_reserved.fields != null) _g313.setReserved("fields",value313); else _g313.h["fields"] = value313;
 		var value314;
 		var _g315 = new haxe.ds.StringMap();
-		if(__map_reserved.user_constraint_field != null) _g315.setReserved("user_constraint_field","userName"); else _g315.h["user_constraint_field"] = "userName";
-		if(__map_reserved.public_constraint_field != null) _g315.setReserved("public_constraint_field","isPublic"); else _g315.h["public_constraint_field"] = "isPublic";
+		if(__map_reserved.id != null) _g315.setReserved("id",true); else _g315.h["id"] = true;
 		value314 = _g315;
-		_g314.set("constraints",value314);
+		if(__map_reserved.index != null) _g313.setReserved("index",value314); else _g313.h["index"] = value314;
 		var value315;
 		var _g316 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g316.setReserved("schema","SGC"); else _g316.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g316.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g316.h["name"] = "SATURNUSER_TO_PERMISSION";
+		value315 = _g316;
+		if(__map_reserved.table_info != null) _g313.setReserved("table_info",value315); else _g313.h["table_info"] = value315;
+		value312 = _g313;
+		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value312); else _g.h["saturn.core.UserToPermission"] = value312;
 		var value316;
 		var _g317 = new haxe.ds.StringMap();
 		var value317;
 		var _g318 = new haxe.ds.StringMap();
-		if(__map_reserved.user_suffix != null) _g318.setReserved("user_suffix",""); else _g318.h["user_suffix"] = "";
-		if(__map_reserved["function"] != null) _g318.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g318.h["function"] = "saturn.core.domain.SaturnSession.load";
+		if(__map_reserved.id != null) _g318.setReserved("id","PKEY"); else _g318.h["id"] = "PKEY";
+		if(__map_reserved.userName != null) _g318.setReserved("userName","USERNAME"); else _g318.h["userName"] = "USERNAME";
+		if(__map_reserved.isPublic != null) _g318.setReserved("isPublic","ISPUBLIC"); else _g318.h["isPublic"] = "ISPUBLIC";
+		if(__map_reserved.sessionContent != null) _g318.setReserved("sessionContent","SESSIONCONTENTS"); else _g318.h["sessionContent"] = "SESSIONCONTENTS";
+		if(__map_reserved.sessionName != null) _g318.setReserved("sessionName","SESSIONNAME"); else _g318.h["sessionName"] = "SESSIONNAME";
 		value317 = _g318;
-		if(__map_reserved.DEFAULT != null) _g317.setReserved("DEFAULT",value317); else _g317.h["DEFAULT"] = value317;
-		value316 = _g317;
-		if(__map_reserved.search_bar != null) _g316.setReserved("search_bar",value316); else _g316.h["search_bar"] = value316;
-		value315 = _g316;
-		_g314.set("actions",value315);
-		value313 = _g314;
-		if(__map_reserved.options != null) _g309.setReserved("options",value313); else _g309.h["options"] = value313;
+		if(__map_reserved.fields != null) _g317.setReserved("fields",value317); else _g317.h["fields"] = value317;
 		var value318;
 		var _g319 = new haxe.ds.StringMap();
-		if(__map_reserved.USERNAME != null) _g319.setReserved("USERNAME","insert.username"); else _g319.h["USERNAME"] = "insert.username";
+		if(__map_reserved.sessionName != null) _g319.setReserved("sessionName",false); else _g319.h["sessionName"] = false;
+		if(__map_reserved.id != null) _g319.setReserved("id",true); else _g319.h["id"] = true;
 		value318 = _g319;
-		if(__map_reserved.auto_functions != null) _g309.setReserved("auto_functions",value318); else _g309.h["auto_functions"] = value318;
+		if(__map_reserved.indexes != null) _g317.setReserved("indexes",value318); else _g317.h["indexes"] = value318;
 		var value319;
 		var _g320 = new haxe.ds.StringMap();
+		if(__map_reserved["user.fullname"] != null) _g320.setReserved("user.fullname",null); else _g320.h["user.fullname"] = null;
+		value319 = _g320;
+		if(__map_reserved.search != null) _g317.setReserved("search",value319); else _g317.h["search"] = value319;
 		var value320;
 		var _g321 = new haxe.ds.StringMap();
-		if(__map_reserved.field != null) _g321.setReserved("field","userName"); else _g321.h["field"] = "userName";
-		if(__map_reserved["class"] != null) _g321.setReserved("class","saturn.core.User"); else _g321.h["class"] = "saturn.core.User";
-		if(__map_reserved.fk_field != null) _g321.setReserved("fk_field","username"); else _g321.h["fk_field"] = "username";
+		if(__map_reserved.schema != null) _g321.setReserved("schema","SGC"); else _g321.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g321.setReserved("name","SATURNSESSION"); else _g321.h["name"] = "SATURNSESSION";
 		value320 = _g321;
-		_g320.set("user",value320);
-		value319 = _g320;
-		if(__map_reserved["fields.synthetic"] != null) _g309.setReserved("fields.synthetic",value319); else _g309.h["fields.synthetic"] = value319;
-		value308 = _g309;
-		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value308); else _g.h["saturn.core.domain.SaturnSession"] = value308;
+		if(__map_reserved.table_info != null) _g317.setReserved("table_info",value320); else _g317.h["table_info"] = value320;
 		var value321;
 		var _g322 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g322.setReserved("alias","Session"); else _g322.h["alias"] = "Session";
+		if(__map_reserved.auto_activate != null) _g322.setReserved("auto_activate","3"); else _g322.h["auto_activate"] = "3";
 		var value322;
 		var _g323 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g323.setReserved("id","PKEY"); else _g323.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g323.setReserved("name","NAME"); else _g323.h["name"] = "NAME";
-		if(__map_reserved.traceDataJson != null) _g323.setReserved("traceDataJson","TRACE_JSON"); else _g323.h["traceDataJson"] = "TRACE_JSON";
+		if(__map_reserved.user_constraint_field != null) _g323.setReserved("user_constraint_field","userName"); else _g323.h["user_constraint_field"] = "userName";
+		if(__map_reserved.public_constraint_field != null) _g323.setReserved("public_constraint_field","isPublic"); else _g323.h["public_constraint_field"] = "isPublic";
 		value322 = _g323;
-		if(__map_reserved.fields != null) _g322.setReserved("fields",value322); else _g322.h["fields"] = value322;
+		_g322.set("constraints",value322);
 		var value323;
 		var _g324 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g324.setReserved("name",false); else _g324.h["name"] = false;
-		if(__map_reserved.id != null) _g324.setReserved("id",true); else _g324.h["id"] = true;
-		value323 = _g324;
-		if(__map_reserved.indexes != null) _g322.setReserved("indexes",value323); else _g322.h["indexes"] = value323;
 		var value324;
 		var _g325 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g325.setReserved("saturn.client.programs.ABITraceViewer",true); else _g325.h["saturn.client.programs.ABITraceViewer"] = true;
-		value324 = _g325;
-		if(__map_reserved.programs != null) _g322.setReserved("programs",value324); else _g322.h["programs"] = value324;
 		var value325;
 		var _g326 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g326.setReserved("alias","Trace Data"); else _g326.h["alias"] = "Trace Data";
-		if(__map_reserved.icon != null) _g326.setReserved("icon","dna_conical_16.png"); else _g326.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g326.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g326.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
+		if(__map_reserved.user_suffix != null) _g326.setReserved("user_suffix",""); else _g326.h["user_suffix"] = "";
+		if(__map_reserved["function"] != null) _g326.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g326.h["function"] = "saturn.core.domain.SaturnSession.load";
 		value325 = _g326;
-		if(__map_reserved.options != null) _g322.setReserved("options",value325); else _g322.h["options"] = value325;
+		if(__map_reserved.DEFAULT != null) _g325.setReserved("DEFAULT",value325); else _g325.h["DEFAULT"] = value325;
+		value324 = _g325;
+		if(__map_reserved.search_bar != null) _g324.setReserved("search_bar",value324); else _g324.h["search_bar"] = value324;
+		value323 = _g324;
+		_g322.set("actions",value323);
+		value321 = _g322;
+		if(__map_reserved.options != null) _g317.setReserved("options",value321); else _g317.h["options"] = value321;
 		var value326;
 		var _g327 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g327.setReserved("schema","SGC"); else _g327.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g327.setReserved("name","TRACES"); else _g327.h["name"] = "TRACES";
+		if(__map_reserved.USERNAME != null) _g327.setReserved("USERNAME","insert.username"); else _g327.h["USERNAME"] = "insert.username";
 		value326 = _g327;
-		if(__map_reserved.table_info != null) _g322.setReserved("table_info",value326); else _g322.h["table_info"] = value326;
+		if(__map_reserved.auto_functions != null) _g317.setReserved("auto_functions",value326); else _g317.h["auto_functions"] = value326;
 		var value327;
 		var _g328 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g328.setReserved("name",true); else _g328.h["name"] = true;
-		value327 = _g328;
-		if(__map_reserved.search != null) _g322.setReserved("search",value327); else _g322.h["search"] = value327;
-		value321 = _g322;
-		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value321); else _g.h["saturn.core.domain.ABITrace"] = value321;
 		var value328;
 		var _g329 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g329.setReserved("field","userName"); else _g329.h["field"] = "userName";
+		if(__map_reserved["class"] != null) _g329.setReserved("class","saturn.core.User"); else _g329.h["class"] = "saturn.core.User";
+		if(__map_reserved.fk_field != null) _g329.setReserved("fk_field","username"); else _g329.h["fk_field"] = "username";
+		value328 = _g329;
+		_g328.set("user",value328);
+		value327 = _g328;
+		if(__map_reserved["fields.synthetic"] != null) _g317.setReserved("fields.synthetic",value327); else _g317.h["fields.synthetic"] = value327;
+		value316 = _g317;
+		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value316); else _g.h["saturn.core.domain.SaturnSession"] = value316;
 		var value329;
 		var _g330 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g330.setReserved("id","PKEY"); else _g330.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g330.setReserved("name","NAME"); else _g330.h["name"] = "NAME";
-		if(__map_reserved.content != null) _g330.setReserved("content","CONTENT"); else _g330.h["content"] = "CONTENT";
-		if(__map_reserved.url != null) _g330.setReserved("url","URL"); else _g330.h["url"] = "URL";
-		value329 = _g330;
-		if(__map_reserved.fields != null) _g329.setReserved("fields",value329); else _g329.h["fields"] = value329;
 		var value330;
 		var _g331 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g331.setReserved("name",false); else _g331.h["name"] = false;
-		if(__map_reserved.id != null) _g331.setReserved("id",true); else _g331.h["id"] = true;
+		if(__map_reserved.id != null) _g331.setReserved("id","PKEY"); else _g331.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g331.setReserved("name","NAME"); else _g331.h["name"] = "NAME";
+		if(__map_reserved.traceDataJson != null) _g331.setReserved("traceDataJson","TRACE_JSON"); else _g331.h["traceDataJson"] = "TRACE_JSON";
 		value330 = _g331;
-		if(__map_reserved.indexes != null) _g329.setReserved("indexes",value330); else _g329.h["indexes"] = value330;
+		if(__map_reserved.fields != null) _g330.setReserved("fields",value330); else _g330.h["fields"] = value330;
 		var value331;
 		var _g332 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g332.setReserved("saturn.client.programs.AlignmentViewer",true); else _g332.h["saturn.client.programs.AlignmentViewer"] = true;
+		if(__map_reserved.name != null) _g332.setReserved("name",false); else _g332.h["name"] = false;
+		if(__map_reserved.id != null) _g332.setReserved("id",true); else _g332.h["id"] = true;
 		value331 = _g332;
-		if(__map_reserved.programs != null) _g329.setReserved("programs",value331); else _g329.h["programs"] = value331;
+		if(__map_reserved.indexes != null) _g330.setReserved("indexes",value331); else _g330.h["indexes"] = value331;
 		var value332;
 		var _g333 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g333.setReserved("alias","Alignments"); else _g333.h["alias"] = "Alignments";
-		if(__map_reserved.icon != null) _g333.setReserved("icon","dna_conical_16.png"); else _g333.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g333.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g333.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g333.setReserved("saturn.client.programs.ABITraceViewer",true); else _g333.h["saturn.client.programs.ABITraceViewer"] = true;
 		value332 = _g333;
-		if(__map_reserved.options != null) _g329.setReserved("options",value332); else _g329.h["options"] = value332;
+		if(__map_reserved.programs != null) _g330.setReserved("programs",value332); else _g330.h["programs"] = value332;
 		var value333;
 		var _g334 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g334.setReserved("schema","SGC"); else _g334.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g334.setReserved("name","ALIGNMENTS"); else _g334.h["name"] = "ALIGNMENTS";
+		if(__map_reserved.alias != null) _g334.setReserved("alias","Trace Data"); else _g334.h["alias"] = "Trace Data";
+		if(__map_reserved.icon != null) _g334.setReserved("icon","dna_conical_16.png"); else _g334.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g334.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g334.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
 		value333 = _g334;
-		if(__map_reserved.table_info != null) _g329.setReserved("table_info",value333); else _g329.h["table_info"] = value333;
+		if(__map_reserved.options != null) _g330.setReserved("options",value333); else _g330.h["options"] = value333;
 		var value334;
 		var _g335 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g335.setReserved("name",true); else _g335.h["name"] = true;
+		if(__map_reserved.schema != null) _g335.setReserved("schema","SGC"); else _g335.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g335.setReserved("name","TRACES"); else _g335.h["name"] = "TRACES";
 		value334 = _g335;
-		if(__map_reserved.search != null) _g329.setReserved("search",value334); else _g329.h["search"] = value334;
-		value328 = _g329;
-		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value328); else _g.h["saturn.core.domain.Alignment"] = value328;
+		if(__map_reserved.table_info != null) _g330.setReserved("table_info",value334); else _g330.h["table_info"] = value334;
+		var value335;
+		var _g336 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g336.setReserved("name",true); else _g336.h["name"] = true;
+		value335 = _g336;
+		if(__map_reserved.search != null) _g330.setReserved("search",value335); else _g330.h["search"] = value335;
+		value329 = _g330;
+		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value329); else _g.h["saturn.core.domain.ABITrace"] = value329;
+		var value336;
+		var _g337 = new haxe.ds.StringMap();
+		var value337;
+		var _g338 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g338.setReserved("id","PKEY"); else _g338.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g338.setReserved("name","NAME"); else _g338.h["name"] = "NAME";
+		if(__map_reserved.content != null) _g338.setReserved("content","CONTENT"); else _g338.h["content"] = "CONTENT";
+		if(__map_reserved.url != null) _g338.setReserved("url","URL"); else _g338.h["url"] = "URL";
+		value337 = _g338;
+		if(__map_reserved.fields != null) _g337.setReserved("fields",value337); else _g337.h["fields"] = value337;
+		var value338;
+		var _g339 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g339.setReserved("name",false); else _g339.h["name"] = false;
+		if(__map_reserved.id != null) _g339.setReserved("id",true); else _g339.h["id"] = true;
+		value338 = _g339;
+		if(__map_reserved.indexes != null) _g337.setReserved("indexes",value338); else _g337.h["indexes"] = value338;
+		var value339;
+		var _g340 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g340.setReserved("saturn.client.programs.AlignmentViewer",true); else _g340.h["saturn.client.programs.AlignmentViewer"] = true;
+		value339 = _g340;
+		if(__map_reserved.programs != null) _g337.setReserved("programs",value339); else _g337.h["programs"] = value339;
+		var value340;
+		var _g341 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g341.setReserved("alias","Alignments"); else _g341.h["alias"] = "Alignments";
+		if(__map_reserved.icon != null) _g341.setReserved("icon","dna_conical_16.png"); else _g341.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g341.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g341.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		value340 = _g341;
+		if(__map_reserved.options != null) _g337.setReserved("options",value340); else _g337.h["options"] = value340;
+		var value341;
+		var _g342 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g342.setReserved("schema","SGC"); else _g342.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g342.setReserved("name","ALIGNMENTS"); else _g342.h["name"] = "ALIGNMENTS";
+		value341 = _g342;
+		if(__map_reserved.table_info != null) _g337.setReserved("table_info",value341); else _g337.h["table_info"] = value341;
+		var value342;
+		var _g343 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g343.setReserved("name",true); else _g343.h["name"] = true;
+		value342 = _g343;
+		if(__map_reserved.search != null) _g337.setReserved("search",value342); else _g337.h["search"] = value342;
+		value336 = _g337;
+		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value336); else _g.h["saturn.core.domain.Alignment"] = value336;
 		this.models = _g;
 	}
 	,__class__: saturn.db.mapping.SGC
@@ -32585,7 +32813,7 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 		if(selectorSQL != "") selectorSQL = " AND " + selectorSQL;
 		this.getConnection(this.config,function(err,connection) {
 			if(err != null) callBack(null,err); else {
-				var sql = selectClause + "  WHERE UPPER(" + _g.columnToStringCommand(keyCol) + ") " + _g.buildSqlInClause(ids.length) + " " + selectorSQL;
+				var sql = selectClause + "  WHERE UPPER(" + _g.columnToStringCommand(keyCol) + ") " + _g.buildSqlInClause(ids.length,0,"upper") + " " + selectorSQL;
 				var additionalSQL = _g.generateUserConstraintSQL(clazz);
 				if(additionalSQL != null) sql += " AND " + additionalSQL;
 				sql += " ORDER BY " + keyCol;
@@ -34520,7 +34748,7 @@ saturn.workflow.Unit.prototype = {
 	,__class__: saturn.workflow.Unit
 };
 saturn.workflow.HMMer = $hxClasses["saturn.workflow.HMMer"] = function(config,cb) {
-	this.hmmPath = "bin/hmmer";
+	this.hmmPath = "bin/deployed_bin/hmmer";
 	saturn.workflow.Unit.call(this,config,cb);
 	this.response = new saturn.workflow.HMMerResponse();
 	this.hmmSearchPath = this.hmmPath + "/hmmsearch";
@@ -34556,7 +34784,9 @@ saturn.workflow.HMMer.prototype = $extend(saturn.workflow.Unit.prototype,{
 						var args = ["--domtblout",path_table,"--noali","-o",path_raw,_g.config.getParameter("hmmFilePath"),_g.config.getParameter("fastaFilePath")];
 						saturn.core.Util.debug(args.join(","));
 						saturn.core.Util.exec(_g.hmmSearchPath,args,function(code) {
+							saturn.core.Util.debug("Hello World");
 							if(code != 0) {
+								saturn.core.Util.debug("Error");
 								_g.response.setError("An error has occurred running HMMSearch");
 								_g.done();
 							} else if(_g.config.isRemote()) _g.done(); else {
@@ -34723,7 +34953,7 @@ saturn.client.workspace.PCRProductWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.PCRProductViewer.CLASS_SUPPORT = [saturn.client.workspace.PCRProductWO];
 saturn.client.workspace.AlleleWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.AlleleViewer.CLASS_SUPPORT = [saturn.client.workspace.AlleleWO];
-saturn.client.workspace.CompoundWO.FILE_IMPORT_FORMATS = [];
+saturn.client.workspace.CompoundWO.FILE_IMPORT_FORMATS = ["sdf"];
 saturn.client.programs.CompoundViewer.CLASS_SUPPORT = [saturn.client.workspace.CompoundWO];
 saturn.client.workspace.ConsoleWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.ConsoleViewer.CLASS_SUPPORT = [saturn.client.workspace.ConsoleWO];
@@ -34731,7 +34961,7 @@ saturn.client.workspace.CrystalHelperDataWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.CrystalHelper.CLASS_SUPPORT = [saturn.client.workspace.CrystalHelperDataWO];
 saturn.client.workspace.DigestWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.DigestViewer.CLASS_SUPPORT = [saturn.client.workspace.DigestWO];
-saturn.client.workspace.GlycanWO.FILE_IMPORT_FORMATS = [];
+saturn.client.workspace.GlycanWO.FILE_IMPORT_FORMATS = ["glycoct_condensed"];
 saturn.client.programs.GlycanBuilder.CLASS_SUPPORT = [saturn.client.workspace.GlycanWO];
 saturn.client.workspace.GridVarWO.FILE_IMPORT_FORMATS = ["csv"];
 saturn.client.programs.GridVarViewer.CLASS_SUPPORT = [saturn.client.workspace.GridVarWO];
