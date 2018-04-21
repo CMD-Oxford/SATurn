@@ -13,7 +13,7 @@
                       },
                       "PDB" :{
                         "dbtype": "prot",
-                        "dbpath": "databases/pdb_annotated.fasta",
+                        "dbpath": "databases/pdb.fasta",
                         "prog": "blastp"
                       },
                       "Targets (DNA)" :{
