@@ -136,7 +136,7 @@
         {
             "clazz": "saturn.server.plugins.core.DefaultProviderPlugin",
             "connections" : [{
-                    "file_name" : "databases\\saturn.sqlite",
+                    "file_name" : "databases/saturn.sqlite",
                     "driver" : "saturn.db.provider.SQLiteProvider",
                     "named_queries": {
                         "TARGET_SEQDATA" : "select   PKEY AS PKEY,   CASE :1 WHEN 'Nucleotide' THEN     DNASEQ   WHEN 'Protein' THEN     PROTSEQ   ELSE     null   END AS SEQ,   NULL AS SEQTYPE,   '1' AS VERSION,   PKEY AS SGCTARGET_PKEY,   NULL AS CRC,   TARGET_ID AS TARGET_ID FROM   TARGET WHERE TARGET_ID = :0",

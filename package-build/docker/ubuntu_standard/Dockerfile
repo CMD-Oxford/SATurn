@@ -51,10 +51,12 @@ wget https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/databas
 unzip databases.zip && \
 rm databases.zip
 RUN cp /home/saturn/SATurn/src_python/ABIConverter.py /home/saturn/SATurn/build/bin/deployed_bin/ABIConverter && \
-chmod u+x /home/saturn/SATurn/build/bin/deployed_bin/ABIConverter.py
+chmod u+x /home/saturn/SATurn/build/bin/deployed_bin/ABIConverter
+RUN chmod u+x /home/saturn/SATurn/build/rundebugsaturn.sh
 USER root
 RUN setcap 'cap_net_bind_service=+ep' /home/saturn/SATurn/build/bin/node/bin/node
-#ENV JAVA_HOME=
+USER saturn
+#CMD /home/saturn/SATurn/build/rundebugsaturn.sh
 
 
 
