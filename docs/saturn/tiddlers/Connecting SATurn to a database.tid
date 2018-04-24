@@ -1,0 +1,99 @@
+created: 20180424134014152
+modified: 20180424140522255
+title: Connecting SATurn to a database
+type: text/vnd.tiddlywiki
+
+!Summary
+SATurn includes a basic ORM (Object relational mapping) technology which allows SATurn to automatically map classes and their corresponding fields with relational tables and their corresponding columns.  Within the service configuration file which starts SATurn you will find within the plugin section that the plugin "DefaultProviderPlugin" is loaded.  Within the DefaultProviderPlugin configuration you will find a connections block which defines an array of databases that you would like to connect SATurn to.
+
+[img[sqlite_connection_def.png]].
+
+The image above shows the connection block which we use in the standalone version of SATurn to connect SATurn to an SQLite database.
+
+The SATurn ORM is fairly comprehensive in the types of relationships (i.e. foreign keys) it supports and the types of advanced queries it supports.  We hope to update this documentation shortly.  But in the meantime a quick example is shown below which describes how to add entities and insert and retrieve them.
+
+! Example of mapping an entity
+The following assumes that you are still using the SQLite database.
+
+1. Create a table in the SQLite database with the following definition
+
+>CREATE TABLE STARS(PKEY INTEGER PRIMARY KEY AUTOINCREMENT, STAR_ID VARCHAR(30), STAR_TYPE VARCHAR(100));
+
+2. Create the following file src/saturn/core/domain/Star.hx
+
+```
+package saturn.core.domain;
+
+class Star {
+    public var id : Int;
+    public var starId : String;
+    public var starType : String;
+
+    public function new(){
+        
+    }
+```
+
+3. Add the following to buildModels in SGCSQLite.hx
+
+```
+models.set('saturn.core.domain.Star', {
+            [
+                'fields'=>[
+                    'starId' => 'STAR_ID',
+                    'id' => 'PKEY',
+                    'starType' => 'STAR_TYPE'
+                ],
+                'indexes'=>[
+                    'starId'=>false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'STARS',
+                    'human_name' => 'Star',
+                    'human_name_plural' => 'Stars'
+                ]
+            ]
+});
+
+```
+
+4. Recompile the SATurn code
+
+> haxe build.hxml (or Ctrl + F9 in IntelliJ)
+
+5. Restart SATurn & hard reload the web-page (In Chrome hold down refresh and click on Empty Cache and hard reload)
+
+Test the new mapping as follows
+
+6. Click on File->New->Script
+7. Enter the following code to insert a new entity
+
+```
+var starObj = new saturn.core,domain.Star();
+starObj.starId = 'Alpha Centauri C';
+starObj.starType = 'red dwarf';
+
+DB.save(starObj, function(err){
+   if(err != null){
+     print(err);
+   }else{
+     print(starObj.starId + ' saved');
+   }
+
+  flush();
+}
+```
+8. Now retrieve the star from the database
+
+```
+DB.getById('Alpha Centauri C', saturn.core.domain.Star, function(starObj, error){
+  if(err != null){
+     print(err);
+  }else{
+     print(starObj.starId + ' is a ' + starObj.starType);
+  }
+  flush();
+}
+```

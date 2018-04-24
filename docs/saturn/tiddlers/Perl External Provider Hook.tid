@@ -1,5 +1,5 @@
 created: 20180420212904396
-modified: 20180420212944074
+modified: 20180424133904607
 title: Perl External Provider Hook
 type: text/vnd.tiddlywiki
 
@@ -40,7 +40,7 @@ print OUTPUT_FILE encode_json \%outputJson;
 close(OUTPUT_FILE);
 ```
 
-Connect the Perl script to the web-service by adding the following block to the Provider configuration within Services.json.  You can decide whether to execute this via NodeJS or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.
+Connect the Perl script to the web-service by adding the following block to the Provider configuration within ServicesLocalLite.json.  You can decide whether to execute this via NodeJS or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.
 
 ```json
 {

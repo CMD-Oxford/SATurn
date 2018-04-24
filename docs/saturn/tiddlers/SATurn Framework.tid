@@ -1,12 +1,12 @@
 created: 20180301161348796
-modified: 20180421081914251
+modified: 20180424140740039
 title: SATurn Framework
 type: text/vnd.tiddlywiki
 
 <div class="welcome_content">
 <$link to="User Guide" class="welcome_button">User Guide</$link>
 <$link to="Internal: Developer Guide" class="welcome_button">Developer Guide</$link><br/>
-<h2>20/4/18: Update</h2>
+<h2>Last Updated on 24/4/18</h2>
 Please note that we are are currently in the process of migrating the internal SGC manuals to this public Wiki.  If you are reading the local copy of the manual distributed with SATurn you can find the latest online version <a href="https://ddamerell53.github.io/SATurn/">here</a>
 <h2>Downloads</h2>
 <div style="margin-top:10px">

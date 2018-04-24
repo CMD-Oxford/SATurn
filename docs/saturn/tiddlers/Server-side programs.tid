@@ -1,0 +1,69 @@
+created: 20180424130935423
+modified: 20180424133719446
+title: Server-side programs
+type: text/vnd.tiddlywiki
+
+!Summary
+SATurn can be extended with server-side programs in a number of different ways.  The simplest way to add server-side functionality to SATurn is by connecting scripts via the JSON bridge layer which is described [[here|]Connecting external scripts]].  You can however create more native-type server-side programs which are written in the Haxe programming language and which gain access to the full SATurn server-side API which includes among-st other things access to core SATurn libraries for handling DNA and protein sequences.
+
+To add a native plugin you can follow the guide below which assumes you have already set-up your development environment (see [[Configuring development environment]] for further instructions).  There is a more low-level API for adding server-side programs which you will see used for many of our plugins like this [[one|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/server/plugins/socket/ClustalPlugin.hx]].  However we would encourage all new program to be written as follows as it's far simpler.
+
+! Creating a server-side program
+1. Save the following to src/saturn/db/provider/hooks/SayHelloHook.hx
+
+```
+package saturn.db.provider.hooks;
+
+import haxe.Json;
+import saturn.core.Util;
+
+import js.Node.NodeChildProcess;
+import bindings.NodeTemp;
+import saturn.app.SaturnServer;
+
+class SayHelloHook {
+    public static function run(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void, hookConfig : Map<String, Dynamic>){
+      var msg = Hello ' +params[0].name;
+
+      cb({'msg':msg}, null); 
+   }
+```
+2. Open services/ServicesLocalLite.json and locate the plugins->Connections->named_query_hooks section
+3. Add the following
+
+```
+{
+  "name": "saturn.db.provider.hooks.SayHelloHook",
+  "class": "ssaturn.db.provider.hooks.SayHelloHook"
+}
+```
+
+4. Compile the new code 
+
+>haxe build.hxml (Ctrl+F9 in IntelliJ)
+
+5. Restart SATurn 
+
+6. In the SATurn interface click on File->New->Script
+
+7. Paste the following code into the script window
+
+```
+saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.db.provider.hooks.SayHelloHook', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0].msg);
+        }
+
+        flush();
+    }
+);
+```
+
+8. Click on "Run"
