@@ -1,0 +1,98 @@
+created: 20180424085828321
+modified: 20180424100729926
+title: Client-side programs
+type: text/vnd.tiddlywiki
+
+! Summary
+A client-side program provides a UI for the user to view and/or manipulate an object (i.e. a DNA or Protein object) and can communicate with server-side programs to perform actions (i.e. BLAST a sequence).  To open a new instance of a program you must first have an object of the corresponding type loaded into the SATurn workspace (the tree on the left-hand side of the UI).  Clicking on the object within the workspace tree will cause SATurn to either open a new program for the object or if one has already been created switch the focus to that program.  
+
+[img[internal_dev_program_panels.png]]
+
+The figure above labels each of the SATurn components and how they relate to the program with the current focus.  Each program is loaded as a new tab within the central panel of the SATurn UI.  Programs are free to render whatever HTML content they like within this panel.  SATurn also provides programs with a panel on the right-hand side of the UI which they can use as they see fit and a lower information panel.  In addition the top menu-bar within SATurn can be used by each program as well as the toolbar which is positioned just above the tab container.  Note that as you switch between programs/tabs SATurn takes care of clearing each of these shared panels and reloading them for the program which has been focused by the user.
+
+As creating new programs involves the creation of two or three classes it's simplest to create new programs using the GenerateClientProgram Python script - instructions [[here|Creating client-side programs]].
+
+! Life-cycle of a program
+If you have used the above Python script to create your programs you will note that a function has been added to your viewer class (HelloWorldViewer) in the example called getQuickLaunchItems().  This function is called to add buttons to the bottom panel of the SATurn interface (see below)
+
+[img[internal_dev_bottom_panel.png]]
+
+An example of one of these functions is shown below
+
+[img[internal_dev_quick_launch.png]]
+
+In the above you can see that we configure the icon to show in the bottom bar for the corresponding program along with the text to display and the action which should be performed when the button is clicked.  This function demonstrates the first step in the life-cycle of a program.
+
+# First the program obtains the main SATurn application instance
+#>WorkspaceApplication.getApplication()
+# Then it obtains the workspace
+#>WorkspaceApplication.getApplication().getWorkspace()
+# Next it creates a new instance of the data type which corresponds to the program
+#>new HelloTypeWO(null, null)
+# And finally adds this object to the workspace panel by combining all of this code into one statement
+#>WorkspaceApplication.getApplication().getWorkspace().addObject(new HelloTypeWO(null, null), true);
+
+When you call addObject you can either ask SATurn to add the object to the workspace panel and open with the default program or simply add to the workspace.  This is controlled by the final parameter which in the above example is set to true.
+
+Regardless of whether SATurn opens the program via the call to addObject or by the user clicking on the object in the workspace tree, SATurn will always consult the ProgramRegistry to workout which program it should create an instance of for the object clicked by the user or passed to addObject.
+
+The ProgramRegistry is populated with data-type/program associations by two methods.  The first way of associating a data-type with a program class is via the static field CLASS_SUPPORT which can be added directly to the corresponding program class.  An example is shown below from the HelloWorldViewer class
+
+[img[internal_dev_class_support.png]]
+
+In the above you can see that we have added the HelloTypeWO data-type class as one which the HelloWorldViewer can be associated with.  The other way of associating a data-type with a program is via the Provider mapping class - an example is shown below but isn't discussed any further in this section.
+
+```
+'saturn.core.domain.Alignment' =>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'name' => 'NAME',
+                    'content'=> 'CONTENT',
+                    'url'=> 'URL'
+                ],
+                'indexes'=>[
+                    'name' => false,
+                    'id' => true
+                ],
+                'programs'=>[
+                    'saturn.client.programs.AlignmentViewer' => true
+                ],
+                'options' =>[
+                    'alias' => 'Alignments',
+                    'icon' => 'dna_conical_16.png',
+                    'workspace_wrapper' => 'saturn.client.workspace.AlignmentWorkspaceObject'
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'ALIGNMENTS'
+                ],
+                'search'=>[
+                    'name' => true
+                ]
+            ]
+```
+
+Once SATurn has decided which program it needs to create a new instance of it will call the constructor of your program class.  Note that you the content which you are going to place into the central panel should be created in the emptyInit function - an example is shown below.
+
+[img[internal_dev_emptyInit.png]]
+
+As the user switches focus between programs the central panel content of each program is maintained and restored automatically for you as the user switches focus.  However the content you add to the other panels (toolbar, information bar, and right-side panel) are deleted each time the user switches focus.  When you program is de-focused on the onBlur function is called which gives you the chance to save any state which you would otherwise loose from these panels.  When you program is given the focus the onFocus function is called and it's within this function that you should populate these shared panels with content.  For example the following example from the ABI trace viewer shows how all of the buttons are added to the shared toolbar as part of the onFocus function.
+
+[img[internal_dev_onFocus_example.png]]
+
+After SATurn has created your program and added it to the central panel it will call setActiveObject which passes your program the id of the object which has been loaded into the workspace panel.  You should use setActiveObject to render whatever UI you require to allow the user to view or modify the underlying object.  Note that you can obtain the passed object anywhere in your program class by calling getObject().
+
+Users are able to close programs by right-clicking on the program tab and selecting "Close Program".  Note that when a program is closed it is completely deleted and all unsaved state will be lost.  The user it then free to click on the corresponding object again in the workspace tree and SATurn will create a new instance of the corresponding program.
+
+Users are able to completely remove the workspace object from SATurn by right-clicking on the object within the workspace tree and selecting "Remove Object".  At this point if a program is currently open for that object SATurn will also close the corresponding program.
+
+Until we have completed the developer manual the best way to learn more about client-side programs is to look at the code in the already existing plugins.
+
+Examples
+
+# Embeding content using an iframe (good example of a simple program)
+#>https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/GlycanBuilder.hx
+# Comprehensive example which covers virtually all aspects of program development
+#>https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/ABITraceViewer.hx
+# Example of embedding a third-party JavaScript tool (another simple example)
+#>https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/TextEditor.hx

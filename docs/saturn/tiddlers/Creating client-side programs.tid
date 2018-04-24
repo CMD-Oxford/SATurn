@@ -1,0 +1,23 @@
+created: 20180424084115855
+modified: 20180424093213743
+title: Creating client-side programs
+type: text/vnd.tiddlywiki
+
+!Synopsis
+The easiest way to create client-side plugins is to use the script GenerateClientProgram.py which creates a new plugin based on a simple template.
+
+# Create the new plugin
+#>cd util-scripts\templates<br/>python GenerateClientProgram.py "HelloType" "HelloWorldViewer"
+#>>Generating: ../src/saturn/client/workspace/HelloTypeWO.hx<br/>Generated: ../src/saturn/core/HelloType.hx<br/>Generated: ../src/saturn/client/programs/HelloWorldViewer.hx<br/>Updating: ../src/saturn/app/SaturnClient.hx
+# Compile the output
+#>cd $saturn<br/>haxe build.hxml # or Ctrl + F9 in IntelliJ
+# Start SATurn
+#>cd $saturn\build\rundebugsaturn.bat
+# Open your web-browser at http://localhost:8091/ to view the new plugin
+#> Normally you have to clear your browser cache first.  In Chrome you hold-down the refresh button and click on "Empty cache & hard reload"
+# You should see a new button at the bottom of the SATurn window
+#>[img[new_plugin_button.png]]
+# Clicking this button will open your new plugin
+#>[img[new_plugin_open.png]]
+
+For a detailed description of how client-side plugins work see [[Client-side programs]]

@@ -1,9 +1,11 @@
 created: 20180301161035796
-modified: 20180308092652187
+modified: 20180424093157263
 title: Internal: Developer Guide
 type: text/vnd.tiddlywiki
 
 #[[Configuring development environment|Internal: Configuring development environment]]
+# [[Client-side programs]]
+## [[Creating client-side program]]
 #[[Configuring documentation environment|Internal: Configuring documentation environment]]
 #[[Building standalone packages|Internal: Building standalone packages]]
 #[[Building QT application|Internal: Building QT application]]
