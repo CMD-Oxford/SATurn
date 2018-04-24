@@ -1,0 +1,26 @@
+created: 20180424120427327
+modified: 20180424122852062
+title: SATurn workspace
+type: text/vnd.tiddlywiki
+
+!Summary
+The SATurn workspace stores the state of your current SATurn session (one-session by web-browser tab).  The state includes all of the objects which you have loaded into the workspace tree as well as the state of all the programs which you have opened.  
+
+The SATurn workspace is represented by the tree shown on the left-hand side of the SATurn UI.
+
+>[img[saturn_workspace.png]]
+
+Using the workspace tree you can: delete objects, place them into folders, rename obiects, and drag files from your PC or Mac to open them directly within SATurn.  Examples of files you can drag-and-drop includes: .fasta, .pdb, .glycoct_condensed, .abi.
+
+If you are using the standalone version of SATurn you can save your workspace into the SATurn SQLite database.  SATurn also has the ability to save workspaces to other types of relational database (i.e. MySQL) and web-browser databases such as IndexedDB.
+
+However the easiest way to save a SATurn workspace is to a single file which you can share with others.  To export your current SATurn session to a file click on File->Workspace Export->Export to file
+
+>[img[saturn_export_workspace.png]]
+
+To reopen the workspace you can either drag-and-drop the workspace onto the workspace panel or if you are using the standalone version of SATurn you can click on File->Open->Open File
+
+>[img[saturn_open_workspace.png]]
+
+
+ 

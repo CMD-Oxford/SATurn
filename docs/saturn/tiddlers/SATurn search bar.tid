@@ -1,0 +1,15 @@
+created: 20180424122930353
+modified: 20180424123619023
+title: SATurn search bar
+type: text/vnd.tiddlywiki
+
+!Summary
+The SATurn search bar can be used to retrieve objects from the SATurn database (which for the standalone version of SATurn is an SQLite database by default - in the SGC we store entities in an Oracle database) and also perform actions on either one object or collections of objects with a single click.
+
+In the image below you can see that the search bar is located on the right-hand side of the SATurn interface. As you type search will begin to suggest possible objects that it could retrieve and actions it could perform for you.
+
+[img[saturn_searchbar.png]]
+
+The search term "THB" was entered into the search bar to produce the results shown in the image above.  THB is the name of a target stored in the SQLite database distributed with the standalone version of SATurn and the name of a splice-variant/target which has been solved at the SGC.  For targets SATurn has been pre-configured to suggest a series of actions that it could perform automatically for you with a single click (for example generating an alignment of all constructs created thus far).
+
+Any of the objects which you save into the SATurn database will be searchable via this search box.  Note that it's up to the developers of the particular program/data-type which you are saving to configure which the fields of the data-type which are searchable.

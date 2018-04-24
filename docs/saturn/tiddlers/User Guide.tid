@@ -1,5 +1,5 @@
 created: 20180305103039051
-modified: 20180420214153819
+modified: 20180424124247142
 title: User Guide
 type: text/vnd.tiddlywiki
 
@@ -11,6 +11,8 @@ Note that in the SGC we use an Oracle database for storage and a commercial LIMS
 
 # SATurn
 ## [[SATurn interface]]
+## [[SATurn workspace]]
+## [[SATurn search bar]]
 ## [[SATurn database]]
 # Construct Design
 ## [[Construct design in SATurn]]
@@ -80,5 +82,6 @@ Note that in the SGC we use an Oracle database for storage and a commercial LIMS
 ## [[Importing called sequence]]
 # [[Compound Viewer]]
 # [[GlycanBuilder]]
+#[[Notes / ELN (Electronic lab notebook]]
 # [[Scripting]]
 ## [[Connecting external scripts]]

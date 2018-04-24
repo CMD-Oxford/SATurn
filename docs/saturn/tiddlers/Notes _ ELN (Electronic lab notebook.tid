@@ -1,0 +1,39 @@
+created: 20180424124255336
+modified: 20180424130450215
+title: Notes / ELN (Electronic lab notebook
+type: text/vnd.tiddlywiki
+
+!Summary
+SATurn includes a basic system for making notes which can be used as an ELN if required.  Note that at the SGC we don't use this system as we already have a commercial ELN product but have included this feature for those that don't.  The ELN component we have included in SATurn uses the same system we use to make documentation for SATurn (i.e. what you are reading).  This system is called TiddlyWiki and you can find out more about this system here - https://tiddlywiki.com/.
+
+To create a new ELN page you click on File->New->ELN Page
+
+[img[eln_new.png]]
+
+You then need to enter a title for your ELN page
+
+[img[eln_title_dialog.png]]
+
+You will then see the new ELN page window
+
+The image below highlights the main sections of the ELN interface
+
+[img[eln_ui_overview.png]]
+
+Note that you need to click on the save button to save your ELN page to the SATurn database.  To open your page at a latter date you just need to search for it by the title using the SATurn search bar found on the top-right of the interface.
+! Embedding an image
+To embed an image within an ELN page do the following
+
+# Copy your image to the clipboard or drag-and-drop image onto the green bar at the top of the ELN page
+#>For example you could do Ctrl+A and Ctrl+C within an Excel slide
+#>[img[powerpoint_copy.png]]
+# Click anywhere outside of a section and press Ctrl+V and click on "Import" in the image below.
+#>[img[eln_import_image.png]]
+# Then click on image.png as shown below
+#>[img[eln_image_imported.png]]
+# Rename the image and click on the tick to save
+#>[img[eln_rename_image.png]]
+# Finally you can embed your image by entering the following code into a text section
+#>[img[eln_rename_image.png]]
+Although this process takes 5 steps to explain, in practice inserting images using this technique is incredibly fast compared to many document editors
+

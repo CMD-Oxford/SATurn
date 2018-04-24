@@ -1,0 +1,13 @@
+created: 20180424123631608
+modified: 20180424124054583
+title: SATurn database
+type: text/vnd.tiddlywiki
+
+!Summary
+SATurn is most useful when a database is provided so that users can save the objects they have created for latter retrieval.  The standalone version of SATurn is distributed with an example SQLite database which includes a basic set of tables required to save all of the main data-types SATurn supports.  In the SGC, SATurn is connected to both MySQL and Oracle databases.
+
+As an example we have included the complete set of THB constructs generated at the SGC in the example database distributed with SATurn.  You can look at these entities by searching for THB in the main SATurn search box located on the top-right of the interface.
+
+To save an entity to the database look for the save bottom shown below which can be found on the program tool-bar.
+
+[img[saturn_toolbar.png]]

@@ -1,0 +1,27 @@
+created: 20180424112311957
+modified: 20180424120247111
+title: SATurn interface
+type: text/vnd.tiddlywiki
+
+!Summary
+The SATurn interface has been designed so that a series of programs can simultaneously be opened within the same interface in the same way that you can open multiple web-sites within the same web-browser window via the use of tabs.  The interface is shown below with key areas labelled.
+
+[img[saturn_interface_users.png]]
+
+The interface features a panel on the left-hand side called the workspace panel which shows all of the objects / data which have been loaded into the interface.  Examples of objects which can be loaded include DNA & protein sequences, trace files, and glycan structures.  By clicking on an object within the workspace panel you will see the content of the object shown in the default program associated with that object/data-type within SATurn.
+
+You can open new programs by clicking on the corresponding icon for the program in the program toolbar which can be found at the bottom of the SATurn interface.
+
+>[img[saturn_program_bar.png]]
+
+You can also launch programs by creating new objects using the File->New menu which will open the newly created object with the default program.
+
+>[img[saturn_file_new.png]]
+
+To close a program you right-click on the program and select "Close Program"
+
+>[img[saturn_interface_close_program.png]]
+
+You can also close programs by deleting the corresponding object from the workspace panel by right-clicking on the object and selecting "
+
+>[img[saturn_remove_object.png]]
