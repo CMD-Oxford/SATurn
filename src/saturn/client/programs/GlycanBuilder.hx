@@ -148,7 +148,6 @@ class GlycanBuilder extends SimpleExtJSProgram{
 
         getApplication().getMiddleSouthPanel().body.update('<b>Please follow these instructions if GlycanBuilder isn\'t working - <a target="_blank" href="/static/manual/index.html#GlycanBuilder%20Installation">Guide</a></b>');
     }
-    ###
 
 
 
