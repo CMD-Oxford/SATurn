@@ -9,6 +9,8 @@
 
 package saturn.client.programs;
 
+import saturn.client.programs.AlignmentViewer;
+import saturn.core.domain.SgcTarget;
 import saturn.client.core.ClientCore;
 import saturn.client.programs.blocks.TargetSummary;
 import saturn.core.domain.SgcConstruct;
@@ -34,6 +36,9 @@ import saturn.core.DNA;
 import saturn.core.CutProductDirection;
 import saturn.core.Protein;
 import bindings.Ext;
+
+import saturn.core.ClustalOmegaParser;
+import saturn.client.core.CommonCore;
 
 import saturn.db.BatchFetch;
 import saturn.client.workspace.DNAWorkspaceObject;
@@ -156,6 +161,70 @@ class MultiConstructHelper extends TableHelper{
         }
 
         return items;
+    }
+
+    /****
+    *Aligns construct protein sequences whith target protein sequence and determines the start and end positions of the
+    *construct relative to the target
+    ****/
+
+    public function doAlignments(){
+        //Becomes fasta strong of construct and target protein sequences
+        var fasta : String = '';
+        //Fetches the datastore, the data behind the datagrid as displayed to the users.
+        var constructStore = getStore();
+        //Determine the number of constructs constructStore
+        var constructCount :Int = constructStore.count() -1;
+
+        //iterate through each construct (SgcConstruct) in the constructStore
+        for(i in 0...constructCount){
+            //Fetch the consturct data from constructStore
+            var constructModel : Dynamic = constructStore.getAt(i);
+
+            //Fetch the consturct protein sequence (minus any tags) from the SgcConsturct
+            var constructSequence = constructModel.get('proteinSeqNoTag');
+
+            //Fetch the constructId from the SgcConsturct and get the target Id by removing the hyphen onwards
+            var targetId = constructModel.get('constructId').split('-')[0];
+
+            //Generates SQL query, looking up the targetId, returning an SgcTarget object.
+            //The mappings to the database column names are defined in SGC.hx.
+            getProvider().getById(targetId, SgcTarget, function(target : SgcTarget, databaseError){
+                if(databaseError != null){
+                    getApplication().showMessage('Database Fetch Error', databaseError);
+                }else{
+                    //Extract the proteinSeq from the SgcTarget object
+                    var targetProteinSeq : String = target.proteinSeq;
+
+                    //Create fasta file containing both the construct and target protein sequences
+                    var fasta = '>' + constructModel.get('constructId') + '\n' + constructSequence + '\n' + '>'
+                    + targetId + '\n' + targetProteinSeq + '\n';
+
+                    //Pass the fatsa file containing the construct and target protein sequnces to clustal
+                    BioinformaticsServicesClient.getClient().sendClustalReportRequest(fasta, function(response, clustalError){
+                        if(clustalError == null){
+                            //Clustal report
+                            var clustalReport = response.json.clustalReport;
+                            //Defined location of the .txt file of the returned Clustal report
+                            var location : js.html.Location = js.Browser.window.location;
+                            var URL = location.protocol+'//'+location.hostname+':'+location.port+'/'+clustalReport;
+
+
+                            CommonCore.getContent(URL, function(content){
+                                //Passes the clustal file to the readStartStop method, which returns an array of Ints
+                                var startStopPos = ClustalOmegaParser.readStartStop(content);
+                                //Sets the consturctModel parameters to the startStopPos array. 1 is added to convert
+                                //from index position to sequence postion
+                                constructModel.set('constructStart', startStopPos[0] + 1);
+                                constructModel.set('constructStop', startStopPos[1] + 1);
+                            });
+                        }else{
+                            getApplication().showMessage('Clustal Error', clustalError);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     public function showConstructAlignment(target : String){
@@ -649,6 +718,15 @@ class MultiConstructHelper extends TableHelper{
                 calculate();
             },
             tooltip: {dismissDelay: 10000, text: 'Calculate DNA/Protein sequences and MW'}
+        });
+
+        getApplication().getToolBar().add({
+            iconCls :'x-btn-calculate',
+            text: 'Calculate Positions',
+            handler: function(){
+                doAlignments();
+            },
+            tooltip: {dismissDelay: 10000, text: 'Calculate start/end positions of construct on target'}
         });
 
         getApplication().getToolBar().add({
