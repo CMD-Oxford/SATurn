@@ -9,6 +9,7 @@
 
 package saturn.client.programs;
 
+import saturn.client.workspace.AlignmentWorkspaceObject;
 import saturn.client.programs.AlignmentViewer;
 import saturn.core.domain.SgcTarget;
 import saturn.client.core.ClientCore;
@@ -181,6 +182,9 @@ class MultiConstructHelper extends TableHelper{
             //Fetch the consturct data from constructStore
             var constructModel : Dynamic = constructStore.getAt(i);
 
+            //Determine the lenght of the construct ID
+            var consreuctIdLength : Int = constructModel.get('constructId').length;
+
             //Fetch the consturct protein sequence (minus any tags) from the SgcConsturct
             var constructSequence = constructModel.get('proteinSeqNoTag');
 
@@ -211,8 +215,15 @@ class MultiConstructHelper extends TableHelper{
 
 
                             CommonCore.getContent(URL, function(content){
+                                var aln = new saturn.core.domain.Alignment();
+                                aln.setAlignmentContent(content);
+                                aln.setAlignmentURL(URL);
+
+                                //Debugging to output all clustal files obtained
+                                WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(aln, "MSA"), true);
+
                                 //Passes the clustal file to the readStartStop method, which returns an array of Ints
-                                var startStopPos = ClustalOmegaParser.readStartStop(content);
+                                var startStopPos = ClustalOmegaParser.readStartStop(content, consreuctIdLength);
                                 //Sets the consturctModel parameters to the startStopPos array. 1 is added to convert
                                 //from index position to sequence postion
                                 constructModel.set('constructStart', startStopPos[0] + 1);
