@@ -145,8 +145,24 @@ class ClustalOmegaParser {
         //Identifies the start and end positions (index, not sequence position) and adds to an array, which is returned
         var startPos : Int = alignmentSymbols.indexOf('*') - targetOffset;
         var endPos : Int = alignmentSymbols.lastIndexOf('*') - targetOffset;
-        startEndPos.insert(0, endPos);
-        startEndPos.insert(0, startPos);
+
+        //Calulcates the number of gaps (-) in target sequence
+
+        var alignmentTargetSub : String = alignmentTarget.substring((startPos + targetOffset),(endPos + targetOffset + 1));
+
+
+        var numberOfGaps : Int = 0;
+
+        for(i in 0...alignmentTargetSub.length){
+            if(alignmentTargetSub.charAt(i) == '-'){
+                numberOfGaps += 1;
+            }
+        }
+
+        startEndPos.push(startPos);
+        startEndPos.push(endPos);
+        startEndPos.push(numberOfGaps);
+
         return startEndPos;
     }
 }
