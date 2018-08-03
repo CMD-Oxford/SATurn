@@ -604,6 +604,7 @@ class GenericRDBMSProvider extends DefaultProvider{
                 try {
                     connection.execute(sql, [id], function(err, results){
                         debug('startswith' + err);
+                        debug('startswith' + results);
 
                         if(err != null){
                             callBack(null, err);

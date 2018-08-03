@@ -582,14 +582,6 @@ class SGC {
                     'alias' => 'Targets',
                     'file.new.label'=>'Target',
                     'icon' => 'protein_16.png',
-                    'actions' => [
-                        /*'search_bar' => [
-                            'wonka' => [
-                                'user_suffix' => 'Wonka',
-                                'function' => 'saturn.core.domain.SgcTarget.loadWonka'
-                            ]
-                        ]*/
-                    ],
                     'auto_activate' => '3'
                 ]
             ],

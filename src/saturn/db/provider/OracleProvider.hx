@@ -11,6 +11,8 @@ package saturn.db.provider;
 
 import js.Node;
 
+import saturn.core.Util;
+
 class OracleProvider extends GenericRDBMSProvider{
 
     public function new(models : Map<String,Map<String,Map<String,Dynamic>>>, config : Dynamic, autoClose : Bool) {
@@ -21,11 +23,25 @@ class OracleProvider extends GenericRDBMSProvider{
         #if ORACLE
         debug('Opening new connection as ' + user.username);
 
-        var oracle = Node.require('oracle'); //Node.require(oracle)
-        var connString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST="+config.host+")(PORT="+config.port+"))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME="+config.service_name+")))";
-        var connectData = { "tns": connString, "user": user.username, "password": user.password };
+        var oracle = Node.require('oracledb'); //Node.require(oracle)
 
-        oracle.connect(connectData, function(err, connection) {
+        // Replicate behaviour of the previous driver
+        oracle.outFormat = oracle.OBJECT;
+        oracle.fetchAsString = [ oracle.CLOB ];
+
+        oracle.getConnection({user:user.username,password:user.password,connectString:config.host+"/"+config.service_name}, function(err : String, connection : Dynamic) {
+            connection.oldExecute = connection.execute;
+
+            connection.execute = function(sql, args, cb){
+                connection.oldExecute(sql, args, function(err, result : Dynamic){
+                    if(err == null){
+                        result = result.rows;
+                    }
+
+                    cb(err, result);
+                });
+            };
+
             cb(err, connection);
         });
         #end

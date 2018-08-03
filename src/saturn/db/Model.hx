@@ -132,6 +132,7 @@ class Model {
 
             if(options.exists('actions')){
                 var actionTypeMap :Map<String, Map<String, Map<String, String>>> = options.get('actions');
+
                 for(actionType in actionTypeMap.keys()){
                     var actions : Map<String, Map<String, String>> = actionTypeMap.get(actionType);
 

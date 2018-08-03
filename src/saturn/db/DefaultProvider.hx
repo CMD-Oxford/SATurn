@@ -99,6 +99,10 @@ class DefaultProvider implements Provider{
         return config;
     }
 
+    public function setConfig(config : Dynamic){
+        this.config = config;
+    }
+
     public function setName(name : String) : Void{
         this.name = name;
     }
@@ -146,6 +150,8 @@ class DefaultProvider implements Provider{
         provider.winConversions = winConversions;
         provider.conversions = conversions;
         provider.regexs = regexs;
+        provider.namedQueryHookConfigs = namedQueryHookConfigs;
+        provider.config = config;
 
         return provider;
     }
@@ -1432,6 +1438,7 @@ class DefaultProvider implements Provider{
         modelClasses = new Array<Model>();
 
         for(classStr in theBindingMap.keys()){
+            debug(classStr);
             var clazz = Type.resolveClass(classStr);
 
             if(clazz != null){

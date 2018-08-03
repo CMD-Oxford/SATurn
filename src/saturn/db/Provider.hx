@@ -79,6 +79,7 @@ interface Provider {
     public function setName(name : String) : Void;
     public function getName() : String;
     public function getConfig() : Dynamic;
+    public function setConfig(config : Dynamic) : Void;
     public function evictObject(object : Dynamic) : Void;
     public function getByExample(obj : Dynamic, cb : Dynamic->Array<Dynamic>->Void) : Void;
     public function query(query : Query, cb : Array<Dynamic>->Dynamic->Void) : Void;
