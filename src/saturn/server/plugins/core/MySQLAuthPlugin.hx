@@ -13,6 +13,8 @@ import saturn.core.User;
 
 import js.Node;
 
+import saturn.core.Util;
+
 class MySQLAuthPlugin implements AuthenticationManager{
     var config : Dynamic;
 
@@ -22,6 +24,8 @@ class MySQLAuthPlugin implements AuthenticationManager{
 
     public function authenticate(username : String, password : String, onSuccess : User->Void, onFailure : String->Void, src :Dynamic) : Void{
         var mysql = Node.require('mysql2');
+
+        Util.debug('Connecting as ' + username);
 
         var connection = mysql.createConnection({
             host: config.hostname,

@@ -96,44 +96,63 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
                     var disconnectOnEnd = false;
                     var connectAsUser = '';
                     var config = provider.getConfig();
+
                     if(config != null){
                         connectAsUser = config.connect_as_user;
                     }
+
+                    debug('Connect as user is: ' + connectAsUser);
+
                     if(command != '_request_models' && (connectAsUser == 'preferred' || connectAsUser == 'force')){
-                        debug('Connect as user is: ' + connectAsUser);
                         if(user == null){
                             if(connectAsUser == 'force'){
                                 debug('Connect as user is forced but user is not logged in to ' + providerName + ' ' + command);
                                 //throw exception
                                 handleError(data, 'You must be logged in to use this provider');
                                 return;
+                            }else{
+                                //Actual work is performed here
+                                debug('Calling method on Provider');
+                                cb(data, provider, user, function(){
+                                    if(disconnectOnEnd){
+                                        provider._closeConnection();
+                                    }
+                                });
                             }
                         }else{
                             debug('Connecting as user');
+                            var original_provider = provider;
                             provider = provider.generatedLinkedClone();
                             provider.setConnectAsUser(true);
-                            provider.setUser(user);
 
                             disconnectOnEnd = true;
+
+                            getSaturnServer().getAuthenticationPlugin().decryptUserPassword(user, function(err : String, user : User){
+
+                                provider.setUser(user);
+
+                                if(err != null){
+                                    handleError(data, err);
+                                }else{
+                                    //Actual work is performed here
+                                    debug('Calling method on Provider');
+                                    cb(data, provider, user, function(){
+                                        if(disconnectOnEnd){
+                                            provider._closeConnection();
+                                        }
+                                    });
+                                }
+                            });
                         }
+                    }else{
+                        //Actual work is performed here
+                        debug('Calling method on Provider');
+                        cb(data, provider, user, function(){
+                            if(disconnectOnEnd){
+                                provider._closeConnection();
+                            }
+                        });
                     }
-                    /*if(config.connect_as_user && user != null){
-                        provider = provider.generatedLinkedClone();
-                        provider.setConnectAsUser(true);
-                        provider.setUser(user);
-
-
-
-                        disconnectOnEnd = true;
-                    }*/
-
-                    //Actual work is performed here
-                    debug('Calling method on Provider');
-                    cb(data, provider, user, function(){
-                        if(disconnectOnEnd){
-                            provider._closeConnection();
-                        }
-                    });
                 }
             }, providerName);
         });

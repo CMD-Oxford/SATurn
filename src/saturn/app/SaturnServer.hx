@@ -9,6 +9,7 @@
 
 package saturn.app;
 
+import saturn.server.plugins.core.AuthenticationPlugin;
 import saturn.core.Util;
 import saturn.server.plugins.socket.core.SocketIOException;
 import bindings.Ext.NodeSocket;
@@ -55,6 +56,8 @@ class SaturnServer {
 
     static var beforeListen : Dynamic;
     static var afterListen : Dynamic;
+
+    var authPlugin : AuthenticationPlugin;
 
     public static function main(){
         defaultServer = new SaturnServer();
@@ -114,6 +117,14 @@ class SaturnServer {
 
         //below conflicts with GlycanBuilder
         //server.use(restify.plugins.bodyParser({mapParams: true}));
+
+        server.use(restify.plugins.queryParser({
+            mapParams: true
+        }));
+
+        server.use(restify.plugins.bodyParser({
+            mapParams: true
+        }));
 
         installPlugins();
 
@@ -277,18 +288,10 @@ class SaturnServer {
         return socket.decoded_token;
     }
 
+
+
     public function isUserAuthenticated(user : User, cb : User->Void){
-        if(user == null){
-            cb(null);
-        }else{
-            redisClient.get(user.uuid, function(err, reply){
-                if(err || reply == null){
-                    cb(null);
-                }else{
-                    cb(user);
-                }
-            });
-        }
+       getAuthenticationPlugin().isUserAuthenticated(user,cb);
     }
 
     public function configureRedisClient(){
@@ -313,5 +316,13 @@ class SaturnServer {
         NodeFSExtra.copy(filePath, outputPath, function(err : String){
             cb(err, remotePath);
         });
+    }
+
+    public function setAuthenticationPlugin(authPlugin : AuthenticationPlugin){
+        this.authPlugin = authPlugin;
+    }
+
+    public function getAuthenticationPlugin() : AuthenticationPlugin {
+        return this.authPlugin;
     }
 }
