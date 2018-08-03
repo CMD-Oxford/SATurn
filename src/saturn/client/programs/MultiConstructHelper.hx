@@ -9,6 +9,10 @@
 
 package saturn.client.programs;
 
+import saturn.core.domain.SgcEntryClone;
+import saturn.client.workspace.AlignmentWorkspaceObject;
+import saturn.client.programs.AlignmentViewer;
+import saturn.core.domain.SgcTarget;
 import saturn.client.core.ClientCore;
 import saturn.client.programs.blocks.TargetSummary;
 import saturn.core.domain.SgcConstruct;
@@ -34,6 +38,9 @@ import saturn.core.DNA;
 import saturn.core.CutProductDirection;
 import saturn.core.Protein;
 import bindings.Ext;
+
+import saturn.core.ClustalOmegaParser;
+import saturn.client.core.CommonCore;
 
 import saturn.db.BatchFetch;
 import saturn.client.workspace.DNAWorkspaceObject;
@@ -157,6 +164,204 @@ class MultiConstructHelper extends TableHelper{
 
         return items;
     }
+
+    /****
+    *Aligns construct protein sequences whith target protein sequence and determines the start and end positions of the
+    *construct relative to the target
+    ****/
+
+    public function doAlignments(){
+        //Fetches the datastore, the data behind the datagrid as displayed to the users.
+        var constructStore = getStore();
+        //Determine the number of constructs constructStore
+        var constructCount : Int = constructStore.count() -1;
+
+        //iterate through each construct (SgcConstruct) in the constructStore
+        for(i in 0...constructCount){
+            var targetProteinSeq : String = '';
+            var vectorRExtensionRC : String = '';
+            var vectorFExtension : String = '';
+            var alleleDnaSequence : String = '';
+            var f_fail : Int = 0;
+            var r_fail : Int = 0;
+            var alleleDnaSequenceAllExtRemoved : String = '';
+            var alleleDnaSequenceFExtRemoved : String = '';
+
+
+
+            var startPos : Int = 0;
+            var stopPos : Int = 0;
+            var adjustedStopPos : Int = 0;
+
+            var startStopPos : Array<Int> = [];
+
+            var firstClustalGaps : Int = 0;
+            var secondClustalGaps : Int = 0;
+
+            //Fetch the consturct data from constructStore
+            var constructModel : Dynamic = constructStore.getAt(i);
+
+            //Determine the lenght of the construct ID
+            var consreuctIdLength : Int = constructModel.get('constructId').length;
+
+            //Fetch the consturct protein sequence (minus any tags) from the SgcConsturct
+            var constructSequence = constructModel.get('proteinSeqNoTag');
+
+            //Fetch the constructId from the SgcConsturct and get the target Id by removing the hyphen onwards
+            var targetId = constructModel.get('constructId').split('-')[0];
+
+            var alleleId = constructModel.get('allele.alleleId');
+
+            var vectorId = constructModel.get('vector.vectorId');
+
+            //get allele from DB
+            getProvider().getById(alleleId, SgcAllele, function(allele : SgcAllele, databaseError){
+                if(databaseError != null){
+                    getApplication().showMessage('Database Fetch Error', databaseError);
+                }else{
+                    //Extract the dna sequence from the allele object
+                    alleleDnaSequence = allele.dnaSeq;
+                    //get vector from DB
+                }
+            });
+
+            getProvider().getById(vectorId, SgcVector, function(vector : SgcVector, databaseError){
+                if(databaseError != null){
+                    getApplication().showMessage('Database Fetch Error', databaseError);
+                }else{
+                    //Extract the required forward extension from the SgcVector object
+                    vectorFExtension = vector.requiredForwardExtension;
+                    ////Extract the required reverse extension from the SgcVector object and get reverse complement
+                    var vectorRExtension = new DNA(vector.requiredReverseExtension);
+                    vectorRExtensionRC = vectorRExtension.getInverseComplement();
+                }
+            });
+
+            //Generates SQL query, looking up the targetId, returning an SgcTarget object.
+            //The mappings to the database column names are defined in SGC.hx.
+            getProvider().getById(targetId, SgcTarget, function(target : SgcTarget, databaseError){
+                if(databaseError != null){
+                    getApplication().showMessage('Database Fetch Error', databaseError);
+                }else{
+                    //Extract the proteinSeq from the SgcTarget object
+                    targetProteinSeq = target.proteinSeq;
+                }
+            });
+
+            //determine if F extension in in allele sequience
+            if(StringTools.startsWith(alleleDnaSequence, vectorFExtension) == false){
+                f_fail = 1;
+            }
+
+            //removed the F primer extension from the allele, to remove the primer overhangs
+            alleleDnaSequenceFExtRemoved = alleleDnaSequence.split(vectorFExtension)[1];
+
+
+
+            //determine if F extension in in allele sequience
+            if(StringTools.endsWith(alleleDnaSequence, vectorRExtensionRC) == false){
+                r_fail = 1;
+            }
+
+            //removed the R primer extension from the allele, to remove the primer overhangs
+            alleleDnaSequenceAllExtRemoved = alleleDnaSequenceFExtRemoved.split(vectorRExtensionRC)[0];
+
+
+            var runs = [];
+            var fastas = [];
+
+            if(f_fail == 0 || r_fail == 0){
+                //translate the remaining sequence
+                var alleleDnaSequenceAllExtRemovedTranslated = new DNA(alleleDnaSequenceAllExtRemoved).getTranslation(GeneticCodes.STANDARD,0,false);
+                //Create fasta file containing both the construct and target protein sequences
+                var fasta = '>' + constructModel.get('constructId') + '\n' + alleleDnaSequenceAllExtRemovedTranslated + '\n' + '>'
+                + targetId + '\n' + targetProteinSeq + '\n';
+
+                fastas.push(fasta);
+
+                runs.push(function(){
+                    if(f_fail == 0){
+                        startPos = startStopPos[0] + 1;
+                    }
+                    if(r_fail == 0){
+                        stopPos = startStopPos[1] + 1;
+                    }
+                    firstClustalGaps = startStopPos[2];
+
+                });
+            }
+
+            if(f_fail == 1 || r_fail == 1){
+                //Create fasta file containing both the construct and target protein sequences
+                var fasta = '>' + constructModel.get('constructId') + '\n' + constructSequence + '\n' + '>'
+                + targetId + '\n' + targetProteinSeq + '\n';
+
+                fastas.push(fasta);
+
+                runs.push(function(){
+                    if(f_fail == 1){
+                        startPos = startStopPos[0] + 1;
+                    }
+                    if(r_fail == 1){
+                        stopPos = startStopPos[1] + 1;
+                    }
+                    secondClustalGaps = startStopPos[2];
+                });
+            }
+
+            if(runs.length > 0){
+                var next = null;
+
+                next = function(){
+                    if(runs.length == 0){
+                        var gapsOffset = Math.round(Math.abs(firstClustalGaps - secondClustalGaps));
+
+                        adjustedStopPos = stopPos - gapsOffset;
+
+                        constructModel.set('constructStart', startPos);
+                        constructModel.set('constructStop', adjustedStopPos);
+                        return;
+                    }
+
+                    var run = runs.pop();
+                    var fasta = fastas.pop();
+
+                    //Pass the fatsa file containing the construct and target protein sequnces to clustal
+                    BioinformaticsServicesClient.getClient().sendClustalReportRequest(fasta, function(response, clustalError){
+                        if(clustalError == null){
+                            //Clustal report
+                            var clustalReport = response.json.clustalReport;
+                            //Defined location of the .txt file of the returned Clustal report
+                            var location : js.html.Location = js.Browser.window.location;
+                            var URL = location.protocol+'//'+location.hostname+':'+location.port+'/'+clustalReport;
+
+
+                            CommonCore.getContent(URL, function(content){
+                                var aln = new saturn.core.domain.Alignment();
+                                aln.setAlignmentContent(content);
+                                aln.setAlignmentURL(URL);
+
+                                //Debugging to output all clustal files obtained
+                                WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(aln, "MSA"), true);
+
+                                //Passes the clustal file to the readStartStop method, which returns an array of Ints
+                                startStopPos = ClustalOmegaParser.readStartStop(content, consreuctIdLength);
+
+                                run();
+
+                                next();
+                            });
+                        }
+                    });
+                };
+
+                next();
+            }
+
+
+        }
+    }
+
 
     public function showConstructAlignment(target : String){
         var objectId = getActiveObjectId();
@@ -649,6 +854,15 @@ class MultiConstructHelper extends TableHelper{
                 calculate();
             },
             tooltip: {dismissDelay: 10000, text: 'Calculate DNA/Protein sequences and MW'}
+        });
+
+        getApplication().getToolBar().add({
+            iconCls :'x-btn-calculate',
+            text: 'Calculate Positions',
+            handler: function(){
+                doAlignments();
+            },
+            tooltip: {dismissDelay: 10000, text: 'Calculate start/end positions of construct on target'}
         });
 
         getApplication().getToolBar().add({
