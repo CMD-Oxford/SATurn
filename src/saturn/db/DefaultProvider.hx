@@ -30,6 +30,10 @@ import js.html.ArrayBuffer;
 import js.html.ArrayBuffer;
 #end
 
+import haxe.crypto.Md5;
+import saturn.core.Util.*;
+import saturn.core.Util;
+
 @:keep
 class DefaultProvider implements Provider{
     public var theBindingMap : Map<String,Map<String,Map<String,Dynamic>>>;
@@ -37,7 +41,7 @@ class DefaultProvider implements Provider{
     var fieldIndexMap : Map<String, Map<String,String>>; // Map<Class,Map<Field,NULL>
     var objectCache : Map<String,Map<String,Map<String,Dynamic>>>; //Map<Class,Map<Field,Map<Value,Object>
 
-    var namedQueryCache : Map<String, Array<NamedQueryCache>>;
+    var namedQueryCache : Map<String, NamedQueryCache>;
 
     var useCache = true;
     var enableBinding = true;
@@ -238,7 +242,7 @@ class DefaultProvider implements Provider{
             }
         }
 
-        namedQueryCache = new Map<String, Array<NamedQueryCache>>();
+        namedQueryCache = new Map<String,NamedQueryCache>();
     }
 
     public function getObjectFromCache<T>(clazz : Class<Dynamic>, field : String, val : Dynamic) : T{
@@ -546,76 +550,48 @@ class DefaultProvider implements Provider{
     }
 
     public function getByNamedQuery(queryId : String, parameters : Dynamic, clazz : Class<Dynamic>, cache : Bool,callBack : Dynamic){
-        debug('In getByNamedQuery');
+        debug('In getByNamedQuery ' + cache);
         try{
-            var isCached = false;
-
-            if(cache && namedQueryCache.exists(queryId)){
-                var qResults = null;
+            if(cache){
+                Util.debug('Looking for cached result');
                 var queries = namedQueryCache.get(queryId);
-                for(query in queries){
-                    debug('Checking for existing results');
-                    var serialParamString = Serializer.run(parameters);
 
-                    if(query.queryParamSerial == serialParamString){
-                        qResults = query.queryResults;
-                        break;
-                    }
+                var serialParamString = Serializer.run(parameters);
 
-                    /*var qParams = query.queryParams;
+                var crc = Md5.encode(queryId + '/' +  serialParamString);
 
-                    if(qParams.length != parameters.length){
-                        continue;
-                    }else{
-                        var matched = true;
-                        for(i in 0...qParams.length){
-                            if(qParams[i] != parameters[i]){
-                                matched = false;
-                            }
-                        }
+                if(namedQueryCache.exists(crc)){
+                    var qResults = namedQueryCache.get(crc).queryResults;
 
-                        if(matched){
-                            qResults = query.queryResults;
+                    Util.debug('Use cached result');
 
-                            break;
-                        }
-                    }*/
-                }
-
-                if(qResults != null){
                     callBack(qResults, null);
+
                     return ;
                 }
-            }else{
-                namedQueryCache.set(queryId, new Array<NamedQueryCache>());
             }
 
             var privateCB =  function(toBind : Array<Dynamic>, exception){
                 if(toBind == null){
-                    if(isCached == false && useCache && cache){
-                        var namedQuery = new NamedQueryCache();
-                        namedQuery.queryName = queryId;
-                        namedQuery.queryParams = parameters;
-                        namedQuery.queryParamSerial = Serializer.run(parameters);
-                        namedQuery.queryResults = toBind;
-
-                        namedQueryCache.get(queryId).push(namedQuery);
-                    }
-
                     callBack(toBind, exception);
                 }else{
+
                     initialiseObjects([], toBind, [], exception, function(objs, err){
-                        if(isCached == false && useCache && cache){ //09/01/15 useCache && cache 18/07/17
+                        if(useCache){ //09/01/15 useCache
+                            Util.debug('Caching result');
                             var namedQuery = new NamedQueryCache();
                             namedQuery.queryName = queryId;
                             namedQuery.queryParams = parameters;
                             namedQuery.queryParamSerial = Serializer.run(parameters);
                             namedQuery.queryResults = objs;
 
-                            namedQueryCache.get(queryId).push(namedQuery);
+                            var crc = Md5.encode(queryId + '/' + namedQuery.queryParamSerial);
+
+                            namedQueryCache.set(crc, namedQuery);
                         }
 
                         callBack(objs, err);
+
                     }, clazz, null, cache);
                 }
             };
@@ -683,57 +659,35 @@ class DefaultProvider implements Provider{
 
 
     public function getByIdStartsWith(id : String, field :String, clazz : Class<Dynamic>, limit : Int, callBack : Dynamic) : Void{
+        debug('Starts with using cache ' + useCache);
+
         var queryId = '__STARTSWITH_' + Type.getClassName(clazz);
         var parameters = new Array<Dynamic>();
         parameters.push(field);
         parameters.push(id);
 
-        var isCached = false;
+        var crc = null;
 
-        if(namedQueryCache.exists(queryId)){
-            var qResults = null;
-            var queries = namedQueryCache.get(queryId);
-            for(query in queries){
-                var qParams = query.queryParams;
+        if(useCache){
+            var crc = Md5.encode(queryId + '/' + Serializer.run(parameters));
 
-                if(qParams.length != parameters.length){
-                    continue;
-                }else{
-                    var matched = true;
-                    for(i in 0...qParams.length){
-                        if(qParams[i] != parameters[i]){
-                            matched = false;
-                        }
-                    }
-
-                    if(matched){
-                        qResults = query.queryResults;
-
-                        break;
-                    }
-                }
+            if(namedQueryCache.exists(crc)){
+                callBack(namedQueryCache.get(crc).queryResults, null);
+                return;
             }
-
-            if(qResults != null){
-                callBack(qResults, null);
-                return ;
-            }
-        }else{
-            namedQueryCache.set(queryId, new Array<NamedQueryCache>());
         }
-
         _getByIdStartsWith(id, field, clazz, limit, function(toBind : Array<Dynamic>, exception){
             if(toBind == null){
                 callBack(toBind, exception);
             }else{
                 initialiseObjects([], toBind, [], exception, function(objs, err){
-                    if(isCached == false && useCache){ //09/01/15 useCache
+                    if(useCache){ //09/01/15 useCache
                         var namedQuery = new NamedQueryCache();
                         namedQuery.queryName = queryId;
                         namedQuery.queryParams = parameters;
                         namedQuery.queryResults = objs;
 
-                        namedQueryCache.get(queryId).push(namedQuery);
+                        namedQueryCache.set(crc, namedQuery);
                     }
 
                     callBack(objs, err);
@@ -817,35 +771,10 @@ class DefaultProvider implements Provider{
     }
 
     public function evictNamedQuery(queryId : String, parameters : Array<Dynamic>) {
-        if(namedQueryCache.exists(queryId)){
-            var qResults = null;
-            var queries = namedQueryCache.get(queryId);
-            for(query in queries){
-                var qParams = query.queryParams;
+        var crc = Md5.encode(queryId + '/' + Serializer.run(parameters));
 
-                if(qParams.length != parameters.length){
-                    continue;
-                }else{
-                    var matched = true;
-                    for(i in 0...qParams.length){
-                        if(qParams[i] != parameters[i]){
-                            matched = false;
-                        }
-                    }
-
-                    if(matched){
-                        queries.remove(query);
-
-                        break;
-                    }
-                }
-            }
-
-            if(queries.length > 0){
-                namedQueryCache.remove(queryId);
-            }else{
-                namedQueryCache.set(queryId, queries);
-            }
+        if(namedQueryCache.exists(crc)){
+            namedQueryCache.remove(crc);
         }
     }
 

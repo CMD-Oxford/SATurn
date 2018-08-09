@@ -331,7 +331,7 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
                     clazz = Type.resolveClass(data.class_name);
             }
 
-            provider.getByNamedQuery(data.queryId, params, clazz, false, function(objs, err){
+            provider.getByNamedQuery(data.queryId, params, clazz, provider.getConfig().enable_cache, function(objs, err){
                 var json : Dynamic = {};
 
                 CommonCore.releaseResource(provider);
@@ -354,16 +354,21 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
 
     public function autoCompleteFields(params :Array<Dynamic>, user : User){
         var retParams = [];
-        for(paramSet in params){
-            for(field in Reflect.fields(paramSet)){
-                if(field == '_username'){
-                    Util.debug('Setting username to ' + user.username);
-                    Reflect.setField(paramSet, '_username', user.username);
+
+        if(Std.is(params, Array)){
+            for(paramSet in params){
+                for(field in Reflect.fields(paramSet)){
+                    if(field == '_username'){
+                        Util.debug('Setting username to ' + user.username);
+                        Reflect.setField(paramSet, '_username', user.username);
+                    }
                 }
+                retParams.push(paramSet);
             }
-            retParams.push(paramSet);
+            return retParams;
+        }else{
+            return params;
         }
-        return retParams;
     }
 
     public function delete(data : Dynamic, provider : Provider, user: User, cb : Void->Void){

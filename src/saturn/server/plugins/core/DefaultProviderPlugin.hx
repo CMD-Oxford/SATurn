@@ -69,7 +69,7 @@ class DefaultProviderPlugin extends BaseServerPlugin{
                         // Should be fatal but server is running so we don't exit
                     });
 
-                    provider.enableCache(false);
+                    provider.enableCache(config.enable_cache);
                 },
                 function(resource : Dynamic){
                     //resource.close();
@@ -82,7 +82,7 @@ class DefaultProviderPlugin extends BaseServerPlugin{
             debug('Configuring provider');
             var provider :Dynamic = Type.createInstance(clazz, [models, config.connection, false]);
 
-            provider.enableCache(false);
+            provider.enableCache(config.enable_cache);
 
             provider.dataBinding(false);
 
@@ -139,7 +139,7 @@ class DefaultProviderPlugin extends BaseServerPlugin{
                         // Should be fatal but server is running so we don't exit
                     });
 
-                    provider.enableCache(false);
+                    provider.enableCache(config.enable_cache);
                 },
                 function(resource : Dynamic){
                     //resource.close();
@@ -151,7 +151,7 @@ class DefaultProviderPlugin extends BaseServerPlugin{
             debug('Configuring provider');
             var provider :Dynamic = Type.createInstance(clazz, [models, config, false]);
 
-            provider.enableCache(false);
+            provider.enableCache(config.enable_cache);
 
             provider.dataBinding(false);
 

@@ -535,7 +535,6 @@ class GenericRDBMSProvider extends DefaultProvider{
         debug('Provider class' + Type.getClassName(Type.getClass(this)));
         debug('Provider: ' + model.getProviderName());
 
-
         //var selectClause = model.getSelectKeyClause();
 
         var keyCol = null;
@@ -577,7 +576,6 @@ class GenericRDBMSProvider extends DefaultProvider{
             }
         }
 
-
         getConnection(config, function(err, connection){
             if(err != null){
                 callBack(null, err);
@@ -603,9 +601,6 @@ class GenericRDBMSProvider extends DefaultProvider{
                 debug('startswith' + sql);
                 try {
                     connection.execute(sql, [id], function(err, results){
-                        debug('startswith' + err);
-                        debug('startswith' + results);
-
                         if(err != null){
                             callBack(null, err);
                         }else{
