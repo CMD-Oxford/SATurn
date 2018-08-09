@@ -67,6 +67,10 @@ class BaseTable implements BuildingBlock {
         return component;
     }
 
+    public function getRawComponent() : Dynamic{
+        return getComponent();
+    }
+
     public function getModelFields() : Array<String>{
         return modelFields;
     }

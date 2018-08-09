@@ -202,6 +202,10 @@ class BaseProgram implements Program implements OutlineListener {
         return null;
     }
 
+    public function getRawComponent() : Dynamic {
+        return getComponent();
+    }
+
     public function setId(id : String) : Void {
         theId = id;
     }

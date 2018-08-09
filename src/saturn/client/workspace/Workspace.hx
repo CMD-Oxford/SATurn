@@ -1098,6 +1098,10 @@ class Workspace implements BuildingBlock{
     public function getComponent() : Dynamic {
         return theComponent;
     }
+
+    public function getRawComponent() : Dynamic {
+        return getRawComponent();
+    }
     
 	/**
 	 * addListener Add a WorkspaceListener that will be notified as WorkspaceObjects

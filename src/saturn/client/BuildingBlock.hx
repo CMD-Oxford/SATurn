@@ -13,4 +13,5 @@ interface BuildingBlock {
     public function onFocus() : Void;
     public function onBlur() : Void;
     public function getComponent() : Dynamic;
+    public function getRawComponent() : Dynamic;
 }

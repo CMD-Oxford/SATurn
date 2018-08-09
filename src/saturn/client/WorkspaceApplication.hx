@@ -1304,6 +1304,10 @@ class WorkspaceApplication {
     public function exitSingleMode(){
 
     }
+
+    public function getGlobalSearchFieldObj() : Dynamic{
+        return null;
+    }
 }
 
 enum ScreenMode {

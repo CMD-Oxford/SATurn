@@ -9,6 +9,7 @@
 
 package saturn.app;
 
+import saturn.client.programs.ChromoHubViewer;
 import saturn.client.core.ClientCore;
 import saturn.client.programs.PurificationHelper;
 import saturn.client.programs.SHRNADesigner;
@@ -122,6 +123,7 @@ import saturn.client.programs.BasicTableViewer;
 import saturn.client.programs.EmptyViewer;
 
 import saturn.client.programs.ConstructDesigner;
+import saturn.client.programs.HelloWorldViewer;
 //<IMPORTS>
 
 class SaturnClient extends EXTApplication implements SearchBarListener{
@@ -320,7 +322,8 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(MultiAlleleHelper,true);
         this.getProgramRegistry().registerProgram(MultiConstructHelper,true);
 
-        this.getProgramRegistry().registerProgram(Phylo5Viewer, true);
+        //this.getProgramRegistry().registerProgram(Phylo5Viewer, true);
+        this.getProgramRegistry().registerProgram(ChromoHubViewer, true);
         //this.getProgramRegistry().registerProgram(SHRNADesigner, true);
         this.getProgramRegistry().registerProgram(TableHelper, true);
 
@@ -342,6 +345,7 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(HomePage, true);
 
 
+		this.getProgramRegistry().registerProgram(HelloWorldViewer, true);
 		//<LOAD_PROGRAMS>
 
         /**
