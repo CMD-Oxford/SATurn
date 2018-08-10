@@ -156,6 +156,7 @@ class DefaultProvider implements Provider{
         provider.regexs = regexs;
         provider.namedQueryHookConfigs = namedQueryHookConfigs;
         provider.config = config;
+        provider.objectCache = new Map<String,Map<String,Map<String,Dynamic>>>();
 
         return provider;
     }
@@ -436,7 +437,11 @@ class DefaultProvider implements Provider{
         var prefetched = null;
         var idsToFetch = null;
 
+        debug('Using cache ' + useCache);
+
         if(useCache){
+            debug('Using cache ' + useCache);
+
             var model = getModel(clazz);
             if(model != null){
                 prefetched = new Array<Dynamic>();
