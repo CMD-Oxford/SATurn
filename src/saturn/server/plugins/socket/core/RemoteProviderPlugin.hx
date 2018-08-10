@@ -122,23 +122,24 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
                         }else{
                             debug('Connecting as user');
                             var original_provider = provider;
-                            provider = provider.generatedLinkedClone();
-                            provider.setConnectAsUser(true);
+                            var userProvider = provider.generatedLinkedClone();
+                            userProvider.setConnectAsUser(true);
 
                             disconnectOnEnd = true;
 
                             getSaturnServer().getAuthenticationPlugin().decryptUserPassword(user, function(err : String, user : User){
 
-                                provider.setUser(user);
+                                userProvider.setUser(user);
 
                                 if(err != null){
                                     handleError(data, err);
                                 }else{
                                     //Actual work is performed here
                                     debug('Calling method on Provider');
-                                    cb(data, provider, user, function(){
+
+                                    cb(data, userProvider, user, function(){
                                         if(disconnectOnEnd){
-                                            provider._closeConnection();
+                                            userProvider._closeConnection();
                                         }
                                     });
                                 }
