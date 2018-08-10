@@ -9,6 +9,7 @@
 
 package saturn.core;
 
+import saturn.core.DNA.GeneticCodeRegistry;
 import saturn.core.domain.MoleculeAnnotation;
 import saturn.core.domain.DataSource;
 import saturn.core.domain.Entity;
@@ -433,6 +434,22 @@ class Protein extends Molecule{
         };
 
         return extinctionReduced;
+    }
+
+    public static function isProtein(sequence : String){
+        var seqLen=sequence.length;
+
+        var valid_res = GeneticCodeRegistry.getDefault().getAAToCodonTable();
+
+        for(i in 0...seqLen){
+            var res : String = sequence.charAt(i).toUpperCase();
+
+            if(!valid_res.exists(res)){
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

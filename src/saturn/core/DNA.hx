@@ -140,6 +140,22 @@ class DNA extends Molecule{
         
         return new DNAComposition(aCount, tCount, gCount, cCount);
     }
+
+    public static function isDNA(sequence : String){
+        var seqLen=sequence.length;
+
+        var valid_nucs = ['A'=>true, 'T'=>true,'G'=>true,'C'=>true,'U'=>true];
+
+        for(i in 0...seqLen){
+            var nuc : String = sequence.charAt(i).toUpperCase();
+
+            if(!(valid_nucs.exists(nuc) && valid_nucs.get(nuc))){
+                return false;
+            }
+        }
+
+        return true;
+    }
     
 	/**
 	 * Method returns the melting temperature 
