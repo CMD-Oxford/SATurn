@@ -382,97 +382,167 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
     * it: SearchBarListener iterator, call it.next() to notify the next listener
     **/
     public function textChanged( app : WorkspaceApplication, queryStr : String, it : Dynamic ) : Void {
+        // Note that at the start of the SATurn project most of the search was hard-coded for each entity
+        // SATurn now has a fully configurable search system for entities but some of the old code remains below
+
+        var sequenceEntered = false;
+
         if(queryStr.length > 30){
+            // Assume long sequences are DNA or Protein
+            // TODO support InChI and SMILES
             if(queryStr.indexOf('>') == -1){
-                queryStr = '>Sequence\n' + queryStr + '\n';
+                var regex =~/\s/g;
+                var regex2 =~/\n/g;
+
+                var convertedString = regex.replace(queryStr,'');
+                var convertedString = regex2.replace(convertedString,'');
+
+                if(saturn.core.DNA.isDNA(convertedString) || saturn.core.Protein.isProtein(convertedString)){
+                    queryStr = '>Sequence\n' + convertedString + '\n';
+
+                    sequenceEntered = true;
+                }
+            }else{
+                sequenceEntered = true;
             }
 
-            DNASequenceEditor.parseFastaString(queryStr, true);
-        }else {
-            var modifier = null;
-            if(queryStr.indexOf('edit ') > -1){
-                modifier = 'edit';
+            if(sequenceEntered){
+                // Type automatically determined
+                DNASequenceEditor.parseFastaString(queryStr, true);
 
-                queryStr = reg_edit.replace(queryStr,'');
-
-                if(queryStr.length == 0){
-                    autocomplete_update([]);
-                    return;
-                }
+                return;
             }
-
-            if(queryStr == 'me'){
-                if(ClientCore.getClientCore().getUser() != null){
-                    queryStr = ClientCore.getClientCore().getUser().fullname;
-                }
-            }
-
-            //Hack as we move towards a more flexible search system
-
-            var units = new Array<Dynamic>();
-
-            units.push({indexof: null, func: autocomplete_fts_models, minlen: null, name: 'FTS', limit : 40});
-
-            var provider = getProvider();
-            if(provider != null){
-                var model = provider.getModel(saturn.app.SaturnClient);
-
-                if(model != null){
-                    if(model.hasFlag('SGC')){
-                        units.push({indexof: null, func: autocomplete_targets, minlen: null, name: 'Targets', limit : 20});
-                        units.push({indexof: 'pdb-', func: retrieve_pdb, minlen: null, name: 'PDB', limit : 20});
-                        units.push({indexof: 'PAGE', func: autocomplete_eln, minlen: null, name: 'ELN', limit : 20});
-                    }
-                }
-            }
-
-            var foundItems = new Array<Dynamic>();
-
-            var i = 0;
-
-            var next = null;
-            next = function(items : Array<Dynamic>){
-                if(items != null){
-                    for(item in items){
-                        item.id = i++;
-                        foundItems.push(item);
-                    }
-                }
-
-                if(units.length == 0){
-                    js.Browser.window.console.log('Returning');
-
-                    var d :Dynamic= js.Browser.window;
-                    d.items = foundItems;
-
-                    autocomplete_update(foundItems);
-
-                    return;
-                }else{
-                    var unit = units.pop();
-                    var indexof = unit.indexof;
-                    var minlen = unit.minlen;
-                    var func :Dynamic = unit.func;
-                    var name = unit.name;
-                    var limit = unit.limit;
-
-                    if(indexof != null && queryStr.indexOf(indexof) == -1){
-                        next(null);
-                    }else {
-                        if(minlen != null && queryStr.length < minlen){
-                            next(null);
-                        }else{
-                            js.Browser.window.console.log('Running ' + name);
-                            func(queryStr, next, limit);
-                        }
-                    }
-                }
-            }
-
-            next(null);
         }
 
-        it.next();
+        var modifier = null;
+        if(queryStr.indexOf('edit ') > -1){
+            // TODO: check if we can remove this
+            modifier = 'edit';
+
+            queryStr = reg_edit.replace(queryStr,'');
+
+            if(queryStr.length == 0){
+                autocomplete_update([]);
+                return;
+            }
+        }
+
+        if(queryStr == 'me'){
+            // Search for my own entities
+            // TODO: Check if this still works
+            if(ClientCore.getClientCore().getUser() != null){
+                queryStr = ClientCore.getClientCore().getUser().fullname;
+            }
+        }
+
+        // Each unit represents a different type of search
+        var units = new Array<Dynamic>();
+
+
+
+        // Legacy SGC units below
+        var provider = getProvider();
+        if(provider != null){
+            var model = provider.getModel(saturn.app.SaturnClient);
+
+            if(model != null){
+                if(model.hasFlag('SGC')){
+                    units.push({indexof: null, func: autocomplete_targets, minlen: null, name: 'Targets', limit : 10});
+                    units.push({indexof: 'pdb-', func: retrieve_pdb, minlen: null, name: 'PDB', limit : 10});
+                    units.push({indexof: 'PAGE', func: autocomplete_eln, minlen: null, name: 'ELN', limit : 10});
+                }
+            }
+        }
+
+        // Most entities should be configured to be searchable via this unit
+        units.push({indexof: null, func: autocomplete_fts_models, minlen: null, name: 'FTS', limit : 10});
+
+        // List of entities or pseudo entities (action + entity is a unique item)
+        var foundItems = new Array<Dynamic>();
+
+        // Gives each unit a unique ID
+        var i = 0;
+
+        // Units completed
+        var completed = 0;
+        // Units to complete
+        var toComplete  = 0;
+
+        // Function is called after each unit completes
+        var onComplete = function(items : Array<Dynamic>){
+            // Increment unit complete counter
+            completed += 1;
+
+            // Add items found to global list
+            if(items != null){
+                for(item in items){
+                    item.id = i++;
+                    foundItems.push(item);
+                }
+            }
+
+            if(completed == toComplete){
+                // Search functions now return in an unpredictable order as they are all run in parellel.
+                // So we have to sort after all functions have completed by the unit order
+                foundItems.sort(function(a, b){
+                    var aUnitSortPosition : Int = Reflect.field(a, 'unitSortPosition');
+                    var bUnitSortPosition : Int = Reflect.field(b, 'unitSortPosition');
+
+                    var aInternalSortPosition : Int = Reflect.field(a, 'internalSortPosition');
+                    var bInternalSortPosition : Int = Reflect.field(b, 'internalSortPosition');
+
+
+                    if (aUnitSortPosition < bUnitSortPosition) return -1;
+                    if (aUnitSortPosition > bUnitSortPosition) return 1;
+
+                    if (aInternalSortPosition > bInternalSortPosition) return 1;
+                    if (aInternalSortPosition < bInternalSortPosition) return -1;
+
+                    return 0;
+                });
+
+                // We get here when all units have completed and we then update the search options shown to the user
+                autocomplete_update(foundItems);
+
+                // Pass control back to ExtJS
+                it.next();
+            }
+        }
+
+        // Test each unit against the user search string to see if it's going to be run so we can set toComplete to the correct value
+        for(unit in units){
+            var indexof = unit.indexof;
+            var minlen = unit.minlen;
+
+            if(!(indexof != null && queryStr.indexOf(indexof) == -1)){
+                if(!(minlen != null && queryStr.length < minlen)){
+                    toComplete += 1;
+                }
+            }
+        }
+
+        // Run each unit in parallel (take advantage of async nature of NodeJS)
+
+        var unitSortPosition = 0;
+
+        for(unit in units){
+            var indexof = unit.indexof;
+            var minlen = unit.minlen;
+            var func :Dynamic = unit.func;
+            var name = unit.name;
+            var limit = unit.limit;
+
+            if(!(indexof != null && queryStr.indexOf(indexof) == -1)){
+                if(!(minlen != null && queryStr.length < minlen)){
+                    // Unit is called here
+
+                    unitSortPosition += 1;
+
+                    func(queryStr, onComplete, limit, unitSortPosition);
+                }
+            }
+        }
+
     }
 
     public function autocomplete_models(queryStr, nextSearch, limit : Int) {
@@ -535,7 +605,10 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         }
     }
 
-    public function autocomplete_fts_models(queryStr : String, nextSearch : Dynamic, limit : Int) : Void{
+    /**
+    * autocomplete_fts_models will search queryStr against all configured entity search columns
+    **/
+    public function autocomplete_fts_models(queryStr : String, nextSearch : Dynamic, limit : Int, unitSortPosition: Int) : Void{
         var match = false;
 
         var model : Model = null;
@@ -549,145 +622,19 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         var foundItems = new Array<Dynamic>();
 
         var queryItems :Array<String> = null;
+
         if(queryStr.indexOf(' ') > -1){
-            var reg =~/\s+/;
+            // We get here for query strings which include spaces and split to get a list of query items
+            var reg =~/\s+/g;
             queryItems = reg.split(queryStr);
-        }
 
-        next = function(items : Array<Dynamic>){
-            if(items != null){
-                for(item in items){
-                    foundItems.push(item);
-                }
-            }
+            if(queryItems.length > 1){
+                // Only process as a list request if more than one item is found
+                for(model in getProvider().getModelClasses()){
+                    var ftsColumn = model.getFirstKey();
 
-            var ftsColumn : String = null;
+                    // We get here when the user wants to retrieve items rather than search for them
 
-            if(ftsColumns != null && ftsColumns.length > 0){
-                ftsColumn = ftsColumns.pop();
-            }else if(models.length > 0){
-                model = models.pop();
-
-                ftsMap = model.getFTSColumns();
-
-                ftsColumns = new Array<String>();
-
-                if(ftsMap != null){
-                    for(column in ftsMap.keys()){
-                        ftsColumns.push(column);
-                    }
-                }
-
-                next(null);
-
-                return;
-            }else{
-
-
-                nextSearch(foundItems);
-                return;
-            }
-
-            var searchDef = ftsMap.get(ftsColumn);
-
-            var regex = searchDef.regex;
-
-            if(regex != null){
-                if(!regex.match(queryStr)){
-                    next(null);
-                    return;
-                }else{
-                    if(searchDef.replaceWith != null){
-                        queryStr = searchDef.regex.replace(queryStr, searchDef.replaceWith);
-                    }
-                }
-            }
-
-            var icon = model.getIcon();
-            var actions : Map<String, ModelAction> = model.getActions('search_bar');
-
-            debug('Searching for  ' + model.getName() + '/' + ftsColumn + '/' + queryStr);
-
-            var handler = function(objs : Array<Dynamic>,exception){
-                if(exception == null){
-                    if(objs == null || objs.length == 0){
-                        next(null);
-                    }else{
-                        debug('Found ' + objs.length);
-                        var storeList : Array<Dynamic> = new Array<Dynamic>();
-
-                        objs.sort(function(a, b){
-                            return Reflect.compare(Reflect.field(a, ftsColumn), Reflect.field(b, ftsColumn));
-                        });
-
-                        var i = 0 ;
-
-                        var idField = model.getFirstKey();
-
-                        for (obj in objs) {
-                            var idValue = Reflect.field(obj, idField);
-
-                            // Allow for attribte retrieval from depth
-                            var title = Model.extractField(obj, ftsColumn);
-
-                            if(idField != ftsColumn){
-                                title += ' - ' + idValue;
-                            }
-
-                            if(Reflect.field(obj,'getShortDescription') != null){
-                                title = obj.getShortDescription();
-                            }
-
-                            debug('Found: ' + title);
-
-                            if(actions.exists('DEFAULT')){
-                                var action : ModelAction = actions.get('DEFAULT');
-
-                                storeList.push( { action: action, icon: icon, title : title, id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
-                            }else{
-                                storeList.push( { icon: icon, title : title, id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
-                            }
-
-                            for(actionName in actions.keys()){
-                                if(actionName == 'DEFAULT'){
-                                    continue;
-                                }
-
-                                var action : ModelAction = actions.get(actionName);
-
-                                var actionIcon = icon;
-                                if(action.icon != null){
-                                    actionIcon = action.icon;
-                                }
-
-                                storeList.push( { action: action, icon: actionIcon, title : title + ' (' + action.userSuffix + ')' , id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
-                            }
-                        }
-
-                        next(storeList);
-                    }
-                }else{
-                    if(CommonCore.getStringError(exception) == 'You must be logged in to use this provider'){
-                        next([]);
-                    }else{
-                        next([]);
-                    }
-                }
-            };
-
-            if(ftsColumn.indexOf('.') > -1){
-                getProvider().queryPath(model.getClass(), ftsColumn, queryStr,'getByValues',function(err, objs){
-
-                    handler(objs, err);
-                });
-            }else{
-                if(queryItems == null){
-                    if(model.stripPrefixes()){
-                        queryStr = model.getIdRegEx().replace(queryStr, '');
-                    }
-
-                    getProvider().getByIdStartsWith(queryStr, ftsColumn, model.getClass(), limit,handler);
-                }else{
                     var cleanedItems = queryItems;
 
                     if(model.stripPrefixes()){
@@ -698,18 +645,197 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                         }
                     }
 
-                    getProvider().getByValues(cleanedItems, model.getClass(), ftsColumn, function(objs, err){
-                        handler(objs, err);
+                    // Get items by value
+                    getProvider().getByValues(cleanedItems, model.getClass(), ftsColumn, function(objs : Array<Dynamic>,err){
+                        if(err == null){
+                            if(objs != null){
+                                for(obj in objs){
+                                    getWorkspace().addObject(obj, true);
+                                }
+                            }
+                        }
                     });
                 }
+
+                return;
             }
         }
 
+        // Build up a list of entities to search
         for(model in getProvider().getModelClasses()){
             models.push(model);
         }
 
-        next(null);
+        // Number of columns which need to be searched
+        var toComplete = 0;
+
+        // Iterate models and FTS columns to work out how many need to be searched (required so we know when searches have been performed
+        for(model in models){
+            var ftsMap = model.getFTSColumns();
+
+            if(ftsMap != null){
+                for(column in ftsMap.keys()){
+                    toComplete += 1;
+                }
+            }
+        }
+
+        // Stores the number of searches which have been performed.  When completed == toComplete we are done
+        var completed = 0;
+
+        // Complete list of matching entities / entities + actions
+        var storeList : Array<Dynamic> = new Array<Dynamic>();
+
+        var internalSortPosition = 0;
+
+        // Iterate models - note that all searches are performed in parellel
+        for(model in models){
+            ftsMap = model.getFTSColumns();
+
+            if(ftsMap == null){
+                // Skip models with no search columns configured
+                continue;
+            }
+
+            // Iterate configured search columns
+            for(ftsColumn in ftsMap.keys()){
+                // Get the search column definition
+                var searchDef = ftsMap.get(ftsColumn);
+
+                internalSortPosition += 1;
+
+                // REGEX query string must match against to perform search
+                var regex = searchDef.regex;
+
+                if(regex != null){
+                    // We get here when a REGEX has been set which must match the query string for a search to be run
+                    if(!regex.match(queryStr)){
+                        // We get here for search strings which don't match the FTS REGEX and so skip it
+
+                        completed +=1;
+
+                        continue;
+                    }else{
+                        // We get here when the search string matches the given REGEX
+                        if(searchDef.replaceWith != null){
+                            // We get here when a replaceWith has been set for this column and replace the matching part with replaceWith
+                            queryStr = searchDef.regex.replace(queryStr, searchDef.replaceWith);
+                        }
+                    }
+                }
+
+                // Model for icon if there is one
+                var icon = model.getIcon();
+
+                // List of actions for model
+                var actions : Map<String, ModelAction> = model.getActions('search_bar');
+
+                var _internalSortPosition = internalSortPosition;
+
+                // Handler called when this search is finished
+                var handler = function(objs : Array<Dynamic>,exception){
+                    // Increment the number of searches completed by one
+                    completed += 1;
+
+                    if(exception == null){
+                        // We get here when no exceptions have occurred performing the search
+                        if(!(objs == null || objs.length == 0)){
+                            // Sort entities
+                            objs.sort(function(a, b){
+                                return Reflect.compare(Reflect.field(a, ftsColumn), Reflect.field(b, ftsColumn));
+                            });
+
+                            var i = 0 ;
+
+                            // Get the user visible primary key column name
+                            var idField = model.getFirstKey();
+
+                            // Iterate entities
+                            for (obj in objs) {
+                                // Get the user visible primary key
+                                var idValue = Reflect.field(obj, idField);
+
+                                // Allow for attribte retrieval from depth
+                                var title = Model.extractField(obj, ftsColumn);
+
+                                // If the search column doesn't match the user visible primary key column append the entity ID to the match
+                                if(idField != ftsColumn){
+                                    title += ' - ' + idValue;
+                                }
+
+                                // If a short description field is present append this to the match
+                                if(Reflect.field(obj,'getShortDescription') != null){
+                                    title = obj.getShortDescription();
+                                }
+
+                                if(actions.exists('DEFAULT')){
+                                    // If a default action is present append this to the list of options the user can select from
+                                    var action : ModelAction = actions.get('DEFAULT');
+
+                                    storeList.push( { internalSortPosition: _internalSortPosition, unitSortPosition: unitSortPosition, action: action, icon: icon, title : title, id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
+                                }else{
+                                    // Add this matching entity to the list which will be shown to the user
+                                    storeList.push( { internalSortPosition: _internalSortPosition, unitSortPosition: unitSortPosition, icon: icon, title : title, id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
+                                }
+
+                                // Iterate custom actions (i.e. each action givens you an additional item in the drop-down for the user)
+                                for(actionName in actions.keys()){
+                                    // Skip the default action as this will already have been dealt with
+                                    if(actionName == 'DEFAULT'){
+                                        continue;
+                                    }
+
+                                    // Get action definition and append to list shown to the user
+                                    var action : ModelAction = actions.get(actionName);
+
+                                    var actionIcon = icon;
+                                    if(action.icon != null){
+                                        actionIcon = action.icon;
+                                    }
+
+                                    storeList.push( { internalSortPosition: _internalSortPosition, unitSortPosition: unitSortPosition, action: action, icon: actionIcon, title : title + ' (' + action.userSuffix + ')' , id : i++, targetId: idValue, type : model, field: idField, group: model.getAlias()} );
+                                }
+                            }
+                        }
+                    }else{
+                        // We get here when an exception has occurred.  At the moment we consume these
+                        if(CommonCore.getStringError(exception) == 'You must be logged in to use this provider'){
+
+                        }else{
+
+                        }
+                    }
+
+                    // Test if this was the last search waiting to complete
+                    if(completed == toComplete){
+                        // We get here if this was the last search waiting to complete
+                        nextSearch(storeList);
+                    }
+                };
+
+                // If the search column includes a period then it means we actually want to search an FK'd property
+                if(ftsColumn.indexOf('.') > -1){
+                    getProvider().queryPath(model.getClass(), ftsColumn, queryStr,'getByValues',function(err, objs){
+                        handler(objs, err);
+                    });
+                }else{
+                    // All other search columns end up here
+
+                    if(queryItems == null){
+                        // We get here when we need to perform a single search
+
+                        // Strip prefixes if this model requires it
+                        if(model.stripPrefixes()){
+                            queryStr = model.getIdRegEx().replace(queryStr, '');
+                        }
+
+                        // Look for matches by ID starts with
+                        getProvider().getByIdStartsWith(queryStr, ftsColumn, model.getClass(), limit,handler);
+                    }
+                }
+            }
+        }
+
     }
 
     public function autocomplete_retrieveModel(item : Dynamic) : Bool{
@@ -755,7 +881,7 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         getProvider().getByIdStartsWith(query, null, LabPage, limit, function(pages : Array<LabPage>,exception){
             if(exception == null){
                 if(pages == null || pages.length == 0){
-                    nextSearch(null);
+                    nextSearch(null); return;
                 }
                 var storeList : Array<Dynamic> = new Array<Dynamic>();
 
@@ -767,6 +893,8 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                 nextSearch(storeList);
             }else if(exception != null){
                 lookupException(exception.message);
+
+                nextSearch(null);
             }
         });
     }
@@ -793,12 +921,14 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
     * TARGETS
     **/
 
-    private function autocomplete_targets(query : String, nextSearch : Dynamic, limit : Int) {
+    private function autocomplete_targets(query : String, nextSearch : Dynamic, limit : Int, unitSortPosition : Int) {
         var modifierStr = '';
         var modifier = '';
 
         getProvider().getByIdStartsWith(query, null,SgcTarget, limit, function(targets : Array<SgcTarget>,exception){
             if(exception == null){
+                var internalSortPosition = 0;
+
                 if(targets == null || targets.length == 0){
                     nextSearch(null);
                     return;
@@ -824,32 +954,77 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
                     var group = 'Targets';
 
-                    if(target.targetId == query || (baseCount <=2 && (lastBaseName == null || baseName != lastBaseName))){
+                    if(target.targetId.toUpperCase() == query.toUpperCase() || (baseCount <=2 && (lastBaseName == null || baseName != lastBaseName))){
                         lastBaseName = baseName;
 
                         group = target.targetId;
 
-                        storeList.push( { icon: 'gridvar_16.png', title : target.targetId + ' (Target Summary)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag Summary', group: group } );
-                        storeList.push( { icon: 'structure_16.png', title : modifierStr + baseName + ' (All Isoforms - Protein)', id : i++, targetId: target.targetId, type : 'All Isoforms - Protein', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'dna_16.png', title : modifierStr + baseName + ' (All Isoforms - Nucleotide)', id : i++, targetId: target.targetId, type : 'All Isoforms - Nucleotide', modifier: modifier, group: group } );
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'gridvar_16.png', title : target.targetId + ' (Target Summary)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag Summary', group: group } );
+
+                        internalSortPosition += 1;
+
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + baseName + ' (All Isoforms - Protein)', id : i++, targetId: target.targetId, type : 'All Isoforms - Protein', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'dna_16.png', title : modifierStr + baseName + ' (All Isoforms - Nucleotide)', id : i++, targetId: target.targetId, type : 'All Isoforms - Nucleotide', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
                     }
 
-                    storeList.push( { icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Protein)', id : i++, targetId: target.targetId, type : 'Protein', modifier: modifier, group: group } );
-                    storeList.push( { icon: 'dna_16.png', title : modifierStr + target.targetId + ' (DNA)', id : i++, targetId: target.targetId, type : 'Nucleotide', modifier: modifier, group: group } );
 
-                    if(target.targetId == query || (targets.length <= 3)){
+
+                    storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Protein)', id : i++, targetId: target.targetId, type : 'Protein', modifier: modifier, group: group } );
+
+                    internalSortPosition += 1;
+
+                    storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'dna_16.png', title : modifierStr + target.targetId + ' (DNA)', id : i++, targetId: target.targetId, type : 'Nucleotide', modifier: modifier, group: group } );
+
+                    internalSortPosition += 1;
+
+                    if(target.targetId.toUpperCase() == query.toUpperCase() || (targets.length <= 3)){
                         group = target.targetId;
 
-                        storeList.push( { icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Entry Clones DNA)', id : i++, targetId: target.targetId, type : 'Entry Clones DNA', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Entry Clones - Translation)', id : i++, targetId: target.targetId, type : 'Entry Clones Translation', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Alleles Protein)', id : i++, targetId: target.targetId, type : 'Alleles Protein', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Alleles DNA)', id : i++, targetId: target.targetId, type : 'Alleles DNA', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Constructs Protein)', id : i++, targetId: target.targetId, type : 'Constructs Protein', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Constructs Protein - No Tag)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Constructs DNA)', id : i++, targetId: target.targetId, type : 'Constructs DNA', modifier: modifier, group: group } );
-                        storeList.push( { icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs DNA)', id : i++, targetId: target.targetId, type : 'Constructs DNA Align' , group: group} );
-                        storeList.push( { icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein)', id : i++, targetId: target.targetId, type : 'Constructs Protein Align', group: group } );
-                        storeList.push( { icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein - No Tag)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag Align' , group: group});
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Entry Clones DNA)', id : i++, targetId: target.targetId, type : 'Entry Clones DNA', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Entry Clones - Translation)', id : i++, targetId: target.targetId, type : 'Entry Clones Translation', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Alleles Protein)', id : i++, targetId: target.targetId, type : 'Alleles Protein', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Alleles DNA)', id : i++, targetId: target.targetId, type : 'Alleles DNA', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Constructs Protein)', id : i++, targetId: target.targetId, type : 'Constructs Protein', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'structure_16.png', title : modifierStr + target.targetId + ' (Constructs Protein - No Tag)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'dna_16.png', title : modifierStr + target.targetId + ' (Constructs DNA)', id : i++, targetId: target.targetId, type : 'Constructs DNA', modifier: modifier, group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs DNA)', id : i++, targetId: target.targetId, type : 'Constructs DNA Align' , group: group} );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein)', id : i++, targetId: target.targetId, type : 'Constructs Protein Align', group: group } );
+
+                        internalSortPosition += 1;
+
+                        storeList.push( { unitSortPosition: unitSortPosition, internalSortPosition : internalSortPosition, icon: 'aln_16.png', title : 'Align ' + target.targetId + ' (Constructs Protein - No Tag)', id : i++, targetId: target.targetId, type : 'Constructs Protein - No Tag Align' , group: group});
+
+                        internalSortPosition += 1;
 
                     }
                 }
