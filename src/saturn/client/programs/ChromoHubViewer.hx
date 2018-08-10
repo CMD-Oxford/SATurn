@@ -508,7 +508,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
             ctx.scale(this.canvas.scale, this.canvas.scale);
 
-            this.radialR= new ChromoHubRadialTreeLayout(this.canvas.canvas.width, this.canvas.canvas.height);
+            this.radialR= new ChromoHubRadialTreeLayout(this, this.canvas.canvas.width, this.canvas.canvas.height);
 
             this.rootNode.screen=new Array();// we need to initizalize the array everytime we render the tree
 
@@ -611,6 +611,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     }
 
 	public function setTreeFromNewickStr( myNewickStr : String ) {
+        getObject().newickStr = myNewickStr;
 
         newickStr = myNewickStr;
 
@@ -653,14 +654,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
         }
 
-        this.canvas = new ChromoHubCanvasRenderer(parentWidth, parentHeight, this.dom, this.rootNode);
+        this.canvas = new ChromoHubCanvasRenderer(this,parentWidth, parentHeight, this.dom, this.rootNode);
 
         this.centrex=Math.round(parentWidth/2);
         this.centrey=Math.round(parentHeight/2);
         this.canvas.cx=this.centrex;
         this.canvas.cy=this.centrey;
         this.rootNode.screen=new Array(); // we need to initizalize the array with all information about annotations position in screen
-        var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(parentWidth, parentHeight);
+        var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(this,parentWidth, parentHeight);
 
        // annotations= new Array();
 
@@ -1501,7 +1502,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         var parentWidth : Int = this.dom.clientWidth;
         var parentHeight : Int = this.dom.clientHeight;
-        this.canvas = new ChromoHubCanvasRenderer(parentWidth, parentHeight, this.dom, this.rootNode);
+        this.canvas = new ChromoHubCanvasRenderer(this,parentWidth, parentHeight, this.dom, this.rootNode);
 
         this.canvas.cx=Math.round(parentWidth/2);
         this.canvas.cy=Math.round(parentHeight/2);
@@ -1531,7 +1532,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         var parentWidth : Int = this.dom.clientWidth;
         var parentHeight : Int = this.dom.clientHeight;
-        this.canvas = new ChromoHubCanvasRenderer(parentWidth, parentHeight, this.dom, this.rootNode);
+        this.canvas = new ChromoHubCanvasRenderer(this,parentWidth, parentHeight, this.dom, this.rootNode);
 
         this.canvas.cx=Math.round(parentWidth/2);
         this.canvas.cy=Math.round(parentHeight/2);
@@ -1558,7 +1559,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         if(standaloneMode){
             chromohubOnFocus();
         }else{
-
+            treeViewInterface();
         }
     }
 
@@ -1905,24 +1906,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             });
         }else{
             addCanvasButton({
-                cls:'x-btn-magplus',
-                xtype: 'button',
-                handler: function(){
-                    zoomIn(this.activeAnnotation);
-                },
-                tooltip: {dismissDelay: 10000, text: 'Zoom in on tree'}
-            });
-
-            addCanvasButton({
-                cls:'x-btn-magminus',
-                xtype: 'button',
-                handler: function(){
-                    zoomOut(this.activeAnnotation);
-                },
-                tooltip: {dismissDelay: 10000, text: 'Zoom out of tree'}
-            });
-
-            addCanvasButton({
                 iconCls :'x-btn-export',
                 text: 'Export SVG',
                 handler: function(){
@@ -1938,6 +1921,16 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     exportPNG();
                 },
                 tooltip: {dismissDelay: 10000, text: 'Export tree as PNG'}
+            });
+
+
+            addCanvasButton({
+                iconCls :'x-btn-copy',
+                text: 'Update',
+                handler: function(){
+                    updateAlignment();
+                },
+                tooltip: {dismissDelay: 10000, text: 'Update tree with current sequences'}
             });
 
             addCanvasButton({
@@ -1956,6 +1949,24 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     addAllDNASequencesFromWorkspace();
                 },
                 tooltip: {dismissDelay: 10000, text: 'Import all DNA sequences from the workspace (click update to update tree)'}
+            });
+
+            addCanvasButton({
+                cls:'x-btn-magplus',
+                xtype: 'button',
+                handler: function(){
+                    zoomIn(this.activeAnnotation);
+                },
+                tooltip: {dismissDelay: 10000, text: 'Zoom in on tree'}
+            });
+
+            addCanvasButton({
+                cls:'x-btn-magminus',
+                xtype: 'button',
+                handler: function(){
+                    zoomOut(this.activeAnnotation);
+                },
+                tooltip: {dismissDelay: 10000, text: 'Zoom out of tree'}
             });
         }
 
@@ -2026,6 +2037,54 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }
     }
 
+
+    public function updateAlignment(){
+        var self : ChromoHubViewer = this;
+
+        var objectIds = getState().getReferences('Sequences');
+
+        var strBuf : StringBuf = new StringBuf();
+
+        for (objectId in objectIds) {
+            var w0 : WorkspaceObject<Dynamic> = getWorkspace().getObject(objectId);
+
+            if ( Std.is(w0, DNAWorkspaceObject) ) {
+                var object : DNAWorkspaceObject<DNA> = getWorkspace().getObjectSafely(objectId, DNAWorkspaceObject);
+                strBuf.add('>'+w0.getName()+'\n'+object.getObject().getSequence()+'\n');
+            }else if ( Std.is(w0, ProteinWorkspaceObject) ) {
+                var object : ProteinWorkspaceObject = cast(w0, ProteinWorkspaceObject);
+                strBuf.add('>'+w0.getName()+'\n'+object.getObject().getSequence()+'\n');
+            }else{
+                var d: Dynamic = w0;
+                strBuf.add('>'+d.getName()+'\n'+d.getSequence()+'\n');
+            }
+        }
+
+        BioinformaticsServicesClient.getClient().sendPhyloReportRequest(strBuf.toString(), function(response, error){
+            if(error == null){
+                var phyloReport = response.json.phyloReport;
+
+                var location : js.html.Location = js.Browser.window.location;
+
+                var dstURL = location.protocol+'//'+location.hostname+':'+location.port+'/'+phyloReport;
+
+                Ext.Ajax.request({
+                    url: dstURL,
+                    success: function(response, opts) {
+                        var obj = response.responseText;
+
+                        self.setTreeFromNewickStr(obj);
+                    },
+                    failure: function(response, opts) {
+                        //response.status
+                    }
+                });
+            }else{
+                getApplication().showMessage('Tree generation error', error);
+            }
+        });
+    }
+
     public function addAllDNASequencesFromWorkspace() {
         registerAllFromWorkspace(DNAWorkspaceObject, 'Sequences');
     }
@@ -2036,8 +2095,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     private function treeViewInterface():Bool{
         var container=getApplication().getSingleAppContainer();
-        if(currentView!=1){
-            if(treeName=='' && newickStr==''){
+        if(!standaloneMode || currentView!=1){
+            if(standaloneMode && treeName=='' && newickStr==''){
                 if(currentView==0){//landing page
                     //if it's the first time and no family tree has been selected yet
                     // or the user has been working just with genes
@@ -2100,6 +2159,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 addControlBtnsToCentralPanel();
 
                 if(standaloneMode){
+
+
                     this.theComponent.doLayout();
                 }
 
@@ -3488,9 +3549,7 @@ $('.vertical .progress-fill span').each(function(){
         super.setActiveObject(objectId);
 
         if(!standaloneMode){
-
-            setTreeFromNewickStr('(((((((((BRD1A-c022:0.00038,BRD1A-c023:0.00038):0.00254,BRD1A-c021:-0.00216):0.16539,BRD1A-c001:-0.04540):0.02000,BRD1A-c003:-0.01550):0.01475,BRD1A-c005:-0.01024):0.00480,(BRD1A-c033:0.00525,BRD1A-c006:-0.00525):0.00382):0.00078,((BRD1A-c002:-0.04037,BRD1A-c010:0.04037):0.03917,BRD1A-c004:-0.00526):0.00209):0.00188,((((BRD1A-c007:-0.00128,BRD1A-c009:0.00128):0.00043,(BRD1A-c016:0.02117,(BRD1A-c014:-0.00369,((BRD1A-c011:-0.00830,(BRD1A-c012:-0.01375,((BRD1A-c017:-0.06041,((BRD1A-c026:-0.00110,(BRD1A-c027:-0.00052,(BRD1A-c025:0.00082,BRD1A-c024:-0.00082):0.00052):0.00110):0.02311,BRD1A-c028:0.03776):0.60953):0.03093,BRD1A-c018:-0.02914):0.02031):0.00782):0.00956,BRD1A-c015:-0.00521):0.00358):0.02085):0.03180):0.00166,BRD1A-c008:-0.00281):0.01017,((((((((BRD1A-c038:0.00000,BRD1A-c043:0.00000):0.00178,BRD1A-c042:-0.00178):0.00093,BRD1A-c044:-0.00093):0.01057,BRD1A-c030:-0.01057):0.00627,BRD1A-c013:0.04501):0.00482,BRD1A-c032:0.00480):0.00518,(((BRD1A-c040:0.00000,BRD1A-c041:0.00000):0.00017,BRD1A-c039:-0.00017):0.00032,BRD1A-c037:-0.00032):0.00780):0.00195,BRD1A-c034:0.01400):0.00255):0.00188):0.00051,((((BRD1A-c036:0.02590,BRD1A-c020:0.00615):0.00512,BRD1A-c019:-0.00512):0.01901,BRD1A-c031:0.01304):0.00352,BRD1A-c029:0.01571):0.00231,BRD1A-c035:0.01692);');
-            treeViewInterface();
+            setTreeFromNewickStr(getObject().newickStr);
         }
     }
 
@@ -3514,7 +3573,7 @@ $('.vertical .progress-fill span').each(function(){
         ctx.translate(newWidth/2,newHeight/2);
         ctx.scale(1,1);
 
-        this.radialR= new ChromoHubRadialTreeLayout(this.canvas.canvas.width, this.canvas.canvas.height);
+        this.radialR= new ChromoHubRadialTreeLayout(this,this.canvas.canvas.width, this.canvas.canvas.height);
 
         this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
 
@@ -3553,7 +3612,7 @@ $('.vertical .progress-fill span').each(function(){
         this.canvas.ctx.translate(width/2,height/2);
         this.canvas.ctx.scale(1, 1);
 
-        this.radialR= new ChromoHubRadialTreeLayout(width, height);
+        this.radialR= new ChromoHubRadialTreeLayout(this, width, height);
 
         this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
 

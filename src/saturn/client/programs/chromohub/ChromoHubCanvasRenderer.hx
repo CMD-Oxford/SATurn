@@ -22,8 +22,12 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
     var rootNode:Dynamic;
     public var cx: Dynamic;
     public var cy: Dynamic;
+    public var prog : ChromoHubViewer;
 
-    public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic){
+
+    public function new (program : ChromoHubViewer,width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic){
+        this.prog = program;
+
        var doc:Dynamic;
 
        this.canvas=js.Browser.document.createElement("canvas");
@@ -186,7 +190,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.translate(this.cx,this.cy);
         this.ctx.scale(this.scale, this.scale);
-        var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(this.canvas.width, this.canvas.height);
+        var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(prog,this.canvas.width, this.canvas.height);
 
         radialRendererObj.render(this.rootNode, this,annotations, annotList);
 
@@ -206,7 +210,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.translate(this.cx,this.cy);
             this.ctx.scale(this.scale, this.scale);
-            var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(this.canvas.width, this.canvas.height);
+            var radialRendererObj  : Dynamic = new ChromoHubRadialTreeLayout(prog, this.canvas.width, this.canvas.height);
 
             radialRendererObj.render(this.rootNode,this, annotations, annotList);
 

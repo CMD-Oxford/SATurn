@@ -27,10 +27,12 @@ class ChromoHubRadialTreeLayout{
 
     public var cx: Float;
     public var cy: Float;
+    public var prog : ChromoHubViewer;
+
     var annotations:Array<ChromoHubAnnotation>;
 
-    public function new (width: Float, height: Float){
-
+    public function new (program: ChromoHubViewer, width: Float, height: Float){
+        this.prog = program;
         this.cx=width/2;
         this.cy=height/2;
 
@@ -43,7 +45,6 @@ class ChromoHubRadialTreeLayout{
         var y=treeNode.y;
         var linecolor="rgb(28,102,224)";
 
-        var prog = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
         if(prog.editmode==true) linecolor="rgb(234,147,28)";
 
         while(i<treeNode.children.length){
