@@ -318,8 +318,12 @@ class MultiConstructHelper extends TableHelper{
 
                         adjustedStopPos = stopPos - gapsOffset;
 
-                        constructModel.set('constructStart', startPos);
-                        constructModel.set('constructStop', adjustedStopPos);
+                        if(startPos == 2 && (vectorFExtension.substr(vectorFExtension.length-3,3) == 'ATG' && targetProteinSeq.charAt(0) == 'M')){
+                            startPos = 1;
+                        }
+
+                        constructModel.set('constructStart', targetProteinSeq.charAt(startPos-1) + startPos);
+                        constructModel.set('constructStop', targetProteinSeq.charAt(adjustedStopPos-1) + adjustedStopPos);
                         return;
                     }
 
@@ -342,7 +346,7 @@ class MultiConstructHelper extends TableHelper{
                                 aln.setAlignmentURL(URL);
 
                                 //Debugging to output all clustal files obtained
-                                WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(aln, "MSA"), true);
+                                //WorkspaceApplication.getApplication().getWorkspace().addObject(new AlignmentWorkspaceObject(aln, "MSA"), true);
 
                                 //Passes the clustal file to the readStartStop method, which returns an array of Ints
                                 startStopPos = ClustalOmegaParser.readStartStop(content, consreuctIdLength);
@@ -357,8 +361,6 @@ class MultiConstructHelper extends TableHelper{
 
                 next();
             }
-
-
         }
     }
 
