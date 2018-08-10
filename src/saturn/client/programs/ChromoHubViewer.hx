@@ -129,8 +129,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     }
 
     override public function emptyInit() {
-		super.emptyInit();
-
+        super.emptyInit();
 
 
         //currentView = 1;
@@ -2425,7 +2424,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     }
 
     private function addBtnsToMainToolBar(searchField:Bool){
-        return;
+        if(!standaloneMode){
+            return;
+        }
 
         var container=getApplication().getSingleAppContainer();
 
@@ -3547,6 +3548,9 @@ $('.vertical .progress-fill span').each(function(){
 
     override public function setActiveObject(objectId : String) {
         super.setActiveObject(objectId);
+
+
+        this.standaloneMode = getObject().standloneMode;
 
         if(!standaloneMode){
             setTreeFromNewickStr(getObject().newickStr);
@@ -4932,6 +4936,10 @@ $('.vertical .progress-fill span').each(function(){
         }
     }
     function getJSonViewOptions(){
+        #if CHROMOHUB
+        standaloneMode = true;
+        #end
+
         CommonCore.getContent(
             "/static/json/ViewOptionsBtns.json",function(content) {
                 var d : Dynamic = WorkspaceApplication.getApplication().getActiveProgram();
@@ -4944,19 +4952,28 @@ $('.vertical .progress-fill span').each(function(){
             });
     }
     function getJSonTips(){
+        #if CHROMOHUB
+        standaloneMode = true;
+        #end
+
         if(standaloneMode){
             CommonCore.getContent("/static/json/tipsHtmlData.json",function(content) {
                 var d : Dynamic = WorkspaceApplication.getApplication().getActiveProgram();
                 d.jsonTipsFile = haxe.Json.parse(content);
 
                 WorkspaceApplication.getApplication().setMode(ScreenMode.SINGLE_APP);
+
+                #if CHROMOHUB
+                var d: Dynamic = WorkspaceApplication.getApplication();
+                d.viewPoint.show();
+                #end
+
             },function(err) {
                 WorkspaceApplication.getApplication().debug(err);
             });
         }
 
     }
-
 
     public function showTips(show:Bool){
         var cookies = untyped __js__('Cookies');

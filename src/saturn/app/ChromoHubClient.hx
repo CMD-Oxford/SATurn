@@ -1,4 +1,5 @@
 package saturn.app;
+import saturn.client.workspace.ChromoHubWorkspaceObject;
 import saturn.client.programs.ChromoHubViewer;
 import saturn.core.domain.Alignment;
 import saturn.client.WorkspaceApplication;
@@ -20,9 +21,14 @@ class ChromoHubClient extends SaturnClient{
     }
 
     //REF: override
-     public function afterLoad(){
+    override public function afterLoad(){
         // Creates a ChromoHub object
-        getWorkspace().addObject(new Alignment(), true);
+        var prog = new ChromoHubViewer();
+
+        var obj = new ChromoHubWorkspaceObject(new Alignment(), "Tree");
+        obj.standaloneMode = true;
+
+        getWorkspace().registerObjectWith(obj,prog);
     }
 
     override public function textChanged( app : WorkspaceApplication, queryStr : String, it : Dynamic ) : Void {

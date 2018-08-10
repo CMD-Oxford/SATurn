@@ -130,6 +130,10 @@ class EXTApplication extends WorkspaceApplication{
                 launch: function() {
                     viewPoint = Ext.create('Ext.container.Viewport', {layout: 'border'});
 
+                    #if CHROMOHUB
+                    viewPoint.hide();
+                    #end
+
                     northContainer = Ext.create('Ext.Container', {layout: 'vbox', width   : '100%', region:'north', border: false});
 
                     northPanel = Ext.create('Ext.Container', {
@@ -153,6 +157,8 @@ class EXTApplication extends WorkspaceApplication{
                     }
 
                     initApplication();
+
+                    afterLoad();
                 }
             });
         });
@@ -939,7 +945,7 @@ class EXTApplication extends WorkspaceApplication{
     override public function getToolsMenu(){
         return toolsMenu;
     }
-	
+
     override public function getFileNewMenu(){
         return this.newMenu;
     }

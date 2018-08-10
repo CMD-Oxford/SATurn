@@ -141,6 +141,8 @@ class WorkspaceApplication {
         createProgressWindow();
 
         checkBrowser();
+
+
     }
 
     public function refreshSession(){
@@ -1307,6 +1309,10 @@ class WorkspaceApplication {
 
     public function getGlobalSearchFieldObj() : Dynamic{
         return null;
+    }
+
+    public function afterLoad(){
+
     }
 }
 

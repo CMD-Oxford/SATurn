@@ -25,6 +25,7 @@ class ChromoHubWorkspaceObject extends WorkspaceObjectBase<Alignment>{
     public static var FILE_IMPORT_FORMATS : Array<String> = [];
 
     public var newickStr = null;
+    public var standaloneMode = false;
 
     public function new(object : Dynamic, name : String){
         if(object == null){
@@ -47,31 +48,4 @@ class ChromoHubWorkspaceObject extends WorkspaceObjectBase<Alignment>{
     public static function getDefaultFolderName() : String{
         return "Trees";
     }
-	
-	/*override
-	public function serialise() : Dynamic {
-		var serialisedObject : Dynamic = super.serialise();
-		
-		serialisedObject.DATA={ 'OBJECT_IDS': object.getAlignmentObjectIds().join(','), 'ALN_URL' : this.getObject().getAlignmentURL() };
-		
-		return serialisedObject;
-	}
-
-	override
-	public function deserialise(object : Dynamic) : Void{
-		super.deserialise(object);
-		
-        var alnObject : Alignment = new Alignment();
-
-        var alnObjectIdsStr : String = object.DATA.OBJECT_IDS;
-
-        if(alnObjectIdsStr != null){
-            var ids : Array<String> = alnObjectIdsStr.split(',');
-            alnObject.setAlignmentObjectIds(ids);
-        }
-
-        alnObject.setAlignmentURL(object.DATA.ALN_URL);
-
-	    setObject(alnObject);
-	}*/
 }
