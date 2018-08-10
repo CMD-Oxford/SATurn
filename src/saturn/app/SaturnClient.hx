@@ -1188,6 +1188,9 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
                     var added = 0;
                     for(allele in alleles){
                         if(allele.proteinSeq != null){
+
+                            allele.proteinSequenceObj.setName(allele.getName() + ' (Protein)');
+
                             getWorkspace()._addObject(allele.proteinSequenceObj, autoOpen, false, folder);
                             autoOpen = false;
 
