@@ -290,9 +290,11 @@ class ChromoHubHooks {
                 sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, pdb, variant v WHERE "+st_family_or_genes+" and ftj.target_id = v.target_id and pdb.id=s.pdb_id and v.is_default=1 and v.pkey=s.variant_pkey "+st_type_cond+st_percent_cond+xray_cond+" GROUP BY ftj.target_id, target_name_index, variant_index ORDER BY ftj.target_id, target_name_index, variant_index";
 
             } else {
-                sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE "+st_family_or_genes+" and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 "+st_type_cond+st_percent_cond+xray_cond+" GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
+                sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE "+st_family_or_genes+" and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 and d.target_id = ftj.target_id"+st_type_cond+st_percent_cond+xray_cond+" GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
             }
         }
+
+        Util.debug(sql);
 
         provider.getConnection(null, function(err, connection){
             if(err != null){
