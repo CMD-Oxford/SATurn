@@ -51,6 +51,7 @@ class ClientCore implements ConversationHelper{
         loginListeners = new Array<Dynamic->Void>();
         logoutListeners = new Array<Void->Void>();
 
+        untyped __js__('debug.enable("saturn:plugin")');
         debugLogger = untyped __js__('debug("saturn:plugin")');
     }
 
@@ -415,6 +416,7 @@ class ClientCore implements ConversationHelper{
 
     public function listenersRegistered(msg : String){
         return listeners.exists(msg);
+
     }
 
     public function notifyListeners(msg : String, data : Dynamic){
@@ -447,19 +449,16 @@ class ClientCore implements ConversationHelper{
             listener();
         }
 
-/*requestNodeMsgId(function(msgId : String, err : String){
-            if(err != null){
-                cb(null, err);
-            }else{
-                data.msgId = msgId;
-
-                theSocket.emit(msg, data);
-
-                cbsAwaitingResponse.set(msgId, cb);
-            }
-        });*/
-
         return msgId;
+    }
+
+    public function printQueryTimes(){
+        for(msgId in msgIdToJobInfo.keys()){
+            if(Reflect.hasField(msgIdToJobInfo.get(msgId), 'END_TIME')){
+                Util.debug('>' + msgId + '\t\t' + msgIdToJobInfo.get(msgId).msg + '\t\t' + ((msgIdToJobInfo.get(msgId).END_TIME - msgIdToJobInfo.get(msgId).START_TIME) / 1000));
+                Util.debug(msgIdToJobInfo.get(msgId).JSON);
+            }
+        }
     }
 
 /**
