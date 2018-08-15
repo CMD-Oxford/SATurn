@@ -371,24 +371,57 @@ class ChromoHubHooks {
 
         var sql='';
         if (typetree == "domain") {
-            sql = "select dh.target_id, dh.name_index, dh.variant_index, cl.cell_line
+            sql = "select * from (select dh.target_id, dh.name_index, dh.variant_index, cl.cell_line, cl.log2
             from domain_highlighted dh, cancer_cell_lines_shrna cl, target t
-            where "+st_family_or_genes_domain+" and (dh.target_id = t.symbol or dh.target_id = t.id) and t.geneid = cl.geneid
-            and dh.on_tree = 1 and cl.log2 <= ? order by dh.target_id, name_index, variant_index, cell_line, log2";
+            where "+st_family_or_genes_domain+" and (dh.target_id = t.symbol) and t.geneid = cl.geneid
+            and dh.on_tree = 1 and cl.log2 <= ? ";
+
+            sql += " union all select dh.target_id, dh.name_index, dh.variant_index, cl.cell_line, cl.log2
+            from domain_highlighted dh, cancer_cell_lines_shrna cl, target t
+            where "+st_family_or_genes_domain+" and (dh.target_id = t.id and t.id <> t.symbol) and t.geneid = cl.geneid
+            and dh.on_tree = 1 and cl.log2 <= ?)a order by a.target_id, a.name_index, a.variant_index, a.cell_line, a.log2";
+
+            var newBoundParameters = new Array();
+
+            for(i in 0...2){
+                for(item in boundParameters){
+                    newBoundParameters.push(item);
+                }
+            }
+
+            boundParameters = newBoundParameters;
 
             //cb(null, sql);
             //return;
 
         } else { //gene_based
-            sql = "select ftj.target_id, null name_index, v.variant_index, cl.cell_line
+            sql = "select * from (select ftj.target_id, null name_index, v.variant_index, cl.cell_line, cl.log2
             from family_target_join ftj, variant v, cancer_cell_lines_shrna cl, target t
             where "+st_family_or_genes+" and ftj.target_id = v.target_id and
             (ftj.target_id = t.symbol or ftj.target_id = t.id) and t.geneid = cl.geneid
-            and v.is_default = 1 and cl.log2 <= ?
-            order by ftj.target_id, name_index, variant_index, cell_line, log2";
+            and v.is_default = 1 and cl.log2 <= ? ";
 
+
+            sql += "union all select ftj.target_id, null name_index, v.variant_index, cl.cell_line,cl.log2
+            from family_target_join ftj, variant v, cancer_cell_lines_shrna cl, target t
+            where "+st_family_or_genes+" and ftj.target_id = v.target_id and
+            (ftj.target_id = t.symbol or ftj.target_id = t.id) and t.geneid = cl.geneid
+            and v.is_default = 1 and cl.log2 <= ?) a
+            order by a.target_id, a.name_index, a.variant_index, a.cell_line, a.log2";
+
+            var newBoundParameters = new Array();
+
+            for(i in 0...2){
+                for(item in boundParameters){
+                    newBoundParameters.push(item);
+                }
+            }
+
+            boundParameters = newBoundParameters;
 
         }
+
+        Util.debug(sql);
 
         provider.getConnection(null, function(err, connection1){
             if(err != null){
@@ -496,7 +529,8 @@ class ChromoHubHooks {
         if (typetree == "domain") {
 
             sql = "SELECT dh.target_id, dh.name_index, dh.variant_index, c.disease, c.count, c.total, c.rank FROM cancer.rnaseq_fc_freq c, probes_tree2.domain_highlighted dh, probes_tree2.family_target_join ftj
-            		where c.gene = dh.target_id
+            		where c.gene = dh.target_id and
+            		dh.target_id = ftj.target_id
                     and "+st_family_or_genes+"
 					and dh.on_tree = 1
                     and c.fc_cutoff = ?
