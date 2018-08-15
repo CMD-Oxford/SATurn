@@ -32,13 +32,15 @@ class BaseTable implements BuildingBlock {
 
     var customContextItems : Array<Dynamic>;
     var hideTitle: Bool;
+    var enableAutoAddNewRow : Bool;
 
-    public function new(columns :Array<ColumnDefinition>, data : Array<Dynamic>, title : String, ?fixedRowHeight : Int=null, hideTitle : Bool = false){
+    public function new(columns :Array<ColumnDefinition>, data : Array<Dynamic>, title : String, ?fixedRowHeight : Int=null, hideTitle : Bool = false, autoAddNewRow = true){
         this.columns = columns;
         this.data = data;
         this.title = title;
         this.fixedRowHeight = fixedRowHeight;
         this.hideTitle = hideTitle;
+        this.enableAutoAddNewRow = autoAddNewRow;
 
         customContextItems = new Array<Dynamic>();
     }
@@ -81,6 +83,10 @@ class BaseTable implements BuildingBlock {
 
     public function onEdit(){
         editListener();
+    }
+
+    public function addListener(callBack : Dynamic->Void){
+        component.on('containerClick',callBack);
     }
 
     public function reconfigure(tableDef : TableDefinition = null){
@@ -133,7 +139,7 @@ class BaseTable implements BuildingBlock {
                 width: '100%',
                 region: 'center',
                 scrollable: true,
-                //flex:1,
+                flex:1,
                 //header: false,
                 //features: [filters],
                 title: title,
@@ -341,6 +347,10 @@ class BaseTable implements BuildingBlock {
     }
 
     public function autoAddNewRow(){
+        if(!enableAutoAddNewRow){
+            return;
+        }
+
         var storeLen = store.count();
 
         var newRow = true;
