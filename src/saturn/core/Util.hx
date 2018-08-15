@@ -150,7 +150,7 @@ class Util {
         getNewFileDialog(function(err : String, dialog : Dynamic){
             dialog.setSelectExisting(false);
             dialog.fileSelected.connect(function(fileName){
-                js.Lib.alert(fileName);
+                js.Browser.alert(fileName);
                 debug('Hello, saving ' + fileName);
                 Util.saveFile(fileName, contents, function(err : String){
                     cb(err, fileName);
