@@ -10,7 +10,7 @@ class ChromoHubClientLauncher {
     public static function main() {
         var inScarab = false;
 
-        var client : ChromoHubClient = new ChromoHubClient('ChromoHub','Workspace', 'Notifications', 'Outline', 'Editor', 'Search', false, 'Search gene symbols');
+        var client : ChromoHubClient = new ChromoHubClient('ChromoHub','Workspace', 'Notifications', 'Outline', 'Editor', 'Search gene symbols', false, 'Search gene symbols');
 
 
         WorkspaceApplication.setApplication(client);
