@@ -133,7 +133,7 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
     public static function main() {
         var inScarab = false;
 
-        var client : SaturnClient = new SaturnClient('SATurn Framework','Workspace', 'Notifications', 'Outline', 'Editor', 'Search', false);
+        var client : SaturnClient = new SaturnClient('SATurn Framework','Workspace', 'Notifications', 'Outline', 'Editor', 'Type to search (targets/constructs/alleles/entry clones/primers/compounds)', false);
 
         WorkspaceApplication.setApplication(client);
     }
