@@ -177,6 +177,10 @@ class EXTApplication extends WorkspaceApplication{
 
     }
 
+    override public function getGlobalSearchFieldObj() : Dynamic{
+        return searchBar;
+    }
+
     public function getResourcesMenu() : Dynamic {
         return databaseMenu;
     }
@@ -1332,7 +1336,7 @@ class EXTApplication extends WorkspaceApplication{
             focusOnToFront: false,
             valueField: 'id',
             region: 'west',
-            emptyText: 'Type to search (targets/constructs/alleles/entry clones/primers/compounds)',
+            emptyText: searchBarTitle,
             store:  Ext.data.StoreManager.lookup('SEARCH_BAR'),
             enableKeyEvents: true,
             doQuery: function(queryStr) {
