@@ -174,11 +174,12 @@ class GenericRDBMSProvider extends DefaultProvider{
             getColumns(connection, schemaName, tableName,  func);
         }else{
             if(modelClazzes.length == 0 && modelsToProcess == 1){
+                postConfigureModels();
                 // Should only be possible to get here if all the models lack table information
                 closeConnection(connection);
 
                 if(cb != null){
-                    debug('All Models have been processed (handing back control to caller callback)');
+                    debug('All Models have been processed (handing back control to caller callback2)');
                     cb(null);
                 }
             }else{
