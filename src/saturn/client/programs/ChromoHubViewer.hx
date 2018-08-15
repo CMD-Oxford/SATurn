@@ -18,6 +18,7 @@
 
 package saturn.client.programs;
 
+import saturn.core.Table;
 import saturn.core.domain.Alignment;
 import js.html.Event;
 import saturn.core.Util;
@@ -93,8 +94,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     var jsonFile : Dynamic;
     var jsonTipsFile : Dynamic;
-    var tableAnnot :Dynamic;
-    var baseTable :Dynamic;
+    var tableAnnot :Table;
+    var baseTable :BaseTable;
     var numTotalAnnot: Int;
     public var tips: Array<Dynamic>;
     public var tipActive=0;
@@ -180,7 +181,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 'keypress': {
                     element: 'el',
                     fn: function(){
-                        js.Lib.alert('Hello');
+                        js.Browser.alert('Hello');
                     }
                 }
             },
@@ -1131,142 +1132,122 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             items[i]=searchedGenes[i];
         }
 
-        nextGene(items, mapResults, annotation, callback);
+        processGeneAnnotations(items, mapResults, annotation, callback);
     }
-    public function nextGene(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int,  callback:Void->Void){
-        if(items.length == 0){
-            callback();
-            return;
-        }
-        var item=items.pop();var i:Int;
 
-        var hookCount = 0;
+    /**
+    * processGeneAnnotations
+    **/
+    public function processGeneAnnotations(items:Array<String>, mapResults: Map<String, Dynamic>, annotation: Int, cb:Void->Void){
+        var toComplete = items.length;
 
-        var leafaux: ChromoHubTreeNode;
-        leafaux=geneMap.get(item);
-
-        if(annotation == 13) {
-            leafaux.targetFamily = mapResults.get(item+'_0').family_id;
-            //leafaux.screen[annotation].family = leafaux.targetFamily;
+        var onDone = function(){
+            if(toComplete == 0){
+                cb();
+            }
         }
 
-        var target:String;
-       // for(i in 0 ... this.searchedGenes.length){
-            var name:String;
-            var index,variant:String;
-            index=null;
-            variant='1';
-            name=item;
-            if (mapResults.exists(name+'_0')){
-                target=name+'_0';
-                var res=mapResults.get(name+'_0');
-                if((annotations[annotation].hasClass!=null)&&(annotations[annotation].hasMethod!=null)){
-                    var clazz=annotations[annotation].hasClass;
-                    var method=annotations[annotation].hasMethod;
-                    var hook:Dynamic;
-                    hook = Reflect.field(Type.resolveClass(clazz), method);
-                    hookCount++;
-                    hook(name,res,0, annotations, item, function(r:HasAnnotationType){
+        for(name in items){
+            (function(){
+                var target = name + '_0';
 
-                        if(r.hasAnnot){
+                if (mapResults.exists(target)){
+                    var res = mapResults.get(target);
 
-                            leafaux.activeAnnotation[annotation]=true;
-                            if(leafaux.annotations[annotation]==null){
-                                leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                                leafaux.annotations[annotation].myleaf=leafaux;
-                                leafaux.annotations[annotation].text=r.text;
-                                leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
-                                leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
-                            }
-                            else{
-                                //split annot
-                                if(leafaux.annotations[annotation].splitresults==true){
-                                    var z=0;
-                                    while(leafaux.annotations[annotation].alfaAnnot[z]!=null) z++;
-                                    leafaux.annotations[annotation].alfaAnnot[z]=new ChromoHubAnnotation();
-                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf=leafaux;
-                                    leafaux.annotations[annotation].alfaAnnot[z].text='';
-                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg=annotations[annotation].defaultImg;
-                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                    var leafaux: ChromoHubTreeNode = geneMap.get(name);
+
+                    var index = null;
+                    var variant = '1';
+
+                    // TODO: What is the purpose of this block?
+                    if(annotation == 13 && Reflect.hasField(res, 'family_id')) {
+                        leafaux.targetFamily = mapResults.get(target).family_id;
+                    }
+
+                    if((annotations[annotation].hasClass != null) && (annotations[annotation].hasMethod != null)){
+                        var clazz = annotations[annotation].hasClass;
+                        var method = annotations[annotation].hasMethod;
+
+                        var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                        hook(name, res, 0, annotations, name, function(r : HasAnnotationType){
+                            if(r.hasAnnot){
+                                leafaux.activeAnnotation[annotation] = true;
+
+                                if(leafaux.annotations[annotation] == null){
+                                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = r.text;
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                                }else{
+                                    if(leafaux.annotations[annotation].splitresults == true){
+                                        var z = 0;
+
+                                        while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                            z++;
+                                        }
+
+                                        leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                                    }
                                 }
                             }
-                        }
-                        hookCount--;
 
-                        nextGene(items, mapResults, annotation, callback);
-                    });  return;
-                }
-                else{
-                    var col='';
-                    if(annotations[annotation].color[0]!=null) col=annotations[annotation].color[0].color;
-                    var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:col,used:true},defImage:annotations[annotation].defaultImg};
-
-                    var leafaux: ChromoHubTreeNode;
-                    leafaux=geneMap.get(item);
-                    leafaux.activeAnnotation[annotation]=true;
-                    if(leafaux.annotations[annotation]==null){
-                        leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                        leafaux.annotations[annotation].myleaf=leafaux;
-                        leafaux.annotations[annotation].text='';
-                        leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
-                        leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
-                    }
-                    else{
-                        //split annot
-                        if(leafaux.annotations[annotation].splitresults==true){
-                            var z=0;
-                            while(leafaux.annotations[annotation].alfaAnnot[z]!=null) z++;
-                            leafaux.annotations[annotation].alfaAnnot[z]=new ChromoHubAnnotation();
-                            leafaux.annotations[annotation].alfaAnnot[z].myleaf=leafaux;
-                            leafaux.annotations[annotation].alfaAnnot[z].text='';
-                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg=annotations[annotation].defaultImg;
-                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
-                        }
-                    }
-
-                }
-            }
-            else{
-//in case of suboptions we have to be sure we remove the previous ones
-                var leafaux: ChromoHubTreeNode;
-                leafaux=geneMap.get(item);
-                leafaux.activeAnnotation[annotation]=false;
-                leafaux.annotations[annotation]=null;
-            }
-        if(hookCount != 0){
-            var waitTime = 10;
-            var hookTimeout = 10000;
-            var time = 0;
-
-            var hookWait = null;
-
-            hookWait = function(){
-                haxe.Timer.delay(function(){
-                    if(hookCount==0){
-                        Util.debug('Calling next');
-                        nextGene(items, mapResults, annotation, callback);
+                            toComplete--;
+                            onDone();
+                        });
                     }else{
-                        time += waitTime;
+                        var col = '';
 
-                        if(time >= hookTimeout){
-                            Util.debug('Timing out');
-                            callback();
-                        }else{
-                            Util.debug('Waiting');
-                            hookWait();
+                        if(annotations[annotation].color[0] != null){
+                            col = annotations[annotation].color[0].color;
                         }
+
+                        var r : HasAnnotationType = {hasAnnot : true, text : '', color : {color : col, used : true}, defImage : annotations[annotation].defaultImg};
+
+                        var leafaux: ChromoHubTreeNode = geneMap.get(name);
+                        leafaux.activeAnnotation[annotation] = true;
+
+                        if(leafaux.annotations[annotation] == null){
+                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = '';
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                        }else{
+                            if(leafaux.annotations[annotation].splitresults == true){
+                                var z = 0;
+
+                                while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                    z++;
+                                }
+
+                                leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                            }
+                        }
+
+                        toComplete--;
+                        onDone();
                     }
-                }, waitTime);
-            }
+                }else{
+                    //in case of suboptions we have to be sure we remove the previous ones
+                    var leafaux: ChromoHubTreeNode = geneMap.get(name);
+                    leafaux.activeAnnotation[annotation] = false;
+                    leafaux.annotations[annotation] = null;
 
-            //hookWait();
-        }else{
-            //nextGene(items, mapResults, annotation, callback);
+                    toComplete--;
+                    onDone();
+                }
+            })();
         }
-
-        nextGene(items, mapResults, annotation, callback);
-       // }
-
     }
 
     public function addAnnotData(annotData  : Array<Dynamic>, annotation: Int, option:Int, callback:Void->Void ){
@@ -1300,187 +1281,242 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         for(i in 0 ... this.rootNode.targets.length){
             items[i]=this.rootNode.targets[i];
         }
-        next(items, mapResults, annotation, option, callback);
+        processFamilyAnnotations(items, mapResults, annotation, option, callback);
     }
 
-    public function next(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, callback:Void->Void){
-        if(items.length == 0){
-            callback();
-            return;
-        }
 
-        var item=items.pop();
+    /**
+    * processFamilyAnnotations
+    *
+    * TODO: Fully document this function especially around Sefa's code to handle variants and indexes as I don't understand this
+    **/
+    public function processFamilyAnnotations(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
+        var toComplete = 0;
 
-        var hookCount = 0;
+        // First we work out how many annotations we need to process
+        // We do this so that it's easy for our onDone function to work out when all async callbacks have finished
+        // We used to use a timer to wait for all the callbacks to finish but that's not necessary
+        for(name in items){
+            var hookCount = 0;
 
-        var name:String;
-        var index,variant:String;
-        index=null;
-        variant='1';
-        name='';
+            var index = null;
+            var variant = '1';
+            var hasName = false;
 
-        var hasname=false;
-        if(item.indexOf('(')!=-1 || item.indexOf('-')!=-1){
-            hasname=true;
-            var auxArray=item.split('');
-            var j:Int;
-            for(j in 0...auxArray.length){
-                if (auxArray[j]=='(' || auxArray[j]=='-') {
-                    if(auxArray[j]=='(') {index=auxArray[j+1]; variant='1';}
-                    if(auxArray[j]=='-') {index=null; variant=auxArray[j+1];}
-                    break;
-                }
-                name+=auxArray[j];
-            }
-        }else{
-            name=item; //target without ( and -
-        }
+            if(name.indexOf('(') != -1 || name.indexOf('-') != -1){
+                hasName = true;
 
-        var j=0;
-        var finished=false;
-        var showAsSgc = false;
-        while((mapResults.exists(name+'_'+j)==true)&&(finished==false)){
-            var keepgoing=true;
-            var res=mapResults.get(name+'_'+j);
+                var auxArray = name.split('');
 
-            if (mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
-                res.sgc = 1;
-                showAsSgc = true;
-            }
+                for(j in 0...auxArray.length){
+                    if(auxArray[j] == '(' || auxArray[j] == '-'){
+                        if(auxArray[j] == '(') {
+                            index  = auxArray[j+1];
+                            variant = '1';
+                        }else if(auxArray[j] == '-') {
+                            index = null;
+                            variant = auxArray[j+1];
+                        }
 
-            if(hasname==true){
-                if(res.target_name_index!=index || res.variant_index!=variant){
-                    keepgoing=false;
-                }
-            }
-            if(keepgoing==false){
-                j++;
-            }else{
-                if((annotations[annotation].hasClass!=null)&&(annotations[annotation].hasMethod!=null)){
-                    var clazz=annotations[annotation].hasClass;
-                    var method=annotations[annotation].hasMethod;
-                    var hook:Dynamic;
-                    hook = Reflect.field(Type.resolveClass(clazz), method);
-
-                    hookCount++;
-                    if(annotation==15){
-                        var iwanttostop=true;
+                        break;
                     }
-                    hook(name,res,option, annotations, item, function(r:HasAnnotationType){
-                        if(r.hasAnnot){
 
-                            var leafaux: ChromoHubTreeNode;
-                            leafaux=this.rootNode.leafNameToNode.get(item);
+                    name += auxArray[j];
+                }
+            }
 
-                            leafaux.activeAnnotation[annotation]=true;
-                            if(leafaux.annotations[annotation]==null){
-                                leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                                leafaux.annotations[annotation].myleaf=leafaux;
-                                leafaux.annotations[annotation].text=r.text;
-                                leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
-                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                                //leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+            var j = 0;
+            var finished = false;
+            var showAsSgc = false;
+
+            while((mapResults.exists(name+'_'+j)==true)&&(finished==false)){
+                var keepgoing=true;
+                var res=mapResults.get(name+'_'+j);
+
+                if (mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
+                    res.sgc = 1;
+                    showAsSgc = true;
+                }
+
+                if(hasName==true){
+                    if(res.target_name_index!=index || res.variant_index!=variant){
+                        keepgoing=false;
+                    }
+                }
+                if(keepgoing==false){
+                    j++;
+                }else{
+                    toComplete += 1;
+                    if((annotations[annotation].hasClass!=null)&&(annotations[annotation].hasMethod!=null)){
+                        j++;
+                    }else{
+                        finished=true;
+                    }
+                }
+            }
+        }
+
+        var onDone = function(){
+            if(toComplete  == 0){
+                cb();
+            }
+        };
+
+        for(item in items){
+            (function(){
+                var hookCount = 0;
+
+                var index = null;
+                var variant = '1';
+                var hasName = false;
+                var name = item;
+
+                if(name.indexOf('(') != -1 || name.indexOf('-') != -1){
+                    hasName = true;
+
+                    var auxArray = name.split('');
+
+                    for(j in 0...auxArray.length){
+                        if(auxArray[j] == '(' || auxArray[j] == '-'){
+                            if(auxArray[j] == '(') {
+                                index  = auxArray[j+1];
+                                variant = '1';
+                            }else if(auxArray[j] == '-') {
+                                index = null;
+                                variant = auxArray[j+1];
                             }
-                            else{
-                                //split annot
-                                if(annotations[annotation].splitresults==true){
-                                    leafaux.annotations[annotation].splitresults=true;
-                                    var z=0;
-                                    while(leafaux.annotations[annotation].alfaAnnot[z]!=null) z++;
-                                    leafaux.annotations[annotation].alfaAnnot[z]=new ChromoHubAnnotation();
-                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf=leafaux;
-                                    leafaux.annotations[annotation].alfaAnnot[z].text='';
-                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg=annotations[annotation].defaultImg;
-                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
-                                    if(leafaux.annotations[annotation].alfaAnnot[z].text==leafaux.annotations[annotation].text){
-                                        leafaux.annotations[annotation].alfaAnnot[z]=null;
+
+                            break;
+                        }
+
+                        name += auxArray[j];
+                    }
+                }
+
+                var j = 0;
+                var finished = false;
+                var showAsSgc = false;
+
+                while((mapResults.exists(name+'_'+j) == true) && (finished == false)){
+                    var keepGoing = true;
+                    var res = mapResults.get(name+'_'+j);
+
+                    if(mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
+                        res.sgc = 1;
+                        showAsSgc = true;
+                    }
+
+                    if(hasName==true){
+                        if(res.target_name_index != index || res.variant_index != variant){
+                            keepGoing=false;
+                        }
+                    }
+
+                    if(keepGoing==false){
+                        j++;
+                    }else{
+                        if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
+                            var clazz = annotations[annotation].hasClass;
+                            var method = annotations[annotation].hasMethod;
+                            var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                            hook(name,res,option, annotations, item, function(r:HasAnnotationType){
+                                if(r.hasAnnot){
+                                    var leafaux: ChromoHubTreeNode;
+                                    leafaux = this.rootNode.leafNameToNode.get(item);
+
+                                    leafaux.activeAnnotation[annotation] = true;
+                                    if(leafaux.annotations[annotation] == null){
+                                        leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                        leafaux.annotations[annotation].myleaf = leafaux;
+                                        leafaux.annotations[annotation].text = r.text;
+                                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                        leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                    }else{
+                                        if(annotations[annotation].splitresults == true){
+                                            leafaux.annotations[annotation].splitresults = true;
+
+                                            var z=0;
+
+                                            while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                                z++;
+                                            }
+
+                                            leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                            leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                            leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+                                            if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
+                                                leafaux.annotations[annotation].alfaAnnot[z] = null;
+                                            }
+                                        }else{
+                                            if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                                leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                                leafaux.annotations[annotation].myleaf = leafaux;
+                                                leafaux.annotations[annotation].text = '';
+                                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                            }
+                                        }
                                     }
+                                }
+
+                                toComplete--;
+                                onDone();
+                            });
+
+                            j++;
+                        }else {
+                            finished=true;
+
+                            var col = '';
+                            if(annotations[annotation].color[0] != null){
+                                col=annotations[annotation].color[0].color;
+                            }
+
+                            var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
+
+                            var leafaux: ChromoHubTreeNode = this.rootNode.leafNameToNode.get(item);
+                            leafaux.activeAnnotation[annotation]=true;
+
+                            if(leafaux.annotations[annotation] == null){
+                                leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                leafaux.annotations[annotation].myleaf = leafaux;
+                                leafaux.annotations[annotation].text = '';
+                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                            }else{
+                                if(leafaux.annotations[annotation].splitresults == true){
+                                    var z=0;
+
+                                    while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                        z++;
+                                    }
+
+                                    leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                    leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+
                                 }else{
-                                    //options
-                                    if(leafaux.annotations[annotation].option!=annotations[annotation].optionSelected[0]){
-                                        leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                                        leafaux.annotations[annotation].myleaf=leafaux;
-                                        leafaux.annotations[annotation].text='';
-                                        leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
+                                    if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                        leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                        leafaux.annotations[annotation].myleaf = leafaux;
+                                        leafaux.annotations[annotation].text = '';
+                                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
                                         leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
                                     }
                                 }
                             }
-                        }
-                        hookCount--;
-                    });
-                    j++;
-                }else {
-                    finished=true;
 
-                    var col='';
-                    if(annotations[annotation].color[0]!=null) col=annotations[annotation].color[0].color;
-                    var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:col,used:true},defImage:annotations[annotation].defaultImg};
-
-                    var leafaux: ChromoHubTreeNode;
-                    leafaux=this.rootNode.leafNameToNode.get(item);
-                    leafaux.activeAnnotation[annotation]=true;
-                    if(leafaux.annotations[annotation]==null){
-                        leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                        leafaux.annotations[annotation].myleaf=leafaux;
-                        leafaux.annotations[annotation].text='';
-                        leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
-                        leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                    }
-                    else{
-                        if(leafaux.annotations[annotation].splitresults==true){
-                            var z=0;
-                            while(leafaux.annotations[annotation].alfaAnnot[z]!=null) z++;
-                            leafaux.annotations[annotation].alfaAnnot[z]=new ChromoHubAnnotation();
-                            leafaux.annotations[annotation].alfaAnnot[z].myleaf=leafaux;
-                            leafaux.annotations[annotation].alfaAnnot[z].text='';
-                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg=annotations[annotation].defaultImg;
-                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
-
-                        }else{
-                            //options
-                            if(leafaux.annotations[annotation].option!=annotations[annotation].optionSelected[0]){
-                                leafaux.annotations[annotation]=new ChromoHubAnnotation();
-                                leafaux.annotations[annotation].myleaf=leafaux;
-                                leafaux.annotations[annotation].text='';
-                                leafaux.annotations[annotation].defaultImg=annotations[annotation].defaultImg;
-                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                            }
+                            toComplete--;
+                            onDone();
                         }
                     }
                 }
-            }
-        }
-
-        if(hookCount != 0){
-            var waitTime = 10;
-            var hookTimeout = 10000;
-            var time = 0;
-
-            var hookWait = null;
-
-            hookWait = function(){
-                haxe.Timer.delay(function(){
-                    if(hookCount==0){
-                        Util.debug('Calling next');
-                        next(items, mapResults, annotation, option, callback);
-                    }else{
-                        time += waitTime;
-
-                        if(time >= hookTimeout){
-                            Util.debug('Timing out');
-                            callback();
-                        }else{
-                            Util.debug('Waiting');
-                            hookWait();
-                        }
-                    }
-                }, waitTime);
-            }
-
-            hookWait();
-        }else{
-            next(items, mapResults, annotation, option, callback);
+            })();
         }
     }
 
@@ -2273,21 +2309,20 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             }
 
             if(d!=null){
-                tableAnnot = new BasicTableViewer();
+                tableAnnot = new Table();
 
                 tableAnnot.setFixedRowHeight(120);
                 tableAnnot.setData(d);
-                var title="Annotations Table";
+                var title="Annotation Table";
                 if(treeName!=''){
                     title=title+" for "+treeName;
                 }
                 tableAnnot.setTitle(title);
 
                 tableAnnot.name = 'Annotations Table';
-
-                baseTable = new BaseTable(null, null, 'Annotations Table');
+                baseTable = new BaseTable(null, null, 'Annotations Table',null, false, false);
                 baseTable.reconfigure(tableAnnot.tableDefinition);
-                baseTable.addListener(function(){
+                baseTable.addListener(function(event : Dynamic){
                     closeAnnotWindows();
                 });
 
@@ -2502,9 +2537,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         container.addElemToModeToolBar({
             cls     :   if(currentView==2)'btn-selected' else '',
             xtype   :   'button',
-            text    :   'Annotations Table',
+            text    :   'Annotation Table',
             handler :   tableViewFunction,
-            tooltip :   {dismissDelay: 10000, text: 'Annotations List'}
+            tooltip :   {dismissDelay: 10000, text: 'Annotation List'}
         });
 
         if((searchField==true)&&(treeName=='')){
@@ -2593,22 +2628,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         var total=numTotalAnnot;
 
-        var currentAnnot = 0;
+        var completedAnnotations = 0;
 
-        var it = null;
-
-        it = function(){
-            currentAnnot++;
-
-            if(currentAnnot==11){
-                it();
-                return;
-            }
-            if(currentAnnot==12){
-                var iwanttostop=true;
-            }
-
-            if(currentAnnot > total){
+        var onDone = function(){
+            // Why total-1 is the somatic hook working
+            if(completedAnnotations == total){
                 Util.debug('All results fetch');
 
                 var d=dataforTable(annotlist, leaves);//only when it's the last one
@@ -2616,18 +2640,29 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                 return;
             }
+        }
+
+        // total+1 as min...max excludes max - i.e. min to max-1
+        for(currentAnnot in 1...total+1){
+            // What is annotation 11?
+            if(currentAnnot==11){
+                completedAnnotations += 1;
+                onDone();
+                continue;
+            }
 
             var alias = annotlist[currentAnnot].mysqlAlias;
             if(alias==''){
-                it(); return;
+                completedAnnotations += 1;
+                onDone();
+                continue;
             }
 
             var parameter:Dynamic;
 
             //before calling the mysql select, we need to check the tree type (domain or gene)
-            if(treeName!=''){
-
-                if(this.treeType=='gene'){
+            if(treeName != ''){
+                if(treeType=='gene'){
                     alias='gene_'+alias;
                 }
 
@@ -2637,17 +2672,17 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var u =annotlist[currentAnnot].optionSelected[0];
 
                     WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
+                        completedAnnotations += 1;
                         if(error == null) {
                             addAnnotData(db_results,currentAnnot,u,function(){
-                                it();
+                                onDone();
                             });
                         }else {
-                            WorkspaceApplication.getApplication().debug(error);
-                            var a=alias;
+                            Util.debug(error);
+
                             callback(null,error);
                         }
                     });
-                    //it();return;
                 }else{
                     var l=currentAnnot;
                     var popMethod=annotlist[currentAnnot].popMethod;
@@ -2655,11 +2690,20 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
 
                     hook(currentAnnot,null,this.treeType,treeName,null,this, function(results, error){
+                        completedAnnotations += 1;
 
-                            it();
+                        //TODO: Why doesn't this method do anything!!!!!!!
+
+                        if(error == null){
+                            onDone();
+                        }else{
+                            Util.debug(error);
+
+                            callback(null,error);
+                        }
                     });
                 }
-            }else{ //own genes option
+            }else{
                 if(annotlist[currentAnnot].popup==false){
                     alias='list_'+alias;
                     var parameter=this.searchedGenes;
@@ -2669,12 +2713,15 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
 
                     WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
+                        completedAnnotations += 1;
+
                         if(error == null) {
                             addAnnotDataGenes(db_results,currentAnnot,function(){
-                                it();
+                                onDone();
                             });
                         }else {
-                            WorkspaceApplication.getApplication().debug(error);
+                            getApplication().showMessage('Unknown',error);
+                            Util.debug(error);
                             var a=alias;
                             callback(null,error);
                         }
@@ -2685,15 +2732,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var hasClass=annotlist[currentAnnot].hasClass;
                     var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
 
-                    hook(currentAnnot,null,this.treeType,treeName,this.searchedGenes,this, function(){
-                        it();
+                    hook(currentAnnot,null,this.treeType,treeName,this.searchedGenes,this, function(results, error){
+                        completedAnnotations += 1;
+
+                        onDone();
                     });
                 }
             }
-
         }
-
-        it();
     }
 
     function dataforTable(annotlist:Array<Dynamic>, leaves:Array<Dynamic>):Array<Dynamic>{
@@ -3419,7 +3465,36 @@ $('.vertical .progress-fill span').each(function(){
         );
         centralTargetPanel.doLayout();
 
-//Second set of target classes
+        centralTargetPanel.add({
+            xtype: 'label',
+            text: 'Ubiquitin Biology',
+            cls:'targetclass-title'
+        });
+
+        centralTargetPanel.add(
+            Ext.create('Ext.panel.Panel', {
+                width: '100%',
+                layout: 'hbox',
+                bodyPadding: '10px 0px',
+                cls: 'x-table-targeticons',
+                defaults: {
+                    frame: true,
+                    bodyPadding: 10
+                },
+                items: [
+                    {
+                        title: 'Ligases',
+                        flex: 3,
+                        xtype : 'panel',
+                        items: ubiButtons
+                    }
+                ]
+            })
+        );
+
+        centralTargetPanel.doLayout();
+
+        //Second set of target classes
         centralTargetPanel.add(
             Ext.create('Ext.panel.Panel', {
                 layout:'hbox',
@@ -3457,6 +3532,8 @@ $('.vertical .progress-fill span').each(function(){
         );
 
         centralTargetPanel.doLayout();
+
+
 
 
         var items :Array<Dynamic> = [
@@ -3772,7 +3849,6 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function showSearchedGenes(targetId :String){
-
         if(currentView==0){
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getFamilies",{gene: targetId}, null, true, function(db_results, error){
 
@@ -3785,7 +3861,6 @@ $('.vertical .progress-fill span').each(function(){
 
             });
         }
-
     }
 
     public function showAddedGenes(targetId :String){
@@ -3935,417 +4010,434 @@ $('.vertical .progress-fill span').each(function(){
      We create here the arrays of all target buttons
     ************************************/
 
-    public var searchedGenes:Array<String>;
+    public var searchedGenes :Array<String>;
 
-    var treeTypeSelection: Dynamic;
+    var treeTypeSelection : Dynamic;
 
-    var chmodproWriters: Array <Dynamic>;
-    var chmodproReaders: Array <Dynamic>;
-    var chmodproErasers: Array <Dynamic>;
+    var chmodproWriters : Array <Dynamic>;
+    var chmodproReaders : Array <Dynamic>;
+    var chmodproErasers : Array <Dynamic>;
 
-    var chmodDnaWriters: Array <Dynamic>;
-    var chmodDnaReaders: Array <Dynamic>;
-    var chmodDnaErasers: Array <Dynamic>;
+    var chmodDnaWriters : Array <Dynamic>;
+    var chmodDnaReaders : Array <Dynamic>;
+    var chmodDnaErasers : Array <Dynamic>;
 
-    var chmodRnaWriters: Array <Dynamic>;
-    var chmodRnaReaders: Array <Dynamic>;
-    var chmodRnaErasers: Array <Dynamic>;
-    var nudix: Array <Dynamic>;
+    var chmodRnaWriters : Array <Dynamic>;
+    var chmodRnaReaders : Array <Dynamic>;
+    var chmodRnaErasers : Array <Dynamic>;
+    var nudix : Array <Dynamic>;
 
-    var chromatin: Array <Dynamic>;
-    var histones: Array <Dynamic>;
-    var wdr: Array <Dynamic>;
+    var chromatin : Array <Dynamic>;
+    var histones : Array <Dynamic>;
+    var wdr : Array <Dynamic>;
     var addicon : Array<Dynamic>;
 
-    var chmodDna: Array <Dynamic>;
-    var chmodRna: Array <Dynamic>;
+    var chmodDna : Array <Dynamic>;
+    var chmodRna : Array <Dynamic>;
+
+    var ubiButtons : Array<Dynamic>;
 
 /***** View Options Array****/
    public var viewOptions : Array <Dynamic>;
 
    private function createBtnsForLandingPage(first:Bool,?mapFam:Map<String,Bool>){
+       var ge=false;
+       var dom=true;
 
-        //treeTypeSelection= new Array();
-        var ge=false;
-        var dom=true;
-         if(treeType!='domain'){
-             ge=true;
-             dom=false;
-         }
-        if(first==true){
-            treeTypeSelection=null;
-            treeTypeSelection=Ext.create('Ext.form.Panel', {
-                bodyPadding: 10,
-                id:'treeTypeCmp',
-                width: 300,
-                items: [
-                    {
-                        xtype      : 'radiogroup',
-                        fieldLabel : 'View trees based on alignment of',
+       if(treeType!='domain'){
+           ge=true;
+           dom=false;
+       }
+
+       if(first==true){
+           treeTypeSelection=null;
+           treeTypeSelection=Ext.create('Ext.form.Panel', {
+               bodyPadding: 10,
+               id:'treeTypeCmp',
+               width: 300,
+               items: [
+                   {
+                       xtype      : 'radiogroup',
+                       fieldLabel : 'View trees based on alignment of',
                        // defaultType: 'radiofield',
-                        cls: 'x-treetype-select',
-                        defaults: {
-                            flex: 1
-                        },
-                        id:'treeType',
-                        layout: 'hbox',
-                        items: [
-                            {
-                                boxLabel  : 'the specified domain',
-                                name      : 'type',
-                                inputValue: 'domain',
-                                id        : 'domain-radio',
-                                checked   :dom,
-                                handler: function(e) {
-                                    if(e.getValue()){
-                                        treeType='domain';
-                                    }
-                                }
-                            },
-                            {
-                                boxLabel  : 'full-length proteins',
-                                name      : 'type',
-                                inputValue: 'gene',
-                                checked   : ge,
-                                id        : 'gene-radio',
-                                handler: function(e) {
-                                    if(e.getValue()) {
-                                        treeType='gene';
-                                    }
-                                }
-                            }
-                        ],
-                        listeners: {
-                            change: function (field, newValue, oldValue) {
+                       cls: 'x-treetype-select',
+                       defaults: {
+                           flex: 1
+                       },
+                       id:'treeType',
+                       layout: 'hbox',
+                       items: [
+                           {
+                               boxLabel  : 'the specified domain',
+                               name      : 'type',
+                               inputValue: 'domain',
+                               id        : 'domain-radio',
+                               checked   :dom,
+                               handler: function(e) {
+                                   if(e.getValue()){
+                                       treeType='domain';
+                                   }
+                               }
+                           },
+                           {
+                               boxLabel  : 'full-length proteins',
+                               name      : 'type',
+                               inputValue: 'gene',
+                               checked   : ge,
+                               id        : 'gene-radio',
+                               handler: function(e) {
+                                   if(e.getValue()) {
+                                       treeType='gene';
+                                   }
+                               }
+                           }
+                       ],
+                       listeners: {
+                           change: function (field, newValue, oldValue) {
                                treeType=newValue.type;
                                renderHome();
-                            }
-                        }
-                    }
-                ]
-            });
-        }else{
-            treeTypeSelection.items.items[0].items.items[0].setValue(dom);
-            treeTypeSelection.items.items[0].items.items[1].setValue(ge);
+                           }
+                       }
+                   }
+               ]
+           });
+       }else{
+           treeTypeSelection.items.items[0].items.items[0].setValue(dom);
+           treeTypeSelection.items.items[0].items.items[1].setValue(ge);
+       }
 
-            //treeTypeSelection.items.items[0].items.items[0].setValue();
-            //treeTypeSelection.items.items[0].items.items[1].doLayout();
-        }
+       ubiButtons = new Array<Dynamic>();
 
+       ubiButtons = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
+               handler: function() {
+                   treeName = 'E1';
 
-        chmodproWriters=new Array();
-        chmodproWriters= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('HMT')==true && treeType=='domain')'x-btn-target-found x-btn-target-pmt' else if(mapFam.exists('PMT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-pmt-gene' else if(mapFam.exists('PMT')==false && treeType=='domain') 'x-btn-target-pmt' else 'x-btn-target-pmt-gene',
-                handler: function(){
-                    treeName='PMT/HMT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
-            }
-        ];
-        if(treeType=='domain'){
-            chmodproWriters.push(
-                    {
-                    margin: '0 10 5 0',
-                    xtype : 'button',
-                    cls :  if (mapFam.exists('HMT')==true)'x-btn-target-found x-btn-target-pmt2' else 'x-btn-target-pmt2',
-                    handler: function(){
-                        treeName='PMT-2/HMT';
-                        generateTree(treeName,treeType);
-                    },
-                    tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
-                }
-            );
-        }
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'E1'}
+           }
+       ];
+
+       chmodproWriters = new Array();
+       chmodproWriters = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('HMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pmt' else if (mapFam.exists('PMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pmt-gene' else if (mapFam.exists('PMT') == false && treeType == 'domain') 'x-btn-target-pmt' else 'x-btn-target-pmt-gene',
+               handler: function() {
+                   treeName = 'PMT/HMT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
+           }
+       ];
+
+       if (treeType == 'domain') {
+           chmodproWriters.push(
+               {
+                   margin: '0 10 5 0',
+                   xtype : 'button',
+                   cls : if (mapFam.exists('HMT') == true)'x-btn-target-found x-btn-target-pmt2' else 'x-btn-target-pmt2',
+                   handler: function() {
+                       treeName = 'PMT-2/HMT';
+                       generateTree(treeName, treeType);
+                   },
+                   tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
+               }
+           );
+       }
 
        chmodproWriters.push(
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('KAT')==true && treeType=='domain')'x-btn-target-found x-btn-target-kat' else if(mapFam.exists('KAT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-kat-gene' else if(mapFam.exists('KAT')==false && treeType=='domain') 'x-btn-target-kat' else 'x-btn-target-kat-gene',
-                handler: function(e){
-                   treeName='KAT';
-                   generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: if(treeType=='gene')  'KAT: Acetylate lysines'  else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-            });
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('KAT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-kat' else if (mapFam.exists('KAT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-kat-gene' else if (mapFam.exists('KAT') == false && treeType == 'domain') 'x-btn-target-kat' else 'x-btn-target-kat-gene',
+               handler: function(e) {
+                   treeName = 'KAT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'KAT: Acetylate lysines' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+           });
+
        chmodproWriters.push(
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('PARP')==true && treeType=='domain')'x-btn-target-found x-btn-target-parp' else if(mapFam.exists('PARP')==true && treeType=='gene') 'x-btn-target-found x-btn-target-parp-gene' else if(mapFam.exists('PARP')==false && treeType=='domain') 'x-btn-target-parp' else 'x-btn-target-parp-gene',
-                handler: function(){
-                    treeName='PARP';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'PARP: ADP - ribosylate proteins'}
-            });
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('PARP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-parp' else if (mapFam.exists('PARP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-parp-gene' else if (mapFam.exists('PARP') == false && treeType == 'domain') 'x-btn-target-parp' else 'x-btn-target-parp-gene',
+               handler: function() {
+                   treeName = 'PARP';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'PARP: ADP - ribosylate proteins'}
+           });
 
 
+       chmodproReaders = new Array();
+       chmodproReaders = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('ADD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-add' else if (mapFam.exists('ADD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-add-gene' else if (mapFam.exists('ADD') == false && treeType == 'domain') 'x-btn-target-add' else 'x-btn-target-add-gene',
+               handler: function() {
+                   treeName = 'ADD';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'ADD'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('BAH') == true && treeType == 'domain')'x-btn-target-found x-btn-target-bah' else if (mapFam.exists('BAH') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-bah-gene' else if (mapFam.exists('BAH') == false && treeType == 'domain') 'x-btn-target-bah' else 'x-btn-target-bah-gene',
+               handler: function() {
+                   this.treeName = 'BAH';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'BAH: Read methyl-lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('BROMO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-bromo' else if (mapFam.exists('BROMO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-bromo-gene' else if (mapFam.exists('BROMO') == false && treeType == 'domain') 'x-btn-target-bromo' else 'x-btn-target-bromo-gene',
+               handler: function() {
+                   this.treeName = 'BROMO';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'BROMO: Read Acetyl-lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('CW') == true && treeType == 'domain')'x-btn-target-found x-btn-target-cw' else if (mapFam.exists('CW') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-cw-gene' else if (mapFam.exists('CW') == false && treeType == 'domain') 'x-btn-target-cw' else 'x-btn-target-cw-gene',
+               handler: function() {
+                   this.treeName = 'CW';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'CW: methyl-lysine reader'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('CHROMO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-chromo' else if (mapFam.exists('CHROMO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-chromo-gene' else if (mapFam.exists('CHROMO') == false && treeType == 'domain') 'x-btn-target-chromo' else 'x-btn-target-chromo-gene',
+               handler: function() {
+                   this.treeName = 'CHROMO';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'CHROMO: Read methyl-lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('MACRO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-macro' else if (mapFam.exists('MACRO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-macro-gene' else if (mapFam.exists('MACRO') == false && treeType == 'domain') 'x-btn-target-macro' else 'x-btn-target-macro-gene',
+               handler: function() {
+                   this.treeName = 'MACRO';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'MACRO: bind ADP-ribosylated proteins' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.' }
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('MBT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-mbt' else if (mapFam.exists('MBT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-mbt-gene' else if (mapFam.exists('MBT') == false && treeType == 'domain') 'x-btn-target-mbt' else 'x-btn-target-mbt-gene',
+               handler: function() {
+                   this.treeName = 'MBT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'MBT: Read methyl-lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('PHD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-phd' else if (mapFam.exists('PHD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-phd-gene' else if (mapFam.exists('PHD') == false && treeType == 'domain') 'x-btn-target-phd' else 'x-btn-target-phd-gene',
+               handler: function() {
+                   this.treeName = 'PHD';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'PHD: Read methyl-lysines, acetylated lysines, methyl-arginines, unmodified lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('PWWP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pwwp' else if (mapFam.exists('PWWP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pwwp-gene' else if (mapFam.exists('PWWP') == false && treeType == 'domain') 'x-btn-target-pwwp' else 'x-btn-target-pwwp-gene',
+               handler: function() {
+                   this.treeName = 'PWWP';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'PWWP: Read methyl-lysines, bind DNA'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('SPINDLIN') == true && treeType == 'domain')'x-btn-target-found x-btn-target-spindlin' else if (mapFam.exists('SPINDLIN') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-spindlin-gene' else if (mapFam.exists('SPINDLIN') == false && treeType == 'domain') 'x-btn-target-spindlin' else 'x-btn-target-spindlin-gene',
+               handler: function() {
+                   this.treeName = 'SPINDLIN';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'SPINDLIN: methyl-lysine/arginine reader'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('TUDOR') == true && treeType == 'domain')'x-btn-target-found x-btn-target-tudor' else if (mapFam.exists('TUDOR') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-tudor-gene' else if (mapFam.exists('TUDOR') == false && treeType == 'domain') 'x-btn-target-tudor' else 'x-btn-target-tudor-gene',
+               handler: function() {
+                   this.treeName = 'TUDOR';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'TUDOR: Read methyl-lysines, methyl-arginines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('YEATS') == true && treeType == 'domain')'x-btn-target-found x-btn-target-yeats' else if (mapFam.exists('YEATS') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-yeats-gene' else if (mapFam.exists('YEATS') == false && treeType == 'domain') 'x-btn-target-yeats' else 'x-btn-target-yeats-gene',
+               handler: function() {
+                   this.treeName = 'YEATS';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'YEATS: read acetyl-lysines and crotonyl-lysines'}
+           }
+       ];
 
-        chmodproReaders=new Array();
-        chmodproReaders= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('ADD')==true && treeType=='domain')'x-btn-target-found x-btn-target-add' else if(mapFam.exists('ADD')==true && treeType=='gene') 'x-btn-target-found x-btn-target-add-gene' else if(mapFam.exists('ADD')==false && treeType=='domain') 'x-btn-target-add' else 'x-btn-target-add-gene',
-                handler: function(){
-                    treeName='ADD';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'ADD'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('BAH')==true && treeType=='domain')'x-btn-target-found x-btn-target-bah' else if(mapFam.exists('BAH')==true && treeType=='gene') 'x-btn-target-found x-btn-target-bah-gene' else if(mapFam.exists('BAH')==false && treeType=='domain') 'x-btn-target-bah' else 'x-btn-target-bah-gene',
-                handler: function(){
-                    this.treeName='BAH';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'BAH: Read methyl-lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('BROMO')==true && treeType=='domain')'x-btn-target-found x-btn-target-bromo' else if(mapFam.exists('BROMO')==true && treeType=='gene') 'x-btn-target-found x-btn-target-bromo-gene' else if(mapFam.exists('BROMO')==false && treeType=='domain') 'x-btn-target-bromo' else 'x-btn-target-bromo-gene',
-                handler: function(){
-                    this.treeName='BROMO';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'BROMO: Read Acetyl-lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('CW')==true && treeType=='domain')'x-btn-target-found x-btn-target-cw' else if(mapFam.exists('CW')==true && treeType=='gene') 'x-btn-target-found x-btn-target-cw-gene' else if(mapFam.exists('CW')==false && treeType=='domain') 'x-btn-target-cw' else 'x-btn-target-cw-gene',
-                handler: function(){
-                    this.treeName='CW';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'CW: methyl-lysine reader'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('CHROMO')==true && treeType=='domain')'x-btn-target-found x-btn-target-chromo' else if(mapFam.exists('CHROMO')==true && treeType=='gene') 'x-btn-target-found x-btn-target-chromo-gene' else if(mapFam.exists('CHROMO')==false && treeType=='domain') 'x-btn-target-chromo' else 'x-btn-target-chromo-gene',
-                handler: function(){
-                    this.treeName='CHROMO';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'CHROMO: Read methyl-lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('MACRO')==true && treeType=='domain')'x-btn-target-found x-btn-target-macro' else if(mapFam.exists('MACRO')==true && treeType=='gene') 'x-btn-target-found x-btn-target-macro-gene' else if(mapFam.exists('MACRO')==false && treeType=='domain') 'x-btn-target-macro' else 'x-btn-target-macro-gene',
-                handler: function(){
-                    this.treeName='MACRO';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: if(treeType=='gene')  'MACRO: bind ADP-ribosylated proteins'  else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.' }
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('MBT')==true && treeType=='domain')'x-btn-target-found x-btn-target-mbt' else if(mapFam.exists('MBT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-mbt-gene' else if(mapFam.exists('MBT')==false && treeType=='domain') 'x-btn-target-mbt' else 'x-btn-target-mbt-gene',
-                handler: function(){
-                    this.treeName='MBT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'MBT: Read methyl-lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('PHD')==true && treeType=='domain')'x-btn-target-found x-btn-target-phd' else if(mapFam.exists('PHD')==true && treeType=='gene') 'x-btn-target-found x-btn-target-phd-gene' else if(mapFam.exists('PHD')==false && treeType=='domain') 'x-btn-target-phd' else 'x-btn-target-phd-gene',
-                handler: function(){
-                    this.treeName='PHD';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'PHD: Read methyl-lysines, acetylated lysines, methyl-arginines, unmodified lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('PWWP')==true && treeType=='domain')'x-btn-target-found x-btn-target-pwwp' else if(mapFam.exists('PWWP')==true && treeType=='gene') 'x-btn-target-found x-btn-target-pwwp-gene' else if(mapFam.exists('PWWP')==false && treeType=='domain') 'x-btn-target-pwwp' else 'x-btn-target-pwwp-gene',
-                handler: function(){
-                    this.treeName='PWWP';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'PWWP: Read methyl-lysines, bind DNA'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('SPINDLIN')==true && treeType=='domain')'x-btn-target-found x-btn-target-spindlin' else if(mapFam.exists('SPINDLIN')==true && treeType=='gene') 'x-btn-target-found x-btn-target-spindlin-gene' else if(mapFam.exists('SPINDLIN')==false && treeType=='domain') 'x-btn-target-spindlin' else 'x-btn-target-spindlin-gene',
-                handler: function(){
-                    this.treeName='SPINDLIN';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'SPINDLIN: methyl-lysine/arginine reader'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('TUDOR')==true && treeType=='domain')'x-btn-target-found x-btn-target-tudor' else if(mapFam.exists('TUDOR')==true && treeType=='gene') 'x-btn-target-found x-btn-target-tudor-gene' else if(mapFam.exists('TUDOR')==false && treeType=='domain') 'x-btn-target-tudor' else 'x-btn-target-tudor-gene',
-                handler: function(){
-                    this.treeName='TUDOR';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'TUDOR: Read methyl-lysines, methyl-arginines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('YEATS')==true && treeType=='domain')'x-btn-target-found x-btn-target-yeats' else if(mapFam.exists('YEATS')==true && treeType=='gene') 'x-btn-target-found x-btn-target-yeats-gene' else if(mapFam.exists('YEATS')==false && treeType=='domain') 'x-btn-target-yeats' else 'x-btn-target-yeats-gene',
-                handler: function(){
-                    this.treeName='YEATS';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'YEATS: read acetyl-lysines and crotonyl-lysines'}
-            }
-        ];
+       chmodproErasers = new Array();
+       chmodproErasers = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('HDAC') == true && treeType == 'domain')'x-btn-target-found x-btn-target-hdac' else if (mapFam.exists('HDAC') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-hdac-gene' else if (mapFam.exists('HDAC') == false && treeType == 'domain') 'x-btn-target-hdac' else 'x-btn-target-hdac-gene',
+               handler: function() {
+                   this.treeName = 'HDAC_SIRT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'HDAC: Deacetylate lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('KDM') == true && treeType == 'domain')'x-btn-target-found x-btn-target-kdm' else if (mapFam.exists('KDM') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-kdm-gene' else if (mapFam.exists('KDM') == false && treeType == 'domain') 'x-btn-target-kdm' else 'x-btn-target-kdm-gene',
+               handler: function() {
+                   this.treeName = 'KDM';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'KDM: De-methylate lysines'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('PADI') == true && treeType == 'domain')'x-btn-target-found x-btn-target-padi' else if (mapFam.exists('PADI') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-padi-gene' else if (mapFam.exists('PADI') == false && treeType == 'domain') 'x-btn-target-padi' else 'x-btn-target-padi-gene',
+               handler: function() {
+                   this.treeName = 'PADI';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'PADI: Deiminate arginines'}
+           }
+       ];
 
-        chmodproErasers=new Array();
-        chmodproErasers= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('HDAC')==true && treeType=='domain')'x-btn-target-found x-btn-target-hdac' else if(mapFam.exists('HDAC')==true && treeType=='gene') 'x-btn-target-found x-btn-target-hdac-gene' else if(mapFam.exists('HDAC')==false && treeType=='domain') 'x-btn-target-hdac' else 'x-btn-target-hdac-gene',
-                handler: function(){
-                    this.treeName='HDAC_SIRT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'HDAC: Deacetylate lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('KDM')==true && treeType=='domain')'x-btn-target-found x-btn-target-kdm' else if(mapFam.exists('KDM')==true && treeType=='gene') 'x-btn-target-found x-btn-target-kdm-gene' else if(mapFam.exists('KDM')==false && treeType=='domain') 'x-btn-target-kdm' else 'x-btn-target-kdm-gene',
-                handler: function(){
-                    this.treeName='KDM';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'KDM: De-methylate lysines'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('PADI')==true && treeType=='domain')'x-btn-target-found x-btn-target-padi' else if(mapFam.exists('PADI')==true && treeType=='gene') 'x-btn-target-found x-btn-target-padi-gene' else if(mapFam.exists('PADI')==false && treeType=='domain') 'x-btn-target-padi' else 'x-btn-target-padi-gene',
-                handler: function(){
-                    this.treeName='PADI';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'PADI: Deiminate arginines'}
-            }
-        ];
+       chmodDnaWriters = new Array();
+       chmodDnaWriters = [
+           {
+               margin: '0 10 5 0',
+               bodyPadding: '0 0 0 9px',
+               xtype : 'button',
+               cls : if (mapFam.exists('DNMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-dnmt' else if (mapFam.exists('DNMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-dnmt-gene' else if (mapFam.exists('DNMT') == false && treeType == 'domain') 'x-btn-target-dnmt' else 'x-btn-target-dnmt-gene',
+               handler: function() {
+                   this.treeName = 'DNMT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'DNMT: Methylate CpG dinucleotides'}
+           }
+       ];
 
-        chmodDnaWriters=new Array();
-        chmodDnaWriters= [
-            {
-                margin: '0 10 5 0',
-                bodyPadding: '0 0 0 9px',
-                xtype : 'button',
-                cls :  if (mapFam.exists('DNMT')==true && treeType=='domain')'x-btn-target-found x-btn-target-dnmt' else if(mapFam.exists('DNMT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-dnmt-gene' else if(mapFam.exists('DNMT')==false && treeType=='domain') 'x-btn-target-dnmt' else 'x-btn-target-dnmt-gene',
-                handler: function(){
-                    this.treeName='DNMT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'DNMT: Methylate CpG dinucleotides'}
-            }
-        ];
-        chmodDnaReaders=new Array();
-        chmodDnaReaders= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('CXXC')==true && treeType=='domain')'x-btn-target-found x-btn-target-cxxc' else if(mapFam.exists('CXXC')==true && treeType=='gene') 'x-btn-target-found x-btn-target-cxxc-gene' else if(mapFam.exists('CXXC')==false && treeType=='domain') 'x-btn-target-cxxc' else 'x-btn-target-cxxc-gene',
-                handler: function(){
-                    this.treeName='CXXC';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'CXXC: Bind to nonmethyl-CpG dinucleotides'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('MBD')==true && treeType=='domain')'x-btn-target-found x-btn-target-mbd' else if(mapFam.exists('MBD')==true && treeType=='gene') 'x-btn-target-found x-btn-target-mbd-gene' else if(mapFam.exists('MBD')==false && treeType=='domain') 'x-btn-target-mbd' else 'x-btn-target-mbd-gene',
-                handler: function(){
-                    this.treeName='MBD';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'MBD: Bind to methyl-CpG dinucleotides'}
-            }
-        ];
+       chmodDnaReaders = new Array();
+       chmodDnaReaders = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('CXXC') == true && treeType == 'domain')'x-btn-target-found x-btn-target-cxxc' else if (mapFam.exists('CXXC') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-cxxc-gene' else if (mapFam.exists('CXXC') == false && treeType == 'domain') 'x-btn-target-cxxc' else 'x-btn-target-cxxc-gene',
+               handler: function() {
+                   this.treeName = 'CXXC';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'CXXC: Bind to nonmethyl-CpG dinucleotides'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('MBD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-mbd' else if (mapFam.exists('MBD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-mbd-gene' else if (mapFam.exists('MBD') == false && treeType == 'domain') 'x-btn-target-mbd' else 'x-btn-target-mbd-gene',
+               handler: function() {
+                   this.treeName = 'MBD';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'MBD: Bind to methyl-CpG dinucleotides'}
+           }
+       ];
 
-        chmodDnaErasers=new Array();
-        chmodDnaErasers= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('TET')==true && treeType=='domain')'x-btn-target-found x-btn-target-tet' else if(mapFam.exists('TET')==true && treeType=='gene') 'x-btn-target-found x-btn-target-tet-gene' else if(mapFam.exists('TET')==false && treeType=='domain') 'x-btn-target-tet' else 'x-btn-target-tet-gene',
-                handler: function(){
-                    this.treeName='TET';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'TET: DNA hydroxylases. Participate in DNA de-methylation'}
-            }
-        ];
+       chmodDnaErasers = new Array();
+       chmodDnaErasers = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('TET') == true && treeType == 'domain')'x-btn-target-found x-btn-target-tet' else if (mapFam.exists('TET') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-tet-gene' else if (mapFam.exists('TET') == false && treeType == 'domain') 'x-btn-target-tet' else 'x-btn-target-tet-gene',
+               handler: function() {
+                   this.treeName = 'TET';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'TET: DNA hydroxylases. Participate in DNA de-methylation'}
+           }
+       ];
 
-        chmodRnaWriters=new Array();
-        chmodRnaWriters= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('RNMT')==true && treeType=='domain')'x-btn-target-found x-btn-target-rnmt' else if(mapFam.exists('RNMT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-rnmt-gene' else if(mapFam.exists('RNMT')==false && treeType=='domain') 'x-btn-target-rnmt' else 'x-btn-target-rnmt-gene',
-                handler: function(){
-                    this.treeName='RNMT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'RNMT: Methylate RNA'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('PUS')==true && treeType=='domain')'x-btn-target-found x-btn-target-pus' else if(mapFam.exists('PUS')==true && treeType=='gene') 'x-btn-target-found x-btn-target-pus-gene' else if(mapFam.exists('PUS')==false && treeType=='domain') 'x-btn-target-pus' else 'x-btn-target-pus-gene',
-                handler: function(){
-                    this.treeName='PUS';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'Pseudouridine synthases: catalyze the site-specific isomerization of uridines on RNA'}
-            }
-        ];
-        chmodRnaReaders=new Array();
-        chmodRnaReaders= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls :  if (mapFam.exists('YTH')==true && treeType=='domain')'x-btn-target-found x-btn-target-yth' else if(mapFam.exists('YTH')==true && treeType=='gene') 'x-btn-target-found x-btn-target-yth-gene' else if(mapFam.exists('YTH')==false && treeType=='domain') 'x-btn-target-yth' else 'x-btn-target-yth-gene',
-                handler: function(){
-                    this.treeName='YTH';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'YTH: bind to methylated RNA'}
-            }
-        ];
+       chmodRnaWriters = new Array();
+       chmodRnaWriters = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('RNMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-rnmt' else if (mapFam.exists('RNMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-rnmt-gene' else if (mapFam.exists('RNMT') == false && treeType == 'domain') 'x-btn-target-rnmt' else 'x-btn-target-rnmt-gene',
+               handler: function() {
+                   this.treeName = 'RNMT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'RNMT: Methylate RNA'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('PUS') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pus' else if (mapFam.exists('PUS') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pus-gene' else if (mapFam.exists('PUS') == false && treeType == 'domain') 'x-btn-target-pus' else 'x-btn-target-pus-gene',
+               handler: function() {
+                   this.treeName = 'PUS';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'Pseudouridine synthases: catalyze the site-specific isomerization of uridines on RNA'}
+           }
+       ];
 
-        chmodRnaErasers=new Array();
-        chmodRnaErasers= [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('RNA-DMT')==true && treeType=='domain')'x-btn-target-found x-btn-target-rna-dmt' else if(mapFam.exists('RNA-DMT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-rna-dmt-gene' else if(mapFam.exists('RNA-DMT')==false && treeType=='domain') 'x-btn-target-rna-dmt' else 'x-btn-target-rna-dmt-gene',
-                handler: function(){
-                    this.treeName='RNA-DMT';
-                    generateTree(treeName,treeType);
-                },
-                tooltip: {dismissDelay: 10000, text: 'RNA-DMT'}
-            }
-        ];
+       chmodRnaReaders = new Array();
+       chmodRnaReaders = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('YTH') == true && treeType == 'domain')'x-btn-target-found x-btn-target-yth' else if (mapFam.exists('YTH') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-yth-gene' else if (mapFam.exists('YTH') == false && treeType == 'domain') 'x-btn-target-yth' else 'x-btn-target-yth-gene',
+               handler: function() {
+                   this.treeName = 'YTH';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'YTH: bind to methylated RNA'}
+           }
+       ];
+
+       chmodRnaErasers = new Array();
+       chmodRnaErasers = [
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('RNA-DMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-rna-dmt' else if (mapFam.exists('RNA-DMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-rna-dmt-gene' else if (mapFam.exists('RNA-DMT') == false && treeType == 'domain') 'x-btn-target-rna-dmt' else 'x-btn-target-rna-dmt-gene',
+               handler: function() {
+                   this.treeName = 'RNA-DMT';
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: 'RNA-DMT'}
+           }
+       ];
 
         chmodDna=new Array();
         chmodDna= [
