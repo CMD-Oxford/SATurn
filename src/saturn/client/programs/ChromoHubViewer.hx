@@ -1147,106 +1147,108 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             }
         }
 
+        if(toComplete == 0){
+            cb(); return;
+        }
+
         for(name in items){
-            (function(){
-                var target = name + '_0';
+            var target = name + '_0';
 
-                if (mapResults.exists(target)){
-                    var res = mapResults.get(target);
+            if (mapResults.exists(target)){
+                var res = mapResults.get(target);
 
-                    var leafaux: ChromoHubTreeNode = geneMap.get(name);
+                var leafaux: ChromoHubTreeNode = geneMap.get(name);
 
-                    var index = null;
-                    var variant = '1';
+                var index = null;
+                var variant = '1';
 
-                    // TODO: What is the purpose of this block?
-                    if(annotation == 13 && Reflect.hasField(res, 'family_id')) {
-                        leafaux.targetFamily = mapResults.get(target).family_id;
-                    }
+                // TODO: What is the purpose of this block?
+                if(annotation == 13 && Reflect.hasField(res, 'family_id')) {
+                    leafaux.targetFamily = mapResults.get(target).family_id;
+                }
 
-                    if((annotations[annotation].hasClass != null) && (annotations[annotation].hasMethod != null)){
-                        var clazz = annotations[annotation].hasClass;
-                        var method = annotations[annotation].hasMethod;
+                if((annotations[annotation].hasClass != null) && (annotations[annotation].hasMethod != null)){
+                    var clazz = annotations[annotation].hasClass;
+                    var method = annotations[annotation].hasMethod;
 
-                        var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+                    var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
 
-                        hook(name, res, 0, annotations, name, function(r : HasAnnotationType){
-                            if(r.hasAnnot){
-                                leafaux.activeAnnotation[annotation] = true;
+                    hook(name, res, 0, annotations, name, function(r : HasAnnotationType){
+                        if(r.hasAnnot){
+                            leafaux.activeAnnotation[annotation] = true;
 
-                                if(leafaux.annotations[annotation] == null){
-                                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                                    leafaux.annotations[annotation].myleaf = leafaux;
-                                    leafaux.annotations[annotation].text = r.text;
-                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                                    leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
-                                }else{
-                                    if(leafaux.annotations[annotation].splitresults == true){
-                                        var z = 0;
+                            if(leafaux.annotations[annotation] == null){
+                                leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                leafaux.annotations[annotation].myleaf = leafaux;
+                                leafaux.annotations[annotation].text = r.text;
+                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                            }else{
+                                if(leafaux.annotations[annotation].splitresults == true){
+                                    var z = 0;
 
-                                        while(leafaux.annotations[annotation].alfaAnnot[z] != null){
-                                            z++;
-                                        }
-
-                                        leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
-                                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
-                                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
-                                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
-                                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                                    while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                        z++;
                                     }
+
+                                    leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                    leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
                                 }
-                            }
-
-                            toComplete--;
-                            onDone();
-                        });
-                    }else{
-                        var col = '';
-
-                        if(annotations[annotation].color[0] != null){
-                            col = annotations[annotation].color[0].color;
-                        }
-
-                        var r : HasAnnotationType = {hasAnnot : true, text : '', color : {color : col, used : true}, defImage : annotations[annotation].defaultImg};
-
-                        var leafaux: ChromoHubTreeNode = geneMap.get(name);
-                        leafaux.activeAnnotation[annotation] = true;
-
-                        if(leafaux.annotations[annotation] == null){
-                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                            leafaux.annotations[annotation].myleaf = leafaux;
-                            leafaux.annotations[annotation].text = '';
-                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                            leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
-                        }else{
-                            if(leafaux.annotations[annotation].splitresults == true){
-                                var z = 0;
-
-                                while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
-                                    z++;
-                                }
-
-                                leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
-                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
-                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
-                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
-                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
                             }
                         }
 
                         toComplete--;
                         onDone();
-                    }
+                    });
                 }else{
-                    //in case of suboptions we have to be sure we remove the previous ones
+                    var col = '';
+
+                    if(annotations[annotation].color[0] != null){
+                        col = annotations[annotation].color[0].color;
+                    }
+
+                    var r : HasAnnotationType = {hasAnnot : true, text : '', color : {color : col, used : true}, defImage : annotations[annotation].defaultImg};
+
                     var leafaux: ChromoHubTreeNode = geneMap.get(name);
-                    leafaux.activeAnnotation[annotation] = false;
-                    leafaux.annotations[annotation] = null;
+                    leafaux.activeAnnotation[annotation] = true;
+
+                    if(leafaux.annotations[annotation] == null){
+                        leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                        leafaux.annotations[annotation].myleaf = leafaux;
+                        leafaux.annotations[annotation].text = '';
+                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                        leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                    }else{
+                        if(leafaux.annotations[annotation].splitresults == true){
+                            var z = 0;
+
+                            while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                z++;
+                            }
+
+                            leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                            leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                            leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                        }
+                    }
 
                     toComplete--;
                     onDone();
                 }
-            })();
+            }else{
+                //in case of suboptions we have to be sure we remove the previous ones
+                var leafaux: ChromoHubTreeNode = geneMap.get(name);
+                leafaux.activeAnnotation[annotation] = false;
+                leafaux.annotations[annotation] = null;
+
+                toComplete--;
+                onDone();
+            }
         }
     }
 
@@ -1296,17 +1298,18 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         // First we work out how many annotations we need to process
         // We do this so that it's easy for our onDone function to work out when all async callbacks have finished
         // We used to use a timer to wait for all the callbacks to finish but that's not necessary
-        for(name in items){
+        for(item in items){
+            var name  = '';
             var hookCount = 0;
 
             var index = null;
             var variant = '1';
             var hasName = false;
 
-            if(name.indexOf('(') != -1 || name.indexOf('-') != -1){
+            if(item.indexOf('(') != -1 || item.indexOf('-') != -1){
                 hasName = true;
 
-                var auxArray = name.split('');
+                var auxArray = item.split('');
 
                 for(j in 0...auxArray.length){
                     if(auxArray[j] == '(' || auxArray[j] == '-'){
@@ -1323,6 +1326,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                     name += auxArray[j];
                 }
+            }else{
+                name = item;
             }
 
             var j = 0;
@@ -1356,167 +1361,172 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             }
         }
 
+
         var onDone = function(){
             if(toComplete  == 0){
                 cb();
             }
         };
 
+        if(toComplete == 0){
+            cb();return;
+        }
+
         for(item in items){
-            (function(){
-                var hookCount = 0;
+            var hookCount = 0;
 
-                var index = null;
-                var variant = '1';
-                var hasName = false;
-                var name = item;
+            var index = null;
+            var variant = '1';
+            var hasName = false;
+            var name = '';
 
-                if(name.indexOf('(') != -1 || name.indexOf('-') != -1){
-                    hasName = true;
+            if(item.indexOf('(') != -1 || item.indexOf('-') != -1){
+                hasName = true;
 
-                    var auxArray = name.split('');
+                var auxArray = item.split('');
 
-                    for(j in 0...auxArray.length){
-                        if(auxArray[j] == '(' || auxArray[j] == '-'){
-                            if(auxArray[j] == '(') {
-                                index  = auxArray[j+1];
-                                variant = '1';
-                            }else if(auxArray[j] == '-') {
-                                index = null;
-                                variant = auxArray[j+1];
-                            }
-
-                            break;
+                for(j in 0...auxArray.length){
+                    if(auxArray[j] == '(' || auxArray[j] == '-'){
+                        if(auxArray[j] == '(') {
+                            index  = auxArray[j+1];
+                            variant = '1';
+                        }else if(auxArray[j] == '-') {
+                            index = null;
+                            variant = auxArray[j+1];
                         }
 
-                        name += auxArray[j];
+                        break;
+                    }
+
+                    name += auxArray[j];
+                }
+            }else{
+                name = item;
+            }
+
+            var j = 0;
+            var finished = false;
+            var showAsSgc = false;
+
+            while((mapResults.exists(name+'_'+j) == true) && (finished == false)){
+                var keepGoing = true;
+                var res = mapResults.get(name+'_'+j);
+
+                if(mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
+                    res.sgc = 1;
+                    showAsSgc = true;
+                }
+
+                if(hasName==true){
+                    if(res.target_name_index != index || res.variant_index != variant){
+                        keepGoing=false;
                     }
                 }
 
-                var j = 0;
-                var finished = false;
-                var showAsSgc = false;
+                if(keepGoing==false){
+                    j++;
+                }else{
+                    if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
+                        var clazz = annotations[annotation].hasClass;
+                        var method = annotations[annotation].hasMethod;
+                        var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
 
-                while((mapResults.exists(name+'_'+j) == true) && (finished == false)){
-                    var keepGoing = true;
-                    var res = mapResults.get(name+'_'+j);
+                        hook(name,res,option, annotations, item, function(r:HasAnnotationType){
+                            if(r.hasAnnot){
+                                var leafaux: ChromoHubTreeNode;
+                                leafaux = this.rootNode.leafNameToNode.get(item);
 
-                    if(mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
-                        res.sgc = 1;
-                        showAsSgc = true;
-                    }
-
-                    if(hasName==true){
-                        if(res.target_name_index != index || res.variant_index != variant){
-                            keepGoing=false;
-                        }
-                    }
-
-                    if(keepGoing==false){
-                        j++;
-                    }else{
-                        if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
-                            var clazz = annotations[annotation].hasClass;
-                            var method = annotations[annotation].hasMethod;
-                            var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
-
-                            hook(name,res,option, annotations, item, function(r:HasAnnotationType){
-                                if(r.hasAnnot){
-                                    var leafaux: ChromoHubTreeNode;
-                                    leafaux = this.rootNode.leafNameToNode.get(item);
-
-                                    leafaux.activeAnnotation[annotation] = true;
-                                    if(leafaux.annotations[annotation] == null){
-                                        leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                                        leafaux.annotations[annotation].myleaf = leafaux;
-                                        leafaux.annotations[annotation].text = r.text;
-                                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                                        leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                                    }else{
-                                        if(annotations[annotation].splitresults == true){
-                                            leafaux.annotations[annotation].splitresults = true;
-
-                                            var z=0;
-
-                                            while(leafaux.annotations[annotation].alfaAnnot[z] != null){
-                                                z++;
-                                            }
-
-                                            leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
-                                            leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
-                                            leafaux.annotations[annotation].alfaAnnot[z].text = '';
-                                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
-                                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
-                                            if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
-                                                leafaux.annotations[annotation].alfaAnnot[z] = null;
-                                            }
-                                        }else{
-                                            if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
-                                                leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                                                leafaux.annotations[annotation].myleaf = leafaux;
-                                                leafaux.annotations[annotation].text = '';
-                                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                toComplete--;
-                                onDone();
-                            });
-
-                            j++;
-                        }else {
-                            finished=true;
-
-                            var col = '';
-                            if(annotations[annotation].color[0] != null){
-                                col=annotations[annotation].color[0].color;
-                            }
-
-                            var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
-
-                            var leafaux: ChromoHubTreeNode = this.rootNode.leafNameToNode.get(item);
-                            leafaux.activeAnnotation[annotation]=true;
-
-                            if(leafaux.annotations[annotation] == null){
-                                leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                                leafaux.annotations[annotation].myleaf = leafaux;
-                                leafaux.annotations[annotation].text = '';
-                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                                leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
-                            }else{
-                                if(leafaux.annotations[annotation].splitresults == true){
-                                    var z=0;
-
-                                    while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
-                                        z++;
-                                    }
-
-                                    leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
-                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
-                                    leafaux.annotations[annotation].alfaAnnot[z].text = '';
-                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
-                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
-
+                                leafaux.activeAnnotation[annotation] = true;
+                                if(leafaux.annotations[annotation] == null){
+                                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = r.text;
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
                                 }else{
-                                    if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
-                                        leafaux.annotations[annotation] = new ChromoHubAnnotation();
-                                        leafaux.annotations[annotation].myleaf = leafaux;
-                                        leafaux.annotations[annotation].text = '';
-                                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
-                                        leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                    if(annotations[annotation].splitresults == true){
+                                        leafaux.annotations[annotation].splitresults = true;
+
+                                        var z=0;
+
+                                        while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                            z++;
+                                        }
+
+                                        leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+                                        if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
+                                            leafaux.annotations[annotation].alfaAnnot[z] = null;
+                                        }
+                                    }else{
+                                        if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                            leafaux.annotations[annotation].myleaf = leafaux;
+                                            leafaux.annotations[annotation].text = '';
+                                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                        }
                                     }
                                 }
                             }
 
                             toComplete--;
                             onDone();
+                        });
+
+                        j++;
+                    }else {
+                        finished=true;
+
+                        var col = '';
+                        if(annotations[annotation].color[0] != null){
+                            col=annotations[annotation].color[0].color;
                         }
+
+                        var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
+
+                        var leafaux: ChromoHubTreeNode = this.rootNode.leafNameToNode.get(item);
+                        leafaux.activeAnnotation[annotation]=true;
+
+                        if(leafaux.annotations[annotation] == null){
+                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = '';
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }else{
+                            if(leafaux.annotations[annotation].splitresults == true){
+                                var z=0;
+
+                                while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                    z++;
+                                }
+
+                                leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+
+                            }else{
+                                if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = '';
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                }
+                            }
+                        }
+
+                        toComplete--;
+                        onDone();
                     }
                 }
-            })();
+            }
         }
     }
 
@@ -2612,6 +2622,56 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         });
     }
 
+    public function redrawTable(){
+        var type='';
+        if(treeName=='' || newickStr==''){
+            //only genes
+            //the user has a list of searched genes
+            type='genes';
+        }else{
+            //the user has selected a family tree
+            //only familytree
+            type='family';
+        }
+
+        var leaves;
+
+        if(type=='family'){
+            leaves= rootNode.targets;
+        }else{
+            leaves=this.searchedGenes;
+        }
+
+        var d=dataforTable(annotations, leaves);
+
+        tableAnnot = new Table();
+
+        tableAnnot.setFixedRowHeight(120);
+        tableAnnot.setData(d);
+        var title="Annotation Table";
+        if(treeName!=''){
+            title=title+" for "+treeName;
+        }
+        tableAnnot.setTitle(title);
+
+        tableAnnot.name = 'Annotations Table';
+        baseTable = new BaseTable(null, null, 'Annotations Table',null, false, false);
+        baseTable.reconfigure(tableAnnot.tableDefinition);
+        baseTable.addListener(function(event : Dynamic){
+            closeAnnotWindows();
+        });
+
+        var tt=baseTable.getComponent();
+        tt.addCls('x-tableAnnot');
+
+        var container=getApplication().getSingleAppContainer();
+
+        container.setCentralComponent(theComponent);
+        container.addComponentToCentralPanel(tt);
+        this.theComponent.doLayout();
+        container.hideProgressBar();
+    }
+
     private function  fillInDataInAnnotTable(type:String,callback : Dynamic->String->Void){
         var annotlist : Array<Dynamic> = this.annotations;
 
@@ -2630,8 +2690,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         var completedAnnotations = 0;
 
-        var onDone = function(){
-            // Why total-1 is the somatic hook working
+        var onDone = function(error, annotation){
             if(completedAnnotations == total){
                 Util.debug('All results fetch');
 
@@ -2647,14 +2706,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             // What is annotation 11?
             if(currentAnnot==11){
                 completedAnnotations += 1;
-                onDone();
+                onDone(null, currentAnnot);
                 continue;
             }
 
             var alias = annotlist[currentAnnot].mysqlAlias;
             if(alias==''){
                 completedAnnotations += 1;
-                onDone();
+                onDone(null, currentAnnot);
                 continue;
             }
 
@@ -2672,15 +2731,17 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var u =annotlist[currentAnnot].optionSelected[0];
 
                     WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
-                        completedAnnotations += 1;
+
                         if(error == null) {
                             addAnnotData(db_results,currentAnnot,u,function(){
-                                onDone();
+                                completedAnnotations += 1;
+                                onDone(null,currentAnnot);
                             });
                         }else {
                             Util.debug(error);
 
-                            callback(null,error);
+                            completedAnnotations += 1;
+                            onDone(error,currentAnnot);
                         }
                     });
                 }else{
@@ -2695,11 +2756,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                         //TODO: Why doesn't this method do anything!!!!!!!
 
                         if(error == null){
-                            onDone();
+                            onDone(null, currentAnnot);
                         }else{
                             Util.debug(error);
 
-                            callback(null,error);
+                            onDone(error, currentAnnot);
                         }
                     });
                 }
@@ -2713,17 +2774,16 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
 
                     WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
-                        completedAnnotations += 1;
-
                         if(error == null) {
                             addAnnotDataGenes(db_results,currentAnnot,function(){
-                                onDone();
+                                completedAnnotations += 1;
+
+                                onDone(null, currentAnnot);
                             });
                         }else {
                             getApplication().showMessage('Unknown',error);
-                            Util.debug(error);
-                            var a=alias;
-                            callback(null,error);
+                            completedAnnotations += 1;
+                            onDone(error, currentAnnot);
                         }
                     });
                 }else{
@@ -2734,8 +2794,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                     hook(currentAnnot,null,this.treeType,treeName,this.searchedGenes,this, function(results, error){
                         completedAnnotations += 1;
-
-                        onDone();
+                        onDone(null,currentAnnot);
                     });
                 }
             }
@@ -2756,15 +2815,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var j:Int;
 
                     for(j in 1...total+1){
-
-                        if(j==12){
-                            var iwanttostop=true;
-                        }
-
                         if(annotlist[j]!=null && annotlist[j].familyMethod!=''){
                             results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showFamilyMethodDivInTable('+j+',\''+annotlist[j].familyMethod+'\')";return false;"><span style="text-align:center;color:">Visualize</span></a> ';
-                        }
-                        else{
+                            Util.debug('Here!');
+                        }else{
+                            Util.debug('Here2!');
                             if(leaf.annotations[j]!=null){
                                 if(leaf.annotations[j]!=null){
                                     if(leaf.annotations[j].hasAnnot==true){
