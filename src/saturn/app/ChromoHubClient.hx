@@ -1,4 +1,5 @@
 package saturn.app;
+import saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation;
 import saturn.client.workspace.ChromoHubWorkspaceObject;
 import saturn.client.programs.ChromoHubViewer;
 import saturn.core.domain.Alignment;
@@ -29,6 +30,10 @@ class ChromoHubClient extends SaturnClient{
         obj.standaloneMode = true;
 
         getWorkspace().registerObjectWith(obj,prog);
+
+        SomaticMutationAnnotation.updateSomaticDiseaseList(function(error){
+
+        });
     }
 
     override public function textChanged( app : WorkspaceApplication, queryStr : String, it : Dynamic ) : Void {
