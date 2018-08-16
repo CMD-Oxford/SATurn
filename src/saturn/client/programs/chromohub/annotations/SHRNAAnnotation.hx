@@ -9,12 +9,14 @@ class SHRNAAnnotation {
 
     }
 
-    static function hasshRNA(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasshRNA(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
         //copy
         if(data!=null){
             var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#1c9d4f',used:true},defImage:100};
-            callBack(r);
+            cb(r); return;
         }
+
+        cb(null);
     }
 
     static function divshRNA(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){

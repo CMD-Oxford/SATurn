@@ -81,6 +81,8 @@ class AntibodyAnnotation {
                         if((db_results.length==0)) {
                             r.text="";
                             r.hasAnnot=false;
+
+                            callBack(r);
                         }
                         else{
                             r.hasAnnot=true;
@@ -104,9 +106,11 @@ class AntibodyAnnotation {
                                 else {
                                     WorkspaceApplication.getApplication().debug(error);
                                 }
+
+                                callBack(r);
                             });
                         }
-                        callBack(r);
+
                     }
                     else {
                         WorkspaceApplication.getApplication().debug(error);

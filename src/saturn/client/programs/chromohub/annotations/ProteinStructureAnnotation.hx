@@ -20,9 +20,11 @@ class ProteinStructureAnnotation {
                     r.color={color:'#bf0000',used:true};
                 }
 
-                cb(r);
+                cb(r); return;
             }
         }
+
+        cb(null);
     }
 
     static function divStructure(screenData: ChromoHubScreenData,x:String,y:String, tree_type:String,callBack : Dynamic->Void){

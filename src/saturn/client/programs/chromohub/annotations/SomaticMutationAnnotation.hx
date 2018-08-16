@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation;
 import haxe.ds.StringMap;
 import haxe.ds.HashMap;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
@@ -9,12 +10,30 @@ import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
 import saturn.client.core.CommonCore;
 
 class SomaticMutationAnnotation {
+    static var firstRun = true;
+    static var diseaseSourceToDescription : Map<String,String>;
 
     public function new() {
 
     }
 
-    static function hasSomaticMut(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static public function updateSomaticDiseaseList(cb : String->Void){
+        WorkspaceApplication.getApplication().getProvider().getByNamedQuery("sm_name_all",[], null, true, function(results: Array<Dynamic>, error){
+            if(error != null){
+                cb(error);
+            }else{
+                diseaseSourceToDescription = new Map<String, String>();
+
+                for(row in results){
+                    diseaseSourceToDescription.set(row.name + '/' + row.source, row.description);
+                }
+
+                cb(null);
+            }
+        });
+    }
+
+    static function hasSomaticMut(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#000000',used:true},defImage:0};
         var family=ChromoHubAnnotationMethods.getFamilyTree();
         if(data!=null){
@@ -32,7 +51,6 @@ class SomaticMutationAnnotation {
                 if(target!=auxResult[0][4]) continue;
                 else finalResult=somatic_mutations_list.get(key);
             }
-            //her auxResult will be the results for the current target
 
             var res:Dynamic;
             var sm_col='';
@@ -44,7 +62,6 @@ class SomaticMutationAnnotation {
                     var aux=finalResult[i][2];
                     if(Std.parseInt(aux)>Std.parseInt(pos)) pos=aux;
                 }
-
 
                 var freq_to_write=Math.fround(Std.parseFloat(pos));
 
@@ -58,32 +75,10 @@ class SomaticMutationAnnotation {
                     sm_col = '#ff0000';
                 }
 
-                updateSomaticListWithDescription(viewer);
+                var somatic_mutations_list: Map<String,Dynamic> = viewer.annotations[annotation].fromresults[8];
 
-                r = {hasAnnot: true, text:freq_to_write+'%',color:{color:sm_col,used:true},defImage:100};
-            }else{
-                r = {hasAnnot: false, text:'',color:{color:'',used:true},defImage:100};
-            }
-            callBack(r);
-        }
-    }
-
-    static function updateSomaticListWithDescription(viewer:ChromoHubViewer){
-        var somatic_mutations_list: Map<String,Dynamic>;
-        var annotation=24;
-        somatic_mutations_list=viewer.annotations[annotation].fromresults[8];
-        var key:String;
-        var finalResult;
-
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery("sm_name_all",[], null, true, function(results: Array<Dynamic>, error){
-            if(error != null){
-                viewer.getApplication().showMessage('Unable to get somatic list descriptions', error);
-            }else{
-                var diseaseSourceToDescription = new Map<String, String>();
-
-                for(row in results){
-                   diseaseSourceToDescription.set(row.name + '/' + row.source, row.description);
-                }
+                // TODO - Why is this hard-coded!
+                var annotation=24;
 
                 for(key in somatic_mutations_list.keys()){
                     var auxResult=somatic_mutations_list.get(key);
@@ -92,15 +87,21 @@ class SomaticMutationAnnotation {
                         var disease=auxResult[i][1];
                         var source=auxResult[i][8];
 
-                        var description = diseaseSourceToDescription.get(disease + '/' + source);
+                        var description = SomaticMutationAnnotation.diseaseSourceToDescription.get(disease + '/' + source);
 
                         auxResult[i][11]=description;
                         somatic_mutations_list.set(key,auxResult);
                         viewer.annotations[annotation].fromresults[8]=somatic_mutations_list;
                     }
                 }
+
+                r = {hasAnnot: true, text:freq_to_write+'%',color:{color:sm_col,used:true},defImage:100};
+            }else{
+                r = {hasAnnot: false, text:'',color:{color:'',used:true},defImage:100};
             }
-        });
+
+            cb(r);
+        }
     }
 
     static function divSomatic(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){

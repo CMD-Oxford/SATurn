@@ -9,11 +9,13 @@ class InhibitorAnnotation {
 
     }
 
-    static function hasInhibitors(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasInhibitors(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
         if(data!=null) {
             var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#707ee7',used:true},defImage:100};
-            callBack(r);
+            cb(r);return;
         }
+
+        cb(null);
     }
 
     static function divInhibitors(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
@@ -150,6 +152,8 @@ class InhibitorAnnotation {
                             callback(db_results,null);
                         });
                     }
+                }else{
+                    callback(null, null);
                 }
             }else {
                 WorkspaceApplication.getApplication().debug(error);
