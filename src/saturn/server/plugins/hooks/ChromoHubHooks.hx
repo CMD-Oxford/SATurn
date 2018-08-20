@@ -818,4 +818,55 @@ class ChromoHubHooks {
             }
         });
     }
+
+    public static function hookHasTumorLevel(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var provider = Util.getProvider();
+
+        var sql : String = '';
+        var boundParameters: Array<Dynamic>;
+        boundParameters=new Array();
+        boundParameters[0] = params[0].familyTree;
+
+        var st_type_cond = "";
+
+        /**
+        var st_cutoff = "";
+        var st_percent_cond = " and s.percent_id IS NOT NULL ";
+        switch(params[0].cutoff){
+            case "best":
+                st_cutoff = "_best";
+            case "low":
+                st_cutoff = "_40";
+            default : // "95% or best":
+                st_cutoff = "";
+                st_percent_cond += " and s.percent_id >= 94.5 ";
+        }
+        */
+
+        sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index FROM protein_tumor p, family_target_join ftj, variant v WHERE ftj.family_id = ? AND ftj.target_id=v.target_id AND v.is_default=1 AND ftj.target_id=p.target_id";
+
+        provider.getConnection(null, function(err, connection){
+            if(err != null){
+                cb(null, err);
+            }else{
+                try {
+                    connection.execute(sql, boundParameters, function(err, results){
+                        Util.debug('Named query returning');
+
+                        if(err != null){
+                            cb(null, err);
+                        }else{
+                            cb(results, null);
+                        }
+
+                        provider.closeConnection(connection);
+                    });
+                }catch(e:Dynamic){
+                    provider.closeConnection(connection);
+
+                    cb(null, e);
+                }
+            }
+        });
+    }
 }

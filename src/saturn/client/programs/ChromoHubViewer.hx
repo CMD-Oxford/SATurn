@@ -3954,7 +3954,7 @@ $('.vertical .progress-fill span').each(function(){
         this.highlightedGenes=new Map<String, Bool>();
         this.geneMap=new Map<String, ChromoHubTreeNode>();
 
-        if(((name=='KAT')||(name=='Histone')||(name=='MACRO')||(name=='WDR')||(name=='NUDIX'))&&(type=='domain')){
+        if(((name=='KAT')||(name=='E1')||(name=='E2')||(name=='NON_USP')||(name=='USP')||(name=='Histone')||(name=='MACRO')||(name=='WDR')||(name=='NUDIX'))&&(type=='domain')){
            // WorkspaceApplication.getApplication().showMessage('Alert','There is no domain-based alignment for this family. This phylogenetic tree is based on full-length alignment.');
 
             if(userDomainMessage==true){
@@ -4173,7 +4173,40 @@ $('.vertical .progress-fill span').each(function(){
 
                    generateTree(treeName, treeType);
                },
-               tooltip: {dismissDelay: 10000, text: 'E1'}
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+               handler: function() {
+                   treeName = 'E2';
+
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E2' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('NON-USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON-USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON-USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
+               handler: function() {
+                   treeName = 'NON_USP';
+
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+           },
+           {
+               margin: '0 10 5 0',
+               xtype : 'button',
+               cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
+               handler: function() {
+                   treeName = 'USP';
+
+                   generateTree(treeName, treeType);
+               },
+               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
            }
        ];
 
