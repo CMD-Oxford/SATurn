@@ -819,31 +819,51 @@ class ChromoHubHooks {
         });
     }
 
-    public static function hookHasTumorLevel(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
-        var provider = Util.getProvider();
+    /**
+    * generateFamilyOrListConstraint is a utility method for adding either gene names or the family ID as a bound parameter
+    * and for returning an SQL fragment which can restrict results to either the supplied family or list of genes
+    *
+    * The SATurn ORM would have been better to use but we don't have time to retrofit so this is the best I can do to
+    * simplify adding new annotations
+    **/
+    public static function generateFamilyOrListConstraint(params : Array<Dynamic>){
+        var boundParameters = new Array<Dynamic>();
 
-        var sql : String = '';
-        var boundParameters: Array<Dynamic>;
-        boundParameters=new Array();
-        boundParameters[0] = params[0].familyTree;
+        // List of gene symbols
+        var searchGenes :Array<String> = params[0].searchGenes;
+        // Name of family
+        var familyTree = params[0].familyTree;
 
-        var st_type_cond = "";
+        var sqlFamilyOrListConstraint = '';
 
-        /**
-        var st_cutoff = "";
-        var st_percent_cond = " and s.percent_id IS NOT NULL ";
-        switch(params[0].cutoff){
-            case "best":
-                st_cutoff = "_best";
-            case "low":
-                st_cutoff = "_40";
-            default : // "95% or best":
-                st_cutoff = "";
-                st_percent_cond += " and s.percent_id >= 94.5 ";
+        if(searchGenes != null){
+            // We get here when a list of genes has been provided
+            var placeHolders = new Array<String>();
+
+            for(gene in searchGenes){
+                placeHolders.push('?');
+                boundParameters.push(gene);
+            }
+
+            sqlFamilyOrListConstraint = " ftj.target_id IN (" + placeHolders.join(',') + ") ";
+        }else if(familyTree != null){
+            // We get here when the tree name as been set
+            sqlFamilyOrListConstraint = 'ftj.family_id = ?';
+
+            boundParameters.push(familyTree);
+        }else{
+            throw new saturn.util.HaxeException('Please set familyTree or searchGenes');
         }
-        */
 
-        sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index FROM protein_tumor p, family_target_join ftj, variant v WHERE ftj.family_id = ? AND ftj.target_id=v.target_id AND v.is_default=1 AND ftj.target_id=p.target_id";
+        return {'params':boundParameters, 'sql': sqlFamilyOrListConstraint};
+    }
+
+    /**
+    * runBasicQuery is a utility method which will execute the given SQL statement with the supplied bound parameters and
+    * notify the supplied callback of the result
+    **/
+    public static function runBasicQuery(sql : String, boundParameters : Array<Dynamic>, cb : Dynamic->String->Void){
+        var provider = Util.getProvider();
 
         provider.getConnection(null, function(err, connection){
             if(err != null){
@@ -868,5 +888,49 @@ class ChromoHubHooks {
                 }
             }
         });
+    }
+
+    public static function hookHasTumorLevel(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+
+        if(treeType == 'domain'){
+            sql = "
+               SELECT
+                    DISTINCT ftj.target_id, null target_name_index, variant_index
+               FROM
+                    protein_tumor p, family_target_join ftj, variant v
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    ftj.target_id = p.target_id
+               ";
+        }else{
+            sql = "
+                SELECT
+                    DISTINCT ftj.target_id, null target_name_index, variant_index
+                FROM
+                    protein_tumor p, family_target_join ftj, variant v
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    v.is_default = 1 AND
+                    ftj.target_id = p.target_id
+            ";
+        }
+
+        runBasicQuery(sql, boundParameters, cb);
     }
 }
