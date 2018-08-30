@@ -93,49 +93,58 @@ class ProteinTumorLevelAnnotation {
         }
     }
 
-
-
-    static function tumorLevelFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer, callback:Dynamic->String->Void){
-        var aux:Dynamic;
+    static function tumorLevelFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
         var cancer_type:String;
-        var option:String;
-        var xray:String;
+        var proteinLevels = [];
 
-        if(form!=null){
-            aux=form.form.findField('cancer_type');
-            cancer_type=aux.lastValue;
+        if(form != null){
+            // We get here for tree annotation requests
+            cancer_type = form.form.findField('cancer_type').lastValue;
+            if(form.form.findField('protein_level_high').lastValue){
+                proteinLevels.push('High');
+            }
 
+            if(form.form.findField('protein_level_medium').lastValue){
+                proteinLevels.push('Medium');
+            }
 
+            if(form.form.findField('protein_level_low').lastValue){
+                proteinLevels.push('Low');
+            }
+
+            if(form.form.findField('protein_level_not_detected').lastValue){
+                proteinLevels.push('Not detected');
+            }
         }else{
-            // it means the function is called from the annotations table, so we need to use the default values
-            option='0';
+            // We get here for table annotation requests
             cancer_type="All";
         }
 
+        var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
 
-        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'',used:true},defImage:100};
+        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
+            if(error == null){
+                if(db_results != null){
 
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', [{'treeType':tree_type,'familyTree':family,'cancer_type':cancer_type,'searchGenes':searchGenes}], null, false,function(db_results, error){
-            if(error == null) {
-                if (db_results!=null){
-                    viewer.activeAnnotation[annotation]=true;
-                    if(viewer.treeName==''){
-                        viewer.addAnnotDataGenes(db_results,annotation,function(){
-                            callback(db_results,null);
+                    viewer.activeAnnotation[annotation] = true;
+
+                    if(viewer.treeName == ''){
+                        // We get here for table view
+                        viewer.addAnnotDataGenes(db_results, annotation, function(){
+                            cb(db_results, null);
                         });
                     }else{
-                        viewer.addAnnotData(db_results,annotation,0,function(){
-                            viewer.newposition(0,0);
-                            callback(db_results,null);
+                        // We get here for tree view
+                        viewer.addAnnotData(db_results, annotation, 0, function(){
+                            viewer.newposition(0, 0);
+
+                            cb(db_results, null);
                         });
                     }
                 }
-            }
-            else {
-                WorkspaceApplication.getApplication().debug(error);
-                callback(null,error);
+            }else{
+                cb(null,error);
             }
         });
     }
-
 }

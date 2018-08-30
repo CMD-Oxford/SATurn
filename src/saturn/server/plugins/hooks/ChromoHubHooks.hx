@@ -870,6 +870,7 @@ class ChromoHubHooks {
                 cb(null, err);
             }else{
                 try {
+                    Util.debug(sql);
                     connection.execute(sql, boundParameters, function(err, results){
                         Util.debug('Named query returning');
 
@@ -905,6 +906,8 @@ class ChromoHubHooks {
         var sql : String = '';
 
         var treeType = params[0].treeType;
+        var cancerType = params[0].cancer_type;
+        var proteinLevels : Array<String> = params[0].protein_levels;
 
         if(treeType == 'domain'){
             sql = "
@@ -929,6 +932,33 @@ class ChromoHubHooks {
                     v.is_default = 1 AND
                     ftj.target_id = p.target_id
             ";
+        }
+
+        // Constrain to the required cancer type
+        if(cancerType != 'All'){
+            sql += ' AND p.cancer_type = ?';
+
+            boundParameters.push(cancerType);
+        }
+
+        // Constrain by protein level
+        if(proteinLevels != null){
+            // The below will look a little redundant, why not just use the value from the user if we know it matches an allowed value?
+            // We don't do that because we shouldn't every concatenate a user supplied value to an SQL statement.
+            // Think about the classic null-byte injection issues that languages have suffered from over the years
+            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not detected'];
+
+            var levels = [];
+
+            for(proteinLevel in proteinLevels){
+                if(proteinLevel != null && allowedProteinLevels.exists(proteinLevel)){
+                    levels.push('"'+allowedProteinLevels.get(proteinLevel)+'"');
+                }
+            }
+
+            if(levels.length > 0){
+                sql += ' AND (' + levels.join(' IS NOT NULL OR ') + ' IS NOT NULL)';
+            }
         }
 
         runBasicQuery(sql, boundParameters, cb);
