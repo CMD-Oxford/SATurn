@@ -752,7 +752,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
 
 /*** Mysql Alias ***/
-                    if(btn.mysqlAlias==null){
+                    if(btn.hookName==null){
                         a.debug('Annotation mysql alias not specified');
                         m.showMessage('Alert','Annotations JSon file is not correct.');
                         return false;
@@ -775,7 +775,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                                 if(btn.options[z].isTitle==false && btn.options[z].isLabelTitle==false){
                                     optsel=z; //in case OptionSelected is null, we'll get the first possible option
                                 }
-                                if(btn.options[j].mysqlAlias==null){
+                                if(btn.options[j].hookName==null){
                                     a.debug('Annotation suboptions without Mysql Alias');
                                     return false;
                                 }
@@ -827,7 +827,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     annotations[a].label=jsonFile.btnGroup[i].buttons[j].label;
                     annotations[a].color=jsonFile.btnGroup[i].buttons[j].color;
 // annotations[a].type=jsonFile.btnGroup[i].buttons[j].annotCode;
-                    annotations[a].mysqlAlias=jsonFile.btnGroup[i].buttons[j].mysqlAlias;
+                    annotations[a].hookName=jsonFile.btnGroup[i].buttons[j].hookName;
                     annotations[a].splitresults=jsonFile.btnGroup[i].buttons[j].splitresults;
                     annotations[a].popup=jsonFile.btnGroup[i].buttons[j].popUpWindows;
 
@@ -847,7 +847,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     if(jsonFile.btnGroup[i].buttons[j].submenu==true){
                         var zz:Int;
                         for (zz in 0 ...jsonFile.btnGroup[i].buttons[j].options.length){
-                            annotations[a].options[zz]=jsonFile.btnGroup[i].buttons[j].options[zz].mysqlAlias;
+                            annotations[a].options[zz]=jsonFile.btnGroup[i].buttons[j].options[zz].hookName;
                             if(jsonFile.btnGroup[i].buttons[j].options[zz].defaultImg!=null)
                                 annotations[a].defaultImg=jsonFile.btnGroup[i].buttons[j].options[zz].defaultImg;
                         }
@@ -900,9 +900,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     //like any of the checks in the current chromohub
     //depending on if it's already checked or not , active will be true or false
     public function showAnnotation(annotCode:Dynamic, active:Bool){
-
         //here we should check the scroll position for annotations menu
-
 
         var currentAnnot=annotCode;
 
@@ -910,13 +908,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         activeAnnotation[currentAnnot]=active;
 
         var container = getApplication().getSingleAppContainer();
-        //if(container.getAnnotWindow()!=null){
-          //  container.closeAnnotWindow();
-        //}
+
         if(active==true){
-            /*if(userMessage==true){
-                container.showMessageWindow();
-            }*/
             var i:Int;
             var needToExpandLegend=false;
 
@@ -941,7 +934,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 var dbAccessed=false;
                 var u:Int;
                 if(annot.options.length==0){ //there aren't options
-                    alias= annot.mysqlAlias;
+                    alias= annot.hookName;
                     annot.defaultImg=0;
                     if(this.alreadyGotAnnotation.exists(alias)==false){ //it's the first time we access the db
                         this.alreadyGotAnnotation.set(alias,true);//we need to add it
@@ -1810,6 +1803,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         editmode=false;
         container.hideEditToolBar();
+        //container.showEditToolBar();
         undolist=new Array();
         container.createOptionsToolBar();
         container.hideOptionsToolBar();
@@ -2710,7 +2704,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 continue;
             }
 
-            var alias = annotlist[currentAnnot].mysqlAlias;
+            var alias = annotlist[currentAnnot].hookName;
             if(alias==''){
                 completedAnnotations += 1;
                 onDone(null, currentAnnot);
@@ -4892,8 +4886,7 @@ $('.vertical .progress-fill span').each(function(){
                                     container.addFormItemToPopUpWindow(optt.form.items,b.annotCode,optt.hasClass,optt.popMethod, this.treeType, this.treeName, null, this );
                                     container.showPopUpWindow();
                                 };
-                            }
-                            else {
+                            }else {
                                 function(){
                                     var elem=js.Browser.document.getElementById('optionToolBarId');
                                     menuScroll=elem.scrollTop;

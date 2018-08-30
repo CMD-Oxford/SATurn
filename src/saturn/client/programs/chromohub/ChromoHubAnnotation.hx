@@ -31,7 +31,7 @@ class ChromoHubAnnotation {
     public var defaultImg:Int; // Icon appear in leaf stored on in root's annotation, so we'll use the same img for all the leaves
     public var shape:String;
     public var color:Dynamic;
-    public var mysqlAlias:String;
+    public var hookName:String;
     public var text:String;
     public var options:Array<Dynamic>;
     public var optionSelected:Array<Int>;

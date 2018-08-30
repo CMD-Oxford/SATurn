@@ -10,7 +10,7 @@
             "annotCode":1,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "diseaseAssociation",
+            "hookName": "diseaseAssociation",
             "shape": "html",
             "color": [
               {"color":"#ededed", "used":"false"}
@@ -34,7 +34,7 @@
             "submenu": false,
             "annotCode":2,
             "popUpWindows":false,
-            "mysqlAlias": "nonSilentSNPs",
+            "hookName": "nonSilentSNPs",
             "shape": "text",
             "color": [
               {"color":"#ed0e2d", "used":"false"}
@@ -57,7 +57,7 @@
             "annotCode":9,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "orphanet",
+            "hookName": "orphanet",
             "shape": "image",
             "color": [],
             "annotImg":["/static/annot/images/orphanet.png"],
@@ -82,7 +82,7 @@
             "annotCode":3,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "summary",
+            "hookName": "summary",
             "shape": "image",
             "color": [
               {"color":"", "used":"false"}
@@ -104,7 +104,7 @@
             "annotCode":4,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "substrate",
+            "hookName": "substrate",
             "shape": "text",
             "color": [
               {"color":"#0aefc7", "used":false},
@@ -144,7 +144,7 @@
             "submenu": false,
             "annotImg":["/static/annot/images/summary.png"],
             "popUpWindows":false,
-            "mysqlAlias": "",
+            "hookName": "",
             "shape": "text",
             "color": [],
             "splitresults":false,
@@ -160,7 +160,7 @@
             "annotCode":6,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "proteinInteractions",
+            "hookName": "proteinInteractions",
             "shape": "image",
             "color": [],
             "annotImg":["/static/annot/images/proteinInteraction.png"],
@@ -180,7 +180,7 @@
             "annotCode":7,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "interactome",
+            "hookName": "interactome",
             "shape": "cercle",
             "color": [
               {"color":"#f6bc4c", "used":"false"}
@@ -202,7 +202,7 @@
             "annotCode":8,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "subcellularLocation",
+            "hookName": "subcellularLocation",
             "shape": "image",
             "color": [],
             "annotImg":["/static/annot/images/subcellarLocationNuclear.png","/static/annot/images/subcellarLocationOther.png","/static/annot/images/subcellarorange.png"],
@@ -222,7 +222,7 @@
             "helpText":  "<b>Pubmed</b>: Articles linked to the NCBI's Entrez Gene record of the human, mouse and rat orthologs. Articles linked to 30 or more genes (typically sequencing or microarray data) are ignored.",
             "annotCode":17,
             "submenu": true,
-            "mysqlAlias": "pubmedAll",
+            "hookName": "pubmedAll",
             "shape": "image",
             "color": [],
             "annotImg":["/static/annot/images/pubmed1.png","/static/annot/images/pubmed2.png","/static/annot/images/pubmed3.png","/static/annot/images/pubmed4.png","/static/annot/images/pubmed5.png"],
@@ -233,8 +233,8 @@
             "optionSelected":[0],
             "popUpWindows":false,
             "options":[
-              {"isTitle":false, "isLabelTitle":false, "label": "All","helpText":  "All Pubmed", "mysqlAlias": "pubmedAll"},
-              {"isTitle":false, "isLabelTitle":false, "label": "Cell/Science/Nature","helpText":  "Cell/Science/Nature Pubmed","mysqlAlias": "pubmedCSN"}
+              {"isTitle":false, "isLabelTitle":false, "label": "All","helpText":  "All Pubmed", "hookName": "pubmedAll"},
+              {"isTitle":false, "isLabelTitle":false, "label": "Cell/Science/Nature","helpText":  "Cell/Science/Nature Pubmed","hookName": "pubmedCSN"}
             ],
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.PubMedAnnotation",
@@ -258,7 +258,7 @@
             "annotCode":18,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "funding",
+            "hookName": "funding",
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.FundingAnnotation",
             "familyMethod": "",
@@ -277,7 +277,7 @@
             "annotCode":10,
             "submenu": false,
             "popUpWindows":true,
-            "mysqlAlias": "inhibitors",
+            "hookName": "inhibitors",
             "shape": "square",
             "color": [
               {"color":"#707ee7", "used":"false"}
@@ -329,7 +329,7 @@
             "helpText":  "compounds with MW < 1000 Da and at least 6 carbons complexed to target of interest",
             "annotCode":12,
             "submenu": true,
-            "mysqlAlias": "ligandsInStructures95",
+            "hookName": "ligandsInStructures95",
             "shape": "square",
             "color": [
               {"color":"#68229d", "used":"false"}
@@ -343,9 +343,9 @@
             "optionSelected":[1],
             "options":[
               {"isTitle":true, "isLabelTitle":true, "label": "Structure identity cut-off"},
-              {"isTitle":false, "isLabelTitle":false, "label": "95%","helpText":  "structure identity cut-off 95%","mysqlAlias": "ligandsInStructures95"},
-              {"isTitle":false, "isLabelTitle":false, "label": "95% or Best","helpText":  "structure identity cut-off 95% or best","mysqlAlias": "ligandsInStructures95best"},
-              {"isTitle":false, "isLabelTitle":false, "label": "40%","helpText":  "structure identity cut-off 40%","mysqlAlias": "ligandsInStructures40"}
+              {"isTitle":false, "isLabelTitle":false, "label": "95%","helpText":  "structure identity cut-off 95%","hookName": "ligandsInStructures95"},
+              {"isTitle":false, "isLabelTitle":false, "label": "95% or Best","helpText":  "structure identity cut-off 95% or best","hookName": "ligandsInStructures95best"},
+              {"isTitle":false, "isLabelTitle":false, "label": "40%","helpText":  "structure identity cut-off 40%","hookName": "ligandsInStructures40"}
             ],
             "hasClass":"saturn.client.programs.chromohub.annotations.LigandAnnotation",
             "familyMethod": "",
@@ -359,7 +359,7 @@
             "annotCode":13,
             "submenu": false,
             "popUpWindows":true,
-            "mysqlAlias": "structures",
+            "hookName": "structures",
             "shape": "cercle",
             "color": [
               {"color":"#689aed", "used":"false"}
@@ -429,7 +429,7 @@
             "annotCode":14,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "antibodiesAntigen",
+            "hookName": "antibodiesAntigen",
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
             "familyMethod": "",
@@ -451,7 +451,7 @@
             "annotCode":15,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "antibodiesFab",
+            "hookName": "antibodiesFab",
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
             "familyMethod": "",
@@ -474,7 +474,7 @@
             "annotCode":16,
             "submenu": false,
             "popUpWindows":false,
-            "mysqlAlias": "antibodiesIgg",
+            "hookName": "antibodiesIgg",
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
             "familyMethod": "",
@@ -501,7 +501,7 @@
             },
             "submenu": false,
             "annotCode":19,
-            "mysqlAlias": "expressionLines",
+            "hookName": "expressionLines",
             "splitresults":false,
             "popUpWindows":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.ExpressionLineAnnotation",
@@ -524,7 +524,7 @@
             "submenu": false,
             "annotCode":20,
             "popUpWindows":false,
-            "mysqlAlias": "geneFusionsCancer",
+            "hookName": "geneFusionsCancer",
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.GeneFusionAnnotation",
             "familyMethod": "",
@@ -538,7 +538,7 @@
             "submenu": false,
             "annotCode":21,
             "popUpWindows":false,
-            "mysqlAlias": "aberrationsCancer",
+            "hookName": "aberrationsCancer",
             "shape": "square",
             "color": [
               {"color":"#ff8000", "used":"false"}
@@ -563,7 +563,7 @@
             "familyMethod":"",
             "hasClass":"saturn.client.programs.chromohub.annotations.RNASeqAnnotation",
             "hasMethod":"hasRNASeq",
-            "mysqlAlias": "rnaSeqGeneExpression",
+            "hookName": "rnaSeqGeneExpression",
             "divMethod":"divRNASeq",
             "shape": "cercle",
             "color": [
@@ -673,7 +673,7 @@
             "submenu": false,
             "popUpWindows":true,
             "familyMethod":"",
-            "mysqlAlias": "vulnerabilityShRNA",
+            "hookName": "vulnerabilityShRNA",
             "hasClass":"saturn.client.programs.chromohub.annotations.SHRNAAnnotation",
             "hasMethod": "hasshRNA",
             "divMethod":"divshRNA",
@@ -736,7 +736,7 @@
             "submenu": false,
             "popUpWindows":true,
             "familyMethod":"",
-            "mysqlAlias": "somaticMutationCancer",
+            "hookName": "somaticMutationCancer",
             "shape": "text",
             "hasClass":"saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation",
             "hasMethod": "hasSomaticMut",
@@ -827,7 +827,7 @@
             "annotCode":25,
             "submenu": false,
             "popUpWindows":true,
-            "mysqlAlias": "tumorLevelAll",
+            "hookName": "tumorLevelAll",
             "shape": "cercle",
             "color": [
               {"color":"#689aed", "used":"false"}
@@ -855,10 +855,58 @@
                       "queryMode": "local",
                       "store":["All","breast cancer","carcinoid","cervical cancer","colorectal cancer","endometrial cancer","glioma","head and neck cancer","liver cancer","lung cancer","lymphoma","melanoma","ovarian cancer","pancreatic cancer","prostate cancer","renal cancer","skin cancer","stomach cancer","testis cancer","thyroid cancer","urothelial cancer"],
                       "value": "All"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Not detected",
+                      "name": "protein_level_not_detected",
+                      "id": "protein_level_not_detected",
+                      "inputValue": "Not detected"
                     }
                   ]
                 }
               }]
+          },
+          {
+            "label": "Protein SubFamilies",
+            "isTitle":false,
+            "helpText":  "",
+            "annotCode":26,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "subfamilies",
+            "shape": "cercle",
+            "color": [
+              {"color":"blue", "used":"false"}
+            ],
+            "legend":{
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text":""
+            },
+            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinSubFamilyAnnotation",
+            "hasMethod":"hasSubFamily",
+            "familyMethod": ""
           }
         ]
       }
