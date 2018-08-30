@@ -103,14 +103,15 @@ class ChromoHubScreenData {
                 }
                 else return false;
             case 5: // non leave node
-                if((mx>=scaleX)&&(mx<(scaleX+scaleWidth))&&(my<(scaleY+scaleHeight))&&(my>=scaleY)) {
-                  /*  WorkspaceApplication.getApplication().debug('x is '+x);
-                    WorkspaceApplication.getApplication().debug('width is '+width);
-                    WorkspaceApplication.getApplication().debug('y is '+y);
-                    WorkspaceApplication.getApplication().debug('height is '+height);*/
+                // The +5 and -5 are being used introduce a tolerance in how close users need to click on internal nodes.
+                // Note that for the Y axis we are making the hit box taller centered around the internal node.
+                // For some reason we have to reduce the hit box width to get the required affect for users.
+                // TODO: Investigate Sefa's code to work out why this is happening.
+                if((mx+5>=scaleX)&&(mx<(scaleX+scaleWidth-5))&&(my<(scaleY+scaleHeight+5))&&(my>=scaleY-5)){
                     return true;
+                }else{
+                    return false;
                 }
-                else return false;
             default:return false;
         }
     }
