@@ -125,6 +125,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     var standaloneMode = false;
     var singleAppContainer : SingleAppContainer;
 
+    var enableEditMode = true;
+
     public function new(){
         super();
     }
@@ -1893,20 +1895,30 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 },
                 //tooltip: {dismissDelay: 10000, text: 'Close Options Tab'}
             });
-            container.addComponentToCentralPanel({
+
+            addCanvasButton({
                 cls :'x-btn-export-single',
                 xtype: 'button',
                 top:40,
                 listeners:{
                     mouseover:
                     function(e){
-                        var ev : Dynamic;
-                        ev=  new js.html.Event('');
-
-                        var xposition = ev.pageX;
+                        var xposition = e.pageX;
 
                         getApplication().getSingleAppContainer().showExportSubMenu(xposition);
                     }
+                }
+            });
+
+            addCanvasButton({
+                cls :'x-btn-export-single-fake',
+                xtype: 'button',
+                top:40,
+                handler:
+                function(e){
+                    editmode = true;
+
+                    getApplication().getSingleAppContainer().showEditToolBar();
                 }
             });
 

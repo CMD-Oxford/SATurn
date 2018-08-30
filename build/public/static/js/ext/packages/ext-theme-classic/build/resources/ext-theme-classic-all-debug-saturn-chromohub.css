@@ -29705,7 +29705,19 @@ a.x-color-picker-item:hover {
    background-color:#f7f8fb!important;
 }
 .x-btn-export-single {
-	left:70px!important;	
+   left:110px!important;
+   width:35px!important;
+   height:35px!important;
+   margin:10px 110px!important;
+   background-repeat: no-repeat!important;
+   background-position: center center!important;
+   background-image: url(/static/js/images/export_24-single.png)!important;
+   border:none!important;
+   background-color:#ffffff!important;
+}
+
+.x-btn-export-single-fake {
+   left:70px!important;
    width:35px!important;
    height:35px!important;
    margin:10px 110px!important;
@@ -29787,7 +29799,7 @@ a.x-color-picker-item:hover {
    background-color:#ffffff!important;
 }
 .x-btn-highlight-single{	
-   left:143px!important;	
+   left:200px!important;
    width:35px!important;
    height:35px!important;
    margin:27px 92px!important;
@@ -30602,6 +30614,12 @@ a.x-color-picker-item:hover {
 .x-btn-target-padi,
 .x-btn-target-e1,
 .x-btn-target-e1-gene,
+.x-btn-target-e2,
+.x-btn-target-e2-gene,
+.x-btn-target-non-usp,
+.x-btn-target-non-usp-gene,
+.x-btn-target-usp,
+.x-btn-target-usp-gene,
 .x-btn-target-kat-gene,
 .x-btn-target-parp-gene,
 .x-btn-target-pmt-gene,

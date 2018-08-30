@@ -963,4 +963,64 @@ class ChromoHubHooks {
 
         runBasicQuery(sql, boundParameters, cb);
     }
+
+    public static function hookHasCancerEssential(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+        var cancerTypes :Array<String> = params[0].cancer_types;
+        var cancerScore = params[0].cancer_score;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+        if(treeType == 'domain'){
+            sql = "
+               SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+               FROM
+                    family_target_join ftj, variant v, essentiality_cancer c
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id
+               ";
+        }else{
+            sql = "
+                SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+                FROM
+                    family_target_join ftj, variant v, essentiality_cancer c
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    v.is_default = 1
+            ";
+        }
+
+        if(cancerTypes != null){
+            var placeHolders = [];
+            for(cancerType in cancerTypes){
+                placeHolders.push('?');
+                boundParameters.push(cancerType);
+            }
+
+            sql += ' AND c.primary_disease IN (' + placeHolders.join(',') + ')';
+        }
+
+        if(cancerScore != null){
+            sql += ' AND c.median_score <= ?';
+
+            boundParameters.push(cancerScore);
+        }
+
+
+        runBasicQuery(sql, boundParameters, cb);
+    }
 }

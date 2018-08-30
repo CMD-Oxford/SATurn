@@ -827,7 +827,7 @@
             "annotCode":25,
             "submenu": false,
             "popUpWindows":true,
-            "hookName": "tumorLevelAll",
+            "hookName": "",
             "shape": "cercle",
             "color": [
               {"color":"#689aed", "used":"false"}
@@ -907,6 +907,72 @@
             "hasClass":"saturn.client.programs.chromohub.annotations.ProteinSubFamilyAnnotation",
             "hasMethod":"hasSubFamily",
             "familyMethod": ""
+          },
+          {
+            "label": "Cancer Essentiaility",
+            "isTitle":false,
+            "helpText":  "",
+            "annotCode":27,
+            "submenu": false,
+            "popUpWindows":true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {"color":"#689aed", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/structuressgc.png","/static/annot/images/structuresothers.png"],
+            "legend":{
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text":""
+            },
+            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasCancerEssential",
+            "divMethod":"divTumorLevel",
+            "windowsData":[
+              {
+                "hasClass":"saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+                "popMethod": "cancerEssentialFunction",
+                "form":{
+                  "items":[
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score",
+                      "fieldLabel": "Cancer Score",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "store":[-1,-0.75]
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_types",
+                      "fieldLabel": "Cancer Types",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "store":["AUTONOMIC_GANGLIA",
+                        "BONE",
+                        "BREAST",
+                        "CENTRAL_NERVOUS_SYSTEM",
+                        "ENDOMETRIUM",
+                        "HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+                        "KIDNEY",
+                        "LARGE_INTESTINE",
+                        "LIVER",
+                        "LUNG",
+                        "OESOPHAGUS",
+                        "OVARY",
+                        "PANCREAS",
+                        "PLEURA",
+                        "SKIN",
+                        "SOFT_TISSUE",
+                        "STOMACH",
+                        "UPPER_AERODIGESTIVE_TRACT",
+                        "URINARY_TRACT"],
+                      "multiSelect": true
+                    }
+                  ]
+                }
+              }]
           }
         ]
       }
