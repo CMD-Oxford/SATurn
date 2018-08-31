@@ -1222,4 +1222,88 @@ class ChromoHubHooks {
         // Run query
         runBasicQuery(sql, boundParameters, cb);
     }
+
+    public static function hookHasTumorLevelPercentage(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            // Prepares base components of required SQL based on what tree mode we are in and whether a family or list of target names has been provided
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var inPercentage :String = params[0].in_percentage;
+        var proteinLevels : Array<String> = params[0].protein_levels;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+        if(treeType == 'domain'){
+            // We get here when the user has requested a domain centric tree
+            sql = "
+               SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+               FROM
+                    protein_tumor_stat s, family_target_join ftj, variant v
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    ftj.target_id = s.target_id
+               ";
+        }else{
+            // We get here when the user has requested a gene centric tree
+            sql = "
+                SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+                FROM
+                    protein_tumor_stat s, family_target_join ftj, variant v
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    v.is_default = 1 AND
+                    ftj.target_id = s.target_id
+            ";
+        }
+
+        if(proteinLevels != null || proteinLevels.length == 0){
+            proteinLevels = ['High', 'Medium', 'Low'];
+        }
+
+        // Append protein level constraints
+        if(proteinLevels != null && proteinLevels.length > 0){
+            var columns = [];
+            for(proteinLevel in proteinLevels){
+                if(proteinLevel == 'High'){
+                    columns.push('s.level_high_num');
+                }
+
+                if(proteinLevel == 'Medium'){
+                    columns.push('s.level_medium_num');
+                }
+
+                if(proteinLevel == 'Low'){
+                    columns.push('s.level_low_num');
+                }
+            }
+
+            sql += ' AND ((' + columns.join('+') + ') / s.total_num > ?)';
+
+            if(inPercentage == 'at least 1'){
+                boundParameters.push(0);
+            }else if(inPercentage == 'more than 25%'){
+                boundParameters.push(0.25);
+            }else if(inPercentage == 'more than 50%'){
+                boundParameters.push(0.50);
+            }else if(inPercentage == 'more than 75%'){
+                boundParameters.push(0.75);
+            }
+        }
+
+        // Run query
+        runBasicQuery(sql, boundParameters, cb);
+    }
 }
