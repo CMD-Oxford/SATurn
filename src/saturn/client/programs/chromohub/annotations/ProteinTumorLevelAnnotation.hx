@@ -147,4 +147,73 @@ class ProteinTumorLevelAnnotation {
             }
         });
     }
+
+    static function hasTumorLevelPercentage(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+        // TODO: To be implemented by Leo
+        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#800080',used:true},defImage:0};
+
+        callBack(r);
+    }
+
+    static function tumorLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
+
+        var proteinLevels = [];
+        var percentage = null;
+
+        if(form != null){
+            // We get here for tree annotation requests
+
+            // Process protein levels
+            if(form.form.findField('protein_level_high').lastValue){
+                proteinLevels.push('High');
+            }
+
+            if(form.form.findField('protein_level_medium').lastValue){
+                proteinLevels.push('Medium');
+            }
+
+            if(form.form.findField('protein_level_low').lastValue){
+                proteinLevels.push('Low');
+            }
+
+            percentage = form.form.findField('in_percentage').lastValue;
+
+        }else{
+            // We aren't planning to support table view for these UbiHub specific annotations
+            throw new saturn.util.HaxeException('Table view not supported for ProteinTumorLevelAnnotation');
+        }
+
+        // Prepare web-service call
+        var args = [{
+            'treeType' : tree_type, 'familyTree' : family,
+            'in_percentage': percentage,
+            'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels
+        }];
+
+        // Make web-service call
+        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookHasTumorLevelPercentage', args, null, false, function(db_results, error){
+            if(error == null){
+                if(db_results != null){
+
+                    viewer.activeAnnotation[annotation] = true;
+
+                    if(viewer.treeName == ''){
+                        // We get here for table view
+                        viewer.addAnnotDataGenes(db_results, annotation, function(){
+                            cb(db_results, null);
+                        });
+                    }else{
+                        // We get here for tree view
+                        viewer.addAnnotData(db_results, annotation, 0, function(){
+                            viewer.newposition(0, 0);
+
+                            cb(db_results, null);
+                        });
+                    }
+                }
+            }else{
+                cb(null,error);
+            }
+        });
+    }
 }

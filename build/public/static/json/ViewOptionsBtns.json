@@ -1352,6 +1352,79 @@
                 }
               }
             ]
+          },
+          {
+            "label": "Protein Levels in Cancer Confidence",
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 30,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasTumorLevelPercentage",
+            "divMethod": "divTumorLevel",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+                "popMethod": "tumorLevelPercentageFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "Tumour type threshold",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"]
+                    }
+                  ]
+                }
+              }
+            ]
           }
         ]
       }
