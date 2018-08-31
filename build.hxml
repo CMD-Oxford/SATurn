@@ -43,6 +43,7 @@
 -D SQLITE
 -D NODE
 -D NCBI_EUTILS
+-D NODE_LATEST
 -D ORACLE
 --macro include('saturn.core.domain')
 --macro include('saturn.core.domain.oppf')
