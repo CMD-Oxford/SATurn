@@ -1903,7 +1903,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 listeners:{
                     mouseover:
                     function(e){
-                        var xposition = e.pageX;
+
+                        var ev : Dynamic;
+                        var d : Dynamic = js.Browser.window;
+                        ev = d.event;
+                        var xposition: Dynamic = ev.pageX;
 
                         getApplication().getSingleAppContainer().showExportSubMenu(xposition);
                     }
