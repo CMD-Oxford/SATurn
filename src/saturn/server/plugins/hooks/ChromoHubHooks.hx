@@ -1023,4 +1023,107 @@ class ChromoHubHooks {
 
         runBasicQuery(sql, boundParameters, cb);
     }
+
+    /**
+    * hookHasProteinNormalLevels lookups protein expression levels in normal tissues based on the parameters in params
+    *
+    * params: {tissue_types=>[], cell_types=>[], protein_levels=>[], relaibilities=>[]}
+    *
+    * See general web-service documentation for an explanation of the other parameters (query & clazz are ignored by this function)
+    **/
+    public static function hookHasProteinNormalLevels(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            // Prepares base components of required SQL based on what tree mode we are in and whether a family or list of target names has been provided
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var tissueTypes :Array<String> = params[0].tissue_types;
+        var cellTypes :Array<String> = params[0].cell_types;
+        var proteinLevels : Array<String> = params[0].protein_levels;
+        var reliabilities : Array<String> = params[0].reliabilities;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+        if(treeType == 'domain'){
+            // We get here when the user has requested a domain centric tree
+            sql = "
+               SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+               FROM
+                    protein_normal_tissue p, family_target_join ftj, variant v
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    ftj.target_id = p.target_id
+               ";
+        }else{
+            // We get here when the user has requested a gene centric tree
+            sql = "
+                SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index
+                FROM
+                    protein_normal_tissue p, family_target_join ftj, variant v
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    v.is_default = 1 AND
+                    ftj.target_id = p.target_id
+            ";
+        }
+
+        // Append tissue type constraints
+        if(tissueTypes != null && tissueTypes.length > 0){
+            var placeHolders = [];
+            for(tissueType in tissueTypes){
+                placeHolders.push('?');
+                boundParameters.push(tissueType);
+            }
+
+            sql += ' AND p.tissue IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append cell type constraints
+        if(cellTypes != null && cellTypes.length > 0){
+            var placeHolders = [];
+            for(cellType in cellTypes){
+                placeHolders.push('?');
+                boundParameters.push(cellType);
+            }
+
+            sql += ' AND p.cell_type IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append protein level constraints
+        if(proteinLevels != null && proteinLevels.length > 0){
+            var placeHolders = [];
+            for(proteinLevel in proteinLevels){
+                placeHolders.push('?');
+                boundParameters.push(proteinLevel);
+            }
+
+            sql += ' AND p.protein_level IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append relaibility constraints
+        if(reliabilities != null && reliabilities.length > 0){
+            var placeHolders = [];
+            for(reliability in reliabilities){
+                placeHolders.push('?');
+                boundParameters.push(reliability);
+            }
+
+            sql += ' AND p.reliability IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Run query
+        runBasicQuery(sql, boundParameters, cb);
+    }
 }

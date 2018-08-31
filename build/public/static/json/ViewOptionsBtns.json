@@ -910,46 +910,56 @@
           },
           {
             "label": "Cancer Essentiaility",
-            "isTitle":false,
-            "helpText":  "",
-            "annotCode":27,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 27,
             "submenu": false,
-            "popUpWindows":true,
+            "popUpWindows": true,
             "hookName": "",
             "shape": "cercle",
             "color": [
-              {"color":"#689aed", "used":"false"}
-            ],
-            "annotImg":["/static/annot/images/structuressgc.png","/static/annot/images/structuresothers.png"],
-            "legend":{
-              "image": "/static/annot/images/tumorLevel-leg.png",
-              "text":""
-            },
-            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
-            "familyMethod": "",
-            "hasMethod":"hasCancerEssential",
-            "divMethod":"divTumorLevel",
-            "windowsData":[
               {
-                "hasClass":"saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasCancerEssential",
+            "divMethod": "divTumorLevel",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
                 "popMethod": "cancerEssentialFunction",
-                "form":{
-                  "items":[
+                "form": {
+                  "items": [
                     {
                       "xtype": "combobox",
                       "name": "cancer_score",
                       "fieldLabel": "Cancer Score",
-                      "labelSeparator" : "",
+                      "labelSeparator": "",
                       "queryMode": "local",
-                      "store":[-1,-0.75]
+                      "store": [
+                        -1,
+                        -0.75
+                      ]
                     },
                     {
                       "xtype": "combobox",
                       "name": "cancer_types",
                       "fieldLabel": "Cancer Types",
-                      "labelSeparator" : "",
+                      "labelSeparator": "",
                       "queryMode": "local",
-                      "store":["AUTONOMIC_GANGLIA",
+                      "store": [
+                        "AUTONOMIC_GANGLIA",
                         "BONE",
                         "BREAST",
                         "CENTRAL_NERVOUS_SYSTEM",
@@ -967,12 +977,276 @@
                         "SOFT_TISSUE",
                         "STOMACH",
                         "UPPER_AERODIGESTIVE_TRACT",
-                        "URINARY_TRACT"],
+                        "URINARY_TRACT"
+                      ],
                       "multiSelect": true
                     }
                   ]
                 }
-              }]
+              }
+            ]
+          },
+          {
+            "label": "Protein Levels in Normal Tissues",
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 28,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasNormalLevel",
+            "divMethod": "divTumorLevel",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+                "popMethod": "hasNormalLevelFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "combobox",
+                      "name": "tissues",
+                      "fieldLabel": "Tissue",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "adrenal gland",
+                        "appendix",
+                        "bone marrow",
+                        "breast",
+                        "bronchus",
+                        "caudate",
+                        "cerebellum",
+                        "cerebral cortex",
+                        "cervix, uterine",
+                        "choroid plexus",
+                        "colon",
+                        "duodenum",
+                        "endometrium 1",
+                        "endometrium 2",
+                        "epididymis",
+                        "esophagus",
+                        "eye",
+                        "fallopian tube",
+                        "gallbladder",
+                        "hair",
+                        "heart muscle",
+                        "hippocampus",
+                        "hypothalamus",
+                        "kidney",
+                        "lactating breast",
+                        "liver",
+                        "lung",
+                        "lymph node",
+                        "nasopharynx",
+                        "oral mucosa",
+                        "ovary",
+                        "pancreas",
+                        "parathyroid gland",
+                        "pituitary gland",
+                        "placenta",
+                        "prostate",
+                        "rectum",
+                        "retina",
+                        "salivary gland",
+                        "seminal vesicle",
+                        "skeletal muscle",
+                        "skin",
+                        "skin 1",
+                        "skin 2",
+                        "small intestine",
+                        "smooth muscle",
+                        "soft tissue 1",
+                        "soft tissue 2",
+                        "sole of foot",
+                        "spleen",
+                        "stomach 1",
+                        "stomach 2",
+                        "testis",
+                        "thymus",
+                        "thyroid gland",
+                        "tonsil",
+                        "urinary bladder",
+                        "vagina"
+                      ],
+                      "multiSelect": true
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cell_types",
+                      "fieldLabel": "Cell Types",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "adipocytes",
+                        "bile duct cells",
+                        "cells in anterior ",
+                        "cells in cortex/medulla",
+                        "cells in cuticle",
+                        "cells in endometrial stroma",
+                        "cells in external root sheath",
+                        "cells in glomeruli",
+                        "cells in granular layer",
+                        "cells in inner nuclear layer ",
+                        "cells in internal root sheath",
+                        "cells in molecular layer",
+                        "cells in photoreceptor layer ",
+                        "cells in posterior ",
+                        "cells in red pulp",
+                        "cells in seminiferous ducts",
+                        "cells in tubules",
+                        "cells in white pulp",
+                        "cells in zona fasciculata",
+                        "cells in zona glomerulosa",
+                        "cells in zona reticularis",
+                        "chondrocytes",
+                        "corneal epithelial cells",
+                        "cortical cells",
+                        "decidual cells",
+                        "ductal cells",
+                        "elongated or late spermatids",
+                        "endothelial cells",
+                        "ependymal cells",
+                        "epidermal cells",
+                        "exocrine glandular cells",
+                        "fibroblasts",
+                        "follicle cells",
+                        "ganglion cells ",
+                        "germinal center cells",
+                        "glandular cells",
+                        "glial cells",
+                        "hematopoietic cells",
+                        "hepatocytes",
+                        "islets of Langerhans",
+                        "keratinocytes",
+                        "lactating glandular cells",
+                        "Langerhans",
+                        "lens epithelial cells",
+                        "lens fiber cells",
+                        "Leydig cells",
+                        "limiting membrane",
+                        "lymphoid tissue",
+                        "macrophages",
+                        "medullary cells",
+                        "melanocytes",
+                        "myocytes",
+                        "myoepithelial cells",
+                        "nerve fibers in inner plexiform layer",
+                        "nerve fibers in nerve fiber layer",
+                        "nerve fibers in outer plexiform layer ",
+                        "neuronal cells",
+                        "neuronal projections",
+                        "neuropil",
+                        "non-germinal center cells",
+                        "ovarian stroma cells",
+                        "pachytene spermatocytes",
+                        "peripheral nerve",
+                        "peripheral nerve/ganglion",
+                        "peritubular cells",
+                        "pigment epithelium",
+                        "pneumocytes",
+                        "preleptotene spermatocytes",
+                        "Purkinje cells",
+                        "respiratory epithelial cells",
+                        "round or early spermatids",
+                        "sebaceous cells",
+                        "secretory cells",
+                        "sertoli cells",
+                        "smooth muscle cells",
+                        "spermatogonia",
+                        "squamous epithelial cells",
+                        "sweat ducts",
+                        "synapses",
+                        "trophoblastic cells",
+                        "urothelial cells",
+                        "vitreous humor"
+                      ],
+                      "multiSelect": true
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Not detected",
+                      "name": "protein_level_not_detected",
+                      "id": "protein_level_not_detected",
+                      "inputValue": "Not detected"
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Reliability"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Approved",
+                      "name": "protein_reliability_approved",
+                      "id": "protein_reliability_approved",
+                      "inputValue": "Approved"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Enhanced",
+                      "name": "protein_reliability_enhanced",
+                      "id": "protein_reliability_enhanced",
+                      "inputValue": "Enhanced"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Supported",
+                      "name": "protein_reliability_supported",
+                      "id": "protein_reliability_supported",
+                      "inputValue": "Supported"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Uncertain",
+                      "name": "protein_reliability_uncertain",
+                      "id": "protein_reliability_uncertain",
+                      "inputValue": "Uncertain"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         ]
       }
