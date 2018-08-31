@@ -1,0 +1,254 @@
+      html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+}
+ 
+#appLayout {
+    height: 100%;
+}
+#leftCol {
+    width: 14em;
+}
+ 
+.claro .demoLayout .edgePanel {
+    background-color: #d0e9fc;
+}
+ 
+#viewsChart {
+    width: 550px;
+    height: 550px;
+}
+
+.sequenceeditorcell::selection {
+        background: #fe57a1; color: #fff; text-shadow: none;
+}
+        
+.molbio-sequenceeditor-table {
+ white-space: nowrap;
+}
+        
+.molbio-sequenceeditor-block {
+ border:0px;
+
+ font: 12px/1.5 Consolas, monospace;
+
+ border-bottom: 1px solid blue;
+
+ line-height: 1.5em;
+ height: 1.5em;
+ 
+ padding: 0px;
+ margin:0px;
+ 
+ /*width:12em;*/
+ 
+ display:inline-block;
+ vertical-align:top;
+ 
+ margin-left: 2px;
+ margin-right: 2px;
+ margin-top: 2px;
+
+ background: none;
+}
+
+.molbio-sequenceeditor-block-part {
+ border:0px;
+
+ font: 12px/1.5 Consolas, monospace;
+
+ line-height: 1.5em;
+ height: 1.5em;
+
+ padding: 0px;
+ margin:0px;
+ display:inline-block;
+ vertical-align:top;
+
+ margin-left: 0px;
+ margin-right: 0px;
+ margin-top: 0px;
+
+ background: none;
+}
+
+.molbio-sequenceeditor-block-hidden {
+ display:inline-block;
+ vertical-align:top;
+ width: 0px;
+ height: 0px;
+}
+
+.molbio-sequenceeditor-row-label {
+ font-family: monospace;
+ font-size: 1em;
+ border:0px;
+ 
+ height: 1.5em;
+ padding: 0px;
+ margin:0px;
+ 
+ /*width:12em;*/
+ 
+ display:inline-block;
+ vertical-align:top;
+ 
+ margin-left: 0.5em;
+ margin-right:0.5em;
+ margin-top: 0.5em;
+}
+
+.molbio-sequenceeditor-block-input {
+ /*font-family: monospace;
+ font-size: 1em; */
+ border:0px;
+
+ font: 12px/1.5 Consolas, monospace;
+
+ border-bottom: 1px solid blue;
+
+ line-height: 1.5em;
+ height: 1.5em;
+ 
+ padding: 0px;
+ margin:0px;
+ 
+ /*width:12em;*/
+ 
+ display:inline-block;
+ vertical-align:top;
+ 
+ margin-left: 2px;
+ margin-right: 2px;
+ margin-top: 2px;
+
+ background: none;
+
+    
+}
+
+.molbio-sequenceeditor-block:focus {
+ outline: none;
+}
+
+
+.molbio-unselectable {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+.molbio-unselectable::selection {
+        background:none;
+}
+
+.molbio-unselectable::-moz-selection {
+    background:none;
+}
+
+.molbio-selectable {
+    -moz-user-select: text;
+	-ms-user-select: text;
+    -khtml-user-select: auto;
+    -webkit-user-select: auto;
+    -o-user-select: auto;
+    user-select: auto;
+}
+
+.molbio-selectable::selection {
+    background : red;
+}
+
+.molbio-selectable::-moz-selection {
+    background : red;
+}
+
+.seq-breaking {
+    word-wrap:break-word;
+}
+
+.phylo5-tree {
+	font-family: Courier New, Courier, monospace;
+	text-shadow: #333 0px 0px 1px;
+	-webkit-text-stroke: 1px rgba(0,0,0,0.1);
+	-webkit-font-smoothing: antialiased;
+}
+
+.molbio-invalid-row {
+    border: 1px solid red;
+}
+
+.gridrow-invalid .x-grid-cell {
+    background-color: #ffe2e2;
+    color: #900;
+}
+
+.scarab_text_read {
+	border: 0px;
+}
+
+.scarab_section {
+	margin-top: 2px;
+	border-top: chocolate solid;
+}
+
+.scarab_page {
+	margin: 3px 3px 3px 3px
+}
+
+.scarab_header {
+	margin-bottom: 10px;
+
+	background: rgb(50, 51, 54);
+}
+
+.scarab_title {
+	color: white;
+     font-family: tahoma;
+     font-size: large;
+     margin-left:4px;
+     margin-right: 4px;
+}
+
+.scarab_author {
+	color: white;
+     font-family: tahoma;
+     font-size: small;
+     margin-left:4px;
+     margin-right: 4px;
+}
+
+.scarab_date {
+	color: white;
+     font-family: tahoma;
+     font-size:small;
+     margin-left:4px;
+     margin-right: 4px;
+}
+
+.scarab_date_updated {
+	color: white;
+     font-family: tahoma;
+     font-size:small;
+     margin-left:4px;
+     margin-right: 4px;
+}
+
+.saturn-info-panel {
+    border-top: 1px solid black;
+}
+
+.saturn-info-panel > .x-panel-body {
+    background-color: rgb(108, 108, 108);
+    padding: 2px 6px 2px;
+    color: white;
+    border: 1px solid black;
+}
+
+.saturn-row-fixed-height > td{
+    height: 100px;
+}
