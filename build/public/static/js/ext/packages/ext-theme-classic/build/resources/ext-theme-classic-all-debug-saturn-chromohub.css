@@ -29705,27 +29705,29 @@ a.x-color-picker-item:hover {
    background-color:#f7f8fb!important;
 }
 .x-btn-export-single {
-   left:110px!important;
+	 left:230px!important;
    width:35px!important;
    height:35px!important;
-   margin:10px 110px!important;
+   //margin:10px 110px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/export_24-single.png)!important;
    border:none!important;
    background-color:#ffffff!important;
+	 background-size: 22px;
 }
 
 .x-btn-export-single-fake {
-   left:70px!important;
+	 left:180px!important;
    width:35px!important;
    height:35px!important;
-   margin:10px 110px!important;
+   //margin:10px 110px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/export_24-single.png)!important;
    border:none!important;
    background-color:#ffffff!important;
+	 background-size: 22px;
 }
 
 .x-exsubmenu-toolsbar{
@@ -29783,15 +29785,17 @@ a.x-color-picker-item:hover {
 .x-btn-magminus-single,
 .x-btn-magplus-single,
 .x-btn-export-single,
-.x-btn-center-single{
-	top:45px!important;
+.x-btn-export-single-fake,
+.x-btn-center-single,
+.x-btn-highlight-single{
+	top:50px!important;
 }
 
 .x-btn-center-single {
-   left:-5px!important;	
+   left: 30px!important;
    width:35px!important;
    height:35px!important;
-   margin:9px 35px!important;
+   //margin:9px 35px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/center-single.png)!important;
@@ -29799,10 +29803,10 @@ a.x-color-picker-item:hover {
    background-color:#ffffff!important;
 }
 .x-btn-highlight-single{	
-   left:200px!important;
+   left:280px!important;
    width:35px!important;
    height:35px!important;
-   margin:27px 92px!important;
+   //margin:27px 92px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/hightlight-single.png)!important;
@@ -29846,10 +29850,10 @@ a.x-color-picker-item:hover {
     background-image: url(/static/js/images/annot_24-single.png);
 }
 .x-btn-magplus-single{
-	left:20px!important;	
+	 left:80px!important;
    width:35px!important;
    height:35px!important;
-   margin:10px 60px!important;
+   //margin:10px 60px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/mag_plus-single.png)!important;
@@ -29858,10 +29862,10 @@ a.x-color-picker-item:hover {
 }
 
 .x-btn-magminus-single {
-	left:45px!important;	
+	 left:130px!important;	
    width:35px!important;
    height:35px!important;
-   margin:10px 85px!important;
+   //margin:10px 85px!important;
    background-repeat: no-repeat!important;
    background-position: center center!important;
    background-image: url(/static/js/images/mag_minus-single.png)!important;
