@@ -52,6 +52,7 @@ import saturn.core.DNA;
 import saturn.client.programs.blocks.BaseTable;
 
 import saturn.client.core.CommonCore;
+import saturn.client.programs.chromohub.ChromoHubViewerHome;
 
 import saturn.client.WorkspaceApplication;
 typedef UndoLast = {
@@ -92,7 +93,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     var tableActive : Bool;
     var onSubmenu:Bool=false;
 
-    var jsonFile : Dynamic;
+    public var jsonFile : Dynamic;
     var jsonTipsFile : Dynamic;
     var tableAnnot :Table;
     var baseTable :BaseTable;
@@ -113,7 +114,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
 
     /*** single app vars ***/
-    var centralTargetPanel : Dynamic;
+    public var centralTargetPanel : Dynamic;
 
     public var menuScroll=0;
 
@@ -1158,9 +1159,13 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 var variant = '1';
 
                 // TODO: What is the purpose of this block?
+                #if PHYLO5
+
+                #else
                 if(annotation == 13 && Reflect.hasField(res, 'family_id')) {
                     leafaux.targetFamily = mapResults.get(target).family_id;
                 }
+                #end
 
                 if((annotations[annotation].hasClass != null) && (annotations[annotation].hasMethod != null)){
                     var clazz = annotations[annotation].hasClass;
@@ -1254,7 +1259,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var j=0;
         var target:String;
         for(i in 0 ... annotData.length){
+            #if PHYLO5
 
+            #else
             if(annotation==1){
                 var aux=annotData[i].pmid_list;
                 var aux2=aux.split(';');
@@ -1264,6 +1271,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                 if(max>v || this.annotations[1].fromresults[1]==null) this.annotations[1].fromresults[1]=max;
             }
+            #end
             target=annotData[i].target_id+'_'+j;
             while (mapResults.exists(target)){
                 j++;
@@ -1423,10 +1431,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 }else{
                     if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
                         var clazz = annotations[annotation].hasClass;
-                        var method = annotations[annotation].hasMethod;
-                        var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+                        var method :Dynamic = annotations[annotation].hasMethod;
 
-                        hook(name,res,option, annotations, item, function(r:HasAnnotationType){
+                        var _processAnnotation = function(r:HasAnnotationType){
                             if(r.hasAnnot){
                                 var leafaux: ChromoHubTreeNode;
                                 leafaux = this.rootNode.leafNameToNode.get(item);
@@ -1470,7 +1477,17 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                             toComplete--;
                             onDone();
-                        });
+                        };
+
+                        if(Reflect.isFunction(method)){
+                            method(name,res,option, annotations, item, _processAnnotation);
+                        }else{
+                            var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                            hook(name,res,option, annotations, item, _processAnnotation);
+                        }
+
+
 
                         j++;
                     }else {
@@ -1613,20 +1630,26 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     public function chromohubOnFocus(){
         //the jsonFile hasn't been downloaded = abort
-        if(jsonFile == null){
-                return;
-        }
-        var res=checkAnnotationJSonData();
-        if (res==false){
+        if(jsonFile != null){
+            var res=checkAnnotationJSonData();
+            if (res==false){
                 WorkspaceApplication.getApplication().showMessage('Alert','Annotations JSon file is not correct.');
                 return;
-        }else {
-            fillAnnotationwithJSonData();
+            }else {
+                fillAnnotationwithJSonData();
+            }
+
+            fillTipswithJSonData();
         }
 
-        fillTipswithJSonData();
+
         var obj : ChromoHubWorkspaceObject = getActiveObject(ChromoHubWorkspaceObject);
         var container = getApplication().getSingleAppContainer();
+
+        if(container == null){
+            // too early
+            return;
+        }
 
         getApplication().hideMiddleSouthPanel();
 
@@ -1805,8 +1828,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         editmode=false;
         container.hideEditToolBar();
-        //container.showEditToolBar();
         undolist=new Array();
+
         container.createOptionsToolBar();
         container.hideOptionsToolBar();
         container.createSubMenuToolBar();
@@ -1817,11 +1840,10 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         container.hideHelpingDiv();
         container.createPopUpWindow();
         container.hidePopUpWindow();
-        //container.createLegendPanel();
-       // container.hideLegendPanel();
 
         // we create the Target Class Selection Panel
         var mapFam=new Map();
+
         createBtnsForLandingPage(true,mapFam);
         createTargetCentralPanel(); //create centralTargetPanel with ALL buttons
 
@@ -2451,25 +2473,29 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     }
 
     private function showTipOfTheDay(){
+        if(tips == null || tips.length ==0){
+            return;
+        }
+
         var container=getApplication().getSingleAppContainer();
 
-            var mydom :Dynamic;
-            mydom=js.Browser.document.childNodes[0];
-            var top, left, width, height:Int;
-            var w=mydom.clientWidth;
-            width=Std.int(w*0.6);
-            left=Std.int(w*0.2);
-            var h= mydom.clientHeight;
-            height=Std.int(h*0.9);
-            top=Std.int(h*0.15);
-            if(container.getTipWindow()==null){
-                var title =tips[tipActive].title;
-                var html =tips[tipActive].html;
-                var text="<h2>"+title+"</h2>"+html;
-                container.createTipWindow(this, top, left, width, height, text);
-            }else{
-                container.showTipWindow();
-            }
+        var mydom :Dynamic;
+        mydom=js.Browser.document.childNodes[0];
+        var top, left, width, height:Int;
+        var w=mydom.clientWidth;
+        width=Std.int(w*0.6);
+        left=Std.int(w*0.2);
+        var h= mydom.clientHeight;
+        height=Std.int(h*0.9);
+        top=Std.int(h*0.15);
+        if(container.getTipWindow()==null){
+            var title =tips[tipActive].title;
+            var html =tips[tipActive].html;
+            var text="<h2>"+title+"</h2>"+html;
+            container.createTipWindow(this, top, left, width, height, text);
+        }else{
+            container.showTipWindow();
+        }
 
 
     }
@@ -2486,13 +2512,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             xtype   :   'button',
             text    :   'Home',
             handler :   function(){
-                /*if(baseTable!=null){
-                    var def = baseTable.getTableDefinition();
-                    def.data = [];
-
-                    baseTable.reconfigure(def);
-                }*/
-
                 if(currentView!=0){
                     var container = getApplication().getSingleAppContainer();
                     container.hideExportSubMenu();
@@ -2550,6 +2569,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             },
             tooltip :   {dismissDelay: 10000, text: 'Phylogenetic Viewer'}
         });
+
         container.addElemToModeToolBar({
             cls     :   if(currentView==2)'btn-selected' else '',
             xtype   :   'button',
@@ -2574,6 +2594,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             searchFieldObj.setValue('');
             container.addElemToModeToolBar(searchFieldObj);
         }
+
         container.addElemToModeToolBar({
         cls     :   if(currentView==3)'btn-selected' else '',
         xtype   :   'button',
@@ -3448,6 +3469,8 @@ $('.vertical .progress-fill span').each(function(){
         el.doLayout();
     }
 
+
+
     public function createTargetCentralPanel(){
         centralTargetPanel = Ext.create('Ext.panel.Panel', {
 
@@ -3468,6 +3491,10 @@ $('.vertical .progress-fill span').each(function(){
             }
         });
 
+        #if PHYLO5
+            var home = new ChromoHubViewerHome(this);
+            home.addUploadForm();
+        #else
         centralTargetPanel.add({
             xtype: 'label',
             text: 'Search/Add Genes',
@@ -3656,6 +3683,7 @@ $('.vertical .progress-fill span').each(function(){
                 items: items
             })
         );
+        #end
         centralTargetPanel.doLayout();
         centralTargetPanel.add({
             xtype: 'panel',
@@ -3978,7 +4006,7 @@ $('.vertical .progress-fill span').each(function(){
                     var aux=this.treeName.split('/');
                     this.treeName=aux[1];
                 }
-                setNewickStr(db_results);
+                setNewickStr(db_results[0].newickStr);
             }
             else {
                 WorkspaceApplication.getApplication().debug(error);
@@ -3987,16 +4015,16 @@ $('.vertical .progress-fill span').each(function(){
         });
 
     }
-    private function setNewickStr(results:Dynamic){
-        var myNewickStr:String;
 
-        myNewickStr=results[0].newickstr;
+    public function setNewickStr(newickStr:String){
+        var myNewickStr = newickStr;
+
         if (myNewickStr==''){
             WorkspaceApplication.getApplication().debug("newickstr is empty");
         }else {
             showTree(myNewickStr);
             //we need to check if there are updates in db for this tree
-            if(recovered==false){
+            if(recovered==false && treeName != null ){
                 WorkspaceApplication.getApplication().getProvider().getByNamedQuery('getTreeUpdates',{family :this.treeName ,domain:this.treeType}, null, false, function(results: Dynamic, error){
                     if((error == null) &&(results.length!=0)){
                         var i=0;
@@ -4067,7 +4095,8 @@ $('.vertical .progress-fill span').each(function(){
             centerCanvas();
         }
     }
-/***************************
+
+    /***************************
      We create here the arrays of all target buttons
     ************************************/
 
@@ -4167,6 +4196,10 @@ $('.vertical .progress-fill span').each(function(){
            treeTypeSelection.items.items[0].items.items[1].setValue(ge);
        }
 
+
+       #if PHYLO5
+
+       #else
        ubiButtons = new Array<Dynamic>();
 
        ubiButtons = [
@@ -4687,6 +4720,8 @@ $('.vertical .progress-fill span').each(function(){
             }
         ];
 
+       #end
+
     }
 
     function showUltraDDGenes(){
@@ -4767,6 +4802,11 @@ $('.vertical .progress-fill span').each(function(){
 /************ View Options Array  from JSON file****/
     public function createViewOptions(){
         viewOptions = new Array<Dynamic>();
+
+        if(jsonFile == null){
+            return;
+        }
+
         var i=0;var j=0;
         while(i< jsonFile.btnGroup.length){
 
@@ -5134,6 +5174,7 @@ $('.vertical .progress-fill span').each(function(){
 
             },function(err) {
                 WorkspaceApplication.getApplication().debug(err);
+                getJSonTips();
             });
     }
     function getJSonTips(){
@@ -5155,6 +5196,13 @@ $('.vertical .progress-fill span').each(function(){
 
             },function(err) {
                 WorkspaceApplication.getApplication().debug(err);
+
+                WorkspaceApplication.getApplication().setMode(ScreenMode.SINGLE_APP);
+
+                #if CHROMOHUB
+                var d: Dynamic = WorkspaceApplication.getApplication();
+                d.viewPoint.show();
+                #end
             });
         }
 

@@ -201,6 +201,8 @@ class DefaultProvider implements Provider{
         for(class_name in theBindingMap.keys()){
             var d:  Map<String, Dynamic> = theBindingMap.get(class_name);
             d.set('provider_name', getName());
+
+            Util.debug(class_name + ' on ' + getName());
         }
 
         if(isModel(saturn.core.domain.FileProxy)){
@@ -656,6 +658,10 @@ class DefaultProvider implements Provider{
             namedQueryHooks.set(name, hook);
             namedQueryHookConfigs.set(name, hookdef);
         }
+    }
+
+    public function addHook(hook : Dynamic, name : String){
+        namedQueryHooks.set(name, hook);
     }
 
     private function _getByNamedQuery(queryId : String, parameters :Dynamic, clazz : Class<Dynamic>, callBack : Dynamic){
