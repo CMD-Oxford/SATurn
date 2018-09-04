@@ -96,16 +96,6 @@ class ChromoHubViewerHome {
         cb(annotations[annotationIndex], null);
     }
 
-    public function styleAnnotation(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
-        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'red',used:false},defImage:100};
-
-        if(data.annotation == 'No'){
-            r.hasAnnot = false;
-        }
-
-        callBack(r);
-    }
-
     public function loadAnnotations(annotationString : String){
         var lines = annotationString.split('\n');
         var header = lines[0];
@@ -120,6 +110,17 @@ class ChromoHubViewerHome {
             annotations[i-1] = [];
 
             var hookName = 'STANDALONE_ANNOTATION_' + (i-1);
+
+            var styleAnnotation = function (target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+                var colours = ['red', 'blue'];
+                var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
+
+                if(data.annotation == 'No'){
+                    r.hasAnnot = false;
+                }
+
+                callBack(r);
+            };
 
             viewer.jsonFile.btnGroup[0].buttons.push({
                 label: cols[i],
