@@ -88,4 +88,5 @@ interface Provider {
     public function getModelByStringName(className : String) : Model;
     public function getConnection(config : Dynamic, cb : String->Connection->Void) : Void;
     public function uploadFile(contents : Dynamic, file_identifier : String, cb : String->String->Void) : String;
+    public function addHook(func : Dynamic, name : String) : Void;
 }

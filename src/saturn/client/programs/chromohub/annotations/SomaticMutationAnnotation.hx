@@ -18,6 +18,9 @@ class SomaticMutationAnnotation {
     }
 
     static public function updateSomaticDiseaseList(cb : String->Void){
+        #if PHYLO5
+
+        #else
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery("sm_name_all",[], null, true, function(results: Array<Dynamic>, error){
             if(error != null){
                 cb(error);
@@ -31,6 +34,7 @@ class SomaticMutationAnnotation {
                 cb(null);
             }
         });
+        #end
     }
 
     static function hasSomaticMut(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
