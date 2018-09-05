@@ -13,7 +13,6 @@ class ProteinTumorLevelAnnotation {
         callBack(r);
     }
 
-
     static function divTumorLevel(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
@@ -37,23 +36,40 @@ class ProteinTumorLevelAnnotation {
                 screenData.target=nom;
             }
 
+            var name:String;
+            if (screenData.target.indexOf('(')!=-1) name=screenData.targetClean;
+            else if (screenData.target.indexOf('-')!=-1) name=screenData.targetClean;
+            else name=screenData.target;
+            trace('Family:');
+
+            var cancer_type:String;
+            cancer_type = screenData.annotation.dbData.cancer_type;
+            if(cancer_type == null) {
+                cancer_type = 'All';
+            }
+
+            var proteinLevels = [];
+            
+
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
+            //searchGenes -> If you have the family name use it otherwise through an exception.
+            var searchGenes = [];
+            searchGenes.push(screenData.targetClean);
 
-            var selectedOptions = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var args = [{'treeType' : tree_type, 'familyTree' : screenData.family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
 
-            WorkspaceApplication.getApplication().getProvider().getByNamedQuery('tumorLevelAllDiv',{target : screenData.targetClean}, null, true, function(results: Dynamic, error){
+            WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevelDiv', args, null, false,function(db_results:Dynamic, error){
                 if(error == null) {
                     var ttext:Dynamic;
                     ttext = '';
 
-                    for(i in 0... results.length){
-                        ttext=ttext+'<tr><td>' + results[i].cancer_type + '</td>';
-                        ttext=ttext+'<td>' + results[i].high + '</td>';
-                        ttext=ttext+'<td>' + results[i].medium + '</td>';
-                        ttext=ttext+'<td>' + results[i].low + '</td>';
-                        ttext=ttext+'<td>' + results[i].not_detected + '</td></tr>';
+                    for(i in 0... db_results.length){
+                        ttext=ttext+'<tr><td>' + db_results[i].cancer_type + '</td>';
+                        ttext=ttext+'<td>' + db_results[i].high + '</td>';
+                        ttext=ttext+'<td>' + db_results[i].medium + '</td>';
+                        ttext=ttext+'<td>' + db_results[i].low + '</td>';
+                        ttext=ttext+'<td>' + db_results[i].not_detected + '</td></tr>';
                     }
-
 
                     var t = '<style type="text/css">
                                  table td:nth-child(1) { width: 40%; }
@@ -62,7 +78,6 @@ class ProteinTumorLevelAnnotation {
                                  table td:nth-child(4) { width: 15%; }
                                  table td:nth-child(5) { width: 15%; }
                                  table td { font-size: 12px; border: 1px solid #cccccc; padding: 5px;}
-                                .divMainDiv4  { }
                                 .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
                                 .divContent{padding:5px;}
                                 .divMainDiv  a{ text-decoration:none!important;}
@@ -122,8 +137,6 @@ class ProteinTumorLevelAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
-
-        viewer.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
             if(error == null){

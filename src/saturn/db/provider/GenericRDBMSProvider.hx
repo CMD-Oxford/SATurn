@@ -656,8 +656,8 @@ class GenericRDBMSProvider extends DefaultProvider{
             }else {
                 debug('Named query with other object type');
                 var dbPlaceHolderI = 0;
-
                 var attributes = Reflect.fields(parameters);
+
                 if(attributes.length == 0){
                     cb(null, 'Unknown parameter collection type'); return;
                 }else{

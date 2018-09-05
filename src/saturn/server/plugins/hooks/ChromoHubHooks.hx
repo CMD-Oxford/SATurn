@@ -908,22 +908,18 @@ class ChromoHubHooks {
         var treeType = params[0].treeType;
         var cancerType = params[0].cancer_type;
         var proteinLevels : Array<String> = params[0].protein_levels;
+        var cancerSelection;
 
-        if(treeType == 'domain'){
-            sql = "
-               SELECT
-                    DISTINCT ftj.target_id, null target_name_index, variant_index
-               FROM
-                    protein_tumor p, family_target_join ftj, variant v
-               WHERE
-                    " + sqlFamilyOrListConstraint + " AND
-                    ftj.target_id = v.target_id AND
-                    ftj.target_id = p.target_id
-               ";
+        if(cancerType == 'All'){
+            cancerSelection = '';
         }else{
+            cancerSelection = ', p.cancer_type ';
+        }
+
+        if(treeType){
             sql = "
                 SELECT
-                    DISTINCT ftj.target_id, null target_name_index, variant_index
+                    DISTINCT ftj.target_id, null target_name_index, variant_index " + cancerSelection + "
                 FROM
                     protein_tumor p, family_target_join ftj, variant v
                 WHERE
@@ -952,7 +948,70 @@ class ChromoHubHooks {
 
             for(proteinLevel in proteinLevels){
                 if(proteinLevel != null && allowedProteinLevels.exists(proteinLevel)){
-                    levels.push('"'+allowedProteinLevels.get(proteinLevel)+'"');
+                    levels.push('`'+allowedProteinLevels.get(proteinLevel)+'`');
+                }
+            }
+
+            if(levels.length > 0){
+                sql += ' AND (' + levels.join(' IS NOT NULL OR ') + ' IS NOT NULL)';
+            }
+        }
+
+        runBasicQuery(sql, boundParameters, cb);
+    }
+
+    public static function hookHasTumorLevelDiv(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var sql : String = '';
+        var treeType = params[0].treeType;
+        var cancerType = params[0].cancer_type;
+
+        if(cancerType == null) {
+            cancerType = 'All';
+        }
+
+        var proteinLevels : Array<String> = params[0].protein_levels;
+
+        if(treeType){
+            sql = "
+                SELECT
+                    p.cancer_type, IFNULL(p.high,'') AS high, IFNULL(p.medium,'') AS medium, IFNULL(p.low,'') AS low, IFNULL(p.not_detected,'') AS not_detected
+                FROM
+                    protein_tumor p
+                WHERE
+                    p.target_id = ?
+            ";
+        }
+
+        // Constrain to the required cancer type
+        if(cancerType != 'All'){
+            sql += ' AND p.cancer_type = ?';
+
+            boundParameters.push(cancerType);
+        }
+
+        // Constrain by protein level
+        if(proteinLevels != null){
+            // The below will look a little redundant, why not just use the value from the user if we know it matches an allowed value?
+            // We don't do that because we shouldn't every concatenate a user supplied value to an SQL statement.
+            // Think about the classic null-byte injection issues that languages have suffered from over the years
+            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not detected'];
+
+            var levels = [];
+
+            for(proteinLevel in proteinLevels){
+                if(proteinLevel != null && allowedProteinLevels.exists(proteinLevel)){
+                    levels.push('`'+allowedProteinLevels.get(proteinLevel)+'`');
                 }
             }
 
@@ -981,45 +1040,48 @@ class ChromoHubHooks {
         var sql : String = '';
 
         var treeType = params[0].treeType;
-        if(treeType == 'domain'){
+        if(treeType == 'gene'){
             sql = "
                SELECT
-                    distinct ftj.target_id, null name_index, v.variant_index
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
                FROM
-                    family_target_join ftj, variant v, essentiality_cancer c
+                    family_target_join ftj, variant v, essentiality_cancer ec
                WHERE
                     " + sqlFamilyOrListConstraint + " AND
-                    ftj.target_id = v.target_id
+                    ftj.target_id = v.target_id AND
+                    ec.target_id = ftj.target_id
                ";
         }else{
             sql = "
                 SELECT
-                    distinct ftj.target_id, null name_index, v.variant_index
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
                 FROM
-                    family_target_join ftj, variant v, essentiality_cancer c
+                    family_target_join ftj, variant v, essentiality_cancer ec
                 WHERE
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
+                    ec.target_id = ftj.target_id AND
                     v.is_default = 1
             ";
         }
 
-        if(cancerTypes != null){
+        if(cancerTypes.length > 0){
             var placeHolders = [];
             for(cancerType in cancerTypes){
                 placeHolders.push('?');
                 boundParameters.push(cancerType);
             }
 
-            sql += ' AND c.primary_disease IN (' + placeHolders.join(',') + ')';
+            sql += ' AND ec.primary_disease IN (' + placeHolders.join(',') + ')';
         }
 
         if(cancerScore != null){
-            sql += ' AND c.median_score <= ?';
+            sql += ' AND ec.median_score <= ?';
 
             boundParameters.push(cancerScore);
         }
 
+        sql += ' ORDER BY ec.median_score';
 
         runBasicQuery(sql, boundParameters, cb);
     }
