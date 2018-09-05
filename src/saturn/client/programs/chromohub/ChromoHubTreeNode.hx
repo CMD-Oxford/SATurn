@@ -11,8 +11,8 @@ package saturn.client.programs.chromohub;
  *         
  */
 
+import saturn.core.Util;
 class ChromoHubTreeNode {
-
     public var parent: ChromoHubTreeNode;
     public var nodeId:Int;
     public var name : String;
@@ -35,6 +35,7 @@ class ChromoHubTreeNode {
     public var screen: Array<ChromoHubScreenData>;
     public var divactive:Int;
     public var space:Int=0;
+    public var colour : String;
 
     public var children: Array<ChromoHubTreeNode>;
     public var dist : Int = 40; // constant que definim nosaltres
@@ -52,6 +53,11 @@ class ChromoHubTreeNode {
     public var rectangleLeft:Int;
     public var results: Array<Int>;
 
+    public var minBranch : Float = null;
+    public var maxBranch : Float = null;
+    public var xRandom : Float = null;
+    public var yRandom : Float = null;
+    public var lineWidth : Float = 1;
 
     public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
         this.parent=parent;
@@ -116,17 +122,22 @@ class ChromoHubTreeNode {
     }
 
     public function preOrderTraversal (mode:Int){
+
+        //this.root.branch = this.root.maxBranch;
+
         if(this.parent!=null){ //this is not a root node
             var parent = this.parent;
 
-            this.x=parent.x+Math.cos(this.angle+this.wedge/2)*this.root.dist;
-            this.y=parent.y+Math.sin(this.angle+this.wedge/2)*this.root.dist;
+            //this.x=parent.x+Math.cos(this.angle+this.wedge/2)*((1-((this.branch -this.root.minBranch) / (this.root.maxBranch - this.root.minBranch))) * 40);
+            //this.y=parent.y+Math.sin(this.angle+this.wedge/2)*((1-((this.branch -this.root.minBranch) / (this.root.maxBranch - this.root.minBranch))) * 40);
+
+            this.x=parent.x+Math.cos(this.angle+this.wedge/2)*dist;
+            this.y=parent.y+Math.sin(this.angle+this.wedge/2)*dist;
 
             if(mode==1){
                 this.nodeId=this.root.numchild;
                 this.root.nodeIdToNode.set(this.nodeId, this);
             }
-            ;
 
         }
         else{
@@ -147,6 +158,28 @@ class ChromoHubTreeNode {
             this.children[i].preOrderTraversal(mode);
             i++;
         }
+
+    }
+
+    public function calculateScale(){
+        Util.debug(''+this.branch + '/' + this.root.minBranch + '/' +  this.root.maxBranch);
+
+        if(this.branch != null){
+            if(this.root.maxBranch == null || this.branch > this.root.maxBranch){
+                this.root.maxBranch = this.branch;
+            }
+
+            if(this.root.minBranch == null || this.branch < this.root.minBranch){
+                this.root.minBranch = this.branch;
+            }
+        }
+
+
+        for(i in 0...this.children.length){
+            this.children[i].calculateScale();
+        }
+
+
 
     }
 

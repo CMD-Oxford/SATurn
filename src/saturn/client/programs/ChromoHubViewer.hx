@@ -130,6 +130,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     var selectedAnnotationOptions = [];
 
+    var currentAdjustmentColour = null;
+    var enableColourAdjust = false;
+
     public function new(){
         super();
     }
@@ -238,8 +241,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             var d = checkPosition(e);
             if (d!=null) {
                 js.Browser.document.body.style.cursor = "auto";
-                if(d.isAnnot==true) showScreenData(false,d,e.pageX,e.pageY);
-                else if(editmode==true){
+                if(d.isAnnot==true){
+                    showScreenData(false,d,e.pageX,e.pageY);
+                }else if(editmode==true){
                     var node:ChromoHubTreeNode;
                     node=this.rootNode.nodeIdToNode.get(d.nodeId);
                     var clock=true;
@@ -250,6 +254,17 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     //we need to check wheter the SHIFT key is pressed
                     //var a=js.html.event.
                     moveNode(d,false, clock);
+                }else if(enableColourAdjust){
+                    var node:ChromoHubTreeNode = this.rootNode.nodeIdToNode.get(d.nodeId);
+
+                    if(d.nodeId == 0){
+                        node = rootNode;
+                    }
+
+
+                    //undolist[undolist.length]={data:d,x:d.x,y:d.y,angle:node.angle, clock:clock};
+
+                    colourNode(node);
                 }
             }
         });
@@ -303,6 +318,12 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             // if (leaving==true)showScreenData(true,null,e.pageX,e.pageY);
              leaving=true;
         });
+    }
+
+    public function colourNode(node: ChromoHubTreeNode){
+        node.colour = currentAdjustmentColour;
+
+        newposition(0,0);
     }
 
 
@@ -639,6 +660,10 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         //this is the time when rootNode gets its content
         rootNode = newickParser.parse(newickStr); //rootNoder is a ChromoHubTreeNode
+        rootNode.calculateScale();
+
+        rootNode.minBranch = 0;
+
         rootNode.postOrderTraversal();
         if (rootNode.leaves > 150) this.rootNode.dist=60;
         rootNode.x = 0;
@@ -646,6 +671,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         rootNode.wedge = 2*Math.PI;
         rootNode.angle = 0;
         rootNode.preOrderTraversal(1);
+
+
+
         // in this point we have the tree with ALL details to be drawn
 
 
@@ -672,6 +700,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
        // annotations= new Array();
 
         radialRendererObj.render(this.rootNode,this.canvas,this.activeAnnotation, annotations);
+
+
+
 
 		// map one key by key code
 		var map = new bindings.KeyMap(theComponent.getEl(), {
@@ -1501,8 +1532,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                             hook(name,res,option, annotations, item, _processAnnotation);
                         }
 
-
-
                         j++;
                     }else {
                         finished=true;
@@ -1880,6 +1909,27 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         container.updateOptionsToolBar(active);
     }
 
+    public function setAdjustmentColour(colour :String){
+        this.currentAdjustmentColour = colour;
+    }
+
+    public function enableColourAdjustment(enable : Bool){
+        enableColourAdjust = enable;
+    }
+
+    public function setLineWidth(width : Float){
+        _setLineWidth(rootNode,width);
+
+        newposition(0,0);
+    }
+
+    public function _setLineWidth(node : ChromoHubTreeNode, width : Float){
+        node.lineWidth = width;
+
+        for(i in 0...node.children.length){
+            _setLineWidth(node.children[i], width);
+        }
+    }
 
     private function addControlBtnsToCentralPanel(){
         if(standaloneMode){
@@ -1950,16 +2000,98 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 }
             });
 
+
+            var items :Array<Dynamic> = [];
+
+            items.push({
+                text:'Edit Mode',
+                hidden : false,
+                handler: function(){
+                    if(editmode){
+                        editmode = false;
+                        getApplication().getSingleAppContainer().hideEditToolBar();
+                    }else{
+                        editmode = true;
+
+                        getApplication().getSingleAppContainer().showEditToolBar();
+                    }
+
+                }
+            });
+
+            var colourPickerItems : Array<Dynamic> = [];
+            colourPickerItems.push( {
+                xtype:'component',
+                autoEl:{
+                    tag:'label',
+                    html:'Choose Colour',
+                    'for':'colour_picker'
+                }
+            });
+
+            colourPickerItems.push({
+                xtype:'component',
+                autoEl: {
+                    html: '<input name="colour_picker" id="colour_picker" type="color"/>'
+                },
+                listeners:{
+                    el:{
+                        delegate: 'input',
+                        change:function(){
+                            var colourField : Dynamic = js.Browser.document.getElementById('colour_picker');
+
+                            setAdjustmentColour(colourField.value);
+                        }
+                    }
+                }
+            });
+
+            items.push({
+                text:'Adjust Colours',
+                hidden : false,
+                handler: function(){
+                    var window = Ext.create('Ext.window.Window', {
+                        listeners: {
+                            afterrender: function(){
+
+                            }
+                        },
+                        items:colourPickerItems
+                    });
+
+                    window.show();
+                },
+                listeners:{
+                    click:function(){
+                        enableColourAdjustment(true);
+                    }
+                }
+            });
+
+            items.push({
+                text:'Set line width',
+                hidden : false,
+                handler: function(){
+                    Ext.Msg.prompt('Enter line width', 'Enter line width', function(btn, text){
+                        if(btn == 'ok'){
+                            setLineWidth(Std.parseFloat(text));
+                        }
+                    });
+                },
+                listeners:{
+                    click:function(){
+                        enableColourAdjustment(true);
+                    }
+                }
+            });
+
             addCanvasButton({
                 cls :'x-btn-export-single-fake',
                 xtype: 'button',
                 top:40,
-                handler:
-                function(e){
-                    editmode = true;
-
-                    getApplication().getSingleAppContainer().showEditToolBar();
-                }
+                menu: Ext.create('Ext.menu.Menu',{
+                    items: items
+                }),
             });
 
             addCanvasButton({

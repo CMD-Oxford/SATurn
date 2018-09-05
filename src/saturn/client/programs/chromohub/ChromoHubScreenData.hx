@@ -43,19 +43,12 @@ class ChromoHubScreenData {
     }
 
     public function checkMouse(mx:Int,my:Int){
-      // WorkspaceApplication.getApplication().debug('mxxx is '+mx);
-      //  WorkspaceApplication.getApplication().debug('myyy is '+my);
-
-
-        // we need to apply the current scale
         var scaleX=x*renderer.scale;
         var scaleY=y*renderer.scale;
         var scaleWidth=(width)*renderer.scale;
         var scaleHeight=(height)*renderer.scale;
 
-
         switch(this.point){
-
             case 1: if((mx>=scaleX)&&(mx<(scaleX+scaleWidth))&&(my<(scaleY+scaleHeight))&&(my>=scaleY)) {
                    /* WorkspaceApplication.getApplication().debug('x is '+x);
                     WorkspaceApplication.getApplication().debug('width is '+width);
@@ -72,10 +65,9 @@ class ChromoHubScreenData {
                     WorkspaceApplication.getApplication().debug('height is '+height);*/
                     return true;
                 }else{
-
-                    return false;}
+                    return false;
+                }
             case 3: // circle
-
                 scaleWidth=(width*renderer.scale)/2;
                 scaleHeight=(height*renderer.scale)/2;
 

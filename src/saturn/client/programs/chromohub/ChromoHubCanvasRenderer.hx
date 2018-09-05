@@ -61,6 +61,27 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
     }
 
+    public function bezierCurve (x0:Float,y0:Float, x1:Float, y1:Float, firstX : Float, firstY : Float, secondX : Float, secondY : Float, strokeStyle:Dynamic, lineWidth: Float){
+
+
+        //var grd = this.ctx.createLinearGradient(0,0,0,150);
+        // light blue
+        //grd.addColorStop(0, 'white');
+        // dark blue
+        //grd.addColorStop(1, strokeStyle);
+
+
+        // this.ctx.scale(this.scale,this.scale);
+        this.ctx.strokeStyle=strokeStyle;
+        this.ctx.beginPath();
+        this.ctx.moveTo(Math.round(x0), Math.round(y0));
+
+        this.ctx.bezierCurveTo(Math.round(firstX),Math.round(firstY),Math.round(secondX),Math.round(secondY), Math.round(x1), Math.round(y1));
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.stroke();
+
+    }
+
     public function drawText (text:String , tx:Float, ty:Float, x:Float, y:Float, rotation: Float, textAlign:String, color: String):Void{
 
         this.ctx.save();

@@ -38,19 +38,50 @@ class ChromoHubRadialTreeLayout{
 
     }
 
-    public function render (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>){
-
+    public function render (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){
         var i=0;
         var x=treeNode.x;
         var y=treeNode.y;
-        var linecolor="rgb(28,102,224)";
 
-        if(prog.editmode==true) linecolor="rgb(234,147,28)";
+        if(prog.editmode==true) lineColour="rgb(234,147,28)";
 
         while(i<treeNode.children.length){
             treeNode.children[i].space=0;
+
             if(treeNode.children[i].isLeaf()) {
-                renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,linecolor);
+                //renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour);
+
+                var deltaX = Math.abs(x - treeNode.children[i].x);
+                var deltaY =  Math.abs(y - treeNode.children[i].y);
+
+                var firstY, secondY;
+                var firstX, secondX;
+
+                if(treeNode.children[i].xRandom == null){
+                    treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
+                }
+
+                if(treeNode.children[i].yRandom == null){
+                    treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
+                }
+
+                if(treeNode.children[i].y < y){
+                    firstY = y -(deltaY * treeNode.children[i].yRandom);
+                    secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                }else{
+                    firstY = y +(deltaY * treeNode.children[i].yRandom);
+                    secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                }
+
+                if(treeNode.children[i].x > x){
+                    firstX = x + (deltaX * 0.6);
+                    secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
+                }else{
+                    firstX = x - (deltaX * 0.6);
+                    secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
+                }
+
+                renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
 
                 var t:Int;
                 var aux,aux1;
@@ -117,6 +148,7 @@ class ChromoHubRadialTreeLayout{
                 var namecolor='#585b5f';
                 var ttar=treeNode.children[i].name;
                 if(prog.highlightedGenes.exists(ttar)==true) namecolor='#ff0000';
+
                 renderer.drawText(' '+treeNode.children[i].name, treeNode.children[i].x,treeNode.children[i].y, -2, 3,rot,orign,namecolor);
                 updateTreeRectangle(treeNode.children[i].x,treeNode.children[i].y, treeNode.root);
                 t= renderer.mesureText(treeNode.children[i].name)+10; // calculate the width of the text in pixels and we add padding
@@ -147,8 +179,46 @@ class ChromoHubRadialTreeLayout{
                 }
             }
             else{
-                this.render(treeNode.children[i],renderer, annotations,annotList); //the edge here is already drawn
-                renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,linecolor);
+                var childLineColour = lineColour;
+                if(treeNode.children[i].colour != null){
+                    childLineColour = treeNode.children[i].colour;
+                }
+
+                this.render(treeNode.children[i],renderer, annotations,annotList,childLineColour); //the edge here is already drawn
+
+
+                var deltaX = Math.abs(x - treeNode.children[i].x);
+                var deltaY =  Math.abs(y - treeNode.children[i].y);
+
+                var firstY, secondY;
+                var firstX, secondX;
+
+                if(treeNode.children[i].xRandom == null){
+                    treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
+                }
+
+                if(treeNode.children[i].yRandom == null){
+                    treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
+                }
+
+                if(treeNode.children[i].y < y){
+                    firstY = y -(deltaY * treeNode.children[i].yRandom);
+                    secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                }else{
+                    firstY = y +(deltaY * treeNode.children[i].yRandom);
+                    secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                }
+
+                if(treeNode.children[i].x > x){
+                    firstX = x + (deltaX * 0.6);
+                    secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
+                }else{
+                    firstX = x - (deltaX * 0.6);
+                    secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
+                }
+
+                renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
+
                 var data:ChromoHubScreenData;
                 data=new ChromoHubScreenData();
 
@@ -169,6 +239,21 @@ class ChromoHubRadialTreeLayout{
             i++;
 
         }
+
+        if(treeNode.parent == null){
+            var rootScreen = new ChromoHubScreenData();
+            rootScreen.x = treeNode.x;
+            rootScreen.y = treeNode.y;
+            rootScreen.nodeId = treeNode.nodeId;
+            rootScreen.renderer = renderer;
+
+            rootScreen.point=5;
+            rootScreen.width=10;
+            rootScreen.height=10;
+
+            treeNode.screen.push(rootScreen);
+        }
+
     }
 
     public function addAnnotation(leave:ChromoHubTreeNode, annotation:Int,  long: Int, renderer: ChromoHubCanvasRenderer,annotList:Array<ChromoHubAnnotation>):Bool{
@@ -470,7 +555,6 @@ class ChromoHubRadialTreeLayout{
 
 
     public function addAlfaAnnotation(leave:ChromoHubTreeNode, alfaAnnot:ChromoHubAnnotation, annotation:Int,  long: Int, renderer: ChromoHubCanvasRenderer,annotList:Array<ChromoHubAnnotation>):Bool{
-
         var res:Bool=false;
         var data:ChromoHubScreenData;
         var nx,ny:Dynamic;
