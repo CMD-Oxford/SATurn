@@ -37,8 +37,9 @@ class ProteinTumorLevelAnnotation {
                 screenData.target=nom;
             }
 
-
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
+
+            var selectedOptions = viewer.getSelectedAnnotationOptions(screenData.annot);
 
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery('tumorLevelAllDiv',{target : screenData.targetClean}, null, true, function(results: Dynamic, error){
                 if(error == null) {
@@ -121,6 +122,8 @@ class ProteinTumorLevelAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
+
+        viewer.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
             if(error == null){

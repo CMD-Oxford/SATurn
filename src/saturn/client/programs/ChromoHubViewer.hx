@@ -128,6 +128,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     var enableEditMode = true;
 
+    var selectedAnnotationOptions = [];
+
     public function new(){
         super();
     }
@@ -144,6 +146,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         searchedGenes=new Array();
         activeAnnotation=new Array();
         annotations=new Array();
+        selectedAnnotationOptions = new Array();
         highlightedGenes=new Map<String, Bool>();
         alreadyGotAnnotation=new Map<String, Bool>();
         geneMap=new Map<String, ChromoHubTreeNode>();
@@ -806,6 +809,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }
     }
 
+    public function setSelectedAnnotationOptions(annotation : Int, selectedOptions : Dynamic){
+        selectedAnnotationOptions[annotation] = selectedOptions;
+    }
+
+    public function getSelectedAnnotationOptions(annotation : Int) : Dynamic{
+        return selectedAnnotationOptions[annotation];
+    }
+
     public function fillAnnotationwithJSonData(){
 
         var i=0; var j=0; var z=0;
@@ -821,6 +832,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     var a:Int;
                     a=jsonFile.btnGroup[i].buttons[j].annotCode;
                     annotations[a]= new ChromoHubAnnotation();
+
+                    selectedAnnotationOptions[a] = null;
+
                     if (jsonFile.btnGroup[i].buttons[j].shape == "image") {
                         annotations[a].uploadImg(jsonFile.btnGroup[i].buttons[j].annotImg); //summary
                     }
