@@ -58,6 +58,8 @@ class ProteinTumorLevelAnnotation {
 
             var args = [{'treeType' : tree_type, 'familyTree' : screenData.family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
 
+            viewer.getSelectedAnnotationOptions(screenData.annot);
+
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevelDiv', args, null, false,function(db_results:Dynamic, error){
                 if(error == null) {
                     var ttext:Dynamic;
@@ -137,6 +139,8 @@ class ProteinTumorLevelAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
+
+        viewer.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
             if(error == null){
