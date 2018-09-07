@@ -43,21 +43,24 @@ class ProteinCancerEssentialAnnotation {
             if (screenData.target.indexOf('(')!=-1) name=screenData.targetClean;
             else if (screenData.target.indexOf('-')!=-1) name=screenData.targetClean;
             else name=screenData.target;
-
-            var cancerScore:String;
-            cancerScore = screenData.annotation.dbData.median_score;
-
-            var score:Float = Std.parseFloat(cancerScore);
-            trace(score);
-
-
             trace('Family:');
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var args = {target : screenData.targetClean, score : score};
+            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var score = selectedAnnotations[0].cancer_score;
+            var cancer_type = selectedAnnotations[0].cancer_types;
+            var alias;
 
-            WorkspaceApplication.getApplication().getProvider().getByNamedQuery('gene_cancerEssentialDiv', args, null, false,function(db_results:Dynamic, error){
+            if(cancer_type.length > 0){
+                alias = 'gene_cancerEssentialDiv';
+            } else {
+                alias = 'gene_cancerEssentialAllDiv';
+            }
+
+            var args = {target : screenData.targetClean, score : score, type : cancer_type};
+
+            WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias, args, null, false,function(db_results:Dynamic, error){
                 if(error == null) {
                     var ttext:Dynamic;
                     ttext = '';
@@ -70,8 +73,8 @@ class ProteinCancerEssentialAnnotation {
 
                     var t = '<style type="text/css">
                                      table td:nth-child(1) { width: 40%; }
-                                     table td:nth-child(2) { width: 15%; }
-                                     table td:nth-child(3) { width: 15%; }
+                                     table td:nth-child(2) { width: 30%; }
+                                     table td:nth-child(3) { width: 30%; }
                                      table td { font-size: 12px; border: 1px solid #cccccc; padding: 5px;}
                                     .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
                                     .divContent{padding:5px;}
@@ -116,6 +119,7 @@ class ProteinCancerEssentialAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_score' : cancerScore, 'searchGenes' : searchGenes, 'cancer_types' :  cancerTypes}];
+        viewer.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookCancerEssential', args, null, false, function(db_results, error){
             if(error == null){

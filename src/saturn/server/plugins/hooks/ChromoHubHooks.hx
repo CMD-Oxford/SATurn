@@ -908,18 +908,11 @@ class ChromoHubHooks {
         var treeType = params[0].treeType;
         var cancerType = params[0].cancer_type;
         var proteinLevels : Array<String> = params[0].protein_levels;
-        var cancerSelection;
-
-        if(cancerType == 'All'){
-            cancerSelection = '';
-        }else{
-            cancerSelection = ', p.cancer_type ';
-        }
 
         if(treeType){
             sql = "
                 SELECT
-                    DISTINCT ftj.target_id, null target_name_index, variant_index " + cancerSelection + "
+                    DISTINCT ftj.target_id, null target_name_index, variant_index
                 FROM
                     protein_tumor p, family_target_join ftj, variant v
                 WHERE
@@ -933,7 +926,6 @@ class ChromoHubHooks {
         // Constrain to the required cancer type
         if(cancerType != 'All'){
             sql += ' AND p.cancer_type = ?';
-
             boundParameters.push(cancerType);
         }
 
@@ -975,10 +967,6 @@ class ChromoHubHooks {
         var sql : String = '';
         var treeType = params[0].treeType;
         var cancerType = params[0].cancer_type;
-
-        if(cancerType == null) {
-            cancerType = 'All';
-        }
 
         var proteinLevels : Array<String> = params[0].protein_levels;
 
@@ -1077,11 +1065,9 @@ class ChromoHubHooks {
 
         if(cancerScore != null){
             sql += ' AND ec.median_score <= ?';
-
             boundParameters.push(cancerScore);
         }
 
-        sql += ' ORDER BY ec.median_score';
 
         runBasicQuery(sql, boundParameters, cb);
     }
@@ -1189,6 +1175,85 @@ class ChromoHubHooks {
         runBasicQuery(sql, boundParameters, cb);
     }
 
+    public static function hookHasProteinNormalLevelsDiv(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var tissueTypes :Array<String> = params[0].tissue_types;
+        var cellTypes :Array<String> = params[0].cell_types;
+        var proteinLevels : Array<String> = params[0].protein_levels;
+        var reliabilities : Array<String> = params[0].reliabilities;
+        var treeType = params[0].treeType;
+
+        var sql : String = '';
+
+        if(treeType){
+            sql = "
+                SELECT
+                    p.tissue, cell_type, p.protein_level, p.reliability
+                FROM
+                    protein_normal_tissue p
+                WHERE
+                    p.target_id = ?
+            ";
+        }
+
+        // Append tissue type constraints
+        if(tissueTypes != null && tissueTypes.length > 0){
+            var placeHolders = [];
+            for(tissueType in tissueTypes){
+                placeHolders.push('?');
+                boundParameters.push(tissueType);
+            }
+
+            sql += ' AND p.tissue IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append cell type constraints
+        if(cellTypes != null && cellTypes.length > 0){
+            var placeHolders = [];
+            for(cellType in cellTypes){
+                placeHolders.push('?');
+                boundParameters.push(cellType);
+            }
+
+            sql += ' AND p.cell_type IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append protein level constraints
+        if(proteinLevels != null && proteinLevels.length > 0){
+            var placeHolders = [];
+            for(proteinLevel in proteinLevels){
+                placeHolders.push('?');
+                boundParameters.push(proteinLevel);
+            }
+
+            sql += ' AND p.protein_level IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append relaibility constraints
+        if(reliabilities != null && reliabilities.length > 0){
+            var placeHolders = [];
+            for(reliability in reliabilities){
+                placeHolders.push('?');
+                boundParameters.push(reliability);
+            }
+
+            sql += ' AND p.reliability IN (' + placeHolders.join(',') + ')';
+        }
+
+
+        runBasicQuery(sql, boundParameters, cb);
+    }
+
     public static function hookHasProteinNormalLevelsPercentage(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
         var familyOrListInfo = null;
 
@@ -1219,7 +1284,8 @@ class ChromoHubHooks {
                WHERE
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
-                    ftj.target_id = p.target_id
+                    ftj.target_id = p.target_id AND
+                    s.target_id = p.target_id
                ";
         }else{
             // We get here when the user has requested a gene centric tree
@@ -1232,11 +1298,12 @@ class ChromoHubHooks {
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
                     v.is_default = 1 AND
-                    ftj.target_id = p.target_id
+                    ftj.target_id = p.target_id AND
+                    s.target_id = p.target_id
             ";
         }
 
-        if(proteinLevels != null || proteinLevels.length == 0){
+        if(proteinLevels != null && proteinLevels.length == 0){
             proteinLevels = ['High', 'Medium', 'Low'];
         }
 
@@ -1282,6 +1349,85 @@ class ChromoHubHooks {
         }
 
         // Run query
+        runBasicQuery(sql, boundParameters, cb);
+    }
+
+    public static function hookHasProteinNormalLevelsPercentageDiv(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var proteinLevels : Array<String> = params[0].protein_levels;
+        var reliabilities : Array<String> = params[0].reliabilities;
+        var inPercentage :String = params[0].in_percentage;
+        var treeType = params[0].treeType;
+
+        var sql : String = '';
+
+        if(treeType){
+            sql = "
+                SELECT
+                    p.tissue, cell_type, p.protein_level, p.reliability
+                FROM
+                    protein_normal_tissue p, protein_normal_tissue_stat s
+                WHERE
+                    p.target_id = ? AND
+                    p.target_id = s.target_id
+            ";
+        }
+
+        if(proteinLevels != null && proteinLevels.length == 0){
+            proteinLevels = ['High', 'Medium', 'Low'];
+        }
+
+        // Append protein level constraints
+        if(proteinLevels != null && proteinLevels.length > 0){
+            var columns = [];
+            for(proteinLevel in proteinLevels){
+                if(proteinLevel == 'High'){
+                    columns.push('s.level_high_num');
+                }
+
+                if(proteinLevel == 'Medium'){
+                    columns.push('s.level_medium_num');
+                }
+
+                if(proteinLevel == 'Low'){
+                    columns.push('s.level_low_num');
+                }
+            }
+
+            sql += ' AND ((' + columns.join('+') + ') / s.total_num > ?)';
+
+            if(inPercentage == 'at least 1'){
+                boundParameters.push(0);
+            }else if(inPercentage == 'more than 25%'){
+                boundParameters.push(0.25);
+            }else if(inPercentage == 'more than 50%'){
+                boundParameters.push(0.50);
+            }else if(inPercentage == 'more than 75%'){
+                boundParameters.push(0.75);
+            }
+        }
+
+        // Append relaibility constraints
+        if(reliabilities != null && reliabilities.length > 0){
+            var placeHolders = [];
+            for(reliability in reliabilities){
+                placeHolders.push('?');
+                boundParameters.push(reliability);
+            }
+
+            sql += ' AND p.reliability IN (' + placeHolders.join(',') + ')';
+        }
+
         runBasicQuery(sql, boundParameters, cb);
     }
 
@@ -1331,7 +1477,7 @@ class ChromoHubHooks {
             ";
         }
 
-        if(proteinLevels != null || proteinLevels.length == 0){
+        if(proteinLevels != null && proteinLevels.length == 0){
             proteinLevels = ['High', 'Medium', 'Low'];
         }
 
@@ -1366,6 +1512,57 @@ class ChromoHubHooks {
         }
 
         // Run query
+        runBasicQuery(sql, boundParameters, cb);
+    }
+
+    public static function hookHasTumorLevelPercentageDiv(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+
+        var sql : String = '';
+        var treeType = params[0].treeType;
+        var inPercentage :String = params[0].in_percentage;
+        var proteinLevels : Array<String> = params[0].protein_levels;
+
+        if(treeType){
+        sql = "
+            SELECT
+                p.cancer_type, IFNULL(p.high,'') AS high, IFNULL(p.medium,'') AS medium, IFNULL(p.low,'') AS low, IFNULL(p.not_detected,'') AS not_detected
+			FROM
+			    protein_tumor p
+			WHERE
+			    p.target_id = ?
+        ";
+        }
+
+        // Constrain by protein level and tumor percentage
+        if(proteinLevels != null){
+            // The below will look a little redundant, why not just use the value from the user if we know it matches an allowed value?
+            // We don't do that because we shouldn't every concatenate a user supplied value to an SQL statement.
+            // Think about the classic null-byte injection issues that languages have suffered from over the years
+            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not detected'];
+
+            var levels = [];
+
+            for(proteinLevel in proteinLevels){
+                if(proteinLevel != null && allowedProteinLevels.exists(proteinLevel)){
+                    levels.push('`'+allowedProteinLevels.get(proteinLevel)+'`');
+                }
+            }
+
+            if(levels.length > 0){
+                sql += ' AND (' + levels.join(' IS NOT NULL OR ') + ' IS NOT NULL)';
+            }
+        }
+
         runBasicQuery(sql, boundParameters, cb);
     }
 }
