@@ -1,5 +1,6 @@
 
 package saturn.client.programs.chromohub;
+import saturn.client.programs.chromohub.ChromoHubTreeNode.LineMode;
 import saturn.client.workspace.ChromoHubWorkspaceObject;
 import saturn.client.programs.ChromoHubViewer;
 import saturn.client.WorkspaceApplication;
@@ -51,37 +52,41 @@ class ChromoHubRadialTreeLayout{
             if(treeNode.children[i].isLeaf()) {
                 //renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour);
 
-                var deltaX = Math.abs(x - treeNode.children[i].x);
-                var deltaY =  Math.abs(y - treeNode.children[i].y);
+                if(treeNode.children[i].lineMode == LineMode.BEZIER){
+                    var deltaX = Math.abs(x - treeNode.children[i].x);
+                    var deltaY =  Math.abs(y - treeNode.children[i].y);
 
-                var firstY, secondY;
-                var firstX, secondX;
+                    var firstY, secondY;
+                    var firstX, secondX;
 
-                if(treeNode.children[i].xRandom == null){
-                    treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
-                }
+                    if(treeNode.children[i].xRandom == null){
+                        treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
+                    }
 
-                if(treeNode.children[i].yRandom == null){
-                    treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
-                }
+                    if(treeNode.children[i].yRandom == null){
+                        treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
+                    }
 
-                if(treeNode.children[i].y < y){
-                    firstY = y -(deltaY * treeNode.children[i].yRandom);
-                    secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                    if(treeNode.children[i].y < y){
+                        firstY = y -(deltaY * treeNode.children[i].yRandom);
+                        secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                    }else{
+                        firstY = y +(deltaY * treeNode.children[i].yRandom);
+                        secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                    }
+
+                    if(treeNode.children[i].x > x){
+                        firstX = x + (deltaX * 0.6);
+                        secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
+                    }else{
+                        firstX = x - (deltaX * 0.6);
+                        secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
+                    }
+
+                    renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
                 }else{
-                    firstY = y +(deltaY * treeNode.children[i].yRandom);
-                    secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                    renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour, treeNode.children[i].lineWidth);
                 }
-
-                if(treeNode.children[i].x > x){
-                    firstX = x + (deltaX * 0.6);
-                    secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
-                }else{
-                    firstX = x - (deltaX * 0.6);
-                    secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
-                }
-
-                renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
 
                 var t:Int;
                 var aux,aux1;
@@ -186,38 +191,41 @@ class ChromoHubRadialTreeLayout{
 
                 this.render(treeNode.children[i],renderer, annotations,annotList,childLineColour); //the edge here is already drawn
 
+                if(treeNode.children[i].lineMode == LineMode.BEZIER){
+                    var deltaX = Math.abs(x - treeNode.children[i].x);
+                    var deltaY =  Math.abs(y - treeNode.children[i].y);
 
-                var deltaX = Math.abs(x - treeNode.children[i].x);
-                var deltaY =  Math.abs(y - treeNode.children[i].y);
+                    var firstY, secondY;
+                    var firstX, secondX;
 
-                var firstY, secondY;
-                var firstX, secondX;
+                    if(treeNode.children[i].xRandom == null){
+                        treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
+                    }
 
-                if(treeNode.children[i].xRandom == null){
-                    treeNode.children[i].xRandom = Math.random() * (0.6-0.3) + 0.3;
-                }
+                    if(treeNode.children[i].yRandom == null){
+                        treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
+                    }
 
-                if(treeNode.children[i].yRandom == null){
-                    treeNode.children[i].yRandom = Math.random() * (0.8-0.4) + 0.4;
-                }
+                    if(treeNode.children[i].y < y){
+                        firstY = y -(deltaY * treeNode.children[i].yRandom);
+                        secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                    }else{
+                        firstY = y +(deltaY * treeNode.children[i].yRandom);
+                        secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                    }
 
-                if(treeNode.children[i].y < y){
-                    firstY = y -(deltaY * treeNode.children[i].yRandom);
-                    secondY = treeNode.children[i].y +(deltaY * treeNode.children[i].yRandom);
+                    if(treeNode.children[i].x > x){
+                        firstX = x + (deltaX * 0.6);
+                        secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
+                    }else{
+                        firstX = x - (deltaX * 0.6);
+                        secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
+                    }
+
+                    renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
                 }else{
-                    firstY = y +(deltaY * treeNode.children[i].yRandom);
-                    secondY = treeNode.children[i].y -(deltaY * treeNode.children[i].yRandom);
+                    renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour, treeNode.children[i].lineWidth);
                 }
-
-                if(treeNode.children[i].x > x){
-                    firstX = x + (deltaX * 0.6);
-                    secondX = treeNode.children[i].x -(deltaX * treeNode.children[i].xRandom);
-                }else{
-                    firstX = x - (deltaX * 0.6);
-                    secondX = treeNode.children[i].x +(deltaX * treeNode.children[i].xRandom);
-                }
-
-                renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX, firstY, secondX, secondY, lineColour, treeNode.children[i].lineWidth);
 
                 var data:ChromoHubScreenData;
                 data=new ChromoHubScreenData();

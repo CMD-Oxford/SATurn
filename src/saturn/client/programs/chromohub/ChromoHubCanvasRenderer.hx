@@ -48,7 +48,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
     }
 
-    public function drawLine (x0:Float,y0:Float, x1:Float, y1:Float,strokeStyle:Dynamic){
+    public function drawLine (x0:Float,y0:Float, x1:Float, y1:Float,strokeStyle:Dynamic, lineWidth : Float){
 
        // this.ctx.scale(this.scale,this.scale);
         this.ctx.strokeStyle=strokeStyle;
@@ -56,6 +56,8 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
         this.ctx.moveTo(Math.round(x0), Math.round(y0));
 
         this.ctx.lineTo(Math.round(x1),Math.round(y1));
+
+        this.ctx.lineWidth = lineWidth;
 
         this.ctx.stroke();
 

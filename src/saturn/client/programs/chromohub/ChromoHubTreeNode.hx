@@ -58,6 +58,7 @@ class ChromoHubTreeNode {
     public var xRandom : Float = null;
     public var yRandom : Float = null;
     public var lineWidth : Float = 1;
+    public var lineMode : LineMode = LineMode.STRAIGHT;
 
     public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
         this.parent=parent;
@@ -241,5 +242,10 @@ class ChromoHubTreeNode {
     }
 
 
+}
+
+enum LineMode {
+    STRAIGHT;
+    BEZIER;
 }
 

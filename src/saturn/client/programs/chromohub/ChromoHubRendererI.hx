@@ -36,7 +36,7 @@ interface ChromoHubRendererI {
      *               Currently in the format rgb(x,x,x)
      * @returns {undefined}
      */
-    public function drawLine (x0:Float,y0:Float, x1:Float, y1:Float,colour:Dynamic):Void;
+    public function drawLine (x0:Float,y0:Float, x1:Float, y1:Float,colour:Dynamic, lineWidth : Float):Void;
 
     /**
      * Method draws text at position x/y after translation and rotation operations

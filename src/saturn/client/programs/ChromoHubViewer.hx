@@ -133,6 +133,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     var currentAdjustmentColour = null;
     var enableColourAdjust = false;
 
+    var subtreeName = null;
+
     public function new(){
         super();
     }
@@ -153,7 +155,12 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         highlightedGenes=new Map<String, Bool>();
         alreadyGotAnnotation=new Map<String, Bool>();
         geneMap=new Map<String, ChromoHubTreeNode>();
+
+        #if UBIHUB
+        treeType='gene';
+        #else
         treeType='domain';
+        #end
         treeName='';
         rootNode=null;
 
@@ -1722,12 +1729,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             },
             tooltip : {dismissDelay: 10000, text: 'Undo last action'}
         });
+
+        #if UBIHUB
         container.addElemToEditToolBar({
             iconCls :'x-btn-save-single',
             handler : function(){
 
                 if(recovered==true){
-                    WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookDelTree',[{'domain':this.treeType,'family':this.treeName}], null, false,function(db_results, error){
+                    WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookDelTree',[{'domain':this.subtreeName,'family':this.treeName}], null, false,function(db_results, error){
                         if(error == null) {
                             if(undolist.length>0){
                                 var blocks = [];
@@ -1742,7 +1751,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                                     var d=auxpop.data;
                                     if(nodelist.exists(d.nodeId)==false){
                                         //nodeId, familyName, domainbase, nodeX, nodeY, angle
-                                        var s={'nodeId':d.nodeId,'family':this.treeName,'domain':this.treeType,'nodeX':auxpop.x, 'nodeY':auxpop.y, 'angle':auxpop.angle, 'clock':auxpop.clock};
+                                        var s={'nodeId':d.nodeId,'family':this.subtreeName,'domain':this.treeType,'nodeX':auxpop.x, 'nodeY':auxpop.y, 'angle':auxpop.angle, 'clock':auxpop.clock};
                                         blocks.push(s);
                                         nodelist.set(d.nodeId,true);
                                     }
@@ -1868,6 +1877,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             },
             tooltip : {dismissDelay: 10000, text: 'Save Tree'}
         });
+        #end
 
         editmode=false;
         container.hideEditToolBar();
@@ -1900,8 +1910,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var cookies = untyped __js__('Cookies');
         var cookie = cookies.getJSON('tipday');
 
+        #if !UBIHUB
         if(cookie == null) showTipOfTheDay();
-
+        #end
     }
 
     private function refreshOptionsToolBar(active:Bool)  {
@@ -1928,6 +1939,29 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         for(i in 0...node.children.length){
             _setLineWidth(node.children[i], width);
+        }
+    }
+
+    public function setStraightLines(){
+        setLineType(LineMode.STRAIGHT);
+    }
+
+    public function setBezierLines(){
+        setLineType(LineMode.BEZIER);
+    }
+
+    public function setLineType(lineMode: LineMode){
+        _setLineType(rootNode,lineMode);
+
+        newposition(0,0);
+
+    }
+
+    public function _setLineType(node : ChromoHubTreeNode,lineMode: LineMode){
+        node.lineMode = lineMode;
+
+        for(i in 0...node.children.length){
+            _setLineType(node.children[i], lineMode);
         }
     }
 
@@ -2016,6 +2050,22 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                         getApplication().getSingleAppContainer().showEditToolBar();
                     }
 
+                }
+            });
+
+            items.push({
+                text:'Straight Lines',
+                hidden : false,
+                handler: function(){
+                    setStraightLines();
+                }
+            });
+
+            items.push({
+                text:'Bezier Lines',
+                hidden : false,
+                handler: function(){
+                    setBezierLines();
                 }
             });
 
@@ -2720,6 +2770,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             tooltip :   {dismissDelay: 10000, text: 'Phylogenetic Viewer'}
         });
 
+        #if !UBIHUB
         container.addElemToModeToolBar({
             cls     :   if(currentView==2)'btn-selected' else '',
             xtype   :   'button',
@@ -2727,6 +2778,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             handler :   tableViewFunction,
             tooltip :   {dismissDelay: 10000, text: 'Annotation List'}
         });
+        #end
 
         if((searchField==true)&&(treeName=='')){
             container.addElemToModeToolBar({
@@ -3659,6 +3711,7 @@ $('.vertical .progress-fill span').each(function(){
         var sobj=getApplication().getGlobalSearchFieldObj();
         centralTargetPanel.add(sobj);
 
+        #if !UBIHUB
         centralTargetPanel.add(treeTypeSelection);
 
         centralTargetPanel.add({
@@ -3703,35 +3756,6 @@ $('.vertical .progress-fill span').each(function(){
         );
         centralTargetPanel.doLayout();
 
-        centralTargetPanel.add({
-            xtype: 'label',
-            text: 'Ubiquitin Biology',
-            cls:'targetclass-title'
-        });
-
-        centralTargetPanel.add(
-            Ext.create('Ext.panel.Panel', {
-                width: '100%',
-                layout: 'hbox',
-                bodyPadding: '10px 0px',
-                cls: 'x-table-targeticons',
-                defaults: {
-                    frame: true,
-                    bodyPadding: 10
-                },
-                items: [
-                    {
-                        title: 'Ligases',
-                        flex: 3,
-                        xtype : 'panel',
-                        items: ubiButtons
-                    }
-                ]
-            })
-        );
-
-        centralTargetPanel.doLayout();
-
         //Second set of target classes
         centralTargetPanel.add(
             Ext.create('Ext.panel.Panel', {
@@ -3770,9 +3794,6 @@ $('.vertical .progress-fill span').each(function(){
         );
 
         centralTargetPanel.doLayout();
-
-
-
 
         var items :Array<Dynamic> = [
             {
@@ -3833,7 +3854,7 @@ $('.vertical .progress-fill span').each(function(){
                 items: items
             })
         );
-        #end
+
         centralTargetPanel.doLayout();
         centralTargetPanel.add({
             xtype: 'panel',
@@ -3841,6 +3862,32 @@ $('.vertical .progress-fill span').each(function(){
                    Liu L, Zhen XT, Denton E, Marsden BD, Schapira M., Bioinformatics (2012): <b>ChromoHub: a data hub for navigators of chromatin-mediated signalling</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/22718786" target="_blank">[pubmed]</a>',
             cls:'targetclass-citation'
         });
+        #else
+
+        centralTargetPanel.add({
+            xtype: 'label',
+            text: 'Ubiquitin Biology',
+            cls:'targetclass-title'
+        });
+
+        centralTargetPanel.add(
+            Ext.create('Ext.panel.Panel', {
+                width: '100%',
+                layout: 'hbox',
+                bodyPadding: '10px 0px',
+                cls: 'x-table-targeticons',
+                defaults: {
+                    frame: true,
+                    bodyPadding: 10
+                },
+                items: ubiButtons
+            })
+        );
+
+        centralTargetPanel.doLayout();
+        #end
+        #end
+
     }
 
     public function setAlignmentURL(alignmentURL : String){
@@ -4132,7 +4179,7 @@ $('.vertical .progress-fill span').each(function(){
 
     }
 
-    private function generateTree(name: String, type:String){
+    private function generateTree(name: String, type:String, subtreeName : String = null){
         WorkspaceApplication.getApplication().debug(name);
         this.searchedGenes=new Array();
         this.highlightedGenes=new Map<String, Bool>();
@@ -4142,21 +4189,26 @@ $('.vertical .progress-fill span').each(function(){
            // WorkspaceApplication.getApplication().showMessage('Alert','There is no domain-based alignment for this family. This phylogenetic tree is based on full-length alignment.');
 
             if(userDomainMessage==true){
+                #if !UBIHUB
                 var container=getApplication().getSingleAppContainer();
                 container.showMessageDomainWindow();
+                #end
             }
             this.treeType='gene';
             type=this.treeType;
         }
 
+        if(subtreeName == null){
+            subtreeName = name;
+        }
 
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getNewickStr",{family : name, type: type}, null, true, function(db_results, error){
+        WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getNewickStr",{family : subtreeName, type: type}, null, true, function(db_results, error){
             if(error == null) {
                 if(this.treeName.indexOf('/')!=-1){
                     var aux=this.treeName.split('/');
                     this.treeName=aux[1];
                 }
-                setNewickStr(db_results[0].newickStr);
+                setNewickStr(db_results[0].newickstr);
             }
             else {
                 WorkspaceApplication.getApplication().debug(error);
@@ -4175,7 +4227,7 @@ $('.vertical .progress-fill span').each(function(){
             showTree(myNewickStr);
             //we need to check if there are updates in db for this tree
             if(recovered==false && treeName != null ){
-                WorkspaceApplication.getApplication().getProvider().getByNamedQuery('getTreeUpdates',{family :this.treeName ,domain:this.treeType}, null, false, function(results: Dynamic, error){
+                WorkspaceApplication.getApplication().getProvider().getByNamedQuery('getTreeUpdates',{family :this.subtreeName ,domain:this.treeType}, null, false, function(results: Dynamic, error){
                     if((error == null) &&(results.length!=0)){
                         var i=0;
                         var auxlist:Dynamic;
@@ -4349,56 +4401,198 @@ $('.vertical .progress-fill span').each(function(){
 
        #if PHYLO5
 
+       #elseif UBIHUB
+        var level1Items :Array<Dynamic> = [
+            {
+                xtype:'label',
+                text:'E1 & E2',
+                style:{
+                    color: '#4d749f'
+                }
+            },
+            {
+                xtype:'panel',
+                layout:'hbox',
+                items:[
+                    {
+                        margin: '0 10 5 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
+                        handler: function() {
+                            treeName = 'E1';
+
+                            subtreeName = treeName;
+
+                            generateTree(treeName, treeType);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    },
+                    {
+                        margin: '0 10 5 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                        handler: function() {
+                            treeName = 'E2';
+
+                            subtreeName = treeName;
+
+                            generateTree(treeName, treeType);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E2' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    }
+                ]
+            }
+        ];
+
+        var level2Items :Array<Dynamic> = [
+            {
+                xtype:'label',
+                text:'E3',
+                style:{
+                    color: '#4d749f'
+                }
+            },
+            {
+                xtype:'panel',
+                layout:'hbox',
+                items:[
+                   {
+                    xtype: 'component',
+                    html:'
+                        <form>
+                            <fieldset>
+                            <legend>
+                            Involved in UPS confidence
+                            </legend>
+                            <div style="max-width:400px">
+                            Indicates the confidence level that a protein is involved in the ubiquitin proteasome system.
+            "degrad" found in Uniprot function: 1 point.
+            "degrad" found in Reactome pathway(s): 1 point.
+            "degrad" found in Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point
+                            </div>
+                            <div>
+                                <input type="radio" name="usp_confidence" value="Cluster" checked/>
+                                <label>Any</label>
+                                <input type="radio" name="usp_confidence" value="1" />
+                                <label>confidence >= 1</label>
+                                <input type="radio" name="usp_confidence" value="2"  />
+                                <label>confidence >= 2</label>
+                                <input type="radio" name="usp_confidence" value="3"  />
+                                <label>confidence >= 3</label>
+                            </div>
+                            </fieldset>
+                        </form>
+                   '
+                   }
+                ]
+            }
+        ];
+
+        var level3Items :Array<Dynamic> = [
+            {
+                margin: '0 10 5 0',
+                xtype : 'button',
+                cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                handler: function() {
+                    treeName = 'E3_Complex';
+
+                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                    subtreeName = treeName + '_' + d.value;
+
+                    generateTree(treeName, treeType,subtreeName);
+                },
+                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Multi-subunit E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+            },
+            {
+                margin: '0 10 5 0',
+                xtype : 'button',
+                cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('Simple E3 ligases') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                handler: function() {
+                    treeName = 'E3_Ligase';
+
+                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                    subtreeName = treeName + '_' + d.value;
+
+                    generateTree(treeName, treeType,subtreeName);
+                },
+                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Simple E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+            }
+        ];
+
+        var level4Items :Array<Dynamic> =[
+            {
+                xtype:'label',
+                text:'DUPs',
+                style:{
+                    color: '#4d749f'
+                }
+            },
+            {
+                xtype:'panel',
+                layout:'hbox',
+                items:[
+                    {
+                        margin: '0 10 5 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('NON-USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON-USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON-USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
+                        handler: function() {
+                            treeName = 'NON_USP';
+
+                            subtreeName = treeName;
+
+                            generateTree(treeName, treeType);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    },
+                    {
+                        margin: '0 10 5 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
+                        handler: function() {
+                            treeName = 'USP';
+
+                            subtreeName = treeName;
+
+                            generateTree(treeName, treeType);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    }
+                 ]
+             }
+        ];
+
+        ubiButtons = [
+            {
+                xtype: 'panel',
+                layout: 'vbox',
+                items:[
+                    {
+                        xtype: 'panel',
+                        layout: 'vbox',
+                        items: level1Items
+                    },
+                    {
+                        xtype: 'panel',
+                        layout: 'vbox',
+                        items: level4Items
+                    },
+                    {
+                        xtype: 'panel',
+                        layout:'vbox',
+                        items:level2Items
+                    },
+                    {
+                        xtype: 'panel',
+                        layout: 'hbox',
+                        items: level3Items
+                    }
+
+                ]
+            }
+        ];
        #else
-       ubiButtons = new Array<Dynamic>();
-
-       ubiButtons = [
-           {
-               margin: '0 10 5 0',
-               xtype : 'button',
-               cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
-               handler: function() {
-                   treeName = 'E1';
-
-                   generateTree(treeName, treeType);
-               },
-               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-           },
-           {
-               margin: '0 10 5 0',
-               xtype : 'button',
-               cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
-               handler: function() {
-                   treeName = 'E2';
-
-                   generateTree(treeName, treeType);
-               },
-               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E2' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-           },
-           {
-               margin: '0 10 5 0',
-               xtype : 'button',
-               cls : if (mapFam.exists('NON-USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON-USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON-USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
-               handler: function() {
-                   treeName = 'NON_USP';
-
-                   generateTree(treeName, treeType);
-               },
-               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-           },
-           {
-               margin: '0 10 5 0',
-               xtype : 'button',
-               cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
-               handler: function() {
-                   treeName = 'USP';
-
-                   generateTree(treeName, treeType);
-               },
-               tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-           }
-       ];
-
        chmodproWriters = new Array();
        chmodproWriters = [
            {
@@ -4407,6 +4601,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('HMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pmt' else if (mapFam.exists('PMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pmt-gene' else if (mapFam.exists('PMT') == false && treeType == 'domain') 'x-btn-target-pmt' else 'x-btn-target-pmt-gene',
                handler: function() {
                    treeName = 'PMT/HMT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
@@ -4421,6 +4618,9 @@ $('.vertical .progress-fill span').each(function(){
                    cls : if (mapFam.exists('HMT') == true)'x-btn-target-found x-btn-target-pmt2' else 'x-btn-target-pmt2',
                    handler: function() {
                        treeName = 'PMT-2/HMT';
+
+                       subtreeName = treeName;
+
                        generateTree(treeName, treeType);
                    },
                    tooltip: {dismissDelay: 10000, text: 'PMT: Methylate lysines'}
@@ -4435,6 +4635,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('KAT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-kat' else if (mapFam.exists('KAT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-kat-gene' else if (mapFam.exists('KAT') == false && treeType == 'domain') 'x-btn-target-kat' else 'x-btn-target-kat-gene',
                handler: function(e) {
                    treeName = 'KAT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'KAT: Acetylate lysines' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
@@ -4447,6 +4650,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('PARP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-parp' else if (mapFam.exists('PARP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-parp-gene' else if (mapFam.exists('PARP') == false && treeType == 'domain') 'x-btn-target-parp' else 'x-btn-target-parp-gene',
                handler: function() {
                    treeName = 'PARP';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'PARP: ADP - ribosylate proteins'}
@@ -4461,6 +4667,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('ADD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-add' else if (mapFam.exists('ADD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-add-gene' else if (mapFam.exists('ADD') == false && treeType == 'domain') 'x-btn-target-add' else 'x-btn-target-add-gene',
                handler: function() {
                    treeName = 'ADD';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'ADD'}
@@ -4471,6 +4680,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('BAH') == true && treeType == 'domain')'x-btn-target-found x-btn-target-bah' else if (mapFam.exists('BAH') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-bah-gene' else if (mapFam.exists('BAH') == false && treeType == 'domain') 'x-btn-target-bah' else 'x-btn-target-bah-gene',
                handler: function() {
                    this.treeName = 'BAH';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'BAH: Read methyl-lysines'}
@@ -4481,6 +4693,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('BROMO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-bromo' else if (mapFam.exists('BROMO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-bromo-gene' else if (mapFam.exists('BROMO') == false && treeType == 'domain') 'x-btn-target-bromo' else 'x-btn-target-bromo-gene',
                handler: function() {
                    this.treeName = 'BROMO';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'BROMO: Read Acetyl-lysines'}
@@ -4491,6 +4706,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('CW') == true && treeType == 'domain')'x-btn-target-found x-btn-target-cw' else if (mapFam.exists('CW') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-cw-gene' else if (mapFam.exists('CW') == false && treeType == 'domain') 'x-btn-target-cw' else 'x-btn-target-cw-gene',
                handler: function() {
                    this.treeName = 'CW';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'CW: methyl-lysine reader'}
@@ -4501,6 +4719,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('CHROMO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-chromo' else if (mapFam.exists('CHROMO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-chromo-gene' else if (mapFam.exists('CHROMO') == false && treeType == 'domain') 'x-btn-target-chromo' else 'x-btn-target-chromo-gene',
                handler: function() {
                    this.treeName = 'CHROMO';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'CHROMO: Read methyl-lysines'}
@@ -4511,6 +4732,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('MACRO') == true && treeType == 'domain')'x-btn-target-found x-btn-target-macro' else if (mapFam.exists('MACRO') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-macro-gene' else if (mapFam.exists('MACRO') == false && treeType == 'domain') 'x-btn-target-macro' else 'x-btn-target-macro-gene',
                handler: function() {
                    this.treeName = 'MACRO';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'MACRO: bind ADP-ribosylated proteins' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.' }
@@ -4521,6 +4745,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('MBT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-mbt' else if (mapFam.exists('MBT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-mbt-gene' else if (mapFam.exists('MBT') == false && treeType == 'domain') 'x-btn-target-mbt' else 'x-btn-target-mbt-gene',
                handler: function() {
                    this.treeName = 'MBT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'MBT: Read methyl-lysines'}
@@ -4531,6 +4758,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('PHD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-phd' else if (mapFam.exists('PHD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-phd-gene' else if (mapFam.exists('PHD') == false && treeType == 'domain') 'x-btn-target-phd' else 'x-btn-target-phd-gene',
                handler: function() {
                    this.treeName = 'PHD';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'PHD: Read methyl-lysines, acetylated lysines, methyl-arginines, unmodified lysines'}
@@ -4541,6 +4771,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('PWWP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pwwp' else if (mapFam.exists('PWWP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pwwp-gene' else if (mapFam.exists('PWWP') == false && treeType == 'domain') 'x-btn-target-pwwp' else 'x-btn-target-pwwp-gene',
                handler: function() {
                    this.treeName = 'PWWP';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'PWWP: Read methyl-lysines, bind DNA'}
@@ -4551,6 +4784,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('SPINDLIN') == true && treeType == 'domain')'x-btn-target-found x-btn-target-spindlin' else if (mapFam.exists('SPINDLIN') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-spindlin-gene' else if (mapFam.exists('SPINDLIN') == false && treeType == 'domain') 'x-btn-target-spindlin' else 'x-btn-target-spindlin-gene',
                handler: function() {
                    this.treeName = 'SPINDLIN';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'SPINDLIN: methyl-lysine/arginine reader'}
@@ -4561,6 +4797,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('TUDOR') == true && treeType == 'domain')'x-btn-target-found x-btn-target-tudor' else if (mapFam.exists('TUDOR') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-tudor-gene' else if (mapFam.exists('TUDOR') == false && treeType == 'domain') 'x-btn-target-tudor' else 'x-btn-target-tudor-gene',
                handler: function() {
                    this.treeName = 'TUDOR';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'TUDOR: Read methyl-lysines, methyl-arginines'}
@@ -4571,6 +4810,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('YEATS') == true && treeType == 'domain')'x-btn-target-found x-btn-target-yeats' else if (mapFam.exists('YEATS') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-yeats-gene' else if (mapFam.exists('YEATS') == false && treeType == 'domain') 'x-btn-target-yeats' else 'x-btn-target-yeats-gene',
                handler: function() {
                    this.treeName = 'YEATS';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'YEATS: read acetyl-lysines and crotonyl-lysines'}
@@ -4585,6 +4827,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('HDAC') == true && treeType == 'domain')'x-btn-target-found x-btn-target-hdac' else if (mapFam.exists('HDAC') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-hdac-gene' else if (mapFam.exists('HDAC') == false && treeType == 'domain') 'x-btn-target-hdac' else 'x-btn-target-hdac-gene',
                handler: function() {
                    this.treeName = 'HDAC_SIRT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'HDAC: Deacetylate lysines'}
@@ -4595,6 +4840,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('KDM') == true && treeType == 'domain')'x-btn-target-found x-btn-target-kdm' else if (mapFam.exists('KDM') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-kdm-gene' else if (mapFam.exists('KDM') == false && treeType == 'domain') 'x-btn-target-kdm' else 'x-btn-target-kdm-gene',
                handler: function() {
                    this.treeName = 'KDM';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'KDM: De-methylate lysines'}
@@ -4605,6 +4853,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('PADI') == true && treeType == 'domain')'x-btn-target-found x-btn-target-padi' else if (mapFam.exists('PADI') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-padi-gene' else if (mapFam.exists('PADI') == false && treeType == 'domain') 'x-btn-target-padi' else 'x-btn-target-padi-gene',
                handler: function() {
                    this.treeName = 'PADI';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'PADI: Deiminate arginines'}
@@ -4620,6 +4871,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('DNMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-dnmt' else if (mapFam.exists('DNMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-dnmt-gene' else if (mapFam.exists('DNMT') == false && treeType == 'domain') 'x-btn-target-dnmt' else 'x-btn-target-dnmt-gene',
                handler: function() {
                    this.treeName = 'DNMT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'DNMT: Methylate CpG dinucleotides'}
@@ -4634,6 +4888,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('CXXC') == true && treeType == 'domain')'x-btn-target-found x-btn-target-cxxc' else if (mapFam.exists('CXXC') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-cxxc-gene' else if (mapFam.exists('CXXC') == false && treeType == 'domain') 'x-btn-target-cxxc' else 'x-btn-target-cxxc-gene',
                handler: function() {
                    this.treeName = 'CXXC';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'CXXC: Bind to nonmethyl-CpG dinucleotides'}
@@ -4644,6 +4901,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('MBD') == true && treeType == 'domain')'x-btn-target-found x-btn-target-mbd' else if (mapFam.exists('MBD') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-mbd-gene' else if (mapFam.exists('MBD') == false && treeType == 'domain') 'x-btn-target-mbd' else 'x-btn-target-mbd-gene',
                handler: function() {
                    this.treeName = 'MBD';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'MBD: Bind to methyl-CpG dinucleotides'}
@@ -4658,6 +4918,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('TET') == true && treeType == 'domain')'x-btn-target-found x-btn-target-tet' else if (mapFam.exists('TET') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-tet-gene' else if (mapFam.exists('TET') == false && treeType == 'domain') 'x-btn-target-tet' else 'x-btn-target-tet-gene',
                handler: function() {
                    this.treeName = 'TET';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'TET: DNA hydroxylases. Participate in DNA de-methylation'}
@@ -4672,6 +4935,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('RNMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-rnmt' else if (mapFam.exists('RNMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-rnmt-gene' else if (mapFam.exists('RNMT') == false && treeType == 'domain') 'x-btn-target-rnmt' else 'x-btn-target-rnmt-gene',
                handler: function() {
                    this.treeName = 'RNMT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'RNMT: Methylate RNA'}
@@ -4682,6 +4948,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('PUS') == true && treeType == 'domain')'x-btn-target-found x-btn-target-pus' else if (mapFam.exists('PUS') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-pus-gene' else if (mapFam.exists('PUS') == false && treeType == 'domain') 'x-btn-target-pus' else 'x-btn-target-pus-gene',
                handler: function() {
                    this.treeName = 'PUS';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'Pseudouridine synthases: catalyze the site-specific isomerization of uridines on RNA'}
@@ -4696,6 +4965,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('YTH') == true && treeType == 'domain')'x-btn-target-found x-btn-target-yth' else if (mapFam.exists('YTH') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-yth-gene' else if (mapFam.exists('YTH') == false && treeType == 'domain') 'x-btn-target-yth' else 'x-btn-target-yth-gene',
                handler: function() {
                    this.treeName = 'YTH';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'YTH: bind to methylated RNA'}
@@ -4710,6 +4982,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('RNA-DMT') == true && treeType == 'domain')'x-btn-target-found x-btn-target-rna-dmt' else if (mapFam.exists('RNA-DMT') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-rna-dmt-gene' else if (mapFam.exists('RNA-DMT') == false && treeType == 'domain') 'x-btn-target-rna-dmt' else 'x-btn-target-rna-dmt-gene',
                handler: function() {
                    this.treeName = 'RNA-DMT';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName, treeType);
                },
                tooltip: {dismissDelay: 10000, text: 'RNA-DMT'}
@@ -4789,6 +5064,9 @@ $('.vertical .progress-fill span').each(function(){
                 cls : if (mapFam.exists('DEXDc')==true && treeType=='domain')'x-btn-target-found x-btn-target-dexdc' else if(mapFam.exists('DEXDc')==true && treeType=='gene') 'x-btn-target-found x-btn-target-dexdc-gene' else if(mapFam.exists('DEXDc')==false && treeType=='domain') 'x-btn-target-dexdc' else 'x-btn-target-dexdc-gene',
                 handler: function(){
                     this.treeName='DEXDc';
+
+                    subtreeName = treeName;
+
                     generateTree(treeName,treeType);
                 },
                 tooltip: {dismissDelay: 10000, text: 'DEXDc'}
@@ -4799,6 +5077,9 @@ $('.vertical .progress-fill span').each(function(){
                 cls : if (mapFam.exists('Helicases')==true && treeType=='domain')'x-btn-target-found x-btn-target-helicc' else if(mapFam.exists('Helicases')==true && treeType=='gene') 'x-btn-target-found x-btn-target-helicc-gene' else if(mapFam.exists('Helicases')==false && treeType=='domain') 'x-btn-target-helicc' else 'x-btn-target-helicc-gene',
                 handler: function(){
                     this.treeName='HELICC/Helicases';
+
+                    subtreeName = treeName;
+
                     generateTree(treeName,treeType);
                 },
                 tooltip: {dismissDelay: 10000, text: 'HELICc'}
@@ -4809,6 +5090,9 @@ $('.vertical .progress-fill span').each(function(){
                 cls : if (mapFam.exists('SANT')==true && treeType=='domain')'x-btn-target-found x-btn-target-sant' else if(mapFam.exists('SANT')==true && treeType=='gene') 'x-btn-target-found x-btn-target-sant-gene' else if(mapFam.exists('SANT')==false && treeType=='domain') 'x-btn-target-sant' else 'x-btn-target-sant-gene',
                 handler: function(){
                     this.treeName='SANT';
+
+                    subtreeName = treeName;
+
                     generateTree(treeName,treeType);
                 },
                 tooltip: {dismissDelay: 10000, text: 'SANT: Involved in chromatin remodeling'}
@@ -4822,6 +5106,9 @@ $('.vertical .progress-fill span').each(function(){
                 cls : if (mapFam.exists('HISTONE')==true && treeType=='domain')'x-btn-target-found x-btn-target-histone' else if(mapFam.exists('HISTONE')==true && treeType=='gene') 'x-btn-target-found x-btn-target-histone-gene' else if(mapFam.exists('HISTONE')==false && treeType=='domain') 'x-btn-target-histone' else 'x-btn-target-histone-gene',
                 handler: function(){
                     this.treeName='Histone';
+
+                    subtreeName = treeName;
+
                     generateTree(treeName,treeType);
                 },
                 tooltip:  {dismissDelay: 10000, text: if(treeType=='gene') 'Histone' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
@@ -4835,6 +5122,9 @@ $('.vertical .progress-fill span').each(function(){
                 cls : if (mapFam.exists('WDR')==true && treeType=='domain')'x-btn-target-found x-btn-target-wdr' else if(mapFam.exists('WDR')==true && treeType=='gene') 'x-btn-target-found x-btn-target-wdr-gene' else if(mapFam.exists('WDR')==false && treeType=='domain') 'x-btn-target-wdr' else 'x-btn-target-wdr-gene',
                 handler: function(){
                     this.treeName='WDR';
+
+                    subtreeName = treeName;
+
                     generateTree(treeName,treeType);
                 },
                 tooltip: {dismissDelay: 10000, text: if(treeType=='gene') 'WDR: Versatile binding module'  else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
@@ -4850,6 +5140,9 @@ $('.vertical .progress-fill span').each(function(){
                cls : if (mapFam.exists('NUDIX')==true && treeType=='domain')'x-btn-target-found x-btn-target-nudix' else if(mapFam.exists('NUDIX')==true && treeType=='gene') 'x-btn-target-found x-btn-target-nudix-gene' else if(mapFam.exists('NUDIX')==false && treeType=='domain') 'x-btn-target-nudix' else 'x-btn-target-nudix-gene',
                handler: function(){
                    this.treeName='NUDIX';
+
+                   subtreeName = treeName;
+
                    generateTree(treeName,treeType);
                },
                tooltip: {dismissDelay: 10000, text:  if(treeType=='gene') 'NUDIX: Break a phosphate bond from RNA caps and other substrates'  else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
@@ -4972,6 +5265,12 @@ $('.vertical .progress-fill span').each(function(){
             j++;
             while(z<jsonFile.btnGroup[i].buttons.length){
                 var b=jsonFile.btnGroup[i].buttons[z];
+
+                if(!b.enabled){
+                    z++;
+                    continue;
+                }
+
                 if(b.isTitle==true){
                     viewOptions[j]=
                     {
