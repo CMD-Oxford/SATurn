@@ -1730,7 +1730,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             tooltip : {dismissDelay: 10000, text: 'Undo last action'}
         });
 
-        #if UBIHUB
+        #if !UBIHUB
         container.addElemToEditToolBar({
             iconCls :'x-btn-save-single',
             handler : function(){

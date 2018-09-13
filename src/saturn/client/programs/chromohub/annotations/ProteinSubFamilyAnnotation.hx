@@ -88,7 +88,7 @@ class ProteinSubFamilyAnnotation {
             trace('Family:');
 
             var genePlusFamily = screenData.target + '_' + screenData.family  +  '.png';
-            var path = '/pfam_images/' + genePlusFamily;
+            var path = '/static/pfam_images/' + genePlusFamily;
             var imgSrc = '<img src="' + path + '" />';
 
 
@@ -105,7 +105,7 @@ class ProteinSubFamilyAnnotation {
                 <div class="divTitle">Domain Architecture  - '+screenData.target+'</div>
                 <div class="divContent">'
                 + imgSrc +
-                '/div>
+                '</div>
             ';
             callBack(t);
         }

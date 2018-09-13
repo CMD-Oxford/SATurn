@@ -941,7 +941,7 @@
           },
           {
             "label": "Cancer Essentiality",
-            "enabled": false,
+            "enabled": true,
             "isTitle": false,
             "helpText": "",
             "annotCode": 27,
@@ -960,7 +960,7 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/tumorLevel-leg.png",
+              "image": "/static/annot/images/essential_cancer.png",
               "text": ""
             },
             "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
@@ -1040,7 +1040,7 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/tumorLevel-leg.png",
+              "image": "/static/annot/images/protein_normal.png",
               "text": ""
             },
             "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
@@ -1303,7 +1303,7 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/tumorLevel-leg.png",
+              "image": "/static/annot/images/protein_normal_perc.png",
               "text": ""
             },
             "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
@@ -1410,7 +1410,7 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/tumorLevel-leg.png",
+              "image": "/static/annot/images/protein_tumor_perc.png",
               "text": ""
             },
             "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
