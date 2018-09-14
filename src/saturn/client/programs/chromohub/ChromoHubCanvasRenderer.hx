@@ -41,9 +41,9 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
 
        this.ctx=this.canvas.getContext('2d');
-       var centrex=Math.round(width/2);
-       var centrey=Math.round(height/2);
-       this.ctx.translate(centrex,centrey); //offset to get sharp lines.
+       cx=Math.round(width/2);
+       cy=Math.round(height/2);
+       this.ctx.translate(cx,cy); //offset to get sharp lines.
 
 
     }
@@ -56,6 +56,19 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
         this.ctx.moveTo(Math.round(x0), Math.round(y0));
 
         this.ctx.lineTo(Math.round(x1),Math.round(y1));
+
+        this.ctx.lineWidth = lineWidth;
+
+        this.ctx.stroke();
+
+    }
+
+    public function drawArc (x : Float, y : Float, radius : Float, sAngle, eAngle, strokeStyle : String, lineWidth : Float){
+
+        // this.ctx.scale(this.scale,this.scale);
+        this.ctx.strokeStyle=strokeStyle;
+        this.ctx.beginPath();
+        this.ctx.arc(x,y,radius,sAngle,eAngle);
 
         this.ctx.lineWidth = lineWidth;
 
@@ -88,6 +101,21 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
         this.ctx.save();
         this.ctx.translate(tx,ty);
+
+        this.ctx.rotate(rotation);
+        this.ctx.textAlign=textAlign;
+        this.ctx.fillStyle = color;
+        this.ctx.fillText(text, x,y);
+
+
+        this.ctx.restore();
+
+    }
+
+    public function drawTextNoTranslate (text:String , tx:Float, ty:Float, x:Float, y:Float, rotation: Float, textAlign:String, color: String):Void{
+
+        this.ctx.save();
+
 
         this.ctx.rotate(rotation);
         this.ctx.textAlign=textAlign;
