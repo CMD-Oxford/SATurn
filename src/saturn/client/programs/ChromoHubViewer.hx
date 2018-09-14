@@ -551,7 +551,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             this.rootNode.rectangleBottom=Std.int(this.rootNode.children[0].y);
             this.rootNode.rectangleTop=Std.int(this.rootNode.children[0].y);
 
-            this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+            this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
 
             this.canvas.ctx.save();
             this.canvas.ctx.beginPath();
@@ -706,7 +706,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
        // annotations= new Array();
 
-        radialRendererObj.render(this.rootNode,this.canvas,this.activeAnnotation, annotations);
+        radialRendererObj.renderCircle(this.rootNode,this.canvas,this.activeAnnotation, annotations);
 
 
 
@@ -3942,7 +3942,7 @@ $('.vertical .progress-fill span').each(function(){
 
         this.radialR= new ChromoHubRadialTreeLayout(this,this.canvas.canvas.width, this.canvas.canvas.height);
 
-        this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
 
         this.canvas.cx=this.centrex;
         this.canvas.cy=this.centrey;
@@ -3981,7 +3981,7 @@ $('.vertical .progress-fill span').each(function(){
 
         this.radialR= new ChromoHubRadialTreeLayout(this, width, height);
 
-        this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
 
 
         this.canvas.ctx = originalCanvas;
