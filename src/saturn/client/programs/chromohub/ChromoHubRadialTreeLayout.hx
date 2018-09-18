@@ -1,5 +1,6 @@
 
 package saturn.client.programs.chromohub;
+import saturn.core.Util;
 import saturn.client.programs.chromohub.ChromoHubTreeNode.LineMode;
 import saturn.client.workspace.ChromoHubWorkspaceObject;
 import saturn.client.programs.ChromoHubViewer;
@@ -37,6 +38,113 @@ class ChromoHubRadialTreeLayout{
         this.cx=width/2;
         this.cy=height/2;
 
+    }
+
+    public function renderCircle (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){
+        _renderCircle(treeNode,renderer, annotations, annotList, lineColour);
+    }
+
+    function _renderCircle(treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)") {
+        var black = 'rgb(41,128,214)';
+        var red = 'rgb(255,0,0)';
+
+        if(treeNode.parent == null){
+            //renderer.ctx.translate(renderer.cx,renderer.cy);
+        }
+
+        var cx = renderer.cx;
+        var cy = renderer.cy;
+
+        var textSize = null;
+        var branch = treeNode.root.dist / treeNode.root.getHeight();
+        var k = 2 * Math.PI / treeNode.root.getLeafCount();
+
+        var fontW = 12;
+        var fontH = 12;
+
+        var firstChild = treeNode.children[0];
+        var lastChild = treeNode.children[treeNode.children.length-1];
+
+        var i : Float = treeNode.angle;
+
+        for(child in treeNode.children){
+            i = _renderCircle(child, renderer, annotations, annotList, lineColour);
+        }
+
+        var h  :Float = null;
+        var ph  :Float = null;
+        var angle :Float = null;
+
+        var y1 :Float, y2 :Float= null;
+        var x1 :Float , x2 :Float= null;
+
+        if(treeNode.parent != null){
+            h = branch * (treeNode.root.getHeight() - treeNode.getHeight());
+            ph = branch * (treeNode.root.getHeight() - treeNode.parent.getHeight());
+
+            if(treeNode.isLeaf()){
+                angle = i;
+            }else{
+                angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
+
+                if(Math.abs(ChromoHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
+                    //renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y,'rgb(0,0,255)', firstChild.lineWidth);
+                }else{
+                    // circles
+                    renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, 'rgb(0,255,0)', treeNode.lineWidth);
+                }
+            }
+
+            treeNode.angle = angle;
+            if(angle == 0){
+                y1 = 0;	y2 = 0;
+            }else{
+                y1 = h * Math.sin(angle);
+                y2 = ph * Math.sin(angle);
+            }
+
+            x1 = h * Math.cos(angle);	x2 = ph * Math.cos(angle);
+
+            treeNode.x = x2;
+            treeNode.y =  y2;
+
+            var lineColour = red;
+
+            if(treeNode.parent == treeNode.root){
+                lineColour = red;
+            }
+
+            // Inner branch lines
+            renderer.drawLine(x1, y1, x2, y2, lineColour, treeNode.lineWidth);
+
+            if(treeNode.isLeaf()){
+                var gap = 5;//10;
+                var ta = angle;
+                var pgap = 40;
+
+                fontH = 1;
+                fontW = 1;
+
+                var tx = x1 + Math.cos(ta) * gap + Math.cos(ta + Math.PI/2) * fontH;
+                var ty = y1 + Math.sin(ta) * gap + Math.sin(ta + Math.PI/2) * fontH;
+
+                var length = treeNode.name.length * fontW;
+                var px = tx + Math.cos(ta) * pgap;
+
+                var py = ty + Math.sin(ta) * pgap;
+                if(ChromoHubMath.radiansToDegrees(ta) > 90 && ChromoHubMath.radiansToDegrees(ta) < 270){
+                    tx += Math.cos(ta) * length - Math.cos(ta + Math.PI/2) * fontH;
+                    ty += Math.sin(ta) * length - Math.sin(ta + Math.PI/2) * fontH;
+                    ta += Math.PI;
+                }
+
+                renderer.drawTextNoTranslate(treeNode.name,0,0, x1,y1,0,'top',black);
+
+                i += k;
+            }
+        }
+
+        return i;
     }
 
     public function render (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){

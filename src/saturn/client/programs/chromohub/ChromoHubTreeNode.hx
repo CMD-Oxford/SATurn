@@ -11,6 +11,8 @@ package saturn.client.programs.chromohub;
  *         
  */
 
+import saturn.client.programs.chromohub.ChromoHubMath;
+import saturn.client.programs.chromohub.ChromoHubTreeNode;
 import saturn.core.Util;
 class ChromoHubTreeNode {
     public var parent: ChromoHubTreeNode;
@@ -59,6 +61,7 @@ class ChromoHubTreeNode {
     public var yRandom : Float = null;
     public var lineWidth : Float = 1;
     public var lineMode : LineMode = LineMode.STRAIGHT;
+    var angle_new : Float = 0;
 
     public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
         this.parent=parent;
@@ -162,6 +165,34 @@ class ChromoHubTreeNode {
 
     }
 
+    public function preOrderTraversal2(mode:Int){
+
+        if(this.parent != null){
+            var a = this.getDepth() * this.ratio;
+            if(this.angle > this.parent.angle) {
+                this.angle += ChromoHubMath.degreesToRadians(a);
+            } else {
+                this.angle -= ChromoHubMath.degreesToRadians(a);
+            }
+
+            this.angle_new = this.angle + this.wedge / 2;
+
+            this.x = this.parent.x + Math.cos(this.angle_new) * this.root.dist; //$u->x + cos($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
+            this.y = this.parent.y + Math.sin(this.angle_new) * this.root.dist; // $u->y + sin($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
+        }
+
+        var n = this.angle;
+
+        for(child in this.children){
+            child.wedge = 2 * Math.PI * child.getLeafCount() / child.root.getLeafCount();
+            child.angle = n;
+            child.angle_new = child.angle + child.wedge/2;
+
+            n += child.wedge;
+            child.preOrderTraversal(0);
+        }
+    }
+
     public function calculateScale(){
         Util.debug(''+this.branch + '/' + this.root.minBranch + '/' +  this.root.maxBranch);
 
@@ -179,9 +210,6 @@ class ChromoHubTreeNode {
         for(i in 0...this.children.length){
             this.children[i].calculateScale();
         }
-
-
-
     }
 
 
