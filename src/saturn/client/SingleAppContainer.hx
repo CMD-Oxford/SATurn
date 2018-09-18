@@ -812,6 +812,21 @@ class SingleAppContainer {
     public function showHighlightWindow(item:Array<Dynamic>,px:Dynamic, py:Dynamic,title:Int,viewer:ChromoHubViewer){
         cleanALlWindows();
 
+        function compare(a, b) {
+            var geneNameA = a.boxLabel.toUpperCase();
+            var geneNameB = b.boxLabel.toUpperCase();
+
+            var comparison = 0;
+            if (geneNameA > geneNameB){
+                comparison = 1;
+            } else if (geneNameA < geneNameB){
+                comparison = -1;
+            }
+            return comparison;
+        }
+
+        item.sort(compare);
+
         highlightWindow = Ext.create('Ext.window.Window', {
             x:px,
             //y:py,

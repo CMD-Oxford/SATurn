@@ -1,0 +1,1527 @@
+{
+    "btnGroup":[
+      {
+        "title": "Disease Annotations",
+        "enabled": false,
+        "buttons":[
+          {
+            "label": "Disease Association",
+            "enabled": true,
+            "isTitle":false,
+            "helpText": "<b> Disease Associations</b>: Articles are linked to genes based on NCBI's Gene <-> Pubmed associations (human and mouse orthologs). Genes are linked to diseases based on the presence of keywords in the Abstract or MeSH Terms of Pubmed entries. Click to see the list of Abstract and MeSH terms.",
+            "annotCode":1,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "diseaseAssociation",
+            "shape": "html",
+            "color": [
+              {"color":"#ededed", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/diseaseAssociation.png"],
+            "legend":{
+              "image": "/static/annot/images/diseaseAssociation-leg.png",
+              "text":"Articles are linked to genes based on NCBI's Gene <-> Pubmed associations (human and mouse orthologs). Genes are linked to diseases based on the presence of keywords in the Abstract or MeSH Terms of Pubmed entries. Click to see the list of Abstract and MeSH terms.",
+							"clazz":"",
+              "method": "",
+              "html":""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.DiseaseAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasDisease",
+            "divMethod":"divDiseaseAssociation"
+          },
+          {
+            "label": "Non-Silent SNPs",
+            "enabled": false,
+            "isTitle":false,
+            "helpText": "<b>Non-Silent SNPs</b>: Natural variations extracted from <a href='www.uniprot.org/docs/humsavar' target='_blank'>www.uniprot.org/docs/humsavar</a>.",
+            "submenu": false,
+            "annotCode":2,
+            "popUpWindows":false,
+            "hookName": "nonSilentSNPs",
+            "shape": "text",
+            "color": [
+              {"color":"#ed0e2d", "used":"false"}
+            ],
+            "annotImg":[""],
+            "legend":{
+              "image": "/static/annot/images/nonSilentSNPs.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.NonSilentAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasNonSilent",
+            "divMethod":"divNonSilent"
+          },
+          {
+            "label": "Orphanet",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "Orphanet",
+            "annotCode":9,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "orphanet",
+            "shape": "image",
+            "color": [],
+            "annotImg":["/static/annot/images/orphanet.png"],
+            "legend":{
+              "image": "/static/annot/images/orphanet-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.OrphanetAnnotation",
+            "familyMethod": "",
+            "divMethod":"divOrphanet"
+          }
+        ]
+      },
+      {
+        "title": "Functional Annotations",
+        "enabled": false,
+        "buttons":[
+          {
+            "label": "Function",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Function</b>: Swissprot summary of protein function",
+            "annotCode":3,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "summary",
+            "shape": "image",
+            "color": [
+              {"color":"", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/summary.png"],
+            "legend":{
+              "image": "/static/annot/images/summary-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.SummaryAnnotation",
+            "familyMethod": "",
+            "divMethod":"divSummary"
+          },
+          {
+            "label": "Substrate",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Substrate</b>: Published substrate specificity",
+            "annotCode":4,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "substrate",
+            "shape": "text",
+            "color": [
+              {"color":"#0aefc7", "used":false},
+              {"color":"#0aef60", "used":false},
+              {"color":"#96ef0a", "used":false},
+              {"color":"#dcef0a", "used":false},
+              {"color":"#ef0a35", "used":false},
+              {"color":"#ef0ae2", "used":false},
+              {"color":"#460aef", "used":false},
+              {"color":"#0ab1ef", "used":false},
+              {"color":"#efcc0a", "used":false},
+              {"color":"#ef960a", "used":false},
+              {"color":"#ef5b0a", "used":false},
+              {"color":"#9ba0be", "used":false},
+              {"color":"#549091", "used":false},
+              {"color":"#865491", "used":false},
+              {"color":"#915474", "used":false},
+              {"color":"#918854", "used":false},
+              {"color":"#573d26", "used":false}
+            ],
+            "annotImg":[""],
+            "legend":{
+              "image": "",
+              "text":"Some text as Subtrate legend",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":true,
+            "hasClass":"saturn.client.programs.chromohub.annotations.SubstrateAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasSubstrate",
+            "divMethod":"divSubstrate"
+          },
+          {
+            "label": "Domain Architecture",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Domain Architecture</b>: PFAM domains identified by using HMMER-3.0 on the protein sequences (downloadable from a link at the top of the tree) against the PFAM database, with an Evalue threshold of 0.01",
+            "annotCode":5,
+            "submenu": false,
+            "annotImg":["/static/annot/images/summary.png"],
+            "popUpWindows":false,
+            "hookName": "",
+            "shape": "text",
+            "color": [],
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.DomainAnnotation",
+            "familyMethod": "familyDomain",
+            "hasMethod":"hasDomain"
+
+          },
+          {
+            "label": "Protein Interactions",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Protein Interactions</b>: Interaction network from <a href='http://www.string-db.org' target='_blank'>http://www.string-db.org</a>",
+            "annotCode":6,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "proteinInteractions",
+            "shape": "image",
+            "color": [],
+            "annotImg":["/static/annot/images/proteinInteraction.png"],
+            "legend":{
+              "image": "/static/annot/images/proteinInteraction-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.InteractionAnnotation",
+            "familyMethod": "",
+            "divMethod":"divInteraction"
+          },
+          {
+            "label": "Human Protein Interactome",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Protein Interactome</b>: data from <a href='http://www.ncbi.nlm.nih.gov/pubmed/25416956' target='_blank'>http://www.ncbi.nlm.nih.gov/pubmed/25416956</a>",
+            "annotCode":7,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "interactome",
+            "shape": "cercle",
+            "color": [
+              {"color":"#f6bc4c", "used":"false"}
+            ],
+            "annotImg":[""],
+            "legend":{
+              "image": "/static/annot/images/interactome-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.InteractomeAnnotation",
+            "familyMethod": "",
+            "divMethod":"divInteractome"
+          },
+          {
+            "label": "Subcellular Location",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Subcellular location</b>: Subcellular location extracted from the Swiss-Prot record of each gene",
+            "annotCode":8,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "subcellularLocation",
+            "shape": "image",
+            "color": [],
+            "annotImg":["/static/annot/images/subcellarLocationNuclear.png","/static/annot/images/subcellarLocationOther.png","/static/annot/images/subcellarorange.png"],
+            "legend":{
+              "image": "/static/annot/images/subcellarLocation-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.SubCellularAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasSubcellular",
+            "divMethod":"divSubcellular"
+          },
+          {
+            "label": "Pubmed",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Pubmed</b>: Articles linked to the NCBI's Entrez Gene record of the human, mouse and rat orthologs. Articles linked to 30 or more genes (typically sequencing or microarray data) are ignored.",
+            "annotCode":17,
+            "submenu": true,
+            "hookName": "pubmedAll",
+            "shape": "image",
+            "color": [],
+            "annotImg":["/static/annot/images/pubmed1.png","/static/annot/images/pubmed2.png","/static/annot/images/pubmed3.png","/static/annot/images/pubmed4.png","/static/annot/images/pubmed5.png"],
+            "legend":{
+              "image": "/static/annot/images/pubmed-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "optionSelected":[0],
+            "popUpWindows":false,
+            "options":[
+              {"isTitle":false, "isLabelTitle":false, "label": "All","helpText":  "All Pubmed", "hookName": "pubmedAll"},
+              {"isTitle":false, "isLabelTitle":false, "label": "Cell/Science/Nature","helpText":  "Cell/Science/Nature Pubmed","hookName": "pubmedCSN"}
+            ],
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.PubMedAnnotation",
+            "hasMethod":"hasPubmed",
+            "familyMethod": "",
+            "divMethod":"divPubmed"
+          },
+          {
+            "label": "Funding",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Funding</b> (Find collaborators): Funded NIH grants with gene name in title or abstract. Data extracted from <a href='https://projectreporter.nih.gov/' target='_blank'>RePORT</a>. ",
+            "shape": "text",
+            "color": [
+              {"color":"", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "/static/annot/images/funding-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "annotCode":18,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "funding",
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.FundingAnnotation",
+            "familyMethod": "",
+            "divMethod":"divFunding",
+            "hasMethod":"hasFunding"
+          }
+        ]
+      },
+      {
+        "title": "Reagents and Resources",
+        "enabled": false,
+        "buttons":[
+          {
+            "label": "Inhibitors",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Inhibitors</b>: Small molecule modulators from the published and patent literature",
+            "annotCode":10,
+            "submenu": false,
+            "popUpWindows":true,
+            "hookName": "inhibitors",
+            "shape": "square",
+            "color": [
+              {"color":"#707ee7", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "/static/annot/images/inhibitors-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "windowsData":[
+              {
+                "hasClass":"saturn.client.programs.chromohub.annotations.InhibitorAnnotation",
+                "popMethod": "inhibitorsFunction",
+                "form":{
+                  "items":[
+                    {
+                      "xtype": "radiogroup",
+                      "name": "ligand_select",
+                      "items": [
+                        { "boxLabel": "All", "name": "inhibitors", "inputValue": 1, "checked": true },
+                        { "boxLabel": "IC<sub>50</sub> < 5&micro;M", "name": "inhibitors", "inputValue": 5},
+                        { "boxLabel": "IC<sub>50</sub> < 2&micro;M", "name": "inhibitors", "inputValue": 2 },
+                        { "boxLabel": "IC<sub>50</sub> < 0.5&micro;M", "name": "inhibitors", "inputValue": 0 }
+                      ]
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": " Only Chemical Probes ",
+                      "labelSeparator" : "",
+                      "name": "chemi_sel",
+                      "inputValue": "1",
+                      "checked": true,
+                      "id": "checkbox5s4"
+
+                    }
+                  ]
+                }
+              }
+            ],
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.InhibitorAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasInhibitors",
+            "divMethod":"divInhibitors"
+          },
+          {
+            "label": "Ligands in Structures",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "compounds with MW < 1000 Da and at least 6 carbons complexed to target of interest",
+            "annotCode":12,
+            "submenu": true,
+            "hookName": "ligandsInStructures95",
+            "shape": "square",
+            "color": [
+              {"color":"#68229d", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "popUpWindows":false,
+            "optionSelected":[1],
+            "options":[
+              {"isTitle":true, "isLabelTitle":true, "label": "Structure identity cut-off"},
+              {"isTitle":false, "isLabelTitle":false, "label": "95%","helpText":  "structure identity cut-off 95%","hookName": "ligandsInStructures95"},
+              {"isTitle":false, "isLabelTitle":false, "label": "95% or Best","helpText":  "structure identity cut-off 95% or best","hookName": "ligandsInStructures95best"},
+              {"isTitle":false, "isLabelTitle":false, "label": "40%","helpText":  "structure identity cut-off 40%","hookName": "ligandsInStructures40"}
+            ],
+            "hasClass":"saturn.client.programs.chromohub.annotations.LigandAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasLigands",
+            "divMethod":"divLigands"
+          },
+          {
+            "label": "Structures",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Structures</b>: Structure coverage generated by blasting the protein sequence (downloadable from a link at the top of the tree) against the PDB with a sequence identity cut-off of 95% and minimum coverage of 30 residues",
+            "annotCode":13,
+            "submenu": false,
+            "popUpWindows":true,
+            "hookName": "structures",
+            "shape": "cercle",
+            "color": [
+              {"color":"#689aed", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/structuressgc.png","/static/annot/images/structuresothers.png"],
+            "legend":{
+              "image": "/static/annot/images/structures-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinStructureAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasStructure",
+            "divMethod":"divStructure",
+            "windowsData":[
+            {
+              "hasClass":"saturn.client.programs.chromohub.annotations.ProteinStructureAnnotation",
+              "popMethod": "structuresFunction",
+              "form":{
+                "items":[
+                  {
+                    "xtype": "radiogroup",
+                    "name": "oplist",
+                    "items": [
+                      { "boxLabel": "All", "name": "structure", "inputValue": 0, "checked": true },
+                      { "boxLabel": "Domain", "name": "structure", "inputValue": 1}
+                    ]
+                  },
+                  {
+                    "xtype": "combobox",
+                    "name": "cutoff",
+                    "fieldLabel": "Identity cut-off",
+                    "labelSeparator" : "",
+                    "queryMode": "local",
+                    "store":["95%","95% or best","40%"],
+                    "value": "95%"
+                  },
+                  {
+                    "xtype": "checkboxfield",
+                    "boxLabel": " X-Ray only ",
+                    "labelSeparator" : "",
+                    "name": "xray",
+                    "inputValue": "2",
+                    "id": "xray"
+
+                  }
+                ]
+              }
+            }]
+          },
+          {
+            "label": "SGC Antibodies",
+            "enabled": false,
+            "isTitle": true
+          },
+          {
+            "label": "Antigen Produced",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "Displayed on the phylogenetic trees the proteins for which we have generated recombinant IgGs and Fabs and that have been validated for one or more application. Also indicated are those proteins for which recombinant IgGs or FAbs will become available in the near future. Please send us a message if you have a particular interest in antibodies to one or more targets and if you are interested in collaborating with us on validating these antibodies.<br> <b>Antigen</b>: Antigens have been cloned, expressed and purified at SGC for FAb/IgG production. ",
+            "shape": "image",
+            "color":  [
+              {"color":"", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/antibodies1.png"],
+            "legend":{
+              "image": "/static/annot/images/antibodies-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "annotCode":14,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "antibodiesAntigen",
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
+            "familyMethod": "",
+            "divMethod":"divAntibodies"
+          },
+          {
+            "label": "FAb Produced",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "Displayed on the phylogenetic trees the proteins for which we have generated recombinant IgGs and Fabs and that have been validated for one or more application. Also indicated are those proteins for which recombinant IgGs or FAbs will become available in the near future. Please send us a message if you have a particular interest in antibodies to one or more targets and if you are interested in collaborating with us on validating these antibodies.<br> <b>FAb</b>: At least one FAb has been validated at SGC for this antigen. ",
+            "shape": "image",
+            "color":  [
+              {"color":"", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/antibodies2.png","/static/annot/images/antibodies4.png"],
+            "legend":{
+              "image": "/static/annot/images/antibodies-legFab.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "annotCode":15,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "antibodiesFab",
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
+            "familyMethod": "",
+            "divMethod":"divAntibodiesFabs",
+            "hasMethod":"hasAntibodiesFab"
+          },
+          {
+            "label": "IgG Produced",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "Displayed on the phylogenetic trees the proteins for which we have generated recombinant IgGs and Fabs and that have been validated for one or more application. Also indicated are those proteins for which recombinant IgGs or FAbs will become available in the near future. Please send us a message if you have a particular interest in antibodies to one or more targets and if you are interested in collaborating with us on validating these antibodies.<br> <b>IgG</b>: At least one IgG has been validated at SGC for this antigen. ",
+            "shape": "image",
+            "color":  [
+              {"color":"", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/antibodies3.png","/static/annot/images/antibodies5.png"],
+            "legend":{
+              "image": "/static/annot/images/antibodies-legIgg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "annotCode":16,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "antibodiesIgg",
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.AntibodyAnnotation",
+            "familyMethod": "",
+            "divMethod":"divAntibodiesIgg",
+            "hasMethod":"hasAntibodiesIgg"
+          }
+        ]
+      },
+      {
+        "title": "Cancer Genomics",
+        "enabled": false,
+        "buttons":[
+          {
+            "label": "Expression in Cancer Lines",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Expression in Cancer Lines</b>: Data extracted from <a href='https://portals.broadinstitute.org/ccle/home' target='_blank'>Cancer Cell Line Encyclopedia</a> (PMID <a href='https://www.ncbi.nlm.nih.gov/pubmed/22460905' target='_blank'>22460905</a>) and <a href='www.cancerRXgene.org' target='_blank'>www.cancerRXgene.org</a> (PMID <a href='https://www.ncbi.nlm.nih.gov/pubmed/22460902' target='_blank'>22460902</a>).",
+            "shape": "cercle",
+            "color": [
+              {"color":"#7d5cdc", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "/static/annot/images/expressionInCancer-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "submenu": false,
+            "annotCode":19,
+            "hookName": "expressionLines",
+            "splitresults":false,
+            "popUpWindows":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.ExpressionLineAnnotation",
+            "familyMethod": "",
+            "divMethod":"divExpressionLines"
+          },
+          {
+            "label": "Gene Fusions in Cancer",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Gene Fusions in Cancer</b>: Data extracted from the August 18, 2014 version of the <a href='http://cgap.nci.nih.gov/Chromosomes/Mitelman' target='_blank'>Mitelman database</a>.",
+            "shape": "text",
+            "color": [
+              {"color":"#71b0e0", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "/static/annot/images/geneFusionCancer-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "submenu": false,
+            "annotCode":20,
+            "popUpWindows":false,
+            "hookName": "geneFusionsCancer",
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.GeneFusionAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasGeneFusions",
+            "divMethod":"divGeneFusions"
+          },
+          {
+            "label": "Known Chromosomal Aberrations in Cancer",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "Data extracted from the November 4th 2014 version of the <a href='http://cancer.sanger.ac.uk/cosmic' target='_blank'>Cancer Gene Census</a>.",
+            "submenu": false,
+            "annotCode":21,
+            "popUpWindows":false,
+            "hookName": "aberrationsCancer",
+            "shape": "square",
+            "color": [
+              {"color":"#ff8000", "used":"false"}
+            ],
+            "annotImg":[],
+            "legend":{
+              "image": "/static/annot/images/chromosomalAberrationsCancer-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "splitresults":false,
+            "hasClass":"saturn.client.programs.chromohub.annotations.CancerAberrationAnnotation",
+            "familyMethod": "",
+            "divMethod":"divAberrationsCancer"
+          },
+          {
+            "label": "RNASeq Gene Expression",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Gene Expression</b>:<br>Change in gene expression (Log 2) between tumor sample and non-tumor sample from the same patient. RNASeq V2 data extracted from <a href='https://tcga-data.nci.nih.gov/docs/publications/tcga/' target='_blank'>The Cancer Genome Atlas Data Matrix</a><br><br><a href='http://apps.thesgc.org/resources/phylogenetic_trees/rnaseq_fc_methods.php' target='_blank'>Click here for method used to calculate fold change values</a>",
+            "submenu": false,
+            "annotCode":22,
+            "popUpWindows":true,
+            "familyMethod":"",
+            "hasClass":"saturn.client.programs.chromohub.annotations.RNASeqAnnotation",
+            "hasMethod":"hasRNASeq",
+            "hookName": "rnaSeqGeneExpression",
+            "divMethod":"divRNASeq",
+            "shape": "cercle",
+            "color": [
+              {"color":"#c9cbcf", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/rnaSeqGeneExpression1.png","/static/annot/images/rnaSeqGeneExpression2.png","/static/annot/images/rnaSeqGeneExpression3.png","/static/annot/images/rnaSeqGeneExpression4.png"],
+            "legend":{
+              "image": "/static/annot/images/rnaSeqGeneExpression-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "windowsData":[
+              {
+                "hasClass":"saturn.client.programs.chromohub.annotations.RNASeqAnnotation",
+                "popMethod": "rnaSeqFunction",
+                "hasMethod":"hasRNASeq",
+                "form":{
+                  "width": "600",
+                  "items":[
+                    {
+                      "xtype": "container",
+                      "layout": "hbox",
+                      "items":[
+                        {
+                          "xtype": "combobox",
+                          "fieldLabel": "Show genes with a log2 fold change ",
+                          "name":"seq_evaluator",
+                          "queryMode": "local",
+                          "labelSeparator" : "",
+                          "displayField": "name",
+                          "store":[["greater",">="],["less","<="]],
+                          "value": ">="
+                        },
+                        {
+                          "xtype": "combobox",
+                          "name": "seqexp_fc_cutoff",
+                          "fieldLabel": " ",
+                          "queryMode": "local",
+                          "displayField": "name",
+                          "labelSeparator" : "",
+                          "store":[["1","1"],["2","2"],["-1","-1"],["-2","-2"]],
+                          "value": "2"
+                        }
+                      ]
+                    },
+                    {
+                      "xtype": "container",
+                      "layout": "hbox",
+                      "cls": "x-form-item-finishgroup",
+                      "items": [
+                        {
+                          "xtype": "textfield",
+                          "name": "seqexp_freq_cutoff",
+                          "fieldLabel": " in at least ",
+                          "labelSeparator": "",
+                          "value": "20"
+                        },
+                        {
+                          "xtype": "label",
+                          "text": " % of patients",
+                          "cls": "x-label-alone"
+                        }
+                      ]
+                    },
+                    {
+                      "xtype": "container",
+                      "layout": "hbox",
+                      "items": [
+                        {
+                          "xtype": "textfield",
+                          "name": "patient_seq_cutoff",
+                          "fieldLabel": "Exclude cancer types where patients number is < ",
+                          "labelSeparator" : "",
+                          "value": "10"
+                        },
+                        {
+                          "xtype": "label",
+                          "text": " patients",
+                          "cls":"x-label-alone"
+                        }
+                      ]
+                    },
+                    {
+                      "xtype": "textfield",
+                      "name": "seqexp_rank_cutoff",
+                      "cls": "x-form-bigger",
+                      "fieldLabel": "Show genes with at least one cancer type for which <= ",
+                      "labelSeparator" : "",
+                      "value": "1000"
+                    },
+                    {
+                      "xtype": "label",
+                      "cls":"x-form-item-finishgroup",
+                      "text": " genes are more frequently overexpressed",
+                      "cls":"x-label-alone"
+                    }
+                  ]
+                }
+
+              }
+            ]
+          },
+          {
+            "label": "Vulnerability of Cancer Cell Lines to shRNA",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>shRNA</b>: Data extracted from <a href='http://portals.broadinstitute.org/IGP/data/browseData?conversationPropagation=begin' target='_blank'>The Integrative Genomics Portal</a>:<br>shRNAs were used to probe the essentiality of 11,194 genes in 102 human cancer cell lines [PMID <a href='https://www.ncbi.nlm.nih.gov/pubmed?term=21746896' target='_blank'>21746896</a>].<br><br><a href='http://apps.thesgc.org/resources/phylogenetic_trees/shRNA_default_values.php' target='_blank'>Click here for explanation of default values</a>",
+            "annotCode":23,
+            "submenu": false,
+            "popUpWindows":true,
+            "familyMethod":"",
+            "hookName": "vulnerabilityShRNA",
+            "hasClass":"saturn.client.programs.chromohub.annotations.SHRNAAnnotation",
+            "hasMethod": "hasshRNA",
+            "divMethod":"divshRNA",
+            "shape": "cercle",
+            "color": [
+              {"color":"#1c9d4f", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/vulnerabilityShRNA.png"],
+            "legend":{
+              "image": "/static/annot/images/vulnerabilityShRNA-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "windowsData":[
+              {
+              "hasClass":"saturn.client.programs.chromohub.annotations.SHRNAAnnotation",
+              "popMethod": "shRnaFunction",
+              "form":{
+                "items":[
+                  {
+                    "xtype": "combobox",
+                    "name": "shrna_cutoff",
+                    "fieldLabel": "where log2 fold change in shRNA abundance is <=",
+                    "labelSeparator" : "",
+                    "queryMode": "local",
+                    "displayField": "name",
+                    "store":[["-1","-1"],["-2","-2"],["-3","-3"]],
+                    "value": "-2"
+                  },
+                  {
+                    "xtype": "combobox",
+                    "name": "shrna_num_cutoff",
+                    "fieldLabel": "with at least shRNAs = ",
+                    "labelSeparator" : "",
+                    "queryMode": "local",
+                    "cls":"x-form-item-finishgroup",
+                    "displayField": "name",
+                    "store":["1","2","3","4"],
+                    "value": "3"
+                  },
+                  {
+                    "xtype": "checkboxfield",
+                    "boxLabel": " flag genes where no data is available ",
+                    "labelSeparator" : "",
+                    "name": "shrna_flag",
+                    "inputValue": "2",
+                    "id": "checkbox5s4"
+
+                  }
+                ]
+              }
+
+              }
+            ]
+          },
+          {
+            "label": "Somatic Mutations in Cancer",
+            "enabled": false,
+            "isTitle":false,
+            "helpText":  "<b>Somatic Mutations</b>: Data extracted from <a href='http://dcc.icgc.org/' target='_blank'>International Cancer Genome Consortium</a> and <a href='https://tcga-data.nci.nih.gov/tcga/' target='_blank'>The Cancer Genome Atlas</a>.<br><br> <a href='http://www.broadinstitute.org/cancer/cga/mutsig' target='_blank'>MutSigCV</a> was used to determine significantly mutated genes.<br> MutSigCV data was extracted from <a href='https://confluence.broadinstitute.org/display/GDAC/Dashboard-Analyses' target='_blank'> GDAC's FireHose's</a> standard data run.<br>MutSigCV data is not available for somatic mutaions extracted from <a href='http://dcc.icgc.org/' target='_blank'>International Cancer Genome Consortium</a><br><br><a href='http://apps.thesgc.org/resources/phylogenetic_trees/somatic_mutations_default_values.php' target='_blank'>Click here for explanation of dynamic cutoff values</a>",
+            "annotCode":24,
+            "submenu": false,
+            "popUpWindows":true,
+            "familyMethod":"",
+            "hookName": "somaticMutationCancer",
+            "shape": "text",
+            "hasClass":"saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation",
+            "hasMethod": "hasSomaticMut",
+            "divMethod": "divSomatic",
+            "splitresults": true,
+            "color": [
+              {"color":"#eb922a", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/somaticMutationCancer1.png","/static/annot/images/somaticMutationCancer2.png","/static/annot/images/somaticMutationCancer3.png","/static/annot/images/somaticMutationCancer4.png"],
+            "legend":{
+              "image": "/static/annot/images/somaticMutationCancer-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "windowsData":[
+              {
+                "hasClass":"saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation",
+                "popMethod": "somaticMutFunction",
+                "form":{
+                  "width":"700px",
+                  "items":[
+                    {
+                      "xtype": "radiogroup",
+                      "id": "sm_mutated_select",
+                      "layout": "vbox",
+                      "items": [
+                        { "boxLabel": "Only show significant results according to MutSigCV (q <= 0.1) ","name": "structure", "inputValue": 1, "checked": true },
+                        { "boxLabel": "Use dynamic cutoffs for hypermutated genomes", "name": "structure", "inputValue": 2},
+                        { "boxLabel": "Exclude genomes with > ", "name": "structure", "inputValue": 3 },
+                        {
+                          "xtype": "combobox",
+                          "name": "mutated_cutoff",
+                          "queryMode": "local",
+                          "displayField": "name",
+                          "store":["100","200","300","400"],
+                          "value": "200",
+                          "id": "sm_mutated_cutoff"
+                        },
+                        {
+                          "xtype": "label",
+                          "text": " mutated genes",
+                          "cls":"x-label-alone",
+                          "id": "sm_mutated_cutoff_label"
+                        }
+                      ]
+                    },
+                    {
+                      "xtype": "textfield",
+                      "name": "patient_cutoff",
+                      "fieldLabel": "Exclude cancer types with patients number < ",
+                      "labelSeparator" : "",
+                      "value": 50,
+                      "id": "sm_patient_cutoff"
+                    },
+                    {
+                      "xtype": "textfield",
+                      "name": "results_cutoff",
+                      "labelSeparator" : "",
+                      "fieldLabel": "Exclude genes mutated in patients number < ",
+                      "value": 2,
+                      "id": "sm_results_cutoff"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Non-silent mutations only  ",
+                      "labelSeparator" : "",
+                      "name": "nonsilent",
+                      "inputValue": "2",
+                      "id": "sm_nonsilent"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Only show validated mutations  ",
+                      "labelSeparator" : "",
+                      "name": "validated",
+                      "inputValue": "2",
+                      "id": "sm_validated"
+                    }
+                  ]
+                }
+
+              }
+            ]
+          },
+          {
+            "label": "Protein Levels in Tumors",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "<b>Protein Levels in Tumors</b>: Staining profiles for proteins in human tumor tissue based on immunohistochemisty using tissue micro arrays. Data from The Human Protein Atlas version 18.  Data from The Human Protein Atlas version 18. <a href='www.proteinatlas.org' target='_blank'>www.proteinatlas.org</a> and DOI: DOI: 10.1126/science.aan2507",
+            "annotCode":25,
+            "submenu": false,
+            "popUpWindows":true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {"color":"#689aed", "used":"false"}
+            ],
+            "annotImg":["/static/annot/images/structuressgc.png","/static/annot/images/structuresothers.png"],
+            "legend":{
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text":"",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasTumorLevel",
+            "divMethod":"divTumorLevel",
+            "windowsData":[
+              {
+                "hasClass":"saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+                "popMethod": "tumorLevelFunction",
+                "form":{
+                  "items":[
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_type",
+                      "fieldLabel": "Cancer Type",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "store":["All","breast cancer","carcinoid","cervical cancer","colorectal cancer","endometrial cancer","glioma","head and neck cancer","liver cancer","lung cancer","lymphoma","melanoma","ovarian cancer","pancreatic cancer","prostate cancer","renal cancer","skin cancer","stomach cancer","testis cancer","thyroid cancer","urothelial cancer"],
+                      "value": "All"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Not detected",
+                      "name": "protein_level_not_detected",
+                      "id": "protein_level_not_detected",
+                      "inputValue": "Not detected"
+                    }
+                  ]
+                }
+              }]
+          },
+          {
+            "label": "Protein SubFamilies",
+            "enabled": true,
+            "isTitle":false,
+            "helpText":  "",
+            "annotCode":26,
+            "submenu": false,
+            "popUpWindows":false,
+            "hookName": "subfamilies",
+            "shape": "cercle",
+            "color": [
+              {"color":"blue", "used":"false"}
+            ],
+            "legend":{
+              "image": "/static/annot/images/tumorLevel-leg.png",
+              "text":"",
+              "clazz":"saturn.client.programs.chromohub.annotations.ProteinSubFamilyAnnotation",
+              "method": "getAnnotationLegend"
+            },
+            "hasClass":"saturn.client.programs.chromohub.annotations.ProteinSubFamilyAnnotation",
+            "familyMethod": "",
+            "hasMethod":"hasSubFamily",
+            "divMethod": "divSubFamily"
+          },
+          {
+            "label": "Cancer Essentiality",
+            "enabled": true,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 27,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/essential_cancer.png",
+              "text": "",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasCancerEssential",
+            "divMethod": "divCancerEssential",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+                "popMethod": "cancerEssentialFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score",
+                      "fieldLabel": "Cancer Score",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -1,
+                        -0.75
+                      ],
+                      "value": "-1"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_types",
+                      "fieldLabel": "Cancer Types",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "AUTONOMIC_GANGLIA",
+                        "BONE",
+                        "BREAST",
+                        "CENTRAL_NERVOUS_SYSTEM",
+                        "ENDOMETRIUM",
+                        "HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+                        "KIDNEY",
+                        "LARGE_INTESTINE",
+                        "LIVER",
+                        "LUNG",
+                        "OESOPHAGUS",
+                        "OVARY",
+                        "PANCREAS",
+                        "PLEURA",
+                        "SKIN",
+                        "SOFT_TISSUE",
+                        "STOMACH",
+                        "UPPER_AERODIGESTIVE_TRACT",
+                        "URINARY_TRACT"
+                      ],
+                      "multiSelect": true
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "Protein Levels in Normal Tissues",
+            "enabled": true,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 28,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/protein_normal.png",
+              "text": "",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasNormalLevel",
+            "divMethod": "divNormalLevel",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+                "popMethod": "hasNormalLevelFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "combobox",
+                      "name": "tissues",
+                      "fieldLabel": "Tissue",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "adrenal gland",
+                        "appendix",
+                        "bone marrow",
+                        "breast",
+                        "bronchus",
+                        "caudate",
+                        "cerebellum",
+                        "cerebral cortex",
+                        "cervix, uterine",
+                        "choroid plexus",
+                        "colon",
+                        "duodenum",
+                        "endometrium 1",
+                        "endometrium 2",
+                        "epididymis",
+                        "esophagus",
+                        "eye",
+                        "fallopian tube",
+                        "gallbladder",
+                        "hair",
+                        "heart muscle",
+                        "hippocampus",
+                        "hypothalamus",
+                        "kidney",
+                        "lactating breast",
+                        "liver",
+                        "lung",
+                        "lymph node",
+                        "nasopharynx",
+                        "oral mucosa",
+                        "ovary",
+                        "pancreas",
+                        "parathyroid gland",
+                        "pituitary gland",
+                        "placenta",
+                        "prostate",
+                        "rectum",
+                        "retina",
+                        "salivary gland",
+                        "seminal vesicle",
+                        "skeletal muscle",
+                        "skin",
+                        "skin 1",
+                        "skin 2",
+                        "small intestine",
+                        "smooth muscle",
+                        "soft tissue 1",
+                        "soft tissue 2",
+                        "sole of foot",
+                        "spleen",
+                        "stomach 1",
+                        "stomach 2",
+                        "testis",
+                        "thymus",
+                        "thyroid gland",
+                        "tonsil",
+                        "urinary bladder",
+                        "vagina"
+                      ],
+                      "multiSelect": true
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cell_types",
+                      "fieldLabel": "Cell Types",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "adipocytes",
+                        "bile duct cells",
+                        "cells in anterior ",
+                        "cells in cortex/medulla",
+                        "cells in cuticle",
+                        "cells in endometrial stroma",
+                        "cells in external root sheath",
+                        "cells in glomeruli",
+                        "cells in granular layer",
+                        "cells in inner nuclear layer ",
+                        "cells in internal root sheath",
+                        "cells in molecular layer",
+                        "cells in photoreceptor layer ",
+                        "cells in posterior ",
+                        "cells in red pulp",
+                        "cells in seminiferous ducts",
+                        "cells in tubules",
+                        "cells in white pulp",
+                        "cells in zona fasciculata",
+                        "cells in zona glomerulosa",
+                        "cells in zona reticularis",
+                        "chondrocytes",
+                        "corneal epithelial cells",
+                        "cortical cells",
+                        "decidual cells",
+                        "ductal cells",
+                        "elongated or late spermatids",
+                        "endothelial cells",
+                        "ependymal cells",
+                        "epidermal cells",
+                        "exocrine glandular cells",
+                        "fibroblasts",
+                        "follicle cells",
+                        "ganglion cells ",
+                        "germinal center cells",
+                        "glandular cells",
+                        "glial cells",
+                        "hematopoietic cells",
+                        "hepatocytes",
+                        "islets of Langerhans",
+                        "keratinocytes",
+                        "lactating glandular cells",
+                        "Langerhans",
+                        "lens epithelial cells",
+                        "lens fiber cells",
+                        "Leydig cells",
+                        "limiting membrane",
+                        "lymphoid tissue",
+                        "macrophages",
+                        "medullary cells",
+                        "melanocytes",
+                        "myocytes",
+                        "myoepithelial cells",
+                        "nerve fibers in inner plexiform layer",
+                        "nerve fibers in nerve fiber layer",
+                        "nerve fibers in outer plexiform layer ",
+                        "neuronal cells",
+                        "neuronal projections",
+                        "neuropil",
+                        "non-germinal center cells",
+                        "ovarian stroma cells",
+                        "pachytene spermatocytes",
+                        "peripheral nerve",
+                        "peripheral nerve/ganglion",
+                        "peritubular cells",
+                        "pigment epithelium",
+                        "pneumocytes",
+                        "preleptotene spermatocytes",
+                        "Purkinje cells",
+                        "respiratory epithelial cells",
+                        "round or early spermatids",
+                        "sebaceous cells",
+                        "secretory cells",
+                        "sertoli cells",
+                        "smooth muscle cells",
+                        "spermatogonia",
+                        "squamous epithelial cells",
+                        "sweat ducts",
+                        "synapses",
+                        "trophoblastic cells",
+                        "urothelial cells",
+                        "vitreous humor"
+                      ],
+                      "multiSelect": true
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Not detected",
+                      "name": "protein_level_not_detected",
+                      "id": "protein_level_not_detected",
+                      "inputValue": "Not detected"
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Reliability"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Approved",
+                      "name": "protein_reliability_approved",
+                      "id": "protein_reliability_approved",
+                      "inputValue": "Approved"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Enhanced",
+                      "name": "protein_reliability_enhanced",
+                      "id": "protein_reliability_enhanced",
+                      "inputValue": "Enhanced"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Supported",
+                      "name": "protein_reliability_supported",
+                      "id": "protein_reliability_supported",
+                      "inputValue": "Supported"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Uncertain",
+                      "name": "protein_reliability_uncertain",
+                      "id": "protein_reliability_uncertain",
+                      "inputValue": "Uncertain"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "Protein Levels in Normal Tissue Confidence",
+            "enabled": true,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 29,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/protein_normal_perc.png",
+              "text": "",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasNormalLevelPercentage",
+            "divMethod": "divNormalLevelPercentage",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinLevelNormalTissuesAnnotation",
+                "popMethod": "hasNormalLevelPercentageFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Reliability"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Approved",
+                      "name": "protein_reliability_approved",
+                      "id": "protein_reliability_approved",
+                      "inputValue": "Approved"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Enhanced",
+                      "name": "protein_reliability_enhanced",
+                      "id": "protein_reliability_enhanced",
+                      "inputValue": "Enhanced"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Supported",
+                      "name": "protein_reliability_supported",
+                      "id": "protein_reliability_supported",
+                      "inputValue": "Supported"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Uncertain",
+                      "name": "protein_reliability_uncertain",
+                      "id": "protein_reliability_uncertain",
+                      "inputValue": "Uncertain"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "Tumour type threshold",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
+											"value": "at least 1"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "Protein Levels in Cancer Confidence",
+            "enabled": true,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 30,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/protein_tumor_perc.png",
+              "text": "",
+							"clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasTumorLevelPercentage",
+            "divMethod": "divTumorLevelPercentage",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+                "popMethod": "tumorLevelPercentageFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "Tumour type threshold",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
+                      "value": "at least 1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+
+}

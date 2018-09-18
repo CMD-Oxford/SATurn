@@ -898,7 +898,13 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     annotations[a].options=new Array();
                     if(jsonFile.btnGroup[i].buttons[j].legend!=null){
                         annotations[a].legend=jsonFile.btnGroup[i].buttons[j].legend.image;
+
+                        if(jsonFile.btnGroup[i].buttons[j].legend.clazz != null) {
+                            annotations[a].legendClazz = jsonFile.btnGroup[i].buttons[j].legend.clazz;
+                            annotations[a].legendMethod = jsonFile.btnGroup[i].buttons[j].legend.method;
+                        }
                     }
+
                     if(jsonFile.btnGroup[i].buttons[j].submenu==true){
                         var zz:Int;
                         for (zz in 0 ...jsonFile.btnGroup[i].buttons[j].options.length){
@@ -970,9 +976,15 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
             for (i in 0...activeAnnotation.length){
                 if (activeAnnotation[i]==true){
-                   if(annotations[i].legend!='') {
+                   if(annotations[i].legend!='' && annotations[i].legendClazz == '') {
                        needToExpandLegend=true;
                        container.addImageToLegend(annotations[i].legend, i);
+                   } else if(annotations[i].legendClazz != '' && annotations[i].legendMethod != ''){
+                       var clazz = Type.resolveClass(annotations[i].legendClazz);
+                       var method = Reflect.field(clazz, annotations[i].legendMethod);
+                       var legend = method(treeName);
+
+                       container.addImageToLegend(legend, i);
                    }
                 }
             }
@@ -5267,6 +5279,11 @@ $('.vertical .progress-fill span').each(function(){
                 var b=jsonFile.btnGroup[i].buttons[z];
 
                 if(!b.enabled){
+                    z++;
+                    continue;
+                }
+
+                if(b.annotCode == 26 && treeName == 'E1' || b.annotCode == 26 && treeName == 'E2' || b.annotCode == 26 && treeName == 'USP'){
                     z++;
                     continue;
                 }

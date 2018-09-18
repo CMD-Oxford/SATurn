@@ -7,6 +7,11 @@ class ProteinSubFamilyAnnotation {
 
     }
 
+    static function getAnnotationLegend(treeName: String) {
+        var legendPath = 'legend/subfamily_' + treeName + '.png';
+        return legendPath;
+    }
+
     static function hasSubFamily(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'red',used:true},defImage:0};
 

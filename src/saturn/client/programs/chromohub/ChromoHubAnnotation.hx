@@ -37,6 +37,8 @@ class ChromoHubAnnotation {
     public var optionSelected:Array<Int>;
     public var dbData:Dynamic;
     public var legend:String;
+    public var legendClazz:String;
+    public var legendMethod:String;
     public var hasClass:String;
     public var hasMethod: String;
     public var divMethod: String;
