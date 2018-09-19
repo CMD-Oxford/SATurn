@@ -68,7 +68,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
         // this.ctx.scale(this.scale,this.scale);
         this.ctx.strokeStyle=strokeStyle;
         this.ctx.beginPath();
-        this.ctx.arc(x,y,radius,sAngle,eAngle);
+        this.ctx.arc(x,y,Math.abs(radius),sAngle,eAngle);
 
         this.ctx.lineWidth = lineWidth;
 
@@ -116,7 +116,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
         this.ctx.save();
 
-
+        this.ctx.translate(tx,ty);
         this.ctx.rotate(rotation);
         this.ctx.textAlign=textAlign;
         this.ctx.fillStyle = color;

@@ -40,8 +40,8 @@ class ChromoHubTreeNode {
     public var colour : String;
 
     public var children: Array<ChromoHubTreeNode>;
-    public var dist : Int = 40; // constant que definim nosaltres
-    var ratio : Float = 1.2;
+    public var dist : Int = 50; // constant que definim nosaltres
+    var ratio : Float = 0.00006;
     public var leaves : Int = 0;
     public var numchild : Int = 0;
 
@@ -125,7 +125,7 @@ class ChromoHubTreeNode {
         }
     }
 
-    public function preOrderTraversal (mode:Int){
+    public function preOrderTraversal2 (mode:Int){
 
         //this.root.branch = this.root.maxBranch;
 
@@ -155,7 +155,7 @@ class ChromoHubTreeNode {
 
 
             if(mode==1){this.root.numchild= this.root.numchild+1;}
-            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
+            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/40; // we scale the angles to avoid label overlapping
             this.children[i].angle=n;
 
             n=n+this.children[i].wedge;
@@ -165,7 +165,7 @@ class ChromoHubTreeNode {
 
     }
 
-    public function preOrderTraversal2(mode:Int){
+    public function preOrderTraversal(mode:Int){
 
         if(this.parent != null){
             var a = this.getDepth() * this.ratio;

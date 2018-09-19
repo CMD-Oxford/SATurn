@@ -56,7 +56,8 @@ class ChromoHubRadialTreeLayout{
         var cy = renderer.cy;
 
         var textSize = null;
-        var branch = treeNode.root.dist / treeNode.root.getHeight();
+
+        var branch = (cx * 2 / treeNode.root.getHeight()) / 4;
         var k = 2 * Math.PI / treeNode.root.getLeafCount();
 
         var fontW = 12;
@@ -88,9 +89,10 @@ class ChromoHubRadialTreeLayout{
                 angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
 
                 if(Math.abs(ChromoHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
-                    //renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y,'rgb(0,0,255)', firstChild.lineWidth);
+                    renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y,'rgb(0,0,255)', firstChild.lineWidth);
                 }else{
                     // circles
+
                     renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, 'rgb(0,255,0)', treeNode.lineWidth);
                 }
             }
@@ -118,27 +120,28 @@ class ChromoHubRadialTreeLayout{
             renderer.drawLine(x1, y1, x2, y2, lineColour, treeNode.lineWidth);
 
             if(treeNode.isLeaf()){
-                var gap = 5;//10;
-                var ta = angle;
-                var pgap = 40;
+                var dy = y1-y2;
+                var dx = x1-x2;
 
-                fontH = 1;
-                fontW = 1;
+                var x = 0;
+                var y = 0;
 
-                var tx = x1 + Math.cos(ta) * gap + Math.cos(ta + Math.PI/2) * fontH;
-                var ty = y1 + Math.sin(ta) * gap + Math.sin(ta + Math.PI/2) * fontH;
+                var gap = 2;
 
-                var length = treeNode.name.length * fontW;
-                var px = tx + Math.cos(ta) * pgap;
+                var ta;
+                // Avoid upside down labels
+                if(dx < 0){
+                    ta = Math.atan2(dy,dx) - Math.PI;
+                    x = - renderer.mesureText(treeNode.name) - gap;
+                }else{
+                    ta = Math.atan2(dy,dx);
 
-                var py = ty + Math.sin(ta) * pgap;
-                if(ChromoHubMath.radiansToDegrees(ta) > 90 && ChromoHubMath.radiansToDegrees(ta) < 270){
-                    tx += Math.cos(ta) * length - Math.cos(ta + Math.PI/2) * fontH;
-                    ty += Math.sin(ta) * length - Math.sin(ta + Math.PI/2) * fontH;
-                    ta += Math.PI;
+                    x = gap;
                 }
 
-                renderer.drawTextNoTranslate(treeNode.name,0,0, x1,y1,0,'top',black);
+                y = 3;
+
+                renderer.drawTextNoTranslate(treeNode.name,x2 + dx ,y2+ dy , x,y,ta,'top',black);
 
                 i += k;
             }
