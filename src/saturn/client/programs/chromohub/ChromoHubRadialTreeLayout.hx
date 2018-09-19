@@ -52,6 +52,8 @@ class ChromoHubRadialTreeLayout{
             //renderer.ctx.translate(renderer.cx,renderer.cy);
         }
 
+        treeNode.space = 0;
+
         var cx = renderer.cx;
         var cy = renderer.cy;
 
@@ -144,6 +146,44 @@ class ChromoHubRadialTreeLayout{
                 renderer.drawTextNoTranslate(treeNode.name,x2 + dx ,y2+ dy , x,y,ta,'top',black);
 
                 i += k;
+
+                var t= renderer.mesureText(treeNode.name)+10; // calculate the width of the text in pixels and we add padding
+
+                treeNode.rad = ta;
+
+                treeNode.x = x1 ;
+                treeNode.y =  y1;
+
+                //renderer.ctx.save();
+                //renderer.ctx.translate(x2 + dx ,y2+ dy);
+
+                //renderer.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                var j:Int;
+                for( j in 1...annotations.length ) {
+                    if(annotations[j]==true){
+                        var added:Bool;
+                        added=addAnnotation(treeNode,j, t, renderer,annotList);
+
+                        if((treeNode.annotations[j]!=null)&&(treeNode.annotations[j].alfaAnnot[0]!=null)&&(treeNode.annotations[j].alfaAnnot.length>0)){
+                            var u=0;
+                            if(added==true)treeNode.space=treeNode.space-1;
+                            treeNode.space=treeNode.space+1;
+                            for (u in 0...treeNode.annotations[j].alfaAnnot.length){
+                                if(annotList[j].shape=='text' && treeNode.quad==2) treeNode.space=treeNode.space+2;
+                                else if(annotList[j].shape=='text' && treeNode.quad==1) treeNode.space=treeNode.space+2;
+                                else treeNode.space=treeNode.space+1;
+                                added=addAlfaAnnotation(treeNode,treeNode.annotations[j].alfaAnnot[u],j, t, renderer,annotList);
+
+                            }if(added==true){
+                                treeNode.space=treeNode.space+1;
+                            }
+                        }else  if(added==true)treeNode.space=treeNode.space+1;
+                    }
+                }
+
+                treeNode.x = x2 ;
+                treeNode.y =  y2;
             }
         }
 

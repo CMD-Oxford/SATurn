@@ -135,7 +135,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     var subtreeName = null;
 
-    var drawingMode = ChromoHubDrawingMode.STRAIGHT;
+    var drawingMode = ChromoHubDrawingMode.CIRCULAR;
 
     public function new(){
         super();
