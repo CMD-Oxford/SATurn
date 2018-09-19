@@ -283,7 +283,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             }
         });
 
-
         panel.body.on('mousewheel', function(e : Dynamic) {
             if(standaloneMode){
                 var container = getApplication().getSingleAppContainer();
@@ -1625,7 +1624,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         this.canvas.cx=Math.round(parentWidth/2);
         this.canvas.cy=Math.round(parentHeight/2);
-        if(this.scale<=2.0)this.scale=this.scale+0.2;
+        if(this.scale<=4.0)this.scale=this.scale+0.2;
         this.canvas.zoomIn(activeAnnotation,annotations,scale);
         newposition(0,0);
     }
@@ -1655,7 +1654,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         this.canvas.cx=Math.round(parentWidth/2);
         this.canvas.cy=Math.round(parentHeight/2);
-        if(this.scale>=0.6)this.scale=this.scale-0.2;
+        //if(this.scale>=0.2)
+        this.scale=this.scale-0.2;
         this.canvas.zoomOut(activeAnnotation, annotations,this.scale);
         newposition(0,0);
     }

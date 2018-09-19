@@ -250,7 +250,7 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
 
     public function zoomOut(annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, scale:Float){
 
-        if (scale>0.4){ // do we need a minimum scale?
+        //if (scale>0.4){ // do we need a minimum scale?
 
             this.scale=scale;
 
@@ -266,6 +266,6 @@ class ChromoHubCanvasRenderer implements ChromoHubRendererI {
             radialRendererObj.render(this.rootNode,this, annotations, annotList);
 
             this.ctx.restore();
-        }
+        //}
     }
 }
