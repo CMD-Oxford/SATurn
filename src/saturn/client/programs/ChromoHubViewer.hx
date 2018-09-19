@@ -292,7 +292,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 container.hideSubMenuToolBar();
             }
 
-            if(e.getWheelDelta()==-1){
+            if(e.getWheelDelta()<0){
                 zoomIn(this.activeAnnotation);
             }else{
                 zoomOut(this.activeAnnotation);
