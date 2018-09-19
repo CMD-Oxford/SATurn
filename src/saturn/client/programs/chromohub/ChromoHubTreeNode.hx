@@ -41,7 +41,7 @@ class ChromoHubTreeNode {
 
     public var children: Array<ChromoHubTreeNode>;
     public var dist : Int = 50; // constant que definim nosaltres
-    var ratio : Float = 0.00006;
+    public var ratio : Float = 0.00006;
     public var leaves : Int = 0;
     public var numchild : Int = 0;
 
@@ -135,8 +135,8 @@ class ChromoHubTreeNode {
             //this.x=parent.x+Math.cos(this.angle+this.wedge/2)*((1-((this.branch -this.root.minBranch) / (this.root.maxBranch - this.root.minBranch))) * 40);
             //this.y=parent.y+Math.sin(this.angle+this.wedge/2)*((1-((this.branch -this.root.minBranch) / (this.root.maxBranch - this.root.minBranch))) * 40);
 
-            this.x=parent.x+Math.cos(this.angle+this.wedge/2)*dist;
-            this.y=parent.y+Math.sin(this.angle+this.wedge/2)*dist;
+            this.x=parent.x+Math.cos(this.angle+this.wedge/2)*this.root.dist;
+            this.y=parent.y+Math.sin(this.angle+this.wedge/2)*this.root.dist;
 
             if(mode==1){
                 this.nodeId=this.root.numchild;
@@ -155,11 +155,11 @@ class ChromoHubTreeNode {
 
 
             if(mode==1){this.root.numchild= this.root.numchild+1;}
-            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/40; // we scale the angles to avoid label overlapping
+            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
             this.children[i].angle=n;
 
             n=n+this.children[i].wedge;
-            this.children[i].preOrderTraversal(mode);
+            this.children[i].preOrderTraversal2(mode);
             i++;
         }
 
@@ -168,7 +168,7 @@ class ChromoHubTreeNode {
     public function preOrderTraversal(mode:Int){
 
         if(this.parent != null){
-            var a = this.getDepth() * this.ratio;
+            var a = this.getDepth() * this.root.ratio;
             if(this.angle > this.parent.angle) {
                 this.angle += ChromoHubMath.degreesToRadians(a);
             } else {

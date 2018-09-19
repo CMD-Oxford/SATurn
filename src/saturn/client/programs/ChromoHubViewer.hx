@@ -135,6 +135,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
     var subtreeName = null;
 
+    var drawingMode = ChromoHubDrawingMode.STRAIGHT;
+
     public function new(){
         super();
     }
@@ -363,7 +365,13 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             node.children[i].angle=n;
 
             n=n+node.children[i].wedge;
-            node.children[i].preOrderTraversal(0);
+
+            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+                node.children[i].preOrderTraversal2(0);
+            }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+                node.children[i].preOrderTraversal(0);
+            }
+
             i++;
         }
         newposition(0,0);
@@ -550,7 +558,14 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             this.rootNode.rectangleBottom=Std.int(this.rootNode.children[0].y);
             this.rootNode.rectangleTop=Std.int(this.rootNode.children[0].y);
 
-            this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+                this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+            }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+                this.rootNode.dist = 50;
+                this.rootNode.ratio = 0.00006;
+
+                this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+            }
 
             this.canvas.ctx.save();
             this.canvas.ctx.beginPath();
@@ -676,7 +691,22 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         rootNode.y = 0;
         rootNode.wedge = 2*Math.PI;
         rootNode.angle = 0;
-        rootNode.preOrderTraversal(1);
+
+        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+            //rootNode.dist = 40;
+            //rootNode.ratio = 1.2;
+
+            rootNode.preOrderTraversal2(1);
+
+
+        }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+            rootNode.dist = 50;
+            rootNode.ratio = 0.00006;
+
+            rootNode.preOrderTraversal(1);
+
+
+        }
 
 
 
@@ -705,10 +735,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
        // annotations= new Array();
 
-        radialRendererObj.renderCircle(this.rootNode,this.canvas,this.activeAnnotation, annotations);
-
-
-
+        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+            radialRendererObj.render(this.rootNode,this.canvas,this.activeAnnotation, annotations);
+        }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+            radialRendererObj.render(this.rootNode,this.canvas,this.activeAnnotation, annotations);
+        }
 
 		// map one key by key code
 		var map = new bindings.KeyMap(theComponent.getEl(), {
@@ -3954,7 +3985,14 @@ $('.vertical .progress-fill span').each(function(){
 
         this.radialR= new ChromoHubRadialTreeLayout(this,this.canvas.canvas.width, this.canvas.canvas.height);
 
-        this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+            this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+            this.rootNode.dist = 50;
+            this.rootNode.ratio = 0.00006;
+
+            this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        }
 
         this.canvas.cx=this.centrex;
         this.canvas.cy=this.centrey;
@@ -3993,8 +4031,14 @@ $('.vertical .progress-fill span').each(function(){
 
         this.radialR= new ChromoHubRadialTreeLayout(this, width, height);
 
-        this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+            this.radialR.render(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+            this.rootNode.dist = 50;
+            this.rootNode.ratio = 0.00006;
 
+            this.radialR.renderCircle(this.rootNode, this.canvas, this.activeAnnotation,annotations);
+        }
 
         this.canvas.ctx = originalCanvas;
         newposition(0,0);
@@ -4286,7 +4330,14 @@ $('.vertical .progress-fill span').each(function(){
                                 node.children[i].angle=n;
 
                                 n=n+node.children[i].wedge;
-                                node.children[i].preOrderTraversal(0);
+
+                                if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+                                    node.children[i].preOrderTraversal2(0);
+                                }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+                                    node.children[i].preOrderTraversal(0);
+                                }
+
+
                                 i++;
                             }
                             newposition(0,0);
@@ -5705,4 +5756,9 @@ $('.vertical .progress-fill span').each(function(){
             return true;
     }
 
+}
+
+enum ChromoHubDrawingMode{
+    STRAIGHT;
+    CIRCULAR;
 }
