@@ -143,7 +143,13 @@ class ChromoHubRadialTreeLayout{
 
                 y = 3;
 
-                renderer.drawTextNoTranslate(treeNode.name,x2 + dx ,y2+ dy , x,y,ta,'top',black);
+                var labelColour = black;
+
+                if(prog.highlightedGenes.exists(treeNode.name)==true){
+                    labelColour = 'red';
+                }
+
+                renderer.drawTextNoTranslate(treeNode.name,x2 + dx ,y2+ dy , x,y,ta,'top',labelColour);
 
                 i += k;
 
