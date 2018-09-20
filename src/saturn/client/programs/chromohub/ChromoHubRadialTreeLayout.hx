@@ -41,10 +41,14 @@ class ChromoHubRadialTreeLayout{
     }
 
     public function renderCircle (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){
-        _renderCircle(treeNode,renderer, annotations, annotList, lineColour);
+        if(treeNode.colour != null){
+            lineColour = treeNode.colour;
+        }
+
+        _renderCircle(treeNode,renderer, annotations, annotList, lineColour, lineColour);
     }
 
-    function _renderCircle(treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)") {
+    function _renderCircle(treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)", parentColour="rgb(28,102,224)") {
         var blue = 'rgb(41,128,214)';
         var red = 'rgb(255,0,0)';
         var black = 'rgb(68,68,68)';
@@ -72,7 +76,12 @@ class ChromoHubRadialTreeLayout{
         var i : Float = treeNode.angle;
 
         for(child in treeNode.children){
-            i = _renderCircle(child, renderer, annotations, annotList, lineColour);
+            var childLineColour = lineColour;
+            if(child.colour != null){
+                childLineColour = child.colour;
+            }
+
+            i = _renderCircle(child, renderer, annotations, annotList, childLineColour, lineColour);
         }
 
         var h  :Float = null;
@@ -92,11 +101,9 @@ class ChromoHubRadialTreeLayout{
                 angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
 
                 if(Math.abs(ChromoHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
-                    renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y, blue, firstChild.lineWidth);
+                    renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y, lineColour, firstChild.lineWidth);
                 }else{
-                    // circles
-
-                    renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, blue, treeNode.lineWidth);
+                    renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, lineColour, treeNode.lineWidth);
                 }
             }
 
@@ -113,11 +120,11 @@ class ChromoHubRadialTreeLayout{
             treeNode.x = x2;
             treeNode.y =  y2;
 
-            var lineColour = blue;
+            /*var lineColour = blue;
 
             if(treeNode.parent == treeNode.root){
                 lineColour = blue;
-            }
+            }*/
 
             // Inner branch lines
             renderer.drawLine(x1, y1, x2, y2, lineColour, treeNode.lineWidth);
@@ -224,6 +231,39 @@ class ChromoHubRadialTreeLayout{
             }
 
 
+        }
+
+        for(child in treeNode.children){
+            var data:ChromoHubScreenData;
+            data=new ChromoHubScreenData();
+
+            data.renderer=renderer;
+            data.isAnnot=false;
+            data.nodeId=child.nodeId;
+            data.point=5;
+            data.width=10;
+            data.height=10;
+
+            data.parentx=Math.round(treeNode.x);
+            data.parenty=Math.round(treeNode.y);
+
+            data.x=Math.round(child.x);
+            data.y=Math.round(child.y);
+            treeNode.root.screen[treeNode.root.screen.length]=data;
+        }
+
+        if(treeNode.parent == null){
+            var rootScreen = new ChromoHubScreenData();
+            rootScreen.x = treeNode.x;
+            rootScreen.y = treeNode.y;
+            rootScreen.nodeId = treeNode.nodeId;
+            rootScreen.renderer = renderer;
+
+            rootScreen.point=5;
+            rootScreen.width=10;
+            rootScreen.height=10;
+
+            treeNode.screen.push(rootScreen);
         }
 
         return i;

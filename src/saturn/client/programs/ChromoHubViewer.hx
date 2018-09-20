@@ -270,10 +270,18 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                         node = rootNode;
                     }
 
+                    if(node.parent == rootNode){
+                        for(child in rootNode.children){
+                            colourNode(child);
+                        }
+                    }else{
+                        colourNode(node);
+                    }
+
 
                     //undolist[undolist.length]={data:d,x:d.x,y:d.y,angle:node.angle, clock:clock};
 
-                    colourNode(node);
+
                 }
             }
         });

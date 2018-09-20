@@ -170,6 +170,11 @@ class ChromoHubTreeNode {
     public function preOrderTraversal(mode:Int){
 
         if(this.parent != null){
+            if(mode==1){
+                this.nodeId=this.root.numchild;
+                this.root.nodeIdToNode.set(this.nodeId, this);
+            }
+
             var a = this.getDepth() * this.root.ratio;
             if(this.angle > this.parent.angle) {
                 this.angle += ChromoHubMath.degreesToRadians(a);
@@ -181,17 +186,20 @@ class ChromoHubTreeNode {
 
             this.x = this.parent.x + Math.cos(this.angle_new) * this.root.dist; //$u->x + cos($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
             this.y = this.parent.y + Math.sin(this.angle_new) * this.root.dist; // $u->y + sin($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
+        }else{
+            if(mode==1) this.nodeId=0;
         }
 
         var n = this.angle;
 
         for(child in this.children){
+            if(mode==1){this.root.numchild= this.root.numchild+1;}
             child.wedge = 2 * Math.PI * child.getLeafCount() / child.root.getLeafCount();
             child.angle = n;
             child.angle_new = child.angle + child.wedge/2;
 
             n += child.wedge;
-            child.preOrderTraversal(0);
+            child.preOrderTraversal(mode);
         }
     }
 
