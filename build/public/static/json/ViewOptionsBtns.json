@@ -68,7 +68,7 @@
             "submenu": false,
             "annotImg":["/static/annot/images/summary.png"],
             "popUpWindows":false,
-            "hookName": "Domain",
+            "hookName": "subfamilies",
             "shape": "cercle",
             "color": [
               {"color":"#2980d6", "used":"true"}
@@ -76,8 +76,8 @@
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.DomainAnnotation",
             "familyMethod": "familyDomain",
-            "hasMethod":"",
-            "divMethod":""
+            "hasMethod":"hasDomain",
+            "divMethod":"divDomain"
           },
           {
             "label": "Structures",
