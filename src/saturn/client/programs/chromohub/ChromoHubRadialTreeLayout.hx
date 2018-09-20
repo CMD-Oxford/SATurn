@@ -45,8 +45,9 @@ class ChromoHubRadialTreeLayout{
     }
 
     function _renderCircle(treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)") {
-        var black = 'rgb(41,128,214)';
+        var blue = 'rgb(41,128,214)';
         var red = 'rgb(255,0,0)';
+        var black = 'rgb(68,68,68)';
 
         if(treeNode.parent == null){
             //renderer.ctx.translate(renderer.cx,renderer.cy);
@@ -91,11 +92,11 @@ class ChromoHubRadialTreeLayout{
                 angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
 
                 if(Math.abs(ChromoHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
-                    renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y,'rgb(0,0,255)', firstChild.lineWidth);
+                    renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y, blue, firstChild.lineWidth);
                 }else{
                     // circles
 
-                    renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, 'rgb(0,255,0)', treeNode.lineWidth);
+                    renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, blue, treeNode.lineWidth);
                 }
             }
 
@@ -112,10 +113,10 @@ class ChromoHubRadialTreeLayout{
             treeNode.x = x2;
             treeNode.y =  y2;
 
-            var lineColour = red;
+            var lineColour = blue;
 
             if(treeNode.parent == treeNode.root){
-                lineColour = red;
+                lineColour = blue;
             }
 
             // Inner branch lines
