@@ -63,4 +63,6 @@ interface ChromoHubRendererI {
 
     public function endGroup ():Void;
 
+    public function mesureText(text : String):Int;
+
 }

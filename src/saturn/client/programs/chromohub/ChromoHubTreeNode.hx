@@ -63,6 +63,8 @@ class ChromoHubTreeNode {
     public var lineMode : LineMode = LineMode.STRAIGHT;
     var angle_new : Float = 0;
 
+    var maxNameLength = -1;
+
     public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
         this.parent=parent;
         this.children=[];
@@ -168,6 +170,11 @@ class ChromoHubTreeNode {
     public function preOrderTraversal(mode:Int){
 
         if(this.parent != null){
+            if(mode==1){
+                this.nodeId=this.root.numchild;
+                this.root.nodeIdToNode.set(this.nodeId, this);
+            }
+
             var a = this.getDepth() * this.root.ratio;
             if(this.angle > this.parent.angle) {
                 this.angle += ChromoHubMath.degreesToRadians(a);
@@ -179,17 +186,20 @@ class ChromoHubTreeNode {
 
             this.x = this.parent.x + Math.cos(this.angle_new) * this.root.dist; //$u->x + cos($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
             this.y = this.parent.y + Math.sin(this.angle_new) * this.root.dist; // $u->y + sin($treeNodeObj->angle + $treeNodeObj->wedge / 2) * $r;
+        }else{
+            if(mode==1) this.nodeId=0;
         }
 
         var n = this.angle;
 
         for(child in this.children){
+            if(mode==1){this.root.numchild= this.root.numchild+1;}
             child.wedge = 2 * Math.PI * child.getLeafCount() / child.root.getLeafCount();
             child.angle = n;
             child.angle_new = child.angle + child.wedge/2;
 
             n += child.wedge;
-            child.preOrderTraversal(0);
+            child.preOrderTraversal(mode);
         }
     }
 
@@ -267,6 +277,41 @@ class ChromoHubTreeNode {
 
             return ChromoHubMath.getMaxOfArray(heightList);
         }
+    }
+
+    public function getMaximumLeafNameLength(renderer : ChromoHubRendererI = null) : Int{
+        if(maxNameLength != -1){
+            return maxNameLength;
+        }
+
+        var nodes = new Array<ChromoHubTreeNode>();
+        nodes.push(this);
+
+        maxNameLength = 0;
+
+        var maxName = '';
+
+        for(node in nodes){
+            if(node.isLeaf()){
+                var nodeNameLength = node.name.length;
+
+                if(nodeNameLength > maxNameLength){
+                    maxNameLength = nodeNameLength;
+                    maxName = node.name;
+                }
+            }else{
+                for(child in node.children){
+                    nodes.push(child);
+                }
+            }
+        }
+
+        if(renderer != null){
+            maxNameLength = renderer.mesureText(maxName);
+        }
+
+        return maxNameLength;
+
     }
 
 
