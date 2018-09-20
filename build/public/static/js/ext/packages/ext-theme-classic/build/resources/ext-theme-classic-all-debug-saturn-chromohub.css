@@ -30624,6 +30624,10 @@ a.x-color-picker-item:hover {
 .x-btn-target-non-usp-gene,
 .x-btn-target-usp,
 .x-btn-target-usp-gene,
+.x-btn-target-e3-simple,
+.x-btn-target-e3-simple-gene,
+.x-btn-target-e3-complex,
+.x-btn-target-e3-complex-gene,
 .x-btn-target-kat-gene,
 .x-btn-target-parp-gene,
 .x-btn-target-pmt-gene,
@@ -30805,6 +30809,14 @@ a.x-color-picker-item:hover {
 .x-btn-target-sant-gene{ background-image: url(/static/js/images/targetbutton-sant-gene.png)!important; }
 .x-btn-target-histone-gene{ background-image: url(/static/js/images/targetbutton-histones-gene.png)!important; }
 .x-btn-target-wdr-gene{ background-image: url(/static/js/images/targetbutton-wdr-gene.png)!important; }
+
+.x-btn-target-e1-gene { background-image: url(/static/js/images/targetbutton-e1.png)!important; }
+.x-btn-target-e2-gene { background-image: url(/static/js/images/targetbutton-e2.png)!important; }
+.x-btn-target-non-usp-gene { background-image: url(/static/js/images/targetbutton-non-usp.png)!important; }
+.x-btn-target-usp-gene { background-image: url(/static/js/images/targetbutton-usp.png)!important; }
+.x-btn-target-e3-complex-gene { background-image: url(/static/js/images/targetbutton-e3-complex.png)!important; }
+.x-btn-target-e3-simple-gene { background-image: url(/static/js/images/targetbutton-e3-simple.png)!important; }
+
 
 .targetclass-citation {
     margin-top: 46px;

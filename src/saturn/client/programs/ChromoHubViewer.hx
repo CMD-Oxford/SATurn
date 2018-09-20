@@ -4510,7 +4510,7 @@ $('.vertical .progress-fill span').each(function(){
         var level2Items :Array<Dynamic> = [
             {
                 xtype:'label',
-                text:'E3',
+                text:'E3 ligases',
                 style:{
                     color: '#4d749f'
                 }
@@ -4555,7 +4555,7 @@ $('.vertical .progress-fill span').each(function(){
             {
                 margin: '0 10 5 0',
                 xtype : 'button',
-                cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                cls : if (mapFam.exists('E3-COMPLEX') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3-COMPLEX') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3-COMPLEX') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
                 handler: function() {
                     treeName = 'E3_Complex';
 
@@ -4570,7 +4570,7 @@ $('.vertical .progress-fill span').each(function(){
             {
                 margin: '0 10 5 0',
                 xtype : 'button',
-                cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('Simple E3 ligases') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                cls : if (mapFam.exists('E3-SIMPLE') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3-SIMPLE') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3-Simple') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
                 handler: function() {
                     treeName = 'E3_Ligase';
 
