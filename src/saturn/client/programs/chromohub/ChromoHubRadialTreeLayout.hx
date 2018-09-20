@@ -153,17 +153,45 @@ class ChromoHubRadialTreeLayout{
 
                 i += k;
 
-                var t= renderer.mesureText(treeNode.name)+10; // calculate the width of the text in pixels and we add padding
+                var t= treeNode.root.getMaximumLeafNameLength(renderer) + 10; // calculate the width of the text in pixels and we add padding
 
                 treeNode.rad = ta;
 
-                treeNode.x = x1 ;
+                treeNode.x = x1;
                 treeNode.y =  y1;
+                //treeNode.quad = 9;
 
-                //renderer.ctx.save();
-                //renderer.ctx.translate(x2 + dx ,y2+ dy);
+                renderer.ctx.save();
+                //renderer.ctx.translate(x2 + dx,y2+ dy );
+                //renderer.ctx.rotate(ta);
 
                 //renderer.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+
+                if((treeNode.y>y2) && (treeNode.x > x2)) {
+                    treeNode.quad=1;
+                }
+                if((treeNode.y<y2) && (treeNode.x > x2)){
+                    treeNode.quad=2;
+                }
+                if((treeNode.y<y2) && (treeNode.x < x2)){
+                    treeNode.quad=3;
+                }
+                if((treeNode.y>y2) && (treeNode.x < x2)){
+                    treeNode.quad=4;
+                }
+                if((treeNode.y==y2) && (treeNode.x > x2)){
+                    treeNode.quad=5;
+                }
+                if((treeNode.y==y2) && (treeNode.x < x2)){
+                    treeNode.quad=6;
+                }
+                if((treeNode.y>y2) && (treeNode.x == x2)){
+                    treeNode.quad=7;
+                }
+                if((treeNode.y<y2) && (treeNode.x == x2)){
+                    treeNode.quad=8;
+                }
 
                 var j:Int;
                 for( j in 1...annotations.length ) {
@@ -188,9 +216,13 @@ class ChromoHubRadialTreeLayout{
                     }
                 }
 
+                renderer.ctx.restore();
+
                 treeNode.x = x2 ;
                 treeNode.y =  y2;
             }
+
+
         }
 
         return i;
@@ -788,10 +820,17 @@ class ChromoHubRadialTreeLayout{
                             case 8: nx=leave.x;
                                 long=long+(20*leave.space);
                                 ny=leave.y-Math.sin(leave.rad)*long;
+                            case 9: long = long=long+(20*leave.space);
 
                         }
                         if(leave.space==0) long=long+1;
-                        renderer.drawCircle(nx,ny,alfaAnnot.color[0].color);
+
+                        if(leave.quad == 9){
+                            renderer.drawCircle(leave.x + long,leave.y, alfaAnnot.color[0].color);
+                        }else{
+                            renderer.drawCircle(nx,ny,alfaAnnot.color[0].color);
+                        }
+
 
                         var aux=nx*renderer.scale;
                         data.x=Math.round(aux)-29;

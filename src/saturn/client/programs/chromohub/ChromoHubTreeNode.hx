@@ -63,6 +63,8 @@ class ChromoHubTreeNode {
     public var lineMode : LineMode = LineMode.STRAIGHT;
     var angle_new : Float = 0;
 
+    var maxNameLength = -1;
+
     public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
         this.parent=parent;
         this.children=[];
@@ -267,6 +269,41 @@ class ChromoHubTreeNode {
 
             return ChromoHubMath.getMaxOfArray(heightList);
         }
+    }
+
+    public function getMaximumLeafNameLength(renderer : ChromoHubRendererI = null) : Int{
+        if(maxNameLength != -1){
+            return maxNameLength;
+        }
+
+        var nodes = new Array<ChromoHubTreeNode>();
+        nodes.push(this);
+
+        maxNameLength = 0;
+
+        var maxName = '';
+
+        for(node in nodes){
+            if(node.isLeaf()){
+                var nodeNameLength = node.name.length;
+
+                if(nodeNameLength > maxNameLength){
+                    maxNameLength = nodeNameLength;
+                    maxName = node.name;
+                }
+            }else{
+                for(child in node.children){
+                    nodes.push(child);
+                }
+            }
+        }
+
+        if(renderer != null){
+            maxNameLength = renderer.mesureText(maxName);
+        }
+
+        return maxNameLength;
+
     }
 
 
