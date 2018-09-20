@@ -4575,7 +4575,7 @@ $('.vertical .progress-fill span').each(function(){
             {
                 margin: '0 10 5 0',
                 xtype : 'button',
-                cls : if (mapFam.exists('E3-COMPLEX') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3-COMPLEX') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3-COMPLEX') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
+                cls : if (mapFam.exists('E3_Complex') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3_Complex') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3_Complex') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
                 handler: function() {
                     treeName = 'E3_Complex';
 
@@ -4590,7 +4590,7 @@ $('.vertical .progress-fill span').each(function(){
             {
                 margin: '0 10 5 0',
                 xtype : 'button',
-                cls : if (mapFam.exists('E3-SIMPLE') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3-SIMPLE') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3-Simple') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
+                cls : if (mapFam.exists('E3_Ligase') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3_Ligase') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3_Ligase') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
                 handler: function() {
                     treeName = 'E3_Ligase';
 
@@ -4619,7 +4619,7 @@ $('.vertical .progress-fill span').each(function(){
                     {
                         margin: '0 10 5 0',
                         xtype : 'button',
-                        cls : if (mapFam.exists('NON-USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON-USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON-USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
+                        cls : if (mapFam.exists('NON_USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON_USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON_USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
                         handler: function() {
                             treeName = 'NON_USP';
 
