@@ -1,0 +1,35 @@
+{
+  "active":0,
+  "tips": [
+    {
+      "position": 0,
+      "title": "Welcome to Chromohub v.2.0",
+      "html": "You can quickly get familiar with the main features of the Chromohub by reading these tips. You may try out the features described in the tips. If you close the dialog, you can always get back to it from the Help  main menu item. <br><br>If you find this resource helpful in your research, thank you for citing the following article:<br>Liu L, Zhen XT, Denton E, Marsden BD, Schapira M., Bioinformatics (2012): <b>ChromoHub: a data hub for navigators of chromatin-mediated signalling</b> <a href='http://www.ncbi.nlm.nih.gov/pubmed/22718786' target='_blank'>[pubmed]</a>"
+    },
+    {
+      "position": 1,
+      "title": "Search Genes in Families",
+      "html": "<img src='/static/tips/tip-1b.gif' style='width:100%' alt='Search gene in families'>"
+    },
+    {
+      "position": 2,
+      "title": "Visualize Family Tree",
+      "html": "<img src='/static/tips/tip-2b.gif' style='width:100%' alt='Search gene in families'>"
+    },
+    {
+      "position": 3,
+      "title": "Disease Association",
+      "html": "<img src='/static/tips/tip-3b.gif' style='width:100%' alt='Show and hide annotations'>"
+    },
+    {
+      "position": 3,
+      "title": "Inhibitors",
+      "html": "<img src='/static/tips/tip-4b.gif' style='width:100%' alt='Visualize annotations data'>"
+    },
+    {
+      "position": 4,
+      "title": "Zoom, drag and Center the tree",
+      "html": "<img src='/static/tips/tip-5a.gif'  style='width:100%' alt='Zoom, drag and Center the tree'>"
+    }
+  ]
+}

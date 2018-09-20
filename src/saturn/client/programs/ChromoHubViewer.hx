@@ -4006,8 +4006,9 @@ $('.vertical .progress-fill span').each(function(){
         this.canvas.cy=this.centrey;
         ctx.restore();
 
-        var blob=this.canvas.canvas.msToBlob();
-        WorkspaceApplication.getApplication().saveFile(blob, this.treeName+'_'+this.treeType+'_tree.png');
+        this.canvas.canvas.toBlob(function (blob) {
+            WorkspaceApplication.getApplication().saveFile(blob, this.treeName+'_'+this.treeType+'_tree.png');
+        });
 
         newposition(0,0);
     }
