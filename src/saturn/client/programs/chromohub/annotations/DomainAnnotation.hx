@@ -15,7 +15,7 @@ class DomainAnnotation {
     }
 
     static function divDomain(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
-        //Needs work
+        ProteinSubFamilyAnnotation.divSubFamily(screenData, x, y, tree_type, callBack);
     }
 
     static function domainFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){

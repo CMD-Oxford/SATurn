@@ -63,7 +63,7 @@ class ProteinSubFamilyAnnotation {
         cb(r);
     }
 
-    static function divSubFamily(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    public static function divSubFamily(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 

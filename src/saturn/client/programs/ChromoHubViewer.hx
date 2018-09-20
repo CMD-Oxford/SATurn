@@ -1030,7 +1030,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 container.legendPanel.expand();
             }
             var annot=annotations[currentAnnot];
-            if(annot.familyMethod==""){
+
+
+            if(annot.hookName != null && annot.hookName != ''){
                 var myGeneList: Array<String>;
                 myGeneList=this.rootNode.targets;
 
@@ -1094,86 +1096,91 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     newposition(0,0);
                 }
             }
-            else{
 
-                if(annot.familyMethod!=""){
-                    var hook:Dynamic;
-                    var clazz,method:String;
-                    activeAnnotation[currentAnnot]=false;
-                    clazz=annotations[currentAnnot].hasClass;
-                    method=annotations[currentAnnot].familyMethod+'table';
+            if(annot.familyMethod!=''){
+                var hook:Dynamic;
+                var clazz,method:String;
 
-                    var data=new ChromoHubScreenData();
+                #if UBIHUB
 
-                    data.renderer=this.radialR;
-                    data.target='';
-                    data.targetClean='';
-                    data.annot=currentAnnot;
-                    data.divAccessed=false;
-                    data.root=this.rootNode;
-                    data.title= annotations[currentAnnot].label;
+                #else
+                activeAnnotation[currentAnnot]=false;
+                #end
+                
+                clazz=annotations[currentAnnot].hasClass;
+                method=annotations[currentAnnot].familyMethod+'table';
 
-                    hook = Reflect.field(Type.resolveClass(clazz), method);
+                var data=new ChromoHubScreenData();
 
-                    this.dom = theComponent.down('component').getEl().dom;
+                data.renderer=this.radialR;
+                data.target='';
+                data.targetClean='';
+                data.annot=currentAnnot;
+                data.divAccessed=false;
+                data.root=this.rootNode;
+                data.title= annotations[currentAnnot].label;
 
-                    var posXDiv  = (this.dom.clientWidth/2)-100;
-                    var posYDiv = this.dom.clientHeight/5;
-                    closeDivInTable();
+                hook = Reflect.field(Type.resolveClass(clazz), method);
 
-                    hook(data,Math.round(posXDiv), Math.round(posYDiv),treeName, treeType, function(div){
-                        data.created=true;
-                        data.div=div;
+                this.dom = theComponent.down('component').getEl().dom;
 
-                        var nn='';
-                        if(data.target!=data.targetClean){
-                            if(data.target.indexOf('(')!=-1 || data.target.indexOf('-')!=-1){
-                                var auxArray=data.target.split('');
-                                var j:Int;
-                                for(j in 0...auxArray.length){
-                                    if (auxArray[j]=='(' || auxArray[j]=='-') {
-                                        nn=auxArray[j+1];
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if(currentAnnot==4){
-                            if(data.annotation.text.indexOf('.')!=-1){
-                                var auxArray=data.annotation.text.split('');
-                                var j:Int;
-                                var naux='';
-                                for(j in 0...auxArray.length){
-                                    if(auxArray[j]!='.') naux+=auxArray[j];
-                                }
-                                nn=nn+naux;
-                            }else if(data.annotation.text.indexOf('/')!=-1){
-                                var auxArray=data.annotation.text.split('');
-                                var j:Int;
-                                var naux='';
-                                for(j in 0...auxArray.length){
-                                    if(auxArray[j]!='/') naux+=auxArray[j];
-                                }
-                                nn=nn+naux;
-                            }else nn=nn+data.annotation.text;
-                        }
+                var posXDiv  = (this.dom.clientWidth/2)-100;
+                var posYDiv = this.dom.clientHeight/5;
+                closeDivInTable();
 
-                        var nom='';
-                        if(data.targetClean.indexOf('/')!=-1){
-                            var auxArray=data.targetClean.split('');
+                hook(data,Math.round(posXDiv), Math.round(posYDiv),treeName, treeType, function(div){
+                    data.created=true;
+                    data.div=div;
+
+                    var nn='';
+                    if(data.target!=data.targetClean){
+                        if(data.target.indexOf('(')!=-1 || data.target.indexOf('-')!=-1){
+                            var auxArray=data.target.split('');
                             var j:Int;
                             for(j in 0...auxArray.length){
-                                if(auxArray[j]!='/') nom+=auxArray[j];
+                                if (auxArray[j]=='(' || auxArray[j]=='-') {
+                                    nn=auxArray[j+1];
+                                    break;
+                                }
                             }
-                        }else nom=data.targetClean;
-                        var id=currentAnnot+'-'+nom+nn;
-                        getApplication().getSingleAppContainer().showAnnotWindow(div, Math.round(posXDiv), Math.round(posYDiv), data.title,id,data);
+                        }
+                    }
+                    if(currentAnnot==4){
+                        if(data.annotation.text.indexOf('.')!=-1){
+                            var auxArray=data.annotation.text.split('');
+                            var j:Int;
+                            var naux='';
+                            for(j in 0...auxArray.length){
+                                if(auxArray[j]!='.') naux+=auxArray[j];
+                            }
+                            nn=nn+naux;
+                        }else if(data.annotation.text.indexOf('/')!=-1){
+                            var auxArray=data.annotation.text.split('');
+                            var j:Int;
+                            var naux='';
+                            for(j in 0...auxArray.length){
+                                if(auxArray[j]!='/') naux+=auxArray[j];
+                            }
+                            nn=nn+naux;
+                        }else nn=nn+data.annotation.text;
+                    }
 
-                    });
-                }
+                    var nom='';
+                    if(data.targetClean.indexOf('/')!=-1){
+                        var auxArray=data.targetClean.split('');
+                        var j:Int;
+                        for(j in 0...auxArray.length){
+                            if(auxArray[j]!='/') nom+=auxArray[j];
+                        }
+                    }else nom=data.targetClean;
+                    var id=currentAnnot+'-'+nom+nn;
+                    getApplication().getSingleAppContainer().showAnnotWindow(div, Math.round(posXDiv), Math.round(posYDiv), data.title,id,data);
+
+                });
             }
-        }
-        else{
+
+
+        }else{
             newposition(0,0);
             container.emptyLegend();
             var i:Int;
@@ -5343,6 +5350,7 @@ $('.vertical .progress-fill span').each(function(){
                     continue;
                 }
 
+                // Hard coded to hide annotations for some of the trees
                 if(b.annotCode == 26 && treeName == 'E1' || b.annotCode == 26 && treeName == 'E2' || b.annotCode == 26 && treeName == 'USP'){
                     z++;
                     continue;
