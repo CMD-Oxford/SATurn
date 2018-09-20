@@ -1106,7 +1106,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 #else
                 activeAnnotation[currentAnnot]=false;
                 #end
-                
+
                 clazz=annotations[currentAnnot].hasClass;
                 method=annotations[currentAnnot].familyMethod+'table';
 
@@ -2095,37 +2095,41 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
             var items :Array<Dynamic> = [];
 
-            items.push({
-                text:'Edit Mode',
-                hidden : false,
-                handler: function(){
-                    if(editmode){
-                        editmode = false;
-                        getApplication().getSingleAppContainer().hideEditToolBar();
-                    }else{
-                        editmode = true;
+            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+                items.push({
+                    text:'Edit Mode',
+                    hidden : false,
+                    handler: function(){
+                        if(editmode){
+                            editmode = false;
+                            getApplication().getSingleAppContainer().hideEditToolBar();
+                        }else{
+                            editmode = true;
 
-                        getApplication().getSingleAppContainer().showEditToolBar();
+                            getApplication().getSingleAppContainer().showEditToolBar();
+                        }
+
                     }
+                });
 
-                }
-            });
+                items.push({
+                    text:'Straight Lines',
+                    hidden : false,
+                    handler: function(){
+                        setStraightLines();
+                    }
+                });
 
-            items.push({
-                text:'Straight Lines',
-                hidden : false,
-                handler: function(){
-                    setStraightLines();
-                }
-            });
+                items.push({
+                    text:'Bezier Lines',
+                    hidden : false,
+                    handler: function(){
+                        setBezierLines();
+                    }
+                });
+            }
 
-            items.push({
-                text:'Bezier Lines',
-                hidden : false,
-                handler: function(){
-                    setBezierLines();
-                }
-            });
+
 
             var colourPickerItems : Array<Dynamic> = [];
             colourPickerItems.push( {
