@@ -3759,9 +3759,15 @@ $('.vertical .progress-fill span').each(function(){
             var home = new ChromoHubViewerHome(this);
             home.addUploadForm();
         #else
+        var title = 'Search/Add Genes';
+
+        #if UBIHUB
+        title = 'Search in trees';
+        #end
+
         centralTargetPanel.add({
             xtype: 'label',
-            text: 'Search/Add Genes',
+            text: title,
             cls:'searchgene-title',
             handler: function(){
 
