@@ -76,8 +76,8 @@
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.DomainAnnotation",
             "familyMethod": "familyDomain",
-            "hasMethod":"hasDomain",
-            "divMethod":"divDomain"
+            "hasMethod":"",
+            "divMethod":""
           },
           {
             "label": "Structures",

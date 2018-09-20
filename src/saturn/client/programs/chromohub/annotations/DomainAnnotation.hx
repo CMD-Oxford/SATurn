@@ -9,104 +9,17 @@ class DomainAnnotation {
     }
 
     static function hasDomain(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
+        //Needs work
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#2980d6',used:true},defImage:0};
-
         cb(r);
     }
 
     static function divDomain(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
-        if(screenData.divAccessed==false){
-            screenData.divAccessed=true;
-
-            if(screenData.targetClean.indexOf('/')!=-1){
-                var auxArray=screenData.targetClean.split('');
-                var j:Int;
-                var nom='';
-                for(j in 0...auxArray.length){
-                    if(auxArray[j]!='/') nom+=auxArray[j];
-                }
-                screenData.targetClean=nom;
-            }
-            if(screenData.target.indexOf('/')!=-1){
-                var auxArray=screenData.target.split('');
-                var j:Int;
-                var nom='';
-                for(j in 0...auxArray.length){
-                    if(auxArray[j]!='/') nom+=auxArray[j];
-                }
-                screenData.target=nom;
-            }
-
-            var name:String;
-            if (screenData.target.indexOf('(')!=-1) name=screenData.targetClean;
-            else if (screenData.target.indexOf('-')!=-1) name=screenData.targetClean;
-            else name=screenData.target;
-            trace('Family:');
-
-            var genePlusFamily = screenData.target + '_' + screenData.family  +  '.png';
-            var path = '/static/pfam_images/' + genePlusFamily;
-            var imgSrc = '<img src="' + path + '" />';
-
-
-            var t = '<style type="text/css">
-                .divMainDiv7  { }
-                .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
-                .divContent{padding:5px;widht:100%!important;}
-                .divMainDiv7  a{ text-decoration:none!important;}
-                .divExtraInfo{padding:5px; widht:100%!important; font-size:10px; margin-top:5px;}
-
-                .structureResult{padding:3px 10px ;}
-                </style>
-                <div class="divMainDiv7 ">
-                <div class="divTitle">Domain Architecture  - '+screenData.target+'</div>
-                <div class="divContent">'
-            + imgSrc +
-            '</div>
-            ';
-            callBack(t);
-        }
+        //Needs work
     }
 
     static function domainFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
-        var cancerScore = null;
-        var cancerTypes = null;
-
-        if(form != null){
-            // We get here for tree annotation requests
-            cancerScore = form.form.findField('cancer_score').lastValue;
-
-            cancerTypes = form.form.findField('cancer_types').lastValue;
-        }else{
-
-        }
-
-        var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_score' : cancerScore, 'searchGenes' : searchGenes, 'cancer_types' :  cancerTypes}];
-        viewer.setSelectedAnnotationOptions(annotation, args);
-
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookCancerEssential', args, null, false, function(db_results, error){
-            if(error == null){
-                if(db_results != null){
-
-                    viewer.activeAnnotation[annotation] = true;
-
-                    if(viewer.treeName == ''){
-                        // We get here for table view
-                        viewer.addAnnotDataGenes(db_results, annotation, function(){
-                            cb(db_results, null);
-                        });
-                    }else{
-                        // We get here for tree view
-                        viewer.addAnnotData(db_results, annotation, 0, function(){
-                            viewer.newposition(0, 0);
-
-                            cb(db_results, null);
-                        });
-                    }
-                }
-            }else{
-                cb(null,error);
-            }
-        });
+        //Needs work
     }
 
     static function familyDomain(targetFamily: String,tree_type:String,callBack : Dynamic->Void){

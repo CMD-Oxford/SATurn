@@ -1017,7 +1017,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                    if(annotations[i].legend!='' && annotations[i].legendClazz == '') {
                        needToExpandLegend=true;
                        container.addImageToLegend(annotations[i].legend, i);
-                   } else if(annotations[i].legendClazz != '' && annotations[i].legendMethod != ''){
+                   } else if(annotations[i].legend != null && annotations[i].legendClazz != '' && annotations[i].legendMethod != ''){
                        var clazz = Type.resolveClass(annotations[i].legendClazz);
                        var method = Reflect.field(clazz, annotations[i].legendMethod);
                        var legend = method(treeName);

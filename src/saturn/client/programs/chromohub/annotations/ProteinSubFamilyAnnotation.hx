@@ -94,13 +94,12 @@ class ProteinSubFamilyAnnotation {
 
             var genePlusFamily = screenData.target + '_' + screenData.family  +  '.png';
             var path = '/static/pfam_images/' + genePlusFamily;
-            var imgSrc = '<img src="' + path + '" />';
+            var imgSrc = '<img onload="app.getSingleAppContainer().annotWindowDoLayout()" src="' + path + '" /';
 
-
-             var t = '<style type="text/css">
+            var t = '<style type="text/css">
                 .divMainDiv7  { }
                 .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
-                .divContent{padding:5px;widht:100%!important;}
+                .divContent{padding:5px;widht:100%!important;}div
                 .divMainDiv7  a{ text-decoration:none!important;}
                 .divExtraInfo{padding:5px; widht:100%!important; font-size:10px; margin-top:5px;}
 
