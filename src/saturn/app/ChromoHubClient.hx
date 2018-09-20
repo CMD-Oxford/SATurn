@@ -129,10 +129,13 @@ class ChromoHubClient extends SaturnClient{
     override public function objectSelected( app : WorkspaceApplication, records : Dynamic, it : Dynamic ) : Void {
         var targetId : String = records[0].data.targetId;
 
+        #if UBIHUB
+
+        #else
         //var prog : saturn.client.programs.ChromoHubViewer = getActiveProgram();
         var prog = cast(getActiveProgram(), ChromoHubViewer);
        // prog.searchedGenes[prog.searchedGenes.length]=targetId;
         prog.showAddedGenes(targetId );
-
+        #end
     }
 }
