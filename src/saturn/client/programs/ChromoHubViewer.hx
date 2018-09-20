@@ -5445,7 +5445,7 @@ $('.vertical .progress-fill span').each(function(){
                             }
                         },
                         {
-                            text:auxtext,
+                            html: '<span>' + auxtext + '</span>',
                             margin: '0 10 5 0',
                             xtype : 'button',
 
