@@ -2435,7 +2435,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 if(currentView==0){//landing page
                     //if it's the first time and no family tree has been selected yet
                     // or the user has been working just with genes
-                    getApplication().showMessage('Alert','Please select a family domain');
+                    getApplication().showMessage('Alert','Please select a family');
                 }
                 else if(currentView==2){ //annotations table
                     // The user has listed her own genes, and want to generate the tree
@@ -2810,7 +2810,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     if(currentView==0){//landing page
                         //if it's the first time and no family tree has been selected yet
                         // or the user has been working just with genes
-                        getApplication().showMessage('Alert','Please select a family domain');
+                        getApplication().showMessage('Alert','Please select a family');
                     }
                     else if(currentView==2){ //annotations table
                         // The user has listed her own genes, and want to generate the tree
