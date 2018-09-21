@@ -715,9 +715,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
 
         }
-
-
-
         // in this point we have the tree with ALL details to be drawn
 
 
@@ -748,6 +745,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
             radialRendererObj.render(this.rootNode,this.canvas,this.activeAnnotation, annotations);
         }
+
+        newposition(0,0);
 
 		// map one key by key code
 		var map = new bindings.KeyMap(theComponent.getEl(), {
@@ -1395,7 +1394,135 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         for(i in 0 ... this.rootNode.targets.length){
             items[i]=this.rootNode.targets[i];
         }
+        #if PHYLO5
+        processAnnotationsSimple(items,mapResults,annotation, option, callback);
+        #else
         processFamilyAnnotations(items, mapResults, annotation, option, callback);
+        #end
+    }
+
+    public function processAnnotationsSimple(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
+        var toComplete = 0;
+        for(key in mapResults){
+            toComplete += 1;
+        }
+
+        var onDone = function(){
+            if(toComplete  == 0){
+                cb();
+            }
+        };
+
+        if(toComplete == 0){
+            cb();return;
+        }
+
+        for(item in items){
+            var name = item + '_0';
+            var res = mapResults.get(name);
+            if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
+                var clazz = annotations[annotation].hasClass;
+                var method :Dynamic = annotations[annotation].hasMethod;
+
+                var _processAnnotation = function(r:HasAnnotationType){
+                    if(r.hasAnnot){
+                        var leafaux: ChromoHubTreeNode;
+                        leafaux = this.rootNode.leafNameToNode.get(item);
+
+                        leafaux.activeAnnotation[annotation] = true;
+                        if(leafaux.annotations[annotation] == null){
+                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = r.text;
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }else{
+                            if(annotations[annotation].splitresults == true){
+                                leafaux.annotations[annotation].splitresults = true;
+
+                                var z=0;
+
+                                while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                    z++;
+                                }
+
+                                leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+                                if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
+                                    leafaux.annotations[annotation].alfaAnnot[z] = null;
+                                }
+                            }else{
+                                if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = '';
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                }
+                            }
+                        }
+                    }
+
+                    toComplete--;
+                    onDone();
+                };
+
+                if(Reflect.isFunction(method)){
+                    method(name,res,option, annotations, item, _processAnnotation);
+                }else{
+                    var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                    hook(name,res,option, annotations, item, _processAnnotation);
+                }
+            }else {
+                var col = '';
+                if(annotations[annotation].color[0] != null){
+                    col=annotations[annotation].color[0].color;
+                }
+
+                var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
+
+                var leafaux: ChromoHubTreeNode = this.rootNode.leafNameToNode.get(item);
+                leafaux.activeAnnotation[annotation]=true;
+
+                if(leafaux.annotations[annotation] == null){
+                    leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                    leafaux.annotations[annotation].myleaf = leafaux;
+                    leafaux.annotations[annotation].text = '';
+                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                }else{
+                    if(leafaux.annotations[annotation].splitresults == true){
+                        var z=0;
+
+                        while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                            z++;
+                        }
+
+                        leafaux.annotations[annotation].alfaAnnot[z] = new ChromoHubAnnotation();
+                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+
+                    }else{
+                        if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                            leafaux.annotations[annotation] = new ChromoHubAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = '';
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }
+                    }
+                }
+
+                toComplete--;
+                onDone();
+            }
+        }
     }
 
 
@@ -2129,6 +2256,13 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 });
             }
 
+            items.push({
+                text:'Toggle Circular Trees',
+                hidden : false,
+                handler: function(){
+                    toggleCircularTrees();
+                }
+            });
 
 
             var colourPickerItems : Array<Dynamic> = [];
@@ -2370,6 +2504,16 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 tooltip: {dismissDelay: 10000, text: 'Highlight gene in tree'}
             });
         }
+    }
+
+    public function toggleCircularTrees(){
+        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+            drawingMode = ChromoHubDrawingMode.CIRCULAR;
+        }else{
+            drawingMode = ChromoHubDrawingMode.STRAIGHT;
+        }
+
+        setTreeFromNewickStr(newickStr);
     }
 
 

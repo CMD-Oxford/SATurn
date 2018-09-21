@@ -105,7 +105,6 @@ class ChromoHubViewerHome {
 
         viewer.jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
 
-
         for(i in 1...cols.length){
             annotations[i-1] = [];
 
@@ -115,7 +114,7 @@ class ChromoHubViewerHome {
                 var colours = ['red', 'blue'];
                 var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
 
-                if(data.annotation == 'No'){
+                if(data == null || data.annotation == 'No'){
                     r.hasAnnot = false;
                 }
 
@@ -127,6 +126,7 @@ class ChromoHubViewerHome {
                 hookName: hookName,
                 annotCode: i,
                 isTitle: false,
+                enabled:true,
                 familyMethod: '',
                 hasMethod: styleAnnotation,
                 hasClass: '',
