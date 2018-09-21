@@ -68,7 +68,7 @@
             "submenu": false,
             "annotImg":["/static/annot/images/summary.png"],
             "popUpWindows":false,
-            "hookName": "Domain",
+            "hookName": "subfamilies",
             "shape": "cercle",
             "color": [
               {"color":"#2980d6", "used":"true"}
@@ -76,8 +76,8 @@
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.DomainAnnotation",
             "familyMethod": "familyDomain",
-            "hasMethod":"",
-            "divMethod":""
+            "hasMethod":"hasDomain",
+            "divMethod":"divDomain"
           },
           {
             "label": "Structures",
@@ -413,6 +413,83 @@
                   ]
                 }
               }]
+          },
+          {
+            "label": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&#12291;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;percentage of tumor types",
+            "enabled": true,
+            "isTitle": false,
+            "helpText": "",
+            "annotCode": 30,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/protein_tumor_perc.png",
+              "text": "",
+              "clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasTumorLevelPercentage",
+            "divMethod": "divTumorLevelPercentage",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
+                "popMethod": "tumorLevelPercentageFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "component",
+                      "html": "Protein Level"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "name": "protein_level_high",
+                      "id": "protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "name": "protein_level_medium",
+                      "id": "protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "name": "protein_level_low",
+                      "id": "protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "Tumour type threshold",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
+                      "value": "at least 1"
+                    }
+                  ]
+                }
+              }
+            ]
           },
           {
             "label": "Cancer Essentiality",
@@ -762,7 +839,7 @@
             ]
           },
           {
-            "label": "Protein Levels in Normal Tissue Confidence",
+            "label": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&#12291;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;percentage of normal tissues",
             "enabled": true,
             "isTitle": false,
             "helpText": "",
@@ -853,83 +930,6 @@
                       "name": "protein_reliability_uncertain",
                       "id": "protein_reliability_uncertain",
                       "inputValue": "Uncertain"
-                    },
-                    {
-                      "xtype": "combobox",
-                      "name": "in_percentage",
-                      "fieldLabel": "Tumour type threshold",
-                      "labelSeparator" : "",
-                      "queryMode": "local",
-                      "cls":"x-form-item-finishgroup",
-                      "displayField": "name",
-                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
-                      "value": "at least 1"
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "label": "Protein Levels in Cancer Confidence",
-            "enabled": true,
-            "isTitle": false,
-            "helpText": "",
-            "annotCode": 30,
-            "submenu": false,
-            "popUpWindows": true,
-            "hookName": "",
-            "shape": "cercle",
-            "color": [
-              {
-                "color": "#689aed",
-                "used": "false"
-              }
-            ],
-            "annotImg": [
-              "/static/annot/images/structuressgc.png",
-              "/static/annot/images/structuresothers.png"
-            ],
-            "legend": {
-              "image": "/static/annot/images/protein_tumor_perc.png",
-              "text": "",
-              "clazz":"",
-              "method": ""
-            },
-            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
-            "familyMethod": "",
-            "hasMethod": "hasTumorLevelPercentage",
-            "divMethod": "divTumorLevelPercentage",
-            "windowsData": [
-              {
-                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinTumorLevelAnnotation",
-                "popMethod": "tumorLevelPercentageFunction",
-                "form": {
-                  "items": [
-                    {
-                      "xtype": "component",
-                      "html": "Protein Level"
-                    },
-                    {
-                      "xtype": "checkboxfield",
-                      "boxLabel": "High",
-                      "name": "protein_level_high",
-                      "id": "protein_level_high",
-                      "inputValue": "High"
-                    },
-                    {
-                      "xtype": "checkboxfield",
-                      "boxLabel": "Medium",
-                      "name": "protein_level_medium",
-                      "id": "protein_level_medium",
-                      "inputValue": "Medium"
-                    },
-                    {
-                      "xtype": "checkboxfield",
-                      "boxLabel": "Low",
-                      "name": "protein_level_low",
-                      "id": "protein_level_low",
-                      "inputValue": "Low"
                     },
                     {
                       "xtype": "combobox",

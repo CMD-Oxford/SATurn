@@ -9,17 +9,12 @@ class DomainAnnotation {
     }
 
     static function hasDomain(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
-        //Needs work
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#2980d6',used:true},defImage:0};
         cb(r);
     }
 
     static function divDomain(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
         ProteinSubFamilyAnnotation.divSubFamily(screenData, x, y, tree_type, callBack);
-    }
-
-    static function domainFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
-        //Needs work
     }
 
     static function familyDomain(targetFamily: String,tree_type:String,callBack : Dynamic->Void){
