@@ -55,7 +55,7 @@ class ProteinCancerEssentialAnnotation {
             var cancer_type = selectedAnnotations[0].cancer_types;
             var alias;
 
-            if(cancer_type.length > 0){
+            if(cancer_type[0] != 'All'){
                 alias = 'gene_cancerEssentialDiv';
             } else {
                 alias = 'gene_cancerEssentialAllDiv';

@@ -377,6 +377,10 @@
                       "xtype": "combobox",
                       "name": "cancer_type",
                       "fieldLabel": "Cancer Type",
+                      "listConfig": [
+                        {"width": "200px"}
+                      ],
+                      "matchFieldWidth" : false,
                       "labelSeparator" : "",
                       "queryMode": "local",
                       "store":["All","breast cancer","carcinoid","cervical cancer","colorectal cancer","endometrial cancer","glioma","head and neck cancer","liver cancer","lung cancer","lymphoma","melanoma","ovarian cancer","pancreatic cancer","prostate cancer","renal cancer","skin cancer","stomach cancer","testis cancer","thyroid cancer","urothelial cancer"],
@@ -530,7 +534,7 @@
                     {
                       "xtype": "combobox",
                       "name": "cancer_score",
-                      "fieldLabel": "Cancer Score",
+                      "fieldLabel": "Cancer Score < ",
                       "labelSeparator": "",
                       "queryMode": "local",
                       "store": [
@@ -542,10 +546,11 @@
                     {
                       "xtype": "combobox",
                       "name": "cancer_types",
-                      "fieldLabel": "Cancer Types",
+                      "fieldLabel": "in Cancer Type",
                       "labelSeparator": "",
                       "queryMode": "local",
                       "store": [
+                        "ALL",
                         "AUTONOMIC_GANGLIA",
                         "BONE",
                         "BREAST",
@@ -566,6 +571,7 @@
                         "UPPER_AERODIGESTIVE_TRACT",
                         "URINARY_TRACT"
                       ],
+                      "value": "All",
                       "multiSelect": true
                     }
                   ]
@@ -613,9 +619,14 @@
                       "xtype": "combobox",
                       "name": "tissues",
                       "fieldLabel": "Tissue",
+                      "listConfig": [
+                        {"width": "200px"}
+                      ],
+                      "matchFieldWidth" : false,
                       "labelSeparator": "",
                       "queryMode": "local",
                       "store": [
+                        "All",
                         "adrenal gland",
                         "appendix",
                         "bone marrow",
@@ -675,15 +686,21 @@
                         "urinary bladder",
                         "vagina"
                       ],
+                      "value": "All",
                       "multiSelect": true
                     },
                     {
                       "xtype": "combobox",
                       "name": "cell_types",
-                      "fieldLabel": "Cell Types",
+                      "fieldLabel": "Cell Type",
+                      "listConfig": [
+                        {"width": "200px"}
+                      ],
+                      "matchFieldWidth" : false,
                       "labelSeparator": "",
                       "queryMode": "local",
                       "store": [
+                        "All",
                         "adipocytes",
                         "bile duct cells",
                         "cells in anterior ",
@@ -767,6 +784,7 @@
                         "urothelial cells",
                         "vitreous humor"
                       ],
+                      "value": "All",
                       "multiSelect": true
                     },
                     {

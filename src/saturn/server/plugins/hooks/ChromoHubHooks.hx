@@ -1053,7 +1053,7 @@ class ChromoHubHooks {
             ";
         }
 
-        if(cancerTypes.length > 0){
+        if(cancerTypes[0] != 'All'){
             var placeHolders = [];
             for(cancerType in cancerTypes){
                 placeHolders.push('?');
@@ -1128,7 +1128,7 @@ class ChromoHubHooks {
         }
 
         // Append tissue type constraints
-        if(tissueTypes != null && tissueTypes.length > 0){
+        if(tissueTypes[0] != 'All'){
             var placeHolders = [];
             for(tissueType in tissueTypes){
                 placeHolders.push('?');
@@ -1139,7 +1139,7 @@ class ChromoHubHooks {
         }
 
         // Append cell type constraints
-        if(cellTypes != null && cellTypes.length > 0){
+        if(cellTypes[0] != 'All'){
             var placeHolders = [];
             for(cellType in cellTypes){
                 placeHolders.push('?');
@@ -1207,7 +1207,7 @@ class ChromoHubHooks {
         }
 
         // Append tissue type constraints
-        if(tissueTypes != null && tissueTypes.length > 0){
+        if(tissueTypes[0] != 'All'){
             var placeHolders = [];
             for(tissueType in tissueTypes){
                 placeHolders.push('?');
@@ -1218,7 +1218,7 @@ class ChromoHubHooks {
         }
 
         // Append cell type constraints
-        if(cellTypes != null && cellTypes.length > 0){
+        if(cellTypes[0] != 'All'){
             var placeHolders = [];
             for(cellType in cellTypes){
                 placeHolders.push('?');
