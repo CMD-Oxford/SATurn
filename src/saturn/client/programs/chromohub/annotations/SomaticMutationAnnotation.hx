@@ -6,7 +6,10 @@ import haxe.ds.HashMap;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class SomaticMutationAnnotation {
@@ -37,7 +40,7 @@ class SomaticMutationAnnotation {
         #end
     }
 
-    static function hasSomaticMut(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
+    static function hasSomaticMut(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, cb : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#000000',used:true},defImage:0};
         var family=ChromoHubAnnotationMethods.getFamilyTree();
         if(data!=null){
@@ -108,7 +111,7 @@ class SomaticMutationAnnotation {
         }
     }
 
-    static function divSomatic(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divSomatic(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;

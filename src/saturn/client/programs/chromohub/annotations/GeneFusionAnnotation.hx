@@ -1,6 +1,9 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class GeneFusionAnnotation {
@@ -9,14 +12,14 @@ class GeneFusionAnnotation {
 
     }
 
-    static function hasGeneFusions(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasGeneFusions(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:''+data.count+'',color:{color:'#2492c6',used:false},defImage:100};
 
         callBack(r);
 
     }
 
-    static function divGeneFusions(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divGeneFusions(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;

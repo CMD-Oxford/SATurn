@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (University of Oxford)
@@ -18,10 +18,8 @@ typedef HasAnnotationType = {
     var color: {color:String,used:Bool};
     var defImage: Int;
 }
-class ChromoHubAnnotation {
 
-
-
+class PhyloAnnotation {
     public var type: Int;
     public var summary: String;
     public var summary_img: Dynamic; //stored on in root's annotation, so we'll use the same img for all the leaves
@@ -44,7 +42,7 @@ class ChromoHubAnnotation {
     public var divMethod: String;
     public var familyMethod: String;
     public var hasAnnot: Bool=false;
-    public var alfaAnnot: Array<ChromoHubAnnotation>;
+    public var alfaAnnot: Array<PhyloAnnotation>;
     public var splitresults:Bool;
     public var popup : Bool;
     public var popMethod: String;
@@ -53,12 +51,12 @@ class ChromoHubAnnotation {
     public var fromresults:Array<Dynamic>; // used to pass db results
     public var label:String;
 
-    public var myleaf: ChromoHubTreeNode;
+    public var myleaf: PhyloTreeNode;
     public var auxMap: Map<String, Dynamic>;
 
 
     public function new(){
-    //    this.list=new Array();
+    //    this.list=PhyloScreenData Array();
         this.color=new Array();
         this.text="";
         this.splitresults=false;

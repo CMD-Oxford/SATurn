@@ -1,6 +1,9 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 
 class ProteinSubFamilyAnnotation {
     public function new() {
@@ -12,7 +15,7 @@ class ProteinSubFamilyAnnotation {
         return legendPath;
     }
 
-    static function hasSubFamily(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
+    static function hasSubFamily(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, cb : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'red',used:true},defImage:0};
 
         if(data.family_id == 'E3_Ligase'){
@@ -63,7 +66,7 @@ class ProteinSubFamilyAnnotation {
         cb(r);
     }
 
-    public static function divSubFamily(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    public static function divSubFamily(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 

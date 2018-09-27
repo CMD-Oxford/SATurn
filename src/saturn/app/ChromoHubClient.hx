@@ -1,7 +1,7 @@
 package saturn.app;
 import saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation;
 import saturn.client.workspace.ChromoHubWorkspaceObject;
-import saturn.client.programs.ChromoHubViewer;
+import saturn.client.programs.chromohub.ChromoHubViewer;
 import saturn.core.domain.Alignment;
 import saturn.client.WorkspaceApplication;
 

@@ -1,6 +1,7 @@
 package saturn.client.programs.chromohub;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.db.Provider;
 import saturn.client.core.CommonCore;
 import saturn.core.Util;
@@ -110,7 +111,7 @@ class ChromoHubViewerHome {
 
             var hookName = 'STANDALONE_ANNOTATION_' + (i-1);
 
-            var styleAnnotation = function (target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+            var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
                 var colours = ['red', 'blue'];
                 var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
 

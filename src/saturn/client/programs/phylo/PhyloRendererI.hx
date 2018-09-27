@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (Universtiy of Oxford)
@@ -9,7 +9,7 @@ package saturn.client.programs.chromohub;
  *         Dr Brian Marsden (brian.marsden@sgc.ox.ac.uk) (University of Oxford)
  *         Dr Matthieu Schapira (matthieu.schapira@utoronto.ca) (University of Toronto)
  * 
- * ChromoHubRendererI should be implemented for each of the surfaces that you wish
+ * PhyloRendererI should be implemented for each of the surfaces that you wish
  * to draw phylogenetic trees to using any of the "ChromoHub" layout engines.
  * 
  * For example ChromoHubCanvasRenderer can be passed to ChromoHubRadialTreeLayout to
@@ -17,7 +17,7 @@ package saturn.client.programs.chromohub;
  * 
  * @returns {undefined}
  */
-interface ChromoHubRendererI {
+interface PhyloRendererI {
     
     /**
      * Method draws a line based on the line style stored in the "colour" argument

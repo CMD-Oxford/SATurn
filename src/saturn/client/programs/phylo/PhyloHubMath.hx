@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (University of Oxford)
@@ -11,7 +11,7 @@ package saturn.client.programs.chromohub;
  *         
  */
 
-class ChromoHubMath{
+class PhyloHubMath{
 
     static public function degreesToRadians (a:Float):Float{
         return a*(Math.PI/180);

@@ -1,19 +1,22 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 
 class ProteinTumorLevelAnnotation {
     public function new() {
 
     }
 
-    static function hasTumorLevel(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasTumorLevel(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#800080',used:true},defImage:0};
 
         callBack(r);
     }
 
-    static function divTumorLevel(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divTumorLevel(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 
@@ -161,13 +164,13 @@ class ProteinTumorLevelAnnotation {
         });
     }
 
-    static function hasTumorLevelPercentage(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasTumorLevelPercentage(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#800080',used:true},defImage:0};
 
         callBack(r);
     }
 
-    static function divTumorLevelPercentage(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divTumorLevelPercentage(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 

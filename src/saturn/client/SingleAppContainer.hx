@@ -1,9 +1,9 @@
 package saturn.client;
-import saturn.client.programs.ChromoHubViewer;
-import saturn.client.programs.chromohub.ChromoHubScreenData;
+import saturn.client.programs.chromohub.ChromoHubViewer;
+import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.WorkspaceApplication.ScreenMode;
-import saturn.client.programs.chromohub.ChromoHubTreeNode;
-import saturn.client.programs.chromohub.ChromoHubAnnotation;
+import saturn.client.programs.phylo.PhyloTreeNode;
+import saturn.client.programs.phylo.PhyloAnnotation;
 import bindings.Ext;
 import saturn.core.Util;
 
@@ -596,7 +596,7 @@ class SingleAppContainer {
     }
 /*********************Annot Window *********************/
 
-    public function showAnnotWindow(text:String,px:Dynamic, py:Dynamic, title:String,ident:String,data: ChromoHubScreenData){
+    public function showAnnotWindow(text:String,px:Dynamic, py:Dynamic, title:String,ident:String,data: PhyloScreenData){
 
         if(alreadyOpen(ident)==false){
 
@@ -719,7 +719,7 @@ class SingleAppContainer {
                     handler: function() {
                         var form:Dynamic;
                         form = this.ultraDDWindow.getComponent('wform');
-                        viewer.geneMap=new Map<String, ChromoHubTreeNode>();
+                        viewer.geneMap=new Map<String, PhyloTreeNode>();
 
                         if (form.isValid()) {
 
@@ -735,7 +735,7 @@ class SingleAppContainer {
                                     viewer.searchedGenes=new Array();
                                     viewer.searchedGenes=mylist;
                                     //we need to create a TreeNode and add it into our geneMap structure
-                                    var geneNode=new ChromoHubTreeNode(null, form.items.items[i].inputValue, true, 0);
+                                    var geneNode=new PhyloTreeNode(null, form.items.items[i].inputValue, true, 0);
 
                                     geneNode.l =1;
                                     geneNode.annotations= new Array();
@@ -858,14 +858,14 @@ class SingleAppContainer {
                     handler: function() {
                         var form:Dynamic;
                         form = this.highlightWindow.getComponent('wform');
-                        viewer.highlightedGenes=new Map<String, Bool>();
+                        viewer.config.highlightedGenes=new Map<String, Bool>();
                         if (form.isValid()) {
 
                             var i=0;var j=0;
                             for(i in 0...form.items.items.length){
                                 if(form.items.items[i].checked==true){
-                                    if(viewer.highlightedGenes.exists(viewer.rootNode.targets[i])==false){
-                                        viewer.highlightedGenes.set(form.items.items[i].inputValue,true);
+                                    if(viewer.config.highlightedGenes.exists(viewer.rootNode.targets[i])==false){
+                                        viewer.config.highlightedGenes.set(form.items.items[i].inputValue,true);
                                     }
                                 }
                             }
@@ -878,7 +878,7 @@ class SingleAppContainer {
                         iconCls: 'x-btn-accept',
                         text: 'Remove highlights',
                         handler: function() {
-                            viewer.highlightedGenes=new Map<String, Bool>();
+                            viewer.config.highlightedGenes=new Map<String, Bool>();
                             viewer.newposition(0,0);
                             highlightWindow.hide();
                         }

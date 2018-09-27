@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (University of Oxford)
@@ -12,15 +12,15 @@ package saturn.client.programs.chromohub;
  */
 
 
-class ChromoHubNewickParser{
+class PhyloNewickParser{
 
     public function new (){
 
     }
 
-    public function parse(newickString:String):ChromoHubTreeNode{
-        var rootNode : ChromoHubTreeNode;
-        rootNode = new ChromoHubTreeNode();
+    public function parse(newickString:String):PhyloTreeNode{
+        var rootNode : PhyloTreeNode;
+        rootNode = new PhyloTreeNode();
 
         var currentNode=rootNode;
         var a:String;
@@ -34,7 +34,7 @@ class ChromoHubNewickParser{
             var i=j;
             if(charArray[i]=='(' && charArray[i+1]=='('){
                 // New child and the child is not a leaf
-                var childNode=new ChromoHubTreeNode(currentNode, '', false, 0);
+                var childNode=new PhyloTreeNode(currentNode, '', false, 0);
                 currentNode=childNode;
             }else if( (charArray[i]=='(' && charArray[i+1]!='(' && charArray[i-1]!='/')
                     || (charArray[i] == ',' && charArray[i + 1] != '(')){
@@ -70,10 +70,10 @@ class ChromoHubNewickParser{
                     branch=1;
                 }
 
-                var child=new ChromoHubTreeNode(currentNode, name, true, branch);
+                var child=new PhyloTreeNode(currentNode, name, true, branch);
             }else if(charArray[i]==',' && charArray[i+1]=='('){
                 // more children that are not leaves
-                var child=new ChromoHubTreeNode(currentNode, '', false, 0);
+                var child=new PhyloTreeNode(currentNode, '', false, 0);
                 currentNode=child;
             }else if(charArray[i]==')' && charArray[i-1]!='/'){
                 // no more children

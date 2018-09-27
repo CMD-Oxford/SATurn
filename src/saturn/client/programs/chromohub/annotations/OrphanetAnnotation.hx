@@ -1,6 +1,9 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class OrphanetAnnotation {
@@ -9,7 +12,7 @@ class OrphanetAnnotation {
 
     }
 
-    static function divOrphanet(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divOrphanet(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
         if(screenData.divAccessed==false){
 

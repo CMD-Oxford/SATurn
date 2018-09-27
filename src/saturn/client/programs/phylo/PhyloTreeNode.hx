@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (University of Oxford)
@@ -11,11 +11,11 @@ package saturn.client.programs.chromohub;
  *         
  */
 
-import saturn.client.programs.chromohub.ChromoHubMath;
-import saturn.client.programs.chromohub.ChromoHubTreeNode;
+import saturn.client.programs.phylo.PhyloHubMath;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.core.Util;
-class ChromoHubTreeNode {
-    public var parent: ChromoHubTreeNode;
+class PhyloTreeNode {
+    public var parent: PhyloTreeNode;
     public var nodeId:Int;
     public var name : String;
     public var targetFamily: String; //the name of the targetfamily (or tree)
@@ -28,25 +28,25 @@ class ChromoHubTreeNode {
     public var wedge: Float;
     public var length:Int;
     public var l:Int;
-    public var root: ChromoHubTreeNode;
+    public var root: PhyloTreeNode;
     public var rad:Dynamic; //trigonometry
     public var quad:Int; //trigonometry
-    public var annotations: Array<ChromoHubAnnotation>;
+    public var annotations: Array<PhyloAnnotation>;
     public var activeAnnotation: Array<Bool>;
     public var targets: Array<String>;
-    public var screen: Array<ChromoHubScreenData>;
+    public var screen: Array<PhyloScreenData>;
     public var divactive:Int;
     public var space:Int=0;
     public var colour : String;
 
-    public var children: Array<ChromoHubTreeNode>;
+    public var children: Array<PhyloTreeNode>;
     public var dist : Int = 50; // constant que definim nosaltres
     public var ratio : Float = 0.00006;
     public var leaves : Int = 0;
     public var numchild : Int = 0;
 
-    public var leafNameToNode : Map<String, ChromoHubTreeNode>;
-    public var nodeIdToNode : Map<Int, ChromoHubTreeNode>;
+    public var leafNameToNode : Map<String, PhyloTreeNode>;
+    public var nodeIdToNode : Map<Int, PhyloTreeNode>;
 
     //Tree area
     public var rectangleTop:Int;
@@ -65,7 +65,9 @@ class ChromoHubTreeNode {
 
     var maxNameLength = -1;
 
-    public function new(?parent : ChromoHubTreeNode , ?name: String , ?leaf : Bool, ?branch: Int){
+    public var wedgeColour : String = null;
+
+    public function new(?parent : PhyloTreeNode, ?name: String, ?leaf : Bool, ?branch: Int){
         this.parent=parent;
         this.children=[];
         this.name=name;
@@ -85,8 +87,8 @@ class ChromoHubTreeNode {
             this.screen=new Array();
 
             this.divactive=99999;
-            leafNameToNode = new Map<String, ChromoHubTreeNode>();
-            nodeIdToNode = new Map<Int, ChromoHubTreeNode>();
+            leafNameToNode = new Map<String, PhyloTreeNode>();
+            nodeIdToNode = new Map<Int, PhyloTreeNode>();
         }
 
         this.angle=0;
@@ -177,9 +179,9 @@ class ChromoHubTreeNode {
 
             var a = this.getDepth() * this.root.ratio;
             if(this.angle > this.parent.angle) {
-                this.angle += ChromoHubMath.degreesToRadians(a);
+                this.angle += PhyloHubMath.degreesToRadians(a);
             } else {
-                this.angle -= ChromoHubMath.degreesToRadians(a);
+                this.angle -= PhyloHubMath.degreesToRadians(a);
             }
 
             this.angle_new = this.angle + this.wedge / 2;
@@ -204,8 +206,6 @@ class ChromoHubTreeNode {
     }
 
     public function calculateScale(){
-        Util.debug(''+this.branch + '/' + this.root.minBranch + '/' +  this.root.maxBranch);
-
         if(this.branch != null){
             if(this.root.maxBranch == null || this.branch > this.root.maxBranch){
                 this.root.maxBranch = this.branch;
@@ -223,11 +223,11 @@ class ChromoHubTreeNode {
     }
 
 
-    public function getChildren():Array<ChromoHubTreeNode>{
+    public function getChildren():Array<PhyloTreeNode>{
         return this.children;
     }
 
-    public function getChildN(i:Int):ChromoHubTreeNode{
+    public function getChildN(i:Int):PhyloTreeNode{
         return this.children[i];
     }
 
@@ -275,16 +275,16 @@ class ChromoHubTreeNode {
                 heightList[i]=this.children[i].getHeight()+1;
             }
 
-            return ChromoHubMath.getMaxOfArray(heightList);
+            return PhyloHubMath.getMaxOfArray(heightList);
         }
     }
 
-    public function getMaximumLeafNameLength(renderer : ChromoHubRendererI = null) : Int{
+    public function getMaximumLeafNameLength(renderer : PhyloRendererI = null) : Int{
         if(maxNameLength != -1){
             return maxNameLength;
         }
 
-        var nodes = new Array<ChromoHubTreeNode>();
+        var nodes = new Array<PhyloTreeNode>();
         nodes.push(this);
 
         maxNameLength = 0;
@@ -312,6 +312,31 @@ class ChromoHubTreeNode {
 
         return maxNameLength;
 
+    }
+
+    public function findFirstLeaf(){
+        for(child in children){
+            if(child.isLeaf()){
+                return child;
+            }else{
+                return child.findFirstLeaf();
+            }
+        }
+
+        return null;
+    }
+
+    public function findLastLeaf(){
+        var lastChild = null;
+        for(child in children){
+            if(child.isLeaf()){
+                lastChild = child;
+            }else{
+                lastChild = child.findLastLeaf();
+            }
+        }
+
+        return lastChild;
     }
 
 

@@ -1,4 +1,4 @@
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
  *         Sefa Garsot (sefa.garsot@sgc.ox.ac.uk) (University of Oxford)
@@ -10,7 +10,7 @@ package saturn.client.programs.chromohub;
  *         
  */
 
-class ChromoHubScreenData {
+class PhyloScreenData {
 
     public var point: Int; //it will tell us whether the annotation icon position is based on 1 = middle point, 2 = left top point, 3=...
     public var x: Int; //x and y positions
@@ -19,17 +19,17 @@ class ChromoHubScreenData {
     public var parenty: Int;
     public var width: Int;
     public var height: Int;
-    public var annotation: ChromoHubAnnotation;
+    public var annotation: PhyloAnnotation;
     public var created:Bool; //whether the DIV is already created
     public var target:String;
     public var targetClean:String;
     public var annot:Int;
-    public var root: ChromoHubTreeNode;
+    public var root: PhyloTreeNode;
     public var div:Dynamic;
     public var divAccessed:Bool;
     public var suboption: Int=0;
     public var family:String;
-    public var renderer: ChromoHubCanvasRenderer;
+    public var renderer: PhyloCanvasRenderer;
     public var isAnnot:Bool;
     public var nodeId:Int;
     public var title:String; //annotation name
@@ -37,7 +37,7 @@ class ChromoHubScreenData {
 
 
     public function new(){
-        this.annotation=new ChromoHubAnnotation();
+        this.annotation=new PhyloAnnotation();
         this.created=false;
         this.divAccessed=false;
     }

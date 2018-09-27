@@ -1,6 +1,9 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class InhibitorAnnotation {
@@ -9,7 +12,7 @@ class InhibitorAnnotation {
 
     }
 
-    static function hasInhibitors(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
+    static function hasInhibitors(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, cb : HasAnnotationType->Void){
         if(data!=null) {
             var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#707ee7',used:true},defImage:100};
             cb(r);return;
@@ -18,7 +21,7 @@ class InhibitorAnnotation {
         cb(null);
     }
 
-    static function divInhibitors(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divInhibitors(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;

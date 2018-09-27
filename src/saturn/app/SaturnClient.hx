@@ -9,7 +9,7 @@
 
 package saturn.app;
 
-import saturn.client.programs.ChromoHubViewer;
+import saturn.client.programs.chromohub.ChromoHubViewer;
 import saturn.client.core.ClientCore;
 import saturn.client.programs.PurificationHelper;
 import saturn.client.programs.SHRNADesigner;

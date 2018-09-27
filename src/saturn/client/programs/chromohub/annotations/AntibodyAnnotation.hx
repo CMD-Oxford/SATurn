@@ -1,6 +1,9 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloTreeNode;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.client.core.CommonCore;
 
 class AntibodyAnnotation {
@@ -9,12 +12,12 @@ class AntibodyAnnotation {
 
     }
 
-    static function hasAntibodies(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasAntibodies(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'',used:true},defImage:0};
         r.text=data.variant_index;
     }
 
-    static function hasAntibodiesFab(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasAntibodiesFab(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: false, text:'',color:{color:'',used:true},defImage:0};
         if(data!=null){
             var alias="";
@@ -68,7 +71,7 @@ class AntibodyAnnotation {
         }
     }
 
-    static function hasAntibodiesIgg(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasAntibodiesIgg(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: false, text:'',color:{color:'',used:true},defImage:0};
         if(data!=null){
             var alias="";
@@ -123,7 +126,7 @@ class AntibodyAnnotation {
         }
     }
 
-    static function divAntibodies(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divAntibodies(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
 
         if(screenData.divAccessed==false){
@@ -165,7 +168,7 @@ class AntibodyAnnotation {
             else{
                 //the first family domain the target belong to, will be use as targetFamily. And it is stored in the leaf.targetFamily
 
-                var leafaux:ChromoHubTreeNode;
+                var leafaux:PhyloTreeNode;
                 leafaux=prog.geneMap.get(screenData.targetClean);
                 fam=leafaux.targetFamilyGene[0];
             }
@@ -241,7 +244,7 @@ class AntibodyAnnotation {
             WorkspaceApplication.getApplication().debug("NOT access db");
     }
 
-    static function divAntibodiesFabs(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divAntibodiesFabs(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
@@ -280,7 +283,7 @@ class AntibodyAnnotation {
             else{
                 //the first family domain the target belong to, will be use as targetFamily. And it is stored in the leaf.targetFamily
 
-                var leafaux:ChromoHubTreeNode;
+                var leafaux:PhyloTreeNode;
                 leafaux=prog.geneMap.get(screenData.targetClean);
                 fam=leafaux.targetFamilyGene[0];
             }
@@ -360,7 +363,7 @@ class AntibodyAnnotation {
             WorkspaceApplication.getApplication().debug("NOT access db");
     }
 
-    static function divAntibodiesIgg(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divAntibodiesIgg(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
 
         if(screenData.divAccessed==false){
@@ -400,7 +403,7 @@ class AntibodyAnnotation {
             else{
                 //the first family domain the target belong to, will be use as targetFamily. And it is stored in the leaf.targetFamily
 
-                var leafaux:ChromoHubTreeNode;
+                var leafaux:PhyloTreeNode;
                 leafaux=prog.geneMap.get(screenData.targetClean);
                 fam=leafaux.targetFamilyGene[0];
             }

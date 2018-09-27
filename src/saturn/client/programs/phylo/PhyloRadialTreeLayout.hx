@@ -1,9 +1,8 @@
-
-package saturn.client.programs.chromohub;
+package saturn.client.programs.phylo;
 import saturn.core.Util;
-import saturn.client.programs.chromohub.ChromoHubTreeNode.LineMode;
+import saturn.client.programs.phylo.PhyloTreeNode.LineMode;
 import saturn.client.workspace.ChromoHubWorkspaceObject;
-import saturn.client.programs.ChromoHubViewer;
+
 import saturn.client.WorkspaceApplication;
 /**
  * ChromoHubRadialTreeLayout
@@ -19,28 +18,26 @@ import saturn.client.WorkspaceApplication;
  * 
  * ChromoHubRadialTreeLayout is able to layout a phylogenetic tree in radial format.
  * 
- * var radialEngine=new ChromoHubRadialTreeLayout(400,400);
- * var canvas5Renderer=new ChromoHubCanvasRenderer(400, 400, document.body);
+ * var radialEngine=PhyloScreenData ChromoHubRadialTreeLayout(400,400);
+ * var canvas5Renderer=PhyloScreenData ChromoHubCanvasRenderer(400, 400, document.body);
  * 
  * radialEngine.render(rootNode, [], canvas5Renderer);
  */
 
-class ChromoHubRadialTreeLayout{
+class PhyloRadialTreeLayout{
 
     public var cx: Float;
     public var cy: Float;
-    public var prog : ChromoHubViewer;
 
-    var annotations:Array<ChromoHubAnnotation>;
+    var annotations:Array<PhyloAnnotation>;
 
-    public function new (program: ChromoHubViewer, width: Float, height: Float){
-        this.prog = program;
+    public function new (width: Float, height: Float){
         this.cx=width/2;
         this.cy=height/2;
 
     }
 
-    public function renderCircle (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){
+    public function renderCircle (treeNode: PhyloTreeNode, renderer: PhyloCanvasRenderer, annotations:Dynamic, annotList:Array<PhyloAnnotation>, lineColour = "rgb(28,102,224)"){
         if(treeNode.colour != null){
             lineColour = treeNode.colour;
         }
@@ -48,7 +45,7 @@ class ChromoHubRadialTreeLayout{
         _renderCircle(treeNode,renderer, annotations, annotList, lineColour, lineColour);
     }
 
-    function _renderCircle(treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)", parentColour="rgb(28,102,224)") {
+    function _renderCircle(treeNode: PhyloTreeNode, renderer: PhyloCanvasRenderer, annotations:Dynamic, annotList:Array<PhyloAnnotation>, lineColour = "rgb(28,102,224)", parentColour="rgb(28,102,224)") {
         var blue = 'rgb(41,128,214)';
         var red = 'rgb(255,0,0)';
         var black = 'rgb(68,68,68)';
@@ -95,15 +92,30 @@ class ChromoHubRadialTreeLayout{
             h = branch * (treeNode.root.getHeight() - treeNode.getHeight());
             ph = branch * (treeNode.root.getHeight() - treeNode.parent.getHeight());
 
+            if(treeNode.wedgeColour != null){
+
+                var startNode = treeNode.findLastLeaf();
+                var endNode = treeNode.findFirstLeaf();
+
+                var wedgeH=treeNode.root.getHeight() * ((cx * 2 / treeNode.root.getHeight()) / 4);
+
+                renderer.drawWedge(0, 0, wedgeH ,  endNode.angle, startNode.angle, treeNode.wedgeColour ,1);
+            }
+
             if(treeNode.isLeaf()){
                 angle = i;
             }else{
                 angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
 
-                if(Math.abs(ChromoHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
+                if(Math.abs(PhyloHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) {
                     renderer.drawLine(firstChild.x, firstChild.y, lastChild.x, lastChild.y, lineColour, firstChild.lineWidth);
+
+                    //renderer.drawWedge(0, 0, h  , firstChild.angle, lastChild.angle, lineColour, treeNode.lineWidth);
                 }else{
                     renderer.drawArc(0, 0, h , firstChild.angle, lastChild.angle, lineColour, treeNode.lineWidth);
+
+
+                    //renderer.drawWedge(0, 0, h , firstChild.angle, lastChild.angle, lineColour, treeNode.lineWidth);
                 }
             }
 
@@ -153,7 +165,7 @@ class ChromoHubRadialTreeLayout{
 
                 var labelColour = black;
 
-                if(prog.highlightedGenes.exists(treeNode.name)==true){
+                if(renderer.getConfig().highlightedGenes.exists(treeNode.name)==true){
                     labelColour = 'red';
                 }
 
@@ -234,8 +246,8 @@ class ChromoHubRadialTreeLayout{
         }
 
         for(child in treeNode.children){
-            var data:ChromoHubScreenData;
-            data=new ChromoHubScreenData();
+            var data:PhyloScreenData;
+            data=new PhyloScreenData();
 
             data.renderer=renderer;
             data.isAnnot=false;
@@ -253,7 +265,7 @@ class ChromoHubRadialTreeLayout{
         }
 
         if(treeNode.parent == null){
-            var rootScreen = new ChromoHubScreenData();
+            var rootScreen = new PhyloScreenData();
             rootScreen.x = treeNode.x;
             rootScreen.y = treeNode.y;
             rootScreen.nodeId = treeNode.nodeId;
@@ -269,12 +281,12 @@ class ChromoHubRadialTreeLayout{
         return i;
     }
 
-    public function render (treeNode: ChromoHubTreeNode, renderer: ChromoHubCanvasRenderer, annotations:Dynamic, annotList:Array<ChromoHubAnnotation>, lineColour = "rgb(28,102,224)"){
+    public function render (treeNode: PhyloTreeNode, renderer: PhyloCanvasRenderer, annotations:Dynamic, annotList:Array<PhyloAnnotation>, lineColour = "rgb(28,102,224)"){
         var i=0;
         var x=treeNode.x;
         var y=treeNode.y;
 
-        if(prog.editmode==true) lineColour="rgb(234,147,28)";
+        if(renderer.getConfig().editmode==true) lineColour="rgb(234,147,28)";
 
         while(i<treeNode.children.length){
             treeNode.children[i].space=0;
@@ -382,7 +394,7 @@ class ChromoHubRadialTreeLayout{
                 //if the target is in  highlightedGene list, we must write its name using red color
                 var namecolor='#585b5f';
                 var ttar=treeNode.children[i].name;
-                if(prog.highlightedGenes.exists(ttar)==true) namecolor='#ff0000';
+                if(renderer.getConfig().highlightedGenes.exists(ttar)==true) namecolor='#ff0000';
 
                 renderer.drawText(' '+treeNode.children[i].name, treeNode.children[i].x,treeNode.children[i].y, -2, 3,rot,orign,namecolor);
                 updateTreeRectangle(treeNode.children[i].x,treeNode.children[i].y, treeNode.root);
@@ -457,8 +469,8 @@ class ChromoHubRadialTreeLayout{
                     renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour, treeNode.children[i].lineWidth);
                 }
 
-                var data:ChromoHubScreenData;
-                data=new ChromoHubScreenData();
+                var data:PhyloScreenData;
+                data=new PhyloScreenData();
 
                 data.renderer=renderer;
                 data.isAnnot=false;
@@ -479,7 +491,7 @@ class ChromoHubRadialTreeLayout{
         }
 
         if(treeNode.parent == null){
-            var rootScreen = new ChromoHubScreenData();
+            var rootScreen = new PhyloScreenData();
             rootScreen.x = treeNode.x;
             rootScreen.y = treeNode.y;
             rootScreen.nodeId = treeNode.nodeId;
@@ -494,7 +506,7 @@ class ChromoHubRadialTreeLayout{
 
     }
 
-    public function addAnnotation(leave:ChromoHubTreeNode, annotation:Int,  long: Int, renderer: ChromoHubCanvasRenderer,annotList:Array<ChromoHubAnnotation>):Bool{
+    public function addAnnotation(leave:PhyloTreeNode, annotation:Int, long: Int, renderer: PhyloCanvasRenderer, annotList:Array<PhyloAnnotation>):Bool{
 
         if(annotList[annotation].optionSelected.length!=0){
             if(leave.annotations[annotation]!=null){
@@ -506,8 +518,8 @@ class ChromoHubRadialTreeLayout{
         }
 
         var res:Bool=false;
-        var data:ChromoHubScreenData;
-        data=new ChromoHubScreenData();
+        var data:PhyloScreenData;
+        data=new PhyloScreenData();
 
         data.renderer=renderer;
         data.target=leave.name;
@@ -792,12 +804,12 @@ class ChromoHubRadialTreeLayout{
     }
 
 
-    public function addAlfaAnnotation(leave:ChromoHubTreeNode, alfaAnnot:ChromoHubAnnotation, annotation:Int,  long: Int, renderer: ChromoHubCanvasRenderer,annotList:Array<ChromoHubAnnotation>):Bool{
+    public function addAlfaAnnotation(leave:PhyloTreeNode, alfaAnnot:PhyloAnnotation, annotation:Int, long: Int, renderer: PhyloCanvasRenderer, annotList:Array<PhyloAnnotation>):Bool{
         var res:Bool=false;
-        var data:ChromoHubScreenData;
+        var data:PhyloScreenData;
         var nx,ny:Dynamic;
         nx=0.0;ny=0.0;
-        data=new ChromoHubScreenData();
+        data=new PhyloScreenData();
 
         data.renderer=renderer;
         data.target=leave.name;
@@ -1049,7 +1061,7 @@ class ChromoHubRadialTreeLayout{
         return res;
     }
 
-    public function  updateTreeRectangle(x:Int,y:Int, treeNode: ChromoHubTreeNode){
+    public function  updateTreeRectangle(x:Int,y:Int, treeNode: PhyloTreeNode){
         var top:Int;
         top=Std.int(treeNode.rectangleTop);
         var right:Int;

@@ -1,8 +1,11 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods.LigandType;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods.PdbType;
+import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class LigandAnnotation {
@@ -11,7 +14,7 @@ class LigandAnnotation {
 
     }
 
-    static function hasLigands(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, callBack : HasAnnotationType->Void){
+    static function hasLigands(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
         if(data!=null){
             if(Reflect.hasField(data, 'variant_pkey')){
                 var r : HasAnnotationType = {hasAnnot: true, text:data.variant_pkey,color:{color:'#68229d',used:true},defImage:100};
@@ -20,7 +23,7 @@ class LigandAnnotation {
         }
     }
 
-    static function divLigands(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divLigands(screenData: PhyloScreenData, x:String, y:String, tree_type:String, callBack : Dynamic->Void){
 
 
         if(screenData.divAccessed==false){
