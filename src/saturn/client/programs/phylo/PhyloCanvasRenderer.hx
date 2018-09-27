@@ -98,6 +98,12 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             translateY = 0;
             translateX = 0;
         }else{
+            var div = js.Browser.document.createElement('div');
+            div.style.width = '200px';
+            div.style.height = '200px';
+
+            parent.appendChild(div);
+
             this.canvas=js.Browser.document.createElement("canvas");
             parent.appendChild(this.canvas);
 
@@ -457,8 +463,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
         var auxx, auxy:Int;
 
-        auxx=Math.round(e.offsetX);
-        auxy=Math.round(e.offsetY);
+        auxx=Math.round(e.clientX);
+        auxy=Math.round(e.clientY);
+
+        auxx=Math.round(e.pageX - canvas.offsetLeft);
+        auxy=Math.round(e.pageY - canvas.offsetTop);
 
         var x,y:Dynamic;
         x=auxx-Math.round(cx);

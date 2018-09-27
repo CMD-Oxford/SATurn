@@ -93,9 +93,16 @@ class PhyloRadialTreeLayout{
             ph = branch * (treeNode.root.getHeight() - treeNode.parent.getHeight());
 
             if(treeNode.wedgeColour != null){
+                var startNode = null;
+                var endNode = null;
 
-                var startNode = treeNode.findLastLeaf();
-                var endNode = treeNode.findFirstLeaf();
+                if(!treeNode.isLeaf()){
+                    startNode = treeNode.findLastLeaf();
+                    endNode = treeNode.findFirstLeaf();
+                }else{
+                    startNode = treeNode.parent.findLastLeaf();
+                    endNode = treeNode.parent.findFirstLeaf();
+                }
 
                 var wedgeH=treeNode.root.getHeight() * ((cx * 2 / treeNode.root.getHeight()) / 4);
 
