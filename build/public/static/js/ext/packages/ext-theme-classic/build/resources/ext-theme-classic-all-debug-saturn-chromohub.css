@@ -31135,4 +31135,33 @@ a.x-color-picker-item:hover {
 
 .x-btn-split-black-background:hover {
     border: none !important;
-    backgroun
+    background: none;
+}
+
+/** Custom CSS */
+
+.tooltip {
+		position: relative;
+		display: inline-block;
+		border-bottom: 1px dotted black;
+		cursor: pointer;
+}
+
+.tooltiptext {
+		position: absolute;
+		top: -20px;
+		right: -13px;
+		z-index: 1;
+		visibility: hidden;
+		font-size: 11px;
+		width: 554px;
+		border: 1px solid #8eaace;
+		background: #e9f2ff;
+		border-radius: 3px;
+		padding: 2px;
+		color: #444444;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}

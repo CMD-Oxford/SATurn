@@ -4639,6 +4639,7 @@ $('.vertical .progress-fill span').each(function(){
             {
                 xtype:'label',
                 text:'E1 & E2',
+                margin: '0 0 5 0',
                 style:{
                     color: '#4d749f'
                 }
@@ -4648,7 +4649,7 @@ $('.vertical .progress-fill span').each(function(){
                 layout:'hbox',
                 items:[
                     {
-                        margin: '0 10 5 0',
+                        margin: '0 15 15 0',
                         xtype : 'button',
                         cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
                         handler: function() {
@@ -4661,7 +4662,7 @@ $('.vertical .progress-fill span').each(function(){
                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
                     },
                     {
-                        margin: '0 10 5 0',
+                        margin: '0 15 15 0',
                         xtype : 'button',
                         cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
                         handler: function() {
@@ -4679,13 +4680,6 @@ $('.vertical .progress-fill span').each(function(){
 
         var level2Items :Array<Dynamic> = [
             {
-                xtype:'label',
-                text:'E3 ligases',
-                style:{
-                    color: '#4d749f'
-                }
-            },
-            {
                 xtype:'panel',
                 layout:'hbox',
                 items:[
@@ -4694,70 +4688,22 @@ $('.vertical .progress-fill span').each(function(){
                     html:'
                         <form>
                             <fieldset>
-                            <legend>
-                            Involved in UPS confidence
-                            </legend>
-                            <div style="max-width:400px">
-                            Indicates the confidence level that a protein is involved in the ubiquitin proteasome system.
-            "degrad" found in Uniprot function: 1 point.
-            "degrad" found in Reactome pathway(s): 1 point.
-            "degrad" found in Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point
-                            </div>
-                            <div>
-                                <input type="radio" name="usp_confidence" value="Cluster" checked/>
-                                <label>Any</label>
-                                <input type="radio" name="usp_confidence" value="1" />
-                                <label>confidence >= 1</label>
-                                <input type="radio" name="usp_confidence" value="2"  />
-                                <label>confidence >= 2</label>
-                                <input type="radio" name="usp_confidence" value="3"  />
-                                <label>confidence >= 3</label>
-                            </div>
+                                <div style="width:100%; padding:10px 0;">
+                                    <span>Show only E3 ligases involved in UPS with confidence <label>&gt=1</label><input type="radio" name="usp_confidence" value="1" />;&nbsp;&nbsp;<label>1&gt2</label><input type="radio" name="usp_confidence" value="2" checked />;&nbsp;&nbsp;<label>&gt=3</label><input type="radio" name="usp_confidence" value="3" />;&nbsp;&nbsp;<label>show all</label><input type="radio" name="usp_confidence" value="Cluster" /> <span class="tooltip">?<span class="tooltiptext">Indicates the confidence level that a protein is involved in the ubiquitin proteasome system. "degrad" found in Uniprot function: 1 point. "degrad" found in Reactome pathway(s): 1 point. "degrad" found in a Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point</span></span>
+                                </div>
                             </fieldset>
                         </form>
-                   '
-                   }
+                    '
+                    }
                 ]
             }
         ];
 
         var level3Items :Array<Dynamic> = [
             {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('E3_Complex') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3_Complex') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3_Complex') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
-                handler: function() {
-                    treeName = 'E3_Complex';
-
-                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
-
-                    subtreeName = treeName + '_' + d.value;
-
-                    generateTree(treeName, treeType,subtreeName);
-                },
-                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Multi-subunit E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('E3_Ligase') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3_Ligase') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3_Ligase') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
-                handler: function() {
-                    treeName = 'E3_Ligase';
-
-                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
-
-                    subtreeName = treeName + '_' + d.value;
-
-                    generateTree(treeName, treeType,subtreeName);
-                },
-                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Simple E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-            }
-        ];
-
-        var level4Items :Array<Dynamic> =[
-            {
                 xtype:'label',
-                text:'DUPs',
+                text:'E3 ligases',
+                margin: '0 0 5 0',
                 style:{
                     color: '#4d749f'
                 }
@@ -4767,7 +4713,54 @@ $('.vertical .progress-fill span').each(function(){
                 layout:'hbox',
                 items:[
                     {
-                        margin: '0 10 5 0',
+                        margin: '0 15 15 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('E3_Complex') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3_Complex') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3_Complex') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
+                        handler: function() {
+                            treeName = 'E3_Complex';
+
+                            var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                            subtreeName = treeName + '_' + d.value;
+
+                            generateTree(treeName, treeType,subtreeName);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Multi-subunit E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    },
+                    {
+                        margin: '0 15 15 0',
+                        xtype : 'button',
+                        cls : if (mapFam.exists('E3_Ligase') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3_Ligase') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3_Ligase') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
+                        handler: function() {
+                            treeName = 'E3_Ligase';
+
+                            var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                            subtreeName = treeName + '_' + d.value;
+
+                            generateTree(treeName, treeType,subtreeName);
+                        },
+                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Simple E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                    }
+                ]
+            }
+        ];
+
+        var level4Items :Array<Dynamic> =[
+            {
+                xtype:'label',
+                text:'DUBs',
+                margin: '0 0 5 0',
+                style:{
+                    color: '#4d749f'
+                }
+            },
+            {
+                xtype:'panel',
+                layout:'hbox',
+                items:[
+                    {
+                        margin: '0 15 15 0',
                         xtype : 'button',
                         cls : if (mapFam.exists('NON_USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON_USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON_USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
                         handler: function() {
@@ -4780,7 +4773,7 @@ $('.vertical .progress-fill span').each(function(){
                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
                     },
                     {
-                        margin: '0 10 5 0',
+                        margin: '0 15 15 0',
                         xtype : 'button',
                         cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
                         handler: function() {
@@ -4809,17 +4802,17 @@ $('.vertical .progress-fill span').each(function(){
                     {
                         xtype: 'panel',
                         layout: 'vbox',
-                        items: level4Items
+                        items: level3Items
                     },
                     {
                         xtype: 'panel',
-                        layout:'vbox',
+                        layout:'hbox',
                         items:level2Items
                     },
                     {
                         xtype: 'panel',
-                        layout: 'hbox',
-                        items: level3Items
+                        layout: 'vbox',
+                        items: level4Items
                     }
 
                 ]

@@ -14,7 +14,62 @@ class DomainAnnotation {
     }
 
     static function divDomain(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
-        ProteinSubFamilyAnnotation.divSubFamily(screenData, x, y, tree_type, callBack);
+        //ProteinSubFamilyAnnotation.divSubFamily(screenData, x, y, tree_type, callBack);
+
+        if(screenData.divAccessed==false){
+            screenData.divAccessed=true;
+
+            if(screenData.targetClean.indexOf('/')!=-1){
+                var auxArray=screenData.targetClean.split('');
+                var j:Int;
+                var nom='';
+                for(j in 0...auxArray.length){
+                    if(auxArray[j]!='/') nom+=auxArray[j];
+                }
+                screenData.targetClean=nom;
+            }
+            if(screenData.target.indexOf('/')!=-1){
+                var auxArray=screenData.target.split('');
+                var j:Int;
+                var nom='';
+                for(j in 0...auxArray.length){
+                    if(auxArray[j]!='/') nom+=auxArray[j];
+                }
+                screenData.target=nom;
+            }
+
+            var name:String;
+            if (screenData.target.indexOf('(')!=-1) name=screenData.targetClean;
+            else if (screenData.target.indexOf('-')!=-1) name=screenData.targetClean;
+            else name=screenData.target;
+            trace('Family:');
+
+            var genePlusFamily = screenData.target + '_' + screenData.family  +  '.png';
+            var path = '/static/pfam_images/' + genePlusFamily;
+            var imgSrc = '<img onload="app.getSingleAppContainer().annotWindowDoLayout()" src="' + path + '" usemap=\"#arch_' + screenData.target + '" />';
+
+            var mapp='';
+            CommonCore.getContent('/static/pfam_images/' + screenData.family + '/' + screenData.target + '.txt',function(filetext){
+                mapp = '<map name="#arch_' + screenData.target + '">'+ filetext + '</map>';
+
+                var t = '<style type="text/css">
+                    .divMainDiv7  { }
+                    .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
+                    .divContent{padding:5px;widht:100%!important;}div
+                    .divMainDiv7  a{ text-decoration:none!important;}
+                    .divExtraInfo{padding:5px; widht:100%!important; font-size:10px; margin-top:5px;}
+
+                    .structureResult{padding:3px 10px ;}
+                    </style>
+                    <div class="divMainDiv7 ">
+                    <div class="divTitle">Domain Architecture  - '+screenData.target+'</div>
+                    <div class="divContent">'
+                + imgSrc + mapp +
+                '</div>
+                ';
+                callBack(t);
+            });
+        }
     }
 
     static function familyDomain(targetFamily: String,tree_type:String,callBack : Dynamic->Void){
