@@ -328,11 +328,11 @@ class SHRNAAnnotation {
                                 viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
                                 viewer.annotationManager.activeAnnotation[annotation]=true;
                                 if(viewer.treeName==''){
-                                    viewer.addAnnotDataGenes(fresults,annotation,function(){
+                                    viewer.annotationManager.addAnnotDataGenes(fresults,annotation,function(){
                                         callback(db_results,null);
                                     });
                                 }else{
-                                    viewer.addAnnotData(fresults,annotation,0,function(){
+                                    viewer.annotationManager.addAnnotData(fresults,annotation,0,function(){
                                         viewer.newposition(0,0);
                                         callback(db_results,null);
                                     });

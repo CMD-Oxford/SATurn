@@ -174,11 +174,11 @@ class ProteinStructureAnnotation {
                 if (db_results!=null){
                     viewer.annotationManager.activeAnnotation[annotation]=true;
                     if(viewer.treeName==''){
-                        viewer.addAnnotDataGenes(db_results,annotation,function(){
+                        viewer.annotationManager.addAnnotDataGenes(db_results,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.addAnnotData(db_results,annotation,0,function(){
+                        viewer.annotationManager.addAnnotData(db_results,annotation,0,function(){
                             viewer.newposition(0,0);
                             callback(db_results,null);
                         });

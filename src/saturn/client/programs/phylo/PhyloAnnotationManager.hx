@@ -1,8 +1,8 @@
 package saturn.client.programs.phylo;
 import saturn.client.WorkspaceApplication;
-import saturn.client.WorkspaceApplication;
-import saturn.client.WorkspaceApplication;
 import saturn.client.programs.chromohub.ChromoHubViewer;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.core.Util;
 
 class PhyloAnnotationManager {
     public var annotations: Array<PhyloAnnotation>;
@@ -13,6 +13,7 @@ class PhyloAnnotationManager {
     public var treeType : String;
     public var numTotalAnnot: Int;
     public var legacyViewer : ChromoHubViewer;
+    public var searchedGenes :Array<String>;
 
     public function new(legacyViewer : ChromoHubViewer) {
         this.legacyViewer = legacyViewer;
@@ -20,6 +21,7 @@ class PhyloAnnotationManager {
         activeAnnotation=new Array();
         alreadyGotAnnotation=new Map<String, Bool>();
         selectedAnnotationOptions = new Array();
+        searchedGenes=new Array();
     }
 
     /**
@@ -716,7 +718,7 @@ class PhyloAnnotationManager {
 
                     WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
                         if(error == null) {
-                            legacyViewer.addAnnotData(db_results,currentAnnot,currentOption, function(){
+                            addAnnotData(db_results,currentAnnot,currentOption, function(){
                                 legacyViewer.newposition(0,0);
                             });
                         }
@@ -758,7 +760,7 @@ class PhyloAnnotationManager {
 
                 var posXDiv  = (legacyViewer.dom.clientWidth/2)-100;
                 var posYDiv = legacyViewer.dom.clientHeight/5;
-                legacyViewer.closeDivInTable();
+                closeDivInTable();
 
                 hook(data,Math.round(posXDiv), Math.round(posYDiv),treeName, treeType, function(div){
                     data.created=true;
@@ -850,5 +852,1340 @@ class PhyloAnnotationManager {
 
         return true;
     }
+
+    public function  fillInDataInAnnotTable(type:String,callback : Dynamic->String->Void){
+        var annotlist : Array<Dynamic> = annotations;
+
+        var leaves : Array<Dynamic> ;
+        var myGeneList: Array<String>;
+
+        if(type=='family'){
+            myGeneList=this.rootNode.targets;
+            leaves= rootNode.targets;
+        }else{
+            myGeneList=searchedGenes;
+            leaves=searchedGenes;
+        }
+
+        var total=numTotalAnnot;
+
+        var completedAnnotations = 0;
+
+        var onDone = function(error, annotation){
+            if(completedAnnotations == total){
+                Util.debug('All results fetch');
+
+                var d=dataforTable(annotlist, leaves);//only when it's the last one
+                callback(d,null);
+
+                return;
+            }
+        }
+
+        // total+1 as min...max excludes max - i.e. min to max-1
+        for(currentAnnot in 1...total+1){
+            // What is annotation 11?
+            if(currentAnnot==11){
+                completedAnnotations += 1;
+                onDone(null, currentAnnot);
+                continue;
+            }
+
+            var alias = annotlist[currentAnnot].hookName;
+            if(alias==''){
+                completedAnnotations += 1;
+                onDone(null, currentAnnot);
+                continue;
+            }
+
+            var parameter:Dynamic;
+
+            //before calling the mysql select, we need to check the tree type (domain or gene)
+            if(treeName != ''){
+                if(treeType=='gene'){
+                    alias='gene_'+alias;
+                }
+
+                parameter=this.treeName;
+
+                if(annotlist[currentAnnot].popup==false){
+                    var u =annotlist[currentAnnot].optionSelected[0];
+
+                    WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
+
+                        if(error == null) {
+                            addAnnotData(db_results,currentAnnot,u,function(){
+                                completedAnnotations += 1;
+                                onDone(null,currentAnnot);
+                            });
+                        }else {
+                            Util.debug(error);
+
+                            completedAnnotations += 1;
+                            onDone(error,currentAnnot);
+                        }
+                    });
+                }else{
+                    var l=currentAnnot;
+                    var popMethod=annotlist[currentAnnot].popMethod;
+                    var hasClass=annotlist[currentAnnot].hasClass;
+                    var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
+
+                    hook(currentAnnot,null,this.treeType,treeName,null,this, function(results, error){
+                        completedAnnotations += 1;
+
+                        //TODO: Why doesn't this method do anything!!!!!!!
+
+                        if(error == null){
+                            onDone(null, currentAnnot);
+                        }else{
+                            Util.debug(error);
+
+                            onDone(error, currentAnnot);
+                        }
+                    });
+                }
+            }else{
+                if(annotlist[currentAnnot].popup==false){
+                    alias='list_'+alias;
+                    var parameter=searchedGenes;
+
+                    if(this.treeType=='gene'){
+                        alias='gene_'+alias;
+                    }
+
+                    WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{param : parameter}, null, true, function(db_results, error){
+                        if(error == null) {
+                            addAnnotDataGenes(db_results,currentAnnot,function(){
+                                completedAnnotations += 1;
+
+                                onDone(null, currentAnnot);
+                            });
+                        }else {
+                            WorkspaceApplication.getApplication().showMessage('Unknown',error);
+                            completedAnnotations += 1;
+                            onDone(error, currentAnnot);
+                        }
+                    });
+                }else{
+                    var l=currentAnnot;
+                    var popMethod=annotlist[currentAnnot].popMethod;
+                    var hasClass=annotlist[currentAnnot].hasClass;
+                    var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
+
+                    hook(currentAnnot,null,this.treeType,treeName,searchedGenes,this, function(results, error){
+                        completedAnnotations += 1;
+                        onDone(null,currentAnnot);
+                    });
+                }
+            }
+        }
+    }
+
+    public function dataforTable(annotlist:Array<Dynamic>, leaves:Array<Dynamic>):Array<Dynamic>{
+        var d=new Array();
+        var total=numTotalAnnot;
+        if(treeName!=''){
+
+            var results=new Array();
+            for (i in 0 ... leaves.length){
+
+                if(rootNode.leafNameToNode.exists(leaves[i])){
+                    var leaf=rootNode.leafNameToNode.get(leaves[i]);
+
+                    var j:Int;
+
+                    for(j in 1...total+1){
+                        if(annotlist[j]!=null && annotlist[j].familyMethod!=''){
+                            results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showFamilyMethodDivInTable('+j+',\''+annotlist[j].familyMethod+'\')";return false;"><span style="text-align:center;color:">Visualize</span></a> ';
+                            Util.debug('Here!');
+                        }else{
+                            Util.debug('Here2!');
+                            if(leaf.annotations[j]!=null){
+                                if(leaf.annotations[j]!=null){
+                                    if(leaf.annotations[j].hasAnnot==true){
+                                        if (leaf.annotations[j].alfaAnnot.length==0){
+
+                                            switch (annotations[j].shape){
+                                                case "cercle": results[j]= '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">O</span></a> ';
+                                                case "html": results[j]= generateIcon(j, leaf.annotations[j].myleaf.name, leaf.results);
+                                                case "square": results[j]= '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].color[0].color+'"/> </div></a> ';
+                                                case "text": results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">'+leaf.annotations[j].text+'</span></a> ';
+                                                case "image":
+                                                    var t=leaf.annotations[j].defaultImg;
+                                                    if(t==null) t=0;
+                                                    if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                        if (t!=100){
+                                                            if(j==1) results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'" width="20px"/><a> ';
+                                                            else results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+                                                        }
+                                                        else results[j]='';
+                                                    }
+                                            }
+                                        }else{
+// var g:Int;
+                                            results[j]='';
+                                            if(leaf.annotations[j].hasAnnot==true){
+                                                switch (annotations[j].shape){
+                                                    case "cercle": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">O</span></a> ';
+                                                    case "square": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].color[0].color+'"/> </div></a> ';
+                                                    case "html": results[j]=results[j]+generateIcon(j, leaf.annotations[j].myleaf.name, leaf.results);
+                                                    case "text": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\',\''+leaf.annotations[j].text+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">'+leaf.annotations[j].text+'</span></a> ';
+                                                    case "image":
+                                                        var t=leaf.annotations[j].defaultImg;
+                                                        if(t==null) t=0;
+                                                        if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                            if (t!=100) results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+
+                                                        }
+                                                }
+                                            }
+                                            var b:Int;
+                                            for(b in 0...leaf.annotations[j].alfaAnnot.length){
+                                                if(leaf.annotations[j].alfaAnnot[b]!=null){
+
+                                                    switch (annotations[j].shape){
+                                                        case "cercle": results[j]=results[j]+ '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'">O</span></a> ';
+                                                        case "square": results[j]=results[j]+ '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'"/> </div></a> ';
+                                                        case "html": results[j]=results[j]+generateIcon(j, leaf.annotations[j].myleaf.name, leaf.results);
+                                                        case "text": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\',\''+leaf.annotations[j].alfaAnnot[b].text+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'">'+leaf.annotations[j].alfaAnnot[b].text+'</span></a> ';
+                                                        case "image":
+                                                            var t=leaf.annotations[j].alfaAnnot[b].defaultImg;
+                                                            if(t==null) t=0;
+                                                            if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                                if (t!=100) results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+                                                            }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else{
+                                        results[j]='';
+                                    }
+                                }
+                                else{
+                                    results[j]='';
+                                }
+                            }
+                            else{
+                                results[j]='';
+                            }
+                        }
+                    }
+
+                    d[i] = {};
+
+                    var a=0;
+                    Reflect.setField(d[i], 'Target', leaf.name);
+                    for(a in 0 ... annotations.length){
+                        if(a==12){
+                            var iwanttostop=true;
+                        }
+                        if(results[a+1]!=null){
+                            //annotcode=11 doesnt exist
+                            if(a!=10)  Reflect.setField(d[i], annotations[a+1].label, results[a+1]);
+                            //if(a!=10)  Reflect.setField(d[i], "<a href='www.google.com'>"+annotations[a+1].label+"</a>", results[a+1]);
+                        }
+                    }
+                }
+            }
+            //d=results;
+        }
+        else{
+            var results=new Array();
+            var leaf:PhyloTreeNode;
+            for (i in 0 ... searchedGenes.length){
+                leaf=legacyViewer.geneMap.get(searchedGenes[i]);
+
+                var j:Int;
+                for(j in 1...total+1){
+                    if(annotlist[j]!=null && annotlist[j].familyMethod!=''){
+                        //results[j]='n/a';
+                        if(leaf.targetFamilyGene!=null && leaf.targetFamilyGene.length!=0){
+                            var ii=0;
+                            var r='';
+                            for(ii in 0...leaf.targetFamilyGene.length){
+                                r=r+leaf.targetFamilyGene[ii]+' ';
+                            }
+                            results[j]=r;
+                        }
+                        else results[j]='';
+                    }
+                    else{
+                        if(leaf.annotations[j]!=null){
+                            if(leaf.annotations[j].hasAnnot==true){
+                                if (leaf.annotations[j].alfaAnnot.length==0){
+                                    switch (annotations[j].shape){
+                                        case "cercle": results[j]= '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">O</span></a> ';
+                                        case "square": results[j]= '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].color[0].color+'"/> </div></a> ';
+                                        case "html": results[j]= generateIcon(j, leaf.annotations[j].myleaf.name, leaf.results);
+                                        case "text": results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">'+leaf.annotations[j].text+'</span></a> ';
+                                        case "image":
+                                            var t=leaf.annotations[j].defaultImg;
+                                            if(t==null) t=0;
+                                            if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                if (t!=100) {
+                                                    if(j==1) results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'" width="20px"/><a> ';
+                                                    else results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+                                                }
+                                                else results[j]='';
+                                            }
+                                    }
+                                }else{
+// var g:Int;
+                                    results[j]='';
+                                    if(leaf.annotations[j].hasAnnot==true){
+                                        switch (annotations[j].shape){
+                                            case "cercle": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">O</span></a> ';
+                                            case "square": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].color[0].color+'"/> </div></a> ';
+                                            case "html": results[j]=results[j]+generateIcon(j, leaf.annotations[j].myleaf.name, leaf.results);
+                                            case "text": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\',\''+leaf.annotations[j].text+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].color[0].color+'">'+leaf.annotations[j].text+'</span></a> ';
+                                            case "image":
+                                                var t=leaf.annotations[j].defaultImg;
+                                                if(t==null) t=0;
+                                                if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                    if (t!=100) {
+                                                        if(j==1) results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'" width="20px"/><a> ';
+                                                        else results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+                                                    }
+                                                }
+                                        }
+                                    }
+                                    var b:Int;
+                                    for(b in 0...leaf.annotations[j].alfaAnnot.length){
+                                        if(leaf.annotations[j].alfaAnnot[b]!=null){
+
+                                            switch (annotations[j].shape){
+                                                case "cercle": results[j]=results[j]+ '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'">O</span></a> ';
+                                                case "square": results[j]=results[j]+ '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'"/> </div></a> ';
+                                                case "html": results[j]=results[j]+ '<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><div id="rectangle" style="text-align:center;width:10px; height:10px; background-color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'"/> </div></a> ';
+                                                case "text": results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\',\''+leaf.annotations[j].alfaAnnot[b].text+'\')";return false;"><span style="text-align:center;color:'+leaf.annotations[j].alfaAnnot[b].color[0].color+'">'+leaf.annotations[j].alfaAnnot[b].text+'</span></a> ';
+                                                case "image":
+                                                    var t=leaf.annotations[j].alfaAnnot[b].defaultImg;
+                                                    if(t==null) t=0;
+                                                    if((annotations[j].annotImg[t]!=null)&&(annotations[j].annotImg[t].currentSrc!=null)){
+                                                        if (t!=100){
+                                                            if(j==1) results[j]='<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'" width="20px"/><a> ';
+                                                            else  results[j]=results[j]+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+leaf.annotations[j].myleaf.name+'\')";return false;"><img src="'+annotations[j].annotImg[t].currentSrc+'"/><a> ';
+                                                        }
+                                                    }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else{
+                                results[j]='';
+                            }
+                        }
+                        else{
+                            results[j]='';
+                        }
+                    }
+                }
+
+                d[i] = {};
+
+                var a=0;
+                Reflect.setField(d[i], 'Target', leaf.name);
+                var tt='';
+                for(a in 0 ... annotations.length){
+                    if(results[a+1]!=null){
+
+                        //annotcode=11 doesnt exist
+                        if(a!=10){
+                            if(a+1==5) Reflect.setField(d[i], 'Family Domains', results[a+1]);
+                            else Reflect.setField(d[i], annotations[a+1].label, results[a+1]);
+                        }
+                    }
+                }
+                //we need to add into the second column, the list of family domains where the target belongs
+                /*  WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getFamilies",{gene: leaf.name}, null, true, function(db_results, error){
+
+                        if(error == null) {
+                            tt=generateFamilyDomainList(db_results);
+                            Reflect.setField(d[i], 'Family Domains', tt);
+
+
+                            return d;
+                        }
+                        else {
+                            WorkspaceApplication.getApplication().debug(error);
+                            return null;
+                        }
+
+                    });*/
+            }
+        }
+
+        return d;
+    }
+
+    function generateIcon(j:Int, tarname:String,results:Array<Int>):String{
+        var name=tarname;
+        if(name.indexOf('(')!=-1 || name.indexOf('/')!=-1){
+            var auxArray=name.split('');
+            var j:Int;
+            var nn='';
+            for(j in 0...auxArray.length){
+                if (auxArray[j]!='(' && auxArray[j]!=')' && auxArray[j]!='/') {
+                    nn=nn+auxArray[j];
+                }
+            }
+            name=nn;
+        }
+        var r1=23-results[1];
+        var r2=23-results[2];
+        var r3=23-results[3];
+        var r4=23-results[4];
+        var r5=23-results[5];
+        var r6=23-results[6];
+        var r7=23-results[7];
+        return "<script type=\"text/javascript\">
+        $('.horizontal .progress-fill span').each(function(){
+  var percent = $(this).html();
+  $(this).parent().css('width', percent);
+});
+
+
+$('.vertical .progress-fill span').each(function(){
+  var percent = $(this).html();
+  var pTop = 100 - ( percent.slice(0, percent.length - 1) ) + \"%\";
+  $(this).parent().css({
+    'height' : percent,
+    'top' : pTop
+  });
+});
+                </script>"+'
+                <style type="text/css" media="all">
+                *, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+ }
+.container {
+  width: 23px;
+  height: 23px;
+  background: #fff;
+  overflow: hidden;
+  border-bottom:1px solid #000;
+}
+
+.vertical .progress-bar {
+  float: left;
+  height: 100%;
+  width: 3px;
+}
+
+.vertical .progress-track {
+  position: relative;
+  width: 3px;
+  height: 100%;
+  background: #ffffff;
+}
+
+.vertical .progress-track-1 {
+   position: relative;
+   width: 3px;
+   height: 100%;
+   background: #2980d6;
+}
+.vertical .progress-fill-1'+name+' {
+  position: relative;
+  height: '+r1+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+
+.vertical .progress-track-2 {
+   position: relative;
+   width: 3px;
+   height: 100%;
+   background: #bf0000;
+}
+.vertical .progress-fill-2'+name+' {
+  position: relative;
+  height: '+r2+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+.vertical .progress-track-3 {
+  position: relative;
+   width: 3px;
+   height: 100%;
+   background: #63cf1b;
+}
+.vertical .progress-fill-3'+name+' {
+  position: relative;
+  height: '+r3+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+.vertical .progress-track-4 {
+  position: relative;
+   width: 3px;
+   height: 100%;
+   background: #ff8000;
+}
+.vertical .progress-fill-4'+name+' {
+  position: relative;
+  height: '+r4+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+.vertical .progress-track-5 {
+  position: relative;
+   width: 3px;
+   height: 100%;
+   background: #c05691;
+}
+.vertical .progress-fill-5'+name+' {
+  position: relative;
+  height: '+r5+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+.vertical .progress-fill-6'+name+' {
+  position: relative;
+  height: '+r6+'px;
+  width: 3px;
+  background-color:#ffffff;
+}
+.vertical .progress-track-6 {
+  position: relative;
+   width: 3px;
+   height: 100%;
+   background: #ffcc00;
+}
+.vertical .progress-track-7 {
+  position: relative;
+   width: 3px;
+   height: 100%;
+   background: #793ff3;
+}
+.vertical .progress-fill-7'+name+' {
+  position: relative;
+  height: '+r7+';
+  width: 3px;
+  background-color:#ffffff;
+}
+                </style>
+                '+'<a id="myLink" title="Click to visualize annotation details"  href="#" onclick="app.getActiveProgram().showDivInTable('+j+',\''+tarname+'\')";return false;">
+                <div class="container vertical flat">
+                          <div class="progress-bar">
+                            <div class="progress-track-1">
+                              <div class="progress-fill-1'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-2">
+                              <div class="progress-fill-2'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-3">
+                              <div class="progress-fill-3'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-4">
+                              <div class="progress-fill-4'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-5">
+                              <div class="progress-fill-5'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-6">
+                              <div class="progress-fill-6'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="progress-bar">
+                            <div class="progress-track-7">
+                              <div class="progress-fill-7'+name+'">
+                                <span> </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div></a>';
+    }
+
+    public function showFamilyMethodDivInTable(annotation:Int){
+        if((annotations[annotation].hasClass!=null)&&(annotations[annotation].familyMethod!=null)){
+            var hook:Dynamic;
+            var clazz,method:String;
+
+            clazz=annotations[annotation].hasClass;
+            method=annotations[annotation].familyMethod+'table';
+
+            var data=new PhyloScreenData();
+
+            data.renderer=legacyViewer.radialR;
+            data.target='';
+            data.targetClean='';
+            data.annot=annotation;
+            data.divAccessed=false;
+            data.root=this.rootNode;
+            data.title=annotations[annotation].label;
+
+            hook = Reflect.field(Type.resolveClass(clazz), method);
+
+            legacyViewer.dom = legacyViewer.theComponent.down('component').getEl().dom;
+
+            var posXDiv  = (legacyViewer.dom.clientWidth/2)-100;
+            var posYDiv = legacyViewer.dom.clientHeight/5;
+
+
+            hook(data,Math.round(posXDiv), Math.round(posYDiv),treeName, treeType, function(div){
+                data.created=true;
+                data.div=div;
+                var nn='';
+                if(data.target!=data.targetClean){
+                    if(data.target.indexOf('(')!=-1 || data.target.indexOf('-')!=-1){
+                        var auxArray=data.target.split('');
+                        var j:Int;
+                        for(j in 0...auxArray.length){
+                            if (auxArray[j]=='(' || auxArray[j]=='-') {
+                                nn=auxArray[j+1];
+                                break;
+                            }
+                        }
+                    }
+                }
+                var nom='';
+                if(data.targetClean.indexOf('/')!=-1){
+                    var auxArray=data.targetClean.split('');
+                    var j:Int;
+                    for(j in 0...auxArray.length){
+                        if(auxArray[j]!='/') nom+=auxArray[j];
+                    }
+                }else nom=data.targetClean;
+                var id=annotation+'-'+nom+nn;
+
+                WorkspaceApplication.getApplication().getSingleAppContainer().showAnnotWindow(div, Math.round(posXDiv), Math.round(posYDiv), data.title,id,data);
+
+            });
+        }
+    }
+
+    public function showDivInTable(annotation:Int,target:String, ?text:String){
+        var leaf:Dynamic;
+        if(treeName=='') leaf=legacyViewer.geneMap.get(target);
+        else leaf=rootNode.leafNameToNode.get(target);
+
+        if((annotations[annotation].hasClass!=null)&&(annotations[annotation].divMethod!=null)){
+            var hook:Dynamic;
+            var clazz,method:String;
+
+            clazz=annotations[annotation].hasClass;
+            method=annotations[annotation].divMethod;
+
+            var data=new PhyloScreenData();
+
+            data.renderer=legacyViewer.radialR;
+            data.target=target;
+            data.annot=annotation;
+            if(text!=null){
+                data.annotation.text=text;
+            }
+            else data.annotation.text=leaf.annotations[annotation].text;
+            var name='';
+            if(target.indexOf('(')!=-1 || target.indexOf('-')!=-1){
+                var auxArray=target.split('');
+                var j:Int;
+                for(j in 0...auxArray.length){
+                    if (auxArray[j]=='(' || auxArray[j]=='-') {
+
+                        // if(auxArray[j]=='(') {index=auxArray[j+1]; variant='1';}
+                        // if(auxArray[j]=='-') {index=null; variant=auxArray[j+1];}
+                        break;
+                    }
+                    name+=auxArray[j];
+                }
+                data.targetClean=name;
+            }
+            else{
+                data.targetClean=target;
+            }
+            data.annot=annotation;
+            data.divAccessed=false;
+            data.root=this.rootNode;
+            data.title=annotations[annotation].label;
+
+            hook = Reflect.field(Type.resolveClass(clazz), method);
+
+            legacyViewer.dom = legacyViewer.theComponent.down('component').getEl().dom;
+
+            var posXDiv  = (legacyViewer.dom.clientWidth/2)-100;
+            var posYDiv = legacyViewer.dom.clientHeight/5;
+            // closeDivInTable();
+
+            hook(data,Math.round(posXDiv), Math.round(posYDiv),treeType, function(div){
+                data.created=true;
+                data.div=div;
+
+                var nn='';
+                if(data.target!=data.targetClean){
+                    if(data.target.indexOf('(')!=-1 || data.target.indexOf('-')!=-1){
+                        var auxArray=data.target.split('');
+                        var j:Int;
+                        for(j in 0...auxArray.length){
+                            if (auxArray[j]=='(' || auxArray[j]=='-') {
+                                nn=auxArray[j+1];
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(annotation==4){
+                    if(data.annotation.text.indexOf('.')!=-1){
+                        var auxArray=data.annotation.text.split('');
+                        var j:Int;
+                        var naux='';
+                        for(j in 0...auxArray.length){
+                            if(auxArray[j]!='.') naux+=auxArray[j];
+                        }
+                        nn=nn+naux;
+                    }else if(data.annotation.text.indexOf('/')!=-1){
+                        var auxArray=data.annotation.text.split('');
+                        var j:Int;
+                        var naux='';
+                        for(j in 0...auxArray.length){
+                            if(auxArray[j]!='/') naux+=auxArray[j];
+                        }
+                        nn=nn+naux;
+                    }else nn=nn+data.annotation.text;
+                }
+
+                var nom='';
+                if(data.targetClean.indexOf('/')!=-1){
+                    var auxArray=data.targetClean.split('');
+                    var j:Int;
+                    for(j in 0...auxArray.length){
+                        if(auxArray[j]!='/') nom+=auxArray[j];
+                    }
+                }else nom=data.targetClean;
+
+                var id=annotation+'-'+nom+nn;
+
+                WorkspaceApplication.getApplication().getSingleAppContainer().showAnnotWindow(div, Math.round(posXDiv), Math.round(posYDiv), data.title,id,data);
+
+            });
+        }
+    }
+
+    public function closeDivInTable(){
+        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
+        // closeAnnotWindows();
+    }
+
+    public function addAnnotDataGenes (annotData  : Array<Dynamic>, annotation: Int, callback:Void->Void ){
+        var i:Int;
+
+        var mapResults: Map<String, Dynamic>;
+        mapResults=new Map();
+
+        var target:String;
+        var j=0;
+
+        for(i in 0 ... annotData.length){
+            if(annotation==1){
+                var aux=annotData[i].pmid_list;
+                var aux2=aux.split(';');
+                var max = aux2.length;
+
+                var v = annotations[1].fromresults[1];
+
+                if(max>v || annotations[1].fromresults[1]==null){
+                    annotations[1].fromresults[1]=max;
+                }
+            }
+            target=annotData[i].target_id+'_'+j;
+            while (mapResults.exists(target)){
+                j++;
+                target=annotData[i].target_id+'_'+j;
+            }
+            j=0;
+            mapResults.set(target, annotData[i]);
+        }
+
+        var items=new Array();
+        var i=0;
+        for (i in 0...searchedGenes.length){
+            items[i]=searchedGenes[i];
+        }
+
+        processGeneAnnotations(items, mapResults, annotation, callback);
+    }
+
+    /**
+    * processGeneAnnotations
+    **/
+    public function processGeneAnnotations(items:Array<String>, mapResults: Map<String, Dynamic>, annotation: Int, cb:Void->Void){
+        var toComplete = items.length;
+
+        var onDone = function(){
+            if(toComplete == 0){
+                cb();
+            }
+        }
+
+        if(toComplete == 0){
+            cb(); return;
+        }
+
+        for(name in items){
+            var target = name + '_0';
+
+            if (mapResults.exists(target)){
+                var res = mapResults.get(target);
+
+                var leafaux: PhyloTreeNode = legacyViewer.geneMap.get(name);
+
+                var index = null;
+                var variant = '1';
+
+                // TODO: What is the purpose of this block?
+                #if PHYLO5
+
+                #else
+                if(annotation == 13 && Reflect.hasField(res, 'family_id')) {
+                    leafaux.targetFamily = mapResults.get(target).family_id;
+                }
+                #end
+
+                if((annotations[annotation].hasClass != null) && (annotations[annotation].hasMethod != null)){
+                    var clazz = annotations[annotation].hasClass;
+                    var method = annotations[annotation].hasMethod;
+
+                    var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                    hook(name, res, 0, annotations, name, function(r : HasAnnotationType){
+                        if(r.hasAnnot){
+                            leafaux.activeAnnotation[annotation] = true;
+
+                            if(leafaux.annotations[annotation] == null){
+                                leafaux.annotations[annotation] = new PhyloAnnotation();
+                                leafaux.annotations[annotation].myleaf = leafaux;
+                                leafaux.annotations[annotation].text = r.text;
+                                leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                            }else{
+                                if(leafaux.annotations[annotation].splitresults == true){
+                                    var z = 0;
+
+                                    while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                        z++;
+                                    }
+
+                                    leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                                    leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                    leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                    leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                                }
+                            }
+                        }
+
+                        toComplete--;
+                        onDone();
+                    });
+                }else{
+                    var col = '';
+
+                    if(annotations[annotation].color[0] != null){
+                        col = annotations[annotation].color[0].color;
+                    }
+
+                    var r : HasAnnotationType = {hasAnnot : true, text : '', color : {color : col, used : true}, defImage : annotations[annotation].defaultImg};
+
+                    var leafaux: PhyloTreeNode = legacyViewer.geneMap.get(name);
+                    leafaux.activeAnnotation[annotation] = true;
+
+                    if(leafaux.annotations[annotation] == null){
+                        leafaux.annotations[annotation] = new PhyloAnnotation();
+                        leafaux.annotations[annotation].myleaf = leafaux;
+                        leafaux.annotations[annotation].text = '';
+                        leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                        leafaux.annotations[annotation].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                    }else{
+                        if(leafaux.annotations[annotation].splitresults == true){
+                            var z = 0;
+
+                            while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                z++;
+                            }
+
+                            leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                            leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                            leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                            leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,mapResults.get(target),100,r);
+                        }
+                    }
+
+                    toComplete--;
+                    onDone();
+                }
+            }else{
+                //in case of suboptions we have to be sure we remove the previous ones
+                var leafaux: PhyloTreeNode = legacyViewer.geneMap.get(name);
+                leafaux.activeAnnotation[annotation] = false;
+                leafaux.annotations[annotation] = null;
+
+                toComplete--;
+                onDone();
+            }
+        }
+    }
+
+    public function addAnnotData(annotData  : Array<Dynamic>, annotation: Int, option:Int, callback:Void->Void ){
+        var i:Int;
+        var mapResults: Map<String, Dynamic>;
+        mapResults=new Map();
+        var j=0;
+        var target:String;
+        for(i in 0 ... annotData.length){
+            #if PHYLO5
+
+            #else
+            if(annotation==1){
+                var aux=annotData[i].pmid_list;
+                var aux2=aux.split(';');
+                var max = aux2.length;
+
+                var v = annotations[1].fromresults[1];
+
+                if(max>v || annotations[1].fromresults[1]==null) annotations[1].fromresults[1]=max;
+            }
+            #end
+            target=annotData[i].target_id+'_'+j;
+            while (mapResults.exists(target)){
+                j++;
+                target=annotData[i].target_id+'_'+j;
+            }
+            j=0;
+            mapResults.set(target, annotData[i]);
+        }
+
+        //creating target list to be processed
+        var items=new Array();
+        for(i in 0 ... this.rootNode.targets.length){
+            items[i]=this.rootNode.targets[i];
+        }
+        #if PHYLO5
+        processAnnotationsSimple(items,mapResults,annotation, option, callback);
+        #else
+        processFamilyAnnotations(items, mapResults, annotation, option, callback);
+        #end
+    }
+
+    public function processAnnotationsSimple(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
+        var toComplete = 0;
+        for(key in mapResults){
+            toComplete += 1;
+        }
+
+        var onDone = function(){
+            if(toComplete  == 0){
+                cb();
+            }
+        };
+
+        if(toComplete == 0){
+            cb();return;
+        }
+
+        for(item in items){
+            var name = item + '_0';
+            var res = mapResults.get(name);
+            if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
+                var clazz = annotations[annotation].hasClass;
+                var method :Dynamic = annotations[annotation].hasMethod;
+
+                var _processAnnotation = function(r:HasAnnotationType){
+                    if(r.hasAnnot){
+                        var leafaux: PhyloTreeNode;
+                        leafaux = this.rootNode.leafNameToNode.get(item);
+
+                        leafaux.activeAnnotation[annotation] = true;
+                        if(leafaux.annotations[annotation] == null){
+                            leafaux.annotations[annotation] = new PhyloAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = r.text;
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }else{
+                            if(annotations[annotation].splitresults == true){
+                                leafaux.annotations[annotation].splitresults = true;
+
+                                var z=0;
+
+                                while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                    z++;
+                                }
+
+                                leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+                                if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
+                                    leafaux.annotations[annotation].alfaAnnot[z] = null;
+                                }
+                            }else{
+                                if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                    leafaux.annotations[annotation] = new PhyloAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = '';
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                }
+                            }
+                        }
+                    }
+
+                    toComplete--;
+                    onDone();
+                };
+
+                if(Reflect.isFunction(method)){
+                    method(name,res,option, annotations, item, _processAnnotation);
+                }else{
+                    var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                    hook(name,res,option, annotations, item, _processAnnotation);
+                }
+            }else {
+                var col = '';
+                if(annotations[annotation].color[0] != null){
+                    col=annotations[annotation].color[0].color;
+                }
+
+                var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
+
+                var leafaux: PhyloTreeNode = this.rootNode.leafNameToNode.get(item);
+                leafaux.activeAnnotation[annotation]=true;
+
+                if(leafaux.annotations[annotation] == null){
+                    leafaux.annotations[annotation] = new PhyloAnnotation();
+                    leafaux.annotations[annotation].myleaf = leafaux;
+                    leafaux.annotations[annotation].text = '';
+                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                }else{
+                    if(leafaux.annotations[annotation].splitresults == true){
+                        var z=0;
+
+                        while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                            z++;
+                        }
+
+                        leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+
+                    }else{
+                        if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                            leafaux.annotations[annotation] = new PhyloAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = '';
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }
+                    }
+                }
+
+                toComplete--;
+                onDone();
+            }
+        }
+    }
+
+
+    /**
+    * processFamilyAnnotations
+    *
+    * TODO: Fully document this function especially around Sefa's code to handle variants and indexes as I don't understand this
+    **/
+    public function processFamilyAnnotations(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
+        var toComplete = 0;
+
+        // First we work out how many annotations we need to process
+        // We do this so that it's easy for our onDone function to work out when all async callbacks have finished
+        // We used to use a timer to wait for all the callbacks to finish but that's not necessary
+        for(item in items){
+            var name  = '';
+            var hookCount = 0;
+
+            var index = null;
+            var variant = '1';
+            var hasName = false;
+
+            if(item.indexOf('(') != -1 || item.indexOf('-') != -1){
+                hasName = true;
+
+                var auxArray = item.split('');
+
+                for(j in 0...auxArray.length){
+                    if(auxArray[j] == '(' || auxArray[j] == '-'){
+                        if(auxArray[j] == '(') {
+                            index  = auxArray[j+1];
+                            variant = '1';
+                        }else if(auxArray[j] == '-') {
+                            index = null;
+                            variant = auxArray[j+1];
+                        }
+
+                        break;
+                    }
+
+                    name += auxArray[j];
+                }
+            }else{
+                name = item;
+            }
+
+            var j = 0;
+            var finished = false;
+            var showAsSgc = false;
+
+            while((mapResults.exists(name+'_'+j)==true)&&(finished==false)){
+                var keepgoing=true;
+                var res=mapResults.get(name+'_'+j);
+
+                if (mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
+                    res.sgc = 1;
+                    showAsSgc = true;
+                }
+
+                if(hasName==true){
+                    if(res.target_name_index!=index || res.variant_index!=variant){
+                        keepgoing=false;
+                    }
+                }
+                if(keepgoing==false){
+                    j++;
+                }else{
+                    toComplete += 1;
+                    if((annotations[annotation].hasClass!=null)&&(annotations[annotation].hasMethod!=null)){
+                        j++;
+                    }else{
+                        finished=true;
+                    }
+                }
+            }
+        }
+
+
+        var onDone = function(){
+            if(toComplete  == 0){
+                cb();
+            }
+        };
+
+        if(toComplete == 0){
+            cb();return;
+        }
+
+        for(item in items){
+            var hookCount = 0;
+
+            var index = null;
+            var variant = '1';
+            var hasName = false;
+            var name = '';
+
+            if(item.indexOf('(') != -1 || item.indexOf('-') != -1){
+                hasName = true;
+
+                var auxArray = item.split('');
+
+                for(j in 0...auxArray.length){
+                    if(auxArray[j] == '(' || auxArray[j] == '-'){
+                        if(auxArray[j] == '(') {
+                            index  = auxArray[j+1];
+                            variant = '1';
+                        }else if(auxArray[j] == '-') {
+                            index = null;
+                            variant = auxArray[j+1];
+                        }
+
+                        break;
+                    }
+
+                    name += auxArray[j];
+                }
+            }else{
+                name = item;
+            }
+
+            var j = 0;
+            var finished = false;
+            var showAsSgc = false;
+
+            while((mapResults.exists(name+'_'+j) == true) && (finished == false)){
+                var keepGoing = true;
+                var res = mapResults.get(name+'_'+j);
+
+                if(mapResults.get(name+'_'+ j).sgc == 1 || showAsSgc == true) {
+                    res.sgc = 1;
+                    showAsSgc = true;
+                }
+
+                if(hasName==true){
+                    if(res.target_name_index != index || res.variant_index != variant){
+                        keepGoing=false;
+                    }
+                }
+
+                if(keepGoing==false){
+                    j++;
+                }else{
+                    if((annotations[annotation].hasClass != null)&&(annotations[annotation].hasMethod != null)){
+                        var clazz = annotations[annotation].hasClass;
+                        var method :Dynamic = annotations[annotation].hasMethod;
+
+                        var _processAnnotation = function(r:HasAnnotationType){
+                            if(r.hasAnnot){
+                                var leafaux: PhyloTreeNode;
+                                leafaux = this.rootNode.leafNameToNode.get(item);
+
+                                leafaux.activeAnnotation[annotation] = true;
+                                if(leafaux.annotations[annotation] == null){
+                                    leafaux.annotations[annotation] = new PhyloAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = r.text;
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                }else{
+                                    if(annotations[annotation].splitresults == true){
+                                        leafaux.annotations[annotation].splitresults = true;
+
+                                        var z=0;
+
+                                        while(leafaux.annotations[annotation].alfaAnnot[z] != null){
+                                            z++;
+                                        }
+
+                                        leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                                        leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                        leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                        leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                        leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+                                        if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text){
+                                            leafaux.annotations[annotation].alfaAnnot[z] = null;
+                                        }
+                                    }else{
+                                        if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                            leafaux.annotations[annotation] = new PhyloAnnotation();
+                                            leafaux.annotations[annotation].myleaf = leafaux;
+                                            leafaux.annotations[annotation].text = '';
+                                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                        }
+                                    }
+                                }
+                            }
+
+                            toComplete--;
+                            onDone();
+                        };
+
+                        if(Reflect.isFunction(method)){
+                            method(name,res,option, annotations, item, _processAnnotation);
+                        }else{
+                            var hook : Dynamic = Reflect.field(Type.resolveClass(clazz), method);
+
+                            hook(name,res,option, annotations, item, _processAnnotation);
+                        }
+
+                        j++;
+                    }else {
+                        finished=true;
+
+                        var col = '';
+                        if(annotations[annotation].color[0] != null){
+                            col=annotations[annotation].color[0].color;
+                        }
+
+                        var r : HasAnnotationType = {hasAnnot : true, text : '',color : {color : col, used : true},defImage : annotations[annotation].defaultImg};
+
+                        var leafaux: PhyloTreeNode = this.rootNode.leafNameToNode.get(item);
+                        leafaux.activeAnnotation[annotation]=true;
+
+                        if(leafaux.annotations[annotation] == null){
+                            leafaux.annotations[annotation] = new PhyloAnnotation();
+                            leafaux.annotations[annotation].myleaf = leafaux;
+                            leafaux.annotations[annotation].text = '';
+                            leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                            leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                        }else{
+                            if(leafaux.annotations[annotation].splitresults == true){
+                                var z=0;
+
+                                while(leafaux.annotations[annotation].alfaAnnot[z]!=null){
+                                    z++;
+                                }
+
+                                leafaux.annotations[annotation].alfaAnnot[z] = new PhyloAnnotation();
+                                leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+                                leafaux.annotations[annotation].alfaAnnot[z].text = '';
+                                leafaux.annotations[annotation].alfaAnnot[z].defaultImg = annotations[annotation].defaultImg;
+                                leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res,option,r);
+
+                            }else{
+                                if(leafaux.annotations[annotation].option != annotations[annotation].optionSelected[0]){
+                                    leafaux.annotations[annotation] = new PhyloAnnotation();
+                                    leafaux.annotations[annotation].myleaf = leafaux;
+                                    leafaux.annotations[annotation].text = '';
+                                    leafaux.annotations[annotation].defaultImg = annotations[annotation].defaultImg;
+                                    leafaux.annotations[annotation].saveAnnotationData(annotation,res,option,r);
+                                }
+                            }
+                        }
+
+                        toComplete--;
+                        onDone();
+                    }
+                }
+            }
+        }
+    }
+
+    /**Function used to remove the previous results of a PopUp Window Annotations. **/
+    public function cleanAnnotResults(annot:Int){
+
+        var items=new Array();
+        for(i in 0 ... this.rootNode.targets.length){
+            var item=this.rootNode.targets[i];
+
+            var leafaux=this.rootNode.leafNameToNode.get(item);
+            if(leafaux.annotations[annot]!=null) leafaux.annotations[annot].hasAnnot=false;
+        }
+
+    }
+
 }
 

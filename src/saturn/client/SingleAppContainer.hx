@@ -732,8 +732,8 @@ class SingleAppContainer {
                                     viewer.treeName='';
                                     viewer.treeType='gene';
                                     viewer.newickStr='';
-                                    viewer.searchedGenes=new Array();
-                                    viewer.searchedGenes=mylist;
+                                    viewer.annotationManager.searchedGenes=new Array();
+                                    viewer.annotationManager.searchedGenes=mylist;
                                     //we need to create a TreeNode and add it into our geneMap structure
                                     var geneNode=new PhyloTreeNode(null, form.items.items[i].inputValue, true, 0);
 
@@ -1254,7 +1254,7 @@ class SingleAppContainer {
                     var form = this.popUpWindow.getComponent('wform');
                     if (form.isValid()) {
 
-                       viewer.cleanAnnotResults(annot);
+                       viewer.annotationManager.cleanAnnotResults(annot);
 
                        var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
                         hook(annot,form,tree_type,family,searchGenes,viewer, function(){

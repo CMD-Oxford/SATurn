@@ -213,11 +213,11 @@ class RNASeqAnnotation {
                     viewer.annotationManager.annotations[annotation].fromresults[1]=seqexp_fc_cutoff;
                     viewer.annotationManager.annotations[annotation].fromresults[2]=seq_evaluator;
                     if(viewer.treeName==''){
-                        viewer.addAnnotDataGenes(check_results,annotation,function(){
+                        viewer.annotationManager.addAnnotDataGenes(check_results,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.addAnnotData(check_results,annotation,0,function(){
+                        viewer.annotationManager.addAnnotData(check_results,annotation,0,function(){
                             viewer.newposition(0,0);
                             callback(db_results,null);
                         });

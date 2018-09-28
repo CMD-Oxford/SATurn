@@ -146,12 +146,12 @@ class ProteinTumorLevelAnnotation {
 
                     if(viewer.treeName == ''){
                         // We get here for table view
-                        viewer.addAnnotDataGenes(db_results, annotation, function(){
+                        viewer.annotationManager.addAnnotDataGenes(db_results, annotation, function(){
                             cb(db_results, null);
                         });
                     }else{
                         // We get here for tree view
-                        viewer.addAnnotData(db_results, annotation, 0, function(){
+                        viewer.annotationManager.addAnnotData(db_results, annotation, 0, function(){
                             viewer.newposition(0, 0);
 
                             cb(db_results, null);
@@ -309,12 +309,12 @@ class ProteinTumorLevelAnnotation {
 
                     if(viewer.treeName == ''){
                         // We get here for table view
-                        viewer.addAnnotDataGenes(db_results, annotation, function(){
+                        viewer.annotationManager.addAnnotDataGenes(db_results, annotation, function(){
                             cb(db_results, null);
                         });
                     }else{
                         // We get here for tree view
-                        viewer.addAnnotData(db_results, annotation, 0, function(){
+                        viewer.annotationManager.addAnnotData(db_results, annotation, 0, function(){
                             viewer.newposition(0, 0);
 
                             cb(db_results, null);
