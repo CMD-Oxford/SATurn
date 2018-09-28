@@ -30,12 +30,20 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     var selectedNode : PhyloTreeNode;
     var contextDiv = null;
 
+    var annotationManager : PhyloAnnotationManager;
+
     var nodeClickListeners : Array<PhyloTreeNode->PhyloScreenData->Dynamic->Void> = new Array<PhyloTreeNode->PhyloScreenData->Dynamic->Void>();
 
-    public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null){
+    public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager){
         this.parent = parentElement;
         this.width = width;
         this.height = height;
+
+        this.annotationManager = annotationManager;
+
+        if(annotationManager == null){
+            annotationManager = new PhyloAnnotationManager(null);
+        }
 
         this.rootNode=rootNode;
 
@@ -144,15 +152,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
                    // createCanvas();
 
                     if(e.wheelDelta<0){
-                        if(config.scale<=4.0){
-                            config.scale = config.scale+0.2;
-                        }
 
-                        zoomIn([],[], config.scale);
+                        zoomIn();
                     }else{
-                        config.scale = config.scale-0.2;
-
-                        zoomOut([],[],config.scale);
+                        zoomOut();
                     }
                 });
 
@@ -161,6 +164,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
                 var mouseDown = false;
 
                 canvas.addEventListener('mousedown', function(e : Dynamic) {
+                    annotationManager.hideAnnotationWindows();
+
                     mouseDownX=e.pageX - translateX;
                     mouseDownY=e.pageY - translateY;
 
@@ -177,14 +182,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
                     if(mouseDown && mouseDownX != 0 && mouseDownY != 0){
                         //parent.removeChild(canvas);
 
-                        createCanvas();
 
-                        translateX = e.pageX - mouseDownX;
-                        translateY = e.pageY - mouseDownY;
 
-                        js.Browser.console.log(translateX);
+                        newPosition(e.pageX - mouseDownX,e.pageY - mouseDownY);
 
-                        redraw([],[],false);
                     }
                 });
 
@@ -195,13 +196,26 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
                     var d = checkPosition(e);
                     if (d!=null) {
-                        selectedNode = rootNode.nodeIdToNode.get(d.nodeId);
+                        if(d.isAnnot==true){
+                            annotationManager.showScreenData(false,d,e.pageX,e.pageY);
+                        }else{
+                            selectedNode = rootNode.nodeIdToNode.get(d.nodeId);
 
-                        notifyNodeClickListeners(selectedNode, d, e);
+                            notifyNodeClickListeners(selectedNode, d, e);
+                        }
                     }
                 });
             }
         }
+    }
+
+    public function newPosition(x : Float, y : Float){
+        createCanvas();
+
+        translateX = x;
+        translateY = y;
+
+        redraw(false);
     }
 
     public function drawLine (x0:Float,y0:Float, x1:Float, y1:Float,strokeStyle:Dynamic, lineWidth : Float){
@@ -419,35 +433,39 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
 
-    public function zoomIn(annotations:Dynamic, annotList:Array<PhyloAnnotation>, scale:Float){
+    public function zoomIn(scale:Float = null){
         //WorkspaceApplication.getApplication().debug("hello");
+        if(scale == null){
+            if(config.scale<=4.0){
+                config.scale = config.scale+0.2;
+            }
+
+            scale = config.scale;
+        }
 
         this.scale=scale;
 
-        this.redraw(annotations, annotList);
+        this.redraw();
     }
 
-    public function zoomOut(annotations:Dynamic, annotList:Array<PhyloAnnotation>, scale:Float){
+    public function zoomOut(scale:Float = null){
+        if(scale == null){
+            config.scale = config.scale-0.2;
+
+            scale = config.scale;
+        }
 
         //if (scale>0.4){ // do we need a minimum scale?
 
-            this.scale=scale;
+        this.scale=scale;
 
-        this.redraw(annotations, annotList);
+        this.redraw();
         //}
     }
 
-    public function redraw(annotations:Dynamic = null, annotList:Array<PhyloAnnotation> = null, create=true){
+    public function redraw(create=true){
         if(create){
             createCanvas();
-        }
-
-        if(annotations == null ){
-            annotations = [];
-        }
-
-        if(annotList == null){
-            annotList = [];
         }
 
         var newWidth = this.canvas.width * this.scale;
@@ -459,7 +477,14 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         this.ctx.scale(this.scale, this.scale);
         var radialRendererObj  : Dynamic = new PhyloRadialTreeLayout(this.canvas.width, this.canvas.height);
 
-        radialRendererObj.renderCircle(this.rootNode,this, annotations, annotList);
+        this.rootNode.screen=new Array();// we need to initizalize the array everytime we render the tree
+
+        this.rootNode.rectangleLeft=Std.int(this.rootNode.children[0].x);
+        this.rootNode.rectangleRight=Std.int(this.rootNode.children[0].x);
+        this.rootNode.rectangleBottom=Std.int(this.rootNode.children[0].y);
+        this.rootNode.rectangleTop=Std.int(this.rootNode.children[0].y);
+
+        radialRendererObj.renderCircle(this.rootNode,this, annotationManager.activeAnnotation, annotationManager.annotations);
 
         this.ctx.restore();
     }

@@ -2187,5 +2187,18 @@ $('.vertical .progress-fill span').each(function(){
 
     }
 
+    public function hideAnnotationWindows(){
+        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
+
+        if(container != null){
+            container.hideExportSubMenu();
+            container.hideHelpingDiv();
+
+            if(WorkspaceApplication.getApplication().getScreenMode() != ScreenMode.DEFAULT){
+                container.hideSubMenuToolBar();
+            }
+        }
+    }
+
 }
 
