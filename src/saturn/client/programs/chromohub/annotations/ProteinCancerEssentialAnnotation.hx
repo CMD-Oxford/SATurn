@@ -50,7 +50,7 @@ class ProteinCancerEssentialAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
             var score = selectedAnnotations[0].cancer_score;
             var cancer_type = selectedAnnotations[0].cancer_types;
             var alias;
@@ -122,13 +122,13 @@ class ProteinCancerEssentialAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_score' : cancerScore, 'searchGenes' : searchGenes, 'cancer_types' :  cancerTypes}];
-        viewer.setSelectedAnnotationOptions(annotation, args);
+        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookCancerEssential', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.activeAnnotation[annotation] = true;
+                    viewer.annotationManager.activeAnnotation[annotation] = true;
 
                     if(viewer.treeName == ''){
                         // We get here for table view

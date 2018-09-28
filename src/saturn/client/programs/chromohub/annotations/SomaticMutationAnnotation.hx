@@ -49,7 +49,7 @@ class SomaticMutationAnnotation {
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
             var family=viewer.treeName;
             var somatic_mutations_list: Map<String,Dynamic>;
-            somatic_mutations_list=viewer.annotations[annotation].fromresults[8];
+            somatic_mutations_list=viewer.annotationManager.annotations[annotation].fromresults[8];
 
             var key:String;
             var finalResult=null;
@@ -82,7 +82,7 @@ class SomaticMutationAnnotation {
                     sm_col = '#ff0000';
                 }
 
-                var somatic_mutations_list: Map<String,Dynamic> = viewer.annotations[annotation].fromresults[8];
+                var somatic_mutations_list: Map<String,Dynamic> = viewer.annotationManager.annotations[annotation].fromresults[8];
 
                 // TODO - Why is this hard-coded!
                 var annotation=24;
@@ -98,7 +98,7 @@ class SomaticMutationAnnotation {
 
                         auxResult[i][11]=description;
                         somatic_mutations_list.set(key,auxResult);
-                        viewer.annotations[annotation].fromresults[8]=somatic_mutations_list;
+                        viewer.annotationManager.annotations[annotation].fromresults[8]=somatic_mutations_list;
                     }
                 }
 
@@ -141,7 +141,7 @@ class SomaticMutationAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
             var somatic_mutations_list:Map<String,Array<Dynamic>>;
-            somatic_mutations_list=viewer.annotations[annotation].fromresults[8];
+            somatic_mutations_list=viewer.annotationManager.annotations[annotation].fromresults[8];
 
             var key:Dynamic;
             var l=new Array<Dynamic>();
@@ -154,12 +154,12 @@ class SomaticMutationAnnotation {
             }
 
             var sm_page:String;
-            var patient_cutoff=viewer.annotations[annotation].fromresults[4];
-            var sm_mutated_cutoff=viewer.annotations[annotation].fromresults[3];
-            var validated=viewer.annotations[annotation].fromresults[7];
-            var nonsilent=viewer.annotations[annotation].fromresults[6];
-            var sm_mutated_dynamic=viewer.annotations[annotation].fromresults[1];
-            var sm_mutated_cutoff_box=viewer.annotations[annotation].fromresults[2];
+            var patient_cutoff=viewer.annotationManager.annotations[annotation].fromresults[4];
+            var sm_mutated_cutoff=viewer.annotationManager.annotations[annotation].fromresults[3];
+            var validated=viewer.annotationManager.annotations[annotation].fromresults[7];
+            var nonsilent=viewer.annotationManager.annotations[annotation].fromresults[6];
+            var sm_mutated_dynamic=viewer.annotationManager.annotations[annotation].fromresults[1];
+            var sm_mutated_cutoff_box=viewer.annotationManager.annotations[annotation].fromresults[2];
 
             if(sm_mutated_dynamic==true) {
                 sm_page =  "somatic_mutations_dynamic.php";
@@ -309,14 +309,14 @@ class SomaticMutationAnnotation {
             results_cutoff=2;
         }
 
-        viewer.annotations[annotation].fromresults[0]=mutsig;
-        viewer.annotations[annotation].fromresults[1]=mutated_dynamic;
-        viewer.annotations[annotation].fromresults[2]=mutated_cutoff_box;
-        viewer.annotations[annotation].fromresults[3]=mutated_cutoff;
-        viewer.annotations[annotation].fromresults[4]=patient_cutoff;
-        viewer.annotations[annotation].fromresults[5]=results_cutoff;
-        viewer.annotations[annotation].fromresults[6]=nonsilent;
-        viewer.annotations[annotation].fromresults[7]=validated;
+        viewer.annotationManager.annotations[annotation].fromresults[0]=mutsig;
+        viewer.annotationManager.annotations[annotation].fromresults[1]=mutated_dynamic;
+        viewer.annotationManager.annotations[annotation].fromresults[2]=mutated_cutoff_box;
+        viewer.annotationManager.annotations[annotation].fromresults[3]=mutated_cutoff;
+        viewer.annotationManager.annotations[annotation].fromresults[4]=patient_cutoff;
+        viewer.annotationManager.annotations[annotation].fromresults[5]=results_cutoff;
+        viewer.annotationManager.annotations[annotation].fromresults[6]=nonsilent;
+        viewer.annotationManager.annotations[annotation].fromresults[7]=validated;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookSomaticMutations', [{'treeType':tree_type,'familyTree':family,'sm_mutsig':mutsig,'sm_mutated_dynamic':mutated_dynamic,'sm_mutated_cutoff_box':mutated_cutoff_box,
             'sm_mutated_cutoff':mutated_cutoff,'sm_patient_cutoff':patient_cutoff,'sm_results_cutoff':results_cutoff,'sm_nonsilent':nonsilent,'sm_validated':validated,'searchGenes':searchGenes}], null, false,function(db_results:Dynamic, error){
@@ -398,8 +398,8 @@ class SomaticMutationAnnotation {
                     }
 
 
-                    viewer.annotations[annotation].fromresults[8]=somatic_mutations_list;
-                    viewer.activeAnnotation[annotation]=true;
+                    viewer.annotationManager.annotations[annotation].fromresults[8]=somatic_mutations_list;
+                    viewer.annotationManager.activeAnnotation[annotation]=true;
                     if(viewer.treeName==''){
                         viewer.addAnnotDataGenes(fresults,annotation,function(){
                             callback(db_results,null);

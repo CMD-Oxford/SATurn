@@ -40,7 +40,7 @@ class RNASeqAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
             var all_results:Dynamic;
-            all_results=viewer.annotations[screenData.annot].fromresults[0];
+            all_results=viewer.annotationManager.annotations[screenData.annot].fromresults[0];
             var w=0;
             var diseaselist=new Array();
             var mapauxx=new Map<String,Bool>();
@@ -62,9 +62,9 @@ class RNASeqAnnotation {
 
                     var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
                     var all_results:Dynamic;
-                    all_results=viewer.annotations[screenData.annot].fromresults[0];
-                    var seqexp_fc_cutoff=viewer.annotations[screenData.annot].fromresults[1];
-                    var seq_evaluator=viewer.annotations[screenData.annot].fromresults[2];
+                    all_results=viewer.annotationManager.annotations[screenData.annot].fromresults[0];
+                    var seqexp_fc_cutoff=viewer.annotationManager.annotations[screenData.annot].fromresults[1];
+                    var seq_evaluator=viewer.annotationManager.annotations[screenData.annot].fromresults[2];
 
                     var table = "<table style='font-size:12px'>
                       <tr><th width='33%'>Cancer Type</th>
@@ -208,10 +208,10 @@ class RNASeqAnnotation {
                             }
                         }
                     }
-                    viewer.activeAnnotation[annotation]=true;
-                    viewer.annotations[annotation].fromresults[0]=all_results;
-                    viewer.annotations[annotation].fromresults[1]=seqexp_fc_cutoff;
-                    viewer.annotations[annotation].fromresults[2]=seq_evaluator;
+                    viewer.annotationManager.activeAnnotation[annotation]=true;
+                    viewer.annotationManager.annotations[annotation].fromresults[0]=all_results;
+                    viewer.annotationManager.annotations[annotation].fromresults[1]=seqexp_fc_cutoff;
+                    viewer.annotationManager.annotations[annotation].fromresults[2]=seq_evaluator;
                     if(viewer.treeName==''){
                         viewer.addAnnotDataGenes(check_results,annotation,function(){
                             callback(db_results,null);

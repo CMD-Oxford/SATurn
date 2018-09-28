@@ -50,7 +50,7 @@ class ProteinLevelNormalTissuesAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
 
             var proteinLevels = [];
             proteinLevels = selectedAnnotations[0].protein_levels;
@@ -175,14 +175,14 @@ class ProteinLevelNormalTissuesAnnotation {
             'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
             'reliabilities': reliability
         }];
-        viewer.setSelectedAnnotationOptions(annotation, args);
+        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         // Make web-service call
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevels', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.activeAnnotation[annotation] = true;
+                    viewer.annotationManager.activeAnnotation[annotation] = true;
 
                     if(viewer.treeName == ''){
                         // We get here for table view
@@ -241,7 +241,7 @@ class ProteinLevelNormalTissuesAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
 
             var proteinLevels = [];
             proteinLevels = selectedAnnotations[0].protein_levels;
@@ -357,14 +357,14 @@ class ProteinLevelNormalTissuesAnnotation {
             'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
             'reliabilities': reliability
         }];
-        viewer.setSelectedAnnotationOptions(annotation, args);
+        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         // Make web-service call
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevelsPercentage', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.activeAnnotation[annotation] = true;
+                    viewer.annotationManager.activeAnnotation[annotation] = true;
 
                     if(viewer.treeName == ''){
                         // We get here for table view

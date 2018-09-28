@@ -104,7 +104,7 @@ class ChromoHubViewerHome {
 
         annotations = new Array<Dynamic>();
 
-        viewer.jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
+        viewer.annotationManager.jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
 
         for(i in 1...cols.length){
             annotations[i-1] = [];
@@ -122,7 +122,7 @@ class ChromoHubViewerHome {
                 callBack(r);
             };
 
-            viewer.jsonFile.btnGroup[0].buttons.push({
+            viewer.annotationManager.jsonFile.btnGroup[0].buttons.push({
                 label: cols[i],
                 hookName: hookName,
                 annotCode: i,
@@ -153,8 +153,8 @@ class ChromoHubViewerHome {
             }
         }
 
-        viewer.fillAnnotationwithJSonData();
-        viewer.createViewOptions();
+        viewer.annotationManager.fillAnnotationwithJSonData();
+        viewer.annotationManager.createViewOptions();
 
 
         /*{

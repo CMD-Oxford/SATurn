@@ -1264,16 +1264,16 @@ class SingleAppContainer {
                        // if(viewer.userMessage==true){
                          //   showMessageWindow();
                         //}
-                        addImageToLegend(viewer.annotations[annot].legend, annot);
+                        addImageToLegend(viewer.annotationManager.annotations[annot].legend, annot);
                         legendPanel.expand();
                         hidePopUpWindow();
 
-                        viewer.activeAnnotation[annot]=true;
+                        viewer.annotationManager.activeAnnotation[annot]=true;
                         clearOptionsToolBar();
-                        viewer.createViewOptions();
-                        addElemToOptionsToolBar(viewer.viewOptions);
+                        viewer.annotationManager.createViewOptions();
+                        addElemToOptionsToolBar(viewer.annotationManager.viewOptions);
                         var elem=js.Browser.document.getElementById('optionToolBarId');
-                        elem.scrollTop=viewer.menuScroll;
+                        elem.scrollTop=viewer.annotationManager.menuScroll;
                     }
                 }
             },

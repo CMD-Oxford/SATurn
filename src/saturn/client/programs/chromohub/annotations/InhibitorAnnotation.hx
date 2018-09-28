@@ -31,8 +31,8 @@ class InhibitorAnnotation {
             WorkspaceApplication.getApplication().debug("access db");
             al='';
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
-            var chemi_sel=viewer.annotations[10].fromresults[1];
-            var ligand_select=viewer.annotations[10].fromresults[0];
+            var chemi_sel=viewer.annotationManager.annotations[10].fromresults[1];
+            var ligand_select=viewer.annotationManager.annotations[10].fromresults[0];
 
             var params = null;
 
@@ -138,13 +138,13 @@ class InhibitorAnnotation {
             ligand_select='1';
         }
 
-        viewer.annotations[annotation].fromresults[0]=ligand_select;
-        viewer.annotations[annotation].fromresults[1]=chemi_sel;
+        viewer.annotationManager.annotations[annotation].fromresults[0]=ligand_select;
+        viewer.annotationManager.annotations[annotation].fromresults[1]=chemi_sel;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookInhibitors',[{'treeType':tree_type,'familyTree':family,'ligand_select':ligand_select,'chemi_sel':chemi_sel,'searchGenes':searchGenes}], null, false,function(db_results, error){
             if(error == null) {
                 if (db_results!=null){
-                    viewer.activeAnnotation[annotation]=true;
+                    viewer.annotationManager.activeAnnotation[annotation]=true;
                     if(viewer.treeName==''){
                         viewer.addAnnotDataGenes(db_results,annotation,function(){
                             callback(db_results,null);

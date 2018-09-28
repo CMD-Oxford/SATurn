@@ -1,6 +1,8 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.chromohub.ChromoHubAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloScreenData;
+import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.core.CommonCore;
 
 class DomainAnnotation {
@@ -8,12 +10,12 @@ class DomainAnnotation {
 
     }
 
-    static function hasDomain(target: String, data: Dynamic, selected:Int,annotList:Array<ChromoHubAnnotation>, item:String, cb : HasAnnotationType->Void){
+    static function hasDomain(target: String, data: Dynamic, selected:Int,annotList:Array<PhyloAnnotation>, item:String, cb : HasAnnotationType->Void){
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#2980d6',used:true},defImage:0};
         cb(r);
     }
 
-    static function divDomain(screenData: ChromoHubScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
+    static function divDomain(screenData: PhyloScreenData,x:String,y:String,tree_type:String, callBack : Dynamic->Void){
         //ProteinSubFamilyAnnotation.divSubFamily(screenData, x, y, tree_type, callBack);
 
         if(screenData.divAccessed==false){
@@ -138,7 +140,7 @@ class DomainAnnotation {
         });
     }
 
-    static function familyDomaintable(screenData: ChromoHubScreenData,x:String,y:String,targetFamily:String,tree_type:String, callBack : Dynamic->Void){
+    static function familyDomaintable(screenData: PhyloScreenData,x:String,y:String,targetFamily:String,tree_type:String, callBack : Dynamic->Void){
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 

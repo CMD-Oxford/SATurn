@@ -29,9 +29,9 @@ class SHRNAAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
             var shrna_results=new Map<String,Dynamic>();
-            shrna_results=viewer.annotations[screenData.annot].fromresults[3];
-            var shrna_num_cutoff=viewer.annotations[screenData.annot].fromresults[1];
-            var shrna_cutoff=viewer.annotations[screenData.annot].fromresults[0];
+            shrna_results=viewer.annotationManager.annotations[screenData.annot].fromresults[3];
+            var shrna_num_cutoff=viewer.annotationManager.annotations[screenData.annot].fromresults[1];
+            var shrna_cutoff=viewer.annotationManager.annotations[screenData.annot].fromresults[0];
 
             var table='';
             var fibrotable='';
@@ -175,7 +175,7 @@ class SHRNAAnnotation {
             if(flag==true) shrna_flag=true;
         }
 
-        viewer.annotations[annotation].fromresults[2]=shrna_flag;
+        viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
 
         if(shrna_flag==true){
             var al='shRnaflaq';
@@ -224,9 +224,9 @@ class SHRNAAnnotation {
             shrna_cutoff='-2';
         }
 
-        viewer.annotations[annotation].fromresults[0]=shrna_cutoff;
-        viewer.annotations[annotation].fromresults[1]=shrna_num_cutoff;
-        viewer.annotations[annotation].fromresults[2]=shrna_flag;
+        viewer.annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
+        viewer.annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
+        viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookshRna', [{'treeType':tree_type,'familyTree':family,'shrna_cutoff':shrna_cutoff,'shrna_num_cutoff':shrna_num_cutoff,'shrna_flag':shrna_flag,'flagresults':flagresults,'searchGenes':searchGenes}], null, false,function(db_results:Array<Dynamic>, error){
             if(error == null) {
@@ -322,11 +322,11 @@ class SHRNAAnnotation {
                                     }
                                 }
 
-                                viewer.annotations[annotation].fromresults[3]=shrna_results;
-                                viewer.annotations[annotation].fromresults[0]=shrna_cutoff;
-                                viewer.annotations[annotation].fromresults[1]=shrna_num_cutoff;
-                                viewer.annotations[annotation].fromresults[2]=shrna_flag;
-                                viewer.activeAnnotation[annotation]=true;
+                                viewer.annotationManager.annotations[annotation].fromresults[3]=shrna_results;
+                                viewer.annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
+                                viewer.annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
+                                viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
+                                viewer.annotationManager.activeAnnotation[annotation]=true;
                                 if(viewer.treeName==''){
                                     viewer.addAnnotDataGenes(fresults,annotation,function(){
                                         callback(db_results,null);

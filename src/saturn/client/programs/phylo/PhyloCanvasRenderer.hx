@@ -66,17 +66,39 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         contextDiv.style.left = e.clientX;
         contextDiv.style.top = e.clientY;
 
-        contextDiv.innerText = 'Options';
+        var wedgeInputLabel :Dynamic = js.Browser.document.createElement('label');
+        wedgeInputLabel.setAttribute('for','wedge_colour_input');
+        wedgeInputLabel.setAttribute('for','wedge_colour_input');
+        wedgeInputLabel.innerText = 'Pick wedge colour';
+        wedgeInputLabel.style.marginRight = '5px';
 
         var wedgeInputColour :Dynamic = js.Browser.document.createElement('input');
         wedgeInputColour.setAttribute('type', 'color');
+        wedgeInputColour.setAttribute('name', 'wedge_colour_input');
         wedgeInputColour.addEventListener('change', function(){
             node.wedgeColour = wedgeInputColour.value;
 
             redraw();
         });
 
+        contextDiv.appendChild(wedgeInputLabel);
         contextDiv.appendChild(wedgeInputColour);
+
+        if(node.wedgeColour != null){
+            var wedgeButtonLabel :Dynamic = js.Browser.document.createElement('button');
+            wedgeButtonLabel.setAttribute('for','wedge_colour_input');
+            wedgeButtonLabel.setAttribute('for','wedge_colour_input');
+            wedgeButtonLabel.innerText = 'Remove Wedge';
+            wedgeButtonLabel.style.marginRight = '5px';
+
+            wedgeButtonLabel.addEventListener('click', function(){
+                node.wedgeColour = null;
+
+                redraw();
+            });
+
+            contextDiv.appendChild(wedgeButtonLabel);
+        }
 
         parent.appendChild(contextDiv);
     }
@@ -98,11 +120,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             translateY = 0;
             translateX = 0;
         }else{
-            var div = js.Browser.document.createElement('div');
+            /*var div = js.Browser.document.createElement('div');
             div.style.width = '200px';
             div.style.height = '200px';
 
-            parent.appendChild(div);
+            parent.appendChild(div);*/
 
             this.canvas=js.Browser.document.createElement("canvas");
             parent.appendChild(this.canvas);
@@ -119,7 +141,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
                 canvas.addEventListener('mousewheel', function(e : Dynamic) {
                     //parent.removeChild(canvas);
 
-                    createCanvas();
+                   // createCanvas();
 
                     if(e.wheelDelta<0){
                         if(config.scale<=4.0){
@@ -162,7 +184,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
                         js.Browser.console.log(translateX);
 
-                        redraw();
+                        redraw([],[],false);
                     }
                 });
 
@@ -415,7 +437,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         //}
     }
 
-    public function redraw(annotations:Dynamic = null, annotList:Array<PhyloAnnotation> = null){
+    public function redraw(annotations:Dynamic = null, annotList:Array<PhyloAnnotation> = null, create=true){
+        if(create){
+            createCanvas();
+        }
+
         if(annotations == null ){
             annotations = [];
         }
@@ -466,8 +492,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         auxx=Math.round(e.clientX);
         auxy=Math.round(e.clientY);
 
-        auxx=Math.round(e.pageX - canvas.offsetLeft);
-        auxy=Math.round(e.pageY - canvas.offsetTop);
+        auxx=Math.round(e.pageX - canvas.offsetLeft - translateX);
+        auxy=Math.round(e.pageY - canvas.offsetTop - translateY);
 
         var x,y:Dynamic;
         x=auxx-Math.round(cx);

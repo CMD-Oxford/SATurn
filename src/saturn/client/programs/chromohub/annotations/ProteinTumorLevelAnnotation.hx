@@ -47,7 +47,7 @@ class ProteinTumorLevelAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
             var cancer_type = selectedAnnotations[0].cancer_type;
             var proteinLevels = [];
             proteinLevels = selectedAnnotations[0].protein_levels;
@@ -136,13 +136,13 @@ class ProteinTumorLevelAnnotation {
         }
 
         var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
-        viewer.setSelectedAnnotationOptions(annotation, args);
+        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.activeAnnotation[annotation] = true;
+                    viewer.annotationManager.activeAnnotation[annotation] = true;
 
                     if(viewer.treeName == ''){
                         // We get here for table view
@@ -201,7 +201,7 @@ class ProteinTumorLevelAnnotation {
 
             var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
 
-            var selectedAnnotations = viewer.getSelectedAnnotationOptions(screenData.annot);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
             var cancer_type = selectedAnnotations[0].cancer_type;
 
             var proteinLevels = [];
@@ -298,14 +298,14 @@ class ProteinTumorLevelAnnotation {
             'in_percentage': percentage,
             'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels
         }];
-        viewer.setSelectedAnnotationOptions(annotation, args);
+        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         // Make web-service call
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevelsPercentage', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.activeAnnotation[annotation] = true;
+                    viewer.annotationManager.activeAnnotation[annotation] = true;
 
                     if(viewer.treeName == ''){
                         // We get here for table view

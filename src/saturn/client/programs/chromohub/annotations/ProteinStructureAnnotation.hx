@@ -172,7 +172,7 @@ class ProteinStructureAnnotation {
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookStructures', [{'treeType':tree_type,'familyTree':family,'st_select':option,'cutoff':cutoff,'xray':xray, 'searchGenes':searchGenes}], null, false,function(db_results, error){
             if(error == null) {
                 if (db_results!=null){
-                    viewer.activeAnnotation[annotation]=true;
+                    viewer.annotationManager.activeAnnotation[annotation]=true;
                     if(viewer.treeName==''){
                         viewer.addAnnotDataGenes(db_results,annotation,function(){
                             callback(db_results,null);
