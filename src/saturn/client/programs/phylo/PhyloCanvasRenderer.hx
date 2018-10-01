@@ -34,16 +34,24 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
     var nodeClickListeners : Array<PhyloTreeNode->PhyloScreenData->Dynamic->Void> = new Array<PhyloTreeNode->PhyloScreenData->Dynamic->Void>();
 
-    public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager){
+    var contextMenu : PhyloContextMenu;
+    var toolBar : PhyloToolBar;
+
+    var container : Dynamic;
+
+    public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager = null){
         this.parent = parentElement;
         this.width = width;
         this.height = height;
 
         this.annotationManager = annotationManager;
 
-        if(annotationManager == null){
-            annotationManager = new PhyloAnnotationManager(null);
+        if(this.annotationManager == null){
+            this.annotationManager = new PhyloAnnotationManager(null);
         }
+
+        this.annotationManager.rootNode = rootNode;
+        this.annotationManager.canvas = this;
 
         this.rootNode=rootNode;
 
@@ -59,7 +67,35 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             addNodeClickListener(defaultNodeClickListener);
         }
 
+        createContainer();
+
+        if(config.enableToolbar){
+            toolBar = new PhyloToolBar(this);
+        }
+
         createCanvas();
+    }
+
+    public function createContainer(){
+        container = js.Browser.document.createElement('div');
+
+        parent.appendChild(container);
+    }
+
+    public function getCanvas() : Dynamic {
+        return canvas;
+    }
+
+    public function getParent() : Dynamic {
+        return parent;
+    }
+
+    public function getContainer() : Dynamic {
+        return container;
+    }
+
+    public function destroy()  {
+        parent.removeChild(container);
     }
 
     public function notifyNodeClickListeners(node : PhyloTreeNode, data : PhyloScreenData, e :Dynamic){
@@ -69,46 +105,21 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function defaultNodeClickListener(node : PhyloTreeNode, data : PhyloScreenData, e : Dynamic){
-        contextDiv = js.Browser.document.createElement('div');
-        contextDiv.style.position = 'absolute';
-        contextDiv.style.left = e.clientX;
-        contextDiv.style.top = e.clientY;
+        if(node == null){
+            if(contextMenu != null){
+                contextMenu.destroyContainer();
 
-        var wedgeInputLabel :Dynamic = js.Browser.document.createElement('label');
-        wedgeInputLabel.setAttribute('for','wedge_colour_input');
-        wedgeInputLabel.setAttribute('for','wedge_colour_input');
-        wedgeInputLabel.innerText = 'Pick wedge colour';
-        wedgeInputLabel.style.marginRight = '5px';
+                contextMenu = null;
 
-        var wedgeInputColour :Dynamic = js.Browser.document.createElement('input');
-        wedgeInputColour.setAttribute('type', 'color');
-        wedgeInputColour.setAttribute('name', 'wedge_colour_input');
-        wedgeInputColour.addEventListener('change', function(){
-            node.wedgeColour = wedgeInputColour.value;
+                return;
+            }
+        }else{
+            if(contextMenu != null){
+                contextMenu.destroyContainer();
+            }
 
-            redraw();
-        });
-
-        contextDiv.appendChild(wedgeInputLabel);
-        contextDiv.appendChild(wedgeInputColour);
-
-        if(node.wedgeColour != null){
-            var wedgeButtonLabel :Dynamic = js.Browser.document.createElement('button');
-            wedgeButtonLabel.setAttribute('for','wedge_colour_input');
-            wedgeButtonLabel.setAttribute('for','wedge_colour_input');
-            wedgeButtonLabel.innerText = 'Remove Wedge';
-            wedgeButtonLabel.style.marginRight = '5px';
-
-            wedgeButtonLabel.addEventListener('click', function(){
-                node.wedgeColour = null;
-
-                redraw();
-            });
-
-            contextDiv.appendChild(wedgeButtonLabel);
+            contextMenu = new PhyloContextMenu(parent, this, node, data, e);
         }
-
-        parent.appendChild(contextDiv);
     }
 
     public function addNodeClickListener(listener : PhyloTreeNode->PhyloScreenData->Dynamic->Void){
@@ -125,8 +136,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
             ctx.restore();
 
-            translateY = 0;
-            translateX = 0;
+            //translateY = 0;
+            //translateX = 0;
         }else{
             /*var div = js.Browser.document.createElement('div');
             div.style.width = '200px';
@@ -135,7 +146,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             parent.appendChild(div);*/
 
             this.canvas=js.Browser.document.createElement("canvas");
-            parent.appendChild(this.canvas);
+            container.appendChild(this.canvas);
 
             this.canvas.width=width;
             this.canvas.height=height;
@@ -165,6 +176,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
                 canvas.addEventListener('mousedown', function(e : Dynamic) {
                     annotationManager.hideAnnotationWindows();
+                    annotationManager.closeAnnotWindows();
 
                     mouseDownX=e.pageX - translateX;
                     mouseDownY=e.pageY - translateY;
@@ -172,20 +184,22 @@ class PhyloCanvasRenderer implements PhyloRendererI {
                     mouseDown = true;
 
                     if(contextDiv != null){
-                        parent.removeChild(contextDiv);
+                        container.removeChild(contextDiv);
 
                         contextDiv = null;
                     }
+
+                    notifyNodeClickListeners(null,null,null);
                 });
 
                 canvas.addEventListener('mousemove', function(e : Dynamic) {
                     if(mouseDown && mouseDownX != 0 && mouseDownY != 0){
-                        //parent.removeChild(canvas);
-
-
+                        //annotationManager.hideAnnotationWindows();
+                        //annotationManager.closeAnnotWindows();
 
                         newPosition(e.pageX - mouseDownX,e.pageY - mouseDownY);
 
+                        notifyNodeClickListeners(null,null,null);
                     }
                 });
 
@@ -203,6 +217,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
                             notifyNodeClickListeners(selectedNode, d, e);
                         }
+                    }else{
+                        notifyNodeClickListeners(null, null, e);
                     }
                 });
             }
@@ -438,6 +454,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         if(scale == null){
             if(config.scale<=4.0){
                 config.scale = config.scale+0.2;
+
+
             }
 
             scale = config.scale;
@@ -451,6 +469,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     public function zoomOut(scale:Float = null){
         if(scale == null){
             config.scale = config.scale-0.2;
+
+
 
             scale = config.scale;
         }
@@ -468,8 +488,13 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             createCanvas();
         }
 
+        toolBar.setTitle(config.title);
+
         var newWidth = this.canvas.width * this.scale;
         var newHeight = this.canvas.height * this.scale;
+
+        //translateX = translateX * this.scale;
+        //translateY = translateY * this.scale;
 
         this.ctx.save();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -514,11 +539,19 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
         var auxx, auxy:Int;
 
-        auxx=Math.round(e.clientX);
-        auxy=Math.round(e.clientY);
+        //auxx=Math.round(e.clientX);
+        //auxy=Math.round(e.clientY);
 
-        auxx=Math.round(e.pageX - canvas.offsetLeft - translateX);
-        auxy=Math.round(e.pageY - canvas.offsetTop - translateY);
+        var elementOffsetX = canvas.getBoundingClientRect().left  -  js.Browser.document.getElementsByTagName("html")[0].getBoundingClientRect().left  ;
+        var auxx = (e.clientX + js.Browser.window.pageXOffset) - elementOffsetX - translateX;
+
+        var elementOffsetY = canvas.getBoundingClientRect().top  -  js.Browser.document.getElementsByTagName("html")[0].getBoundingClientRect().top  ;
+        var auxy = (e.clientY + js.Browser.window.pageYOffset) - elementOffsetY - translateY;
+
+
+
+        //auxx=Math.round(e.pageX - canvas.offsetLeft - translateX);
+        //auxy=Math.round(e.pageY - canvas.offsetTop - translateY);
 
         var x,y:Dynamic;
         x=auxx-Math.round(cx);
@@ -560,6 +593,8 @@ class PhyloCanvasConfiguration{
     public var enableZoom : Bool = false;
     public var scale : Float = 1;
     public var enableTools : Bool = false;
+    public var enableToolbar : Bool = false;
+    public var title : String;
 
     public function new(){
 

@@ -384,7 +384,7 @@ class SingleAppContainer {
     }
 
     public function viewClose(active:Bool){
-        var closebtn = centralPanel.getComponent('closeAnnotmenu');
+        /*var closebtn = centralPanel.getComponent('closeAnnotmenu');
         var attachPosition = centralPanel.items.findIndex('itemId', 'closeAnnotmenu');
         centralPanel.remove('closeAnnotmenu', false);
         centralPanel.doLayout();
@@ -396,11 +396,11 @@ class SingleAppContainer {
         }
 
         centralPanel.add(closebtn);
-        centralPanel.doLayout();
+        centralPanel.doLayout();*/
     }
 
     public function updateOptionsToolBar(active:Bool){
-        var closebtn = centralPanel.getComponent('closeAnnotmenu');
+        /*var closebtn = centralPanel.getComponent('closeAnnotmenu');
         var attachPosition = centralPanel.items.findIndex('itemId', 'closeAnnotmenu');
         centralPanel.remove('closeAnnotmenu', false);
         centralPanel.doLayout();
@@ -414,7 +414,7 @@ class SingleAppContainer {
         }
 
         centralPanel.add(closebtn);
-        centralPanel.doLayout();
+        centralPanel.doLayout();*/
     }
 
     public function getOptionsToolBar(){

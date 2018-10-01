@@ -13,12 +13,20 @@ package saturn.client.programs.phylo;
 
 
 class PhyloNewickParser{
+    static var newLineReg = ~/\n/g;
+    static var carLineReg = ~/\r/g;
+    static var whiteSpaceReg = ~/\s/g;
+    
 
     public function new (){
 
     }
 
     public function parse(newickString:String):PhyloTreeNode{
+        newickString = whiteSpaceReg.replace(newickString, "");
+        newickString = newLineReg.replace(newickString,"");
+        newickString = carLineReg.replace(newickString, "");
+
         var rootNode : PhyloTreeNode;
         rootNode = new PhyloTreeNode();
 

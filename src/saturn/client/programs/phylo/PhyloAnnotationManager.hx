@@ -2188,14 +2188,18 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function hideAnnotationWindows(){
-        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
+        var app = WorkspaceApplication.getApplication();
 
-        if(container != null){
-            container.hideExportSubMenu();
-            container.hideHelpingDiv();
+        if(app != null){
+            var container = app.getSingleAppContainer();
 
-            if(WorkspaceApplication.getApplication().getScreenMode() != ScreenMode.DEFAULT){
-                container.hideSubMenuToolBar();
+            if(container != null){
+                container.hideExportSubMenu();
+                container.hideHelpingDiv();
+
+                if(WorkspaceApplication.getApplication().getScreenMode() != ScreenMode.DEFAULT){
+                    container.hideSubMenuToolBar();
+                }
             }
         }
     }

@@ -156,6 +156,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         config.enableTools = true;
         config.enableZoom = true;
+        config.enableToolbar = true;
 
         //currentView = 1;
 
@@ -360,7 +361,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         });*/
     }
 
-    public function colourNode(node: PhyloTreeNode){
+    /*public function colourNode(node: PhyloTreeNode){
         node.colour = currentAdjustmentColour;
 
         newposition(0,0);
@@ -414,7 +415,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             i++;
         }
         newposition(0,0);
-    }
+    }*/
 
     /*public function checkPosition(e:Dynamic):PhyloScreenData{
         if(this.canvas == null){
@@ -519,7 +520,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     }
 
     function centerCanvas(){
-        var left,right,top,bottom,w,h:Int;
+        /*var left,right,top,bottom,w,h:Int;
         left=this.rootNode.rectangleLeft;
         right=this.rootNode.rectangleRight;
         top=this.rootNode.rectangleBottom;
@@ -545,10 +546,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         w=w+120;
         h=h+200;
 
-       /* this.canvas.ctx.rect(x, y, w, h);
-        this.canvas.ctx.fillStyle = '#ff0000';
-        this.canvas.ctx.fill();
-        this.canvas.ctx.restore();*/
 
         var newWidth  : Int = this.dom.clientWidth;
         var newHeight : Int = this.dom.clientHeight;
@@ -576,6 +573,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         newposition(0, 0);
        // newposition(new_x, new_y);
        // WorkspaceApplication.getApplication().debug('the area should be from left-top ('+this.rootNode.rectangleLeft+','+this.rootNode.rectangleTop+') and righ-bottom ('+this.rootNode.rectangleRight+','+this.rootNode.rectangleBottom+')');
+       */
+
 
     }
 
@@ -583,9 +582,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         if(this.canvas == null){
             //too early
             return;
+        }else{
+            this.canvas.redraw();
         }
 
-        this.dom = theComponent.down('component').getEl().dom;
+        /*this.dom = theComponent.down('component').getEl().dom;
 
         var newWidth  : Int = this.dom.clientWidth;
         var newHeight : Int = this.dom.clientHeight;
@@ -597,7 +598,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var ctx=this.canvas.canvas.getContext('2d');
         newposition(0,0);
 
-        ctx.restore();
+        ctx.restore();*/
     }
 
 	public function setTreeFromNewickStr( myNewickStr : String ) {
@@ -922,7 +923,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         container.addElemToEditToolBar({
             iconCls :'x-btn-undo-single',
             handler : function(){
-                if(undolist.length>0) moveNode(undolist[undolist.length-1].data,true, true);
+               // if(undolist.length>0) moveNode(undolist[undolist.length-1].data,true, true);
             },
             tooltip : {dismissDelay: 10000, text: 'Undo last action'}
         });
@@ -1200,16 +1201,18 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             }
             if(this.treeName!=null ) text=this.treeName+text;
 
+            config.title = text;
+
             var container=getApplication().getSingleAppContainer();
-            container.addComponentToCentralPanel( {
+            /*container.addComponentToCentralPanel( {
                 xtype: 'label',
                 text: text ,
                 cls:'targetclass-treetitle',
                 top:33,
                 left:10
-            });
+            });*/
 
-            container.addComponentToCentralPanel({
+            /*container.addComponentToCentralPanel({
                 cls :'x-btn-close-options',
                 xtype: 'button',
                 itemId: 'closeAnnotmenu',
@@ -1260,14 +1263,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 }
             });
 
-            addCanvasButton({
-                cls :'x-btn-export-single',
-                xtype: 'button',
-                top:40,
-                menu: Ext.create('Ext.menu.Menu',{
-                    items: exportItems
-                }),
-            });
 
             var items :Array<Dynamic> = [];
 
@@ -1527,7 +1522,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
                 },
                 tooltip: {dismissDelay: 10000, text: 'Zoom out of tree'}
-            });
+            });*/
         }else{
             addCanvasButton({
                 iconCls :'x-btn-export',
@@ -1597,7 +1592,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         if(standaloneMode){
             var container=getApplication().getSingleAppContainer();
 
-            container.addComponentToCentralPanel({
+            /*container.addComponentToCentralPanel({
                 cls : 'x-btn-center-single' ,
                 xtype: 'button',
                 top:40,
@@ -1617,9 +1612,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
                 },
                 tooltip: {dismissDelay: 10000, text: 'Centre Tree'}
-            });
+            });*/
 
-            container.addComponentToCentralPanel({
+           /* container.addComponentToCentralPanel({
                 cls : 'x-btn-highlight-single' ,
                 xtype: 'button',
                 top:40,
@@ -1629,19 +1624,19 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
                     annotationManager.closeAnnotWindows();
     //garsot
-                    if(this.rootNode.targets.length!=0){
+                    if(this.canvas.rootNode.targets.length!=0){
                         var div :Array<Dynamic>;
                         div=new Array();
                         var i=0;
-                        var title=this.rootNode.targets.length;
-                        for(i in 0 ... this.rootNode.targets.length){
+                        var title=this.canvas.rootNode.targets.length;
+                        for(i in 0 ... this.canvas.rootNode.targets.length){
                             div[i]={
                                 xtype: "checkboxfield",
-                                boxLabel: this.rootNode.targets[i],
+                                boxLabel: this.canvas.rootNode.targets[i],
                                 labelSeparator : "",
                                 name: "gene",
                                 cls: "highlightgene-checkbox",
-                                inputValue: this.rootNode.targets[i],
+                                inputValue: this.canvas.rootNode.targets[i],
                                 id:  "hight-"+i
                             };
                         }
@@ -1657,7 +1652,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     }
                 },
                 tooltip: {dismissDelay: 10000, text: 'Highlight gene in tree'}
-            });
+            });*/
         }
     }
 
@@ -1766,7 +1761,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                     //clear Central Panel
 
                     if(this.canvas!=null){
-                        this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
+                        //this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
+                        this.canvas.destroy();
                         this.canvas=null;
                     }
                     container.setCentralComponent(theComponent);
@@ -1826,9 +1822,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }
 
         var container=getApplication().getSingleAppContainer();
-        while(undolist.length>0){
-            moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-        }
+        //while(undolist.length>0){
+        //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+       // }
         config.editmode=false;
         //container.viewClose(true);
         container.hideEditToolBar();
@@ -1988,9 +1984,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var centralPanel=container.getCentralPanel();
         centralPanel.doLayout();
 
-        while(undolist.length>0){
-            moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-        }
+        //while(undolist.length>0){
+        //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+        //}
 
         config.editmode=false;
         container.hideEditToolBar();
@@ -2013,7 +2009,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         centralPanel.doLayout();
 
         if(this.canvas!=null){
-            this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
+            this.canvas.destroy();
             this.canvas=null;
         }
         container.setCentralComponent(theComponent);
@@ -2185,9 +2181,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 if(undolist.length>0){
                     WorkspaceApplication.getApplication().userPrompt('Question', 'You are going to lose your changes. Do you want to continue?', function(){
                         keepgoing=false;
-                        while(undolist.length>0){
-                            moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-                        }
+                        //while(undolist.length>0){
+                         //   moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                        //}
                         config.editmode=false;
                         container.viewClose(true);
                         container.hideEditToolBar();
@@ -2206,9 +2202,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
             if(keepgoing==true){
 
-                while(undolist.length>0){
-                    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-                }
+               // while(undolist.length>0){
+                //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                //}
                 config.editmode=false;
                 //container.viewClose(true);
                 container.hideEditToolBar();
@@ -2242,7 +2238,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var leaves;
 
         if(type=='family'){
-            leaves= rootNode.targets;
+            leaves= canvas.rootNode.targets;
         }else{
             leaves=annotationManager.searchedGenes;
         }
@@ -2684,9 +2680,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             if(undolist.length>0){
                 WorkspaceApplication.getApplication().userPrompt('Question', 'You are going to lose your changes. Do you want to continue?', function(){
                     keepgoing=false;
-                    while(undolist.length>0){
-                        moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-                    }
+                    //while(undolist.length>0){
+                    //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                    //}
                     config.editmode=false;
                     if(standaloneMode){
                         container.viewClose(true);
@@ -2720,9 +2716,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         if(keepgoing==true){
 
             if(recovered==false){
-                while(undolist.length>0){
-                    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
-                }
+                //while(undolist.length>0){
+                //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                //}
                 undolist=new Array();
                 if(viewOptionsActive==false){
                     viewOptionsActive=true;
@@ -3133,11 +3129,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             "degrad" found in Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point
                             </div>
                             <div>
-                                <input type="radio" name="usp_confidence" value="Cluster" checked/>
+                                <input type="radio" name="usp_confidence" value="Cluster" />
                                 <label>Any</label>
                                 <input type="radio" name="usp_confidence" value="1" />
                                 <label>confidence >= 1</label>
-                                <input type="radio" name="usp_confidence" value="2"  />
+                                <input type="radio" name="usp_confidence" value="2"  checked />
                                 <label>confidence >= 2</label>
                                 <input type="radio" name="usp_confidence" value="3"  />
                                 <label>confidence >= 3</label>
