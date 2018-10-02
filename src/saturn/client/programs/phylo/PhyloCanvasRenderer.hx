@@ -1,5 +1,7 @@
 package saturn.client.programs.phylo;
 
+import saturn.client.programs.phylo.PhyloTreeNode.LineMode;
+
 
 /**
  * Authors Dr David R. Damerell (david.damerell@sgc.ox.ac.uk) (University of Oxford)
@@ -12,6 +14,8 @@ package saturn.client.programs.phylo;
  *         Dr Matthieu Schapira (matthieu.schapira@utoronto.ca) (University of Toronto)
  *         
  */
+
+import js.html.Blob;
 
 class PhyloCanvasRenderer implements PhyloRendererI {
     var canvas : Dynamic;
@@ -76,6 +80,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         createCanvas();
     }
 
+    public function getRootNode() : PhyloTreeNode{
+        return rootNode;
+    }
+
     public function createContainer(){
         container = js.Browser.document.createElement('div');
 
@@ -107,15 +115,13 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     public function defaultNodeClickListener(node : PhyloTreeNode, data : PhyloScreenData, e : Dynamic){
         if(node == null){
             if(contextMenu != null){
-                contextMenu.destroyContainer();
-
-                contextMenu = null;
+                closeContextMenu();
 
                 return;
             }
         }else{
             if(contextMenu != null){
-                contextMenu.destroyContainer();
+                closeContextMenu();
             }
 
             contextMenu = new PhyloContextMenu(parent, this, node, data, e);
@@ -225,6 +231,62 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }
     }
 
+    public function exportPNG(cb : Dynamic->Void){
+        this.canvas.toBlob(function (blob) {
+            cb(blob);
+        });
+    }
+
+    public function exportPNGToFile(){
+        exportPNG(function(blob : Dynamic){
+            var uWin :Dynamic = js.Browser.window;
+            uWin.saveAs(blob, annotationManager.treeName+'_'+annotationManager.treeType+'_tree.png');
+        });
+    }
+
+    public function exportSVG(){
+        var width = width;
+        var height = height;
+
+        var svgCtx = untyped __js__('new C2S(width,height)');
+
+        var ctx = this.ctx;
+
+        this.ctx = svgCtx;
+
+        var rTranslateX = translateX;
+        var rTranslateY = translateY;
+
+        translateX = width / 2;
+        translateY = height / 2;
+
+        redraw(false);
+
+        translateX = rTranslateX;
+        translateY = rTranslateY;
+
+        this.ctx = ctx;
+
+        return svgCtx.getSerializedSvg(true);
+    }
+
+    public function exportSVGToFile(){
+        var svgStr = exportSVG();
+
+        var blob = new Blob([svgStr], {type: "text/plain;charset=utf-8"});
+
+        var uWin :Dynamic = js.Browser.window;
+        uWin.saveAs(blob, annotationManager.treeName+'_'+annotationManager.treeType+'_tree.svg');
+    }
+
+    public function showHighlightDialog(){
+        var dialog = new PhyloHighlightWidget(parent, this);
+    }
+
+    public function center(){
+        newPosition(0,0);
+    }
+
     public function newPosition(x : Float, y : Float){
         createCanvas();
 
@@ -242,6 +304,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
        // this.ctx.scale(this.scale,this.scale);
         this.ctx.strokeStyle=strokeStyle;
+
         this.ctx.beginPath();
         this.ctx.moveTo(Math.round(x0), Math.round(y0));
 
@@ -484,6 +547,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function redraw(create=true){
+        if(toolBar != null){
+            toolBar.setLineTypeButtonVisible(config.drawingMode == PhyloDrawingMode.STRAIGHT);
+        }
+
         if(create){
             createCanvas();
         }
@@ -509,7 +576,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         this.rootNode.rectangleBottom=Std.int(this.rootNode.children[0].y);
         this.rootNode.rectangleTop=Std.int(this.rootNode.children[0].y);
 
-        radialRendererObj.renderCircle(this.rootNode,this, annotationManager.activeAnnotation, annotationManager.annotations);
+        if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
+            radialRendererObj.renderCircle(this.rootNode,this, annotationManager.activeAnnotation, annotationManager.annotations);
+        }else{
+            radialRendererObj.render(this.rootNode,this, annotationManager.activeAnnotation, annotationManager.annotations);
+        }
 
         this.ctx.restore();
     }
@@ -578,6 +649,63 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         else return null;
     }
 
+    public function setLineWidth(width : Float){
+        rootNode.setLineWidth(width);
+
+        redraw();
+    }
+
+    public function toggleType(){
+        if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
+            config.drawingMode = PhyloDrawingMode.STRAIGHT;
+
+            rootNode.preOrderTraversal2();
+        }else{
+            config.drawingMode = PhyloDrawingMode.CIRCULAR;
+
+            rootNode.preOrderTraversal();
+        }
+
+        closeContextMenu();
+
+        redraw();
+    }
+
+    public function closeContextMenu(){
+        if(contextMenu != null){
+            contextMenu.close();
+
+            contextMenu = null;
+        }
+    }
+
+    public function toggleLineMode(){
+        if(config.bezierLines){
+            rootNode.setLineMode(LineMode.STRAIGHT);
+
+            config.bezierLines = false;
+        }else{
+            rootNode.setLineMode(LineMode.BEZIER);
+
+            config.bezierLines = true;
+        }
+
+        redraw();
+    }
+
+    public function rotateNode(node : PhyloTreeNode, clockwise : Bool){
+        node.rotateNode(clockwise, getConfig().drawingMode);
+
+        redraw();
+    }
+
+    public function setShadowColour(colour : String){
+        getConfig().shadowColour = colour;
+        getConfig().enableShadow = true;
+
+        redraw();
+    }
+
     public static function main(){
 
     }
@@ -587,7 +715,7 @@ class PhyloCanvasConfiguration{
     public var enableShadow : Bool  = false;
     public var shadowColour : String = 'gray';
     public var bezierLines : Bool = false;
-    public var drawingMode  = ChromoHubDrawingMode.CIRCULAR;
+    public var drawingMode  = PhyloDrawingMode.CIRCULAR;
     public var editmode : Bool = false;
     public var highlightedGenes :Map<String, Bool> = new Map<String, Bool>();
     public var enableZoom : Bool = false;
@@ -601,7 +729,7 @@ class PhyloCanvasConfiguration{
     }
 }
 
-enum ChromoHubDrawingMode{
+enum PhyloDrawingMode{
     STRAIGHT;
     CIRCULAR;
 }

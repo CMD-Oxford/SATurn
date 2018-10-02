@@ -61,7 +61,7 @@ class PhyloRadialTreeLayout{
 
         var textSize = null;
 
-        var branch = (cx * 2 / treeNode.root.getHeight()) / 4;
+        var branch = (cx * 2 / treeNode.root.getHeight()) / (4 - (treeNode.root.getHeight() * 0.011));
         var k = 2 * Math.PI / treeNode.root.getLeafCount();
 
         var fontW = 12;
@@ -104,7 +104,7 @@ class PhyloRadialTreeLayout{
                     endNode = treeNode.parent.findFirstLeaf();
                 }
 
-                var wedgeH=treeNode.root.getHeight() * ((cx * 2 / treeNode.root.getHeight()) / 4);
+                var wedgeH=treeNode.root.getHeight() * ((cx * 2 / treeNode.root.getHeight()) / (4 - (treeNode.root.getHeight() * 0.011)));
 
                 renderer.drawWedge(0, 0, wedgeH ,  endNode.angle, startNode.angle, treeNode.wedgeColour ,1);
             }
@@ -402,6 +402,8 @@ class PhyloRadialTreeLayout{
                 var namecolor='#585b5f';
                 var ttar=treeNode.children[i].name;
                 if(renderer.getConfig().highlightedGenes.exists(ttar)==true) namecolor='#ff0000';
+
+                //rot = rot + (rot/100)* 5 ;
 
                 renderer.drawText(' '+treeNode.children[i].name, treeNode.children[i].x,treeNode.children[i].y, -2, 3,rot,orign,namecolor);
                 updateTreeRectangle(treeNode.children[i].x,treeNode.children[i].y, treeNode.root);

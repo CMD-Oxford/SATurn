@@ -11,6 +11,7 @@ package saturn.client.programs.phylo;
  *         
  */
 
+import saturn.client.programs.phylo.PhyloCanvasRenderer.PhyloDrawingMode;
 import saturn.client.programs.phylo.PhyloHubMath;
 import saturn.client.programs.phylo.PhyloTreeNode;
 import saturn.core.Util;
@@ -156,17 +157,27 @@ class PhyloTreeNode {
         var n=this.angle;
         var i=0;
         while(i<this.children.length){
-
-
             if(mode==1){this.root.numchild= this.root.numchild+1;}
-            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
+
+
+            this.children[i].wedge=((this.children[i].l/this.children[i].root.l)*2*Math.PI)+Math.PI/50;
+
             this.children[i].angle=n;
 
             n=n+this.children[i].wedge;
             this.children[i].preOrderTraversal2(mode);
             i++;
         }
+    }
 
+    public function areAllChildrenLeaf() : Bool {
+        for(child in children){
+            if(!child.isLeaf()){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function preOrderTraversal(mode:Int){
@@ -339,6 +350,97 @@ class PhyloTreeNode {
         return lastChild;
     }
 
+    public function setLineWidth(width : Float){
+        lineWidth = width;
+
+        for(child in children){
+            child.setLineWidth(width);
+        }
+    }
+
+    public function setLineMode(mode : LineMode){
+        lineMode = mode;
+
+        for(child in children){
+            child.setLineMode(mode);
+        }
+    }
+
+    public function rotateNode(clockwise : Bool, drawingMode : PhyloDrawingMode){
+        var delta = -0.3;
+
+        if(clockwise){
+            delta = 0.3;
+        }
+
+        this.x = ((this.x-this.parent.x)*Math.cos(delta))-((this.y-this.parent.y)*Math.sin(delta))+this.parent.x;
+        this.y=((this.x-this.parent.x)*Math.sin(delta))+((this.y-this.parent.y)*Math.cos(delta))+this.parent.y;
+
+        this.angle = this.angle + delta;
+
+        var n = this.angle;
+
+        for(child in children){
+
+            child.wedge=((child.l/root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
+            child.angle=n;
+
+            n=n+child.wedge;
+
+            if(drawingMode == PhyloDrawingMode.STRAIGHT){
+                child.preOrderTraversal2(0);
+            }else if(drawingMode == PhyloDrawingMode.CIRCULAR){
+                child.preOrderTraversal(0);
+            }
+        }
+
+        /*if(clock==true)alpha=0.3;
+        else alpha=-0.3;
+        node=this.rootNode.nodeIdToNode.get(d.nodeId);
+        node.x=((d.x-d.parentx)*Math.cos(alpha))-((d.y-d.parenty)*Math.sin(alpha))+d.parentx;
+        node.y=((d.x-d.parentx)*Math.sin(alpha))+((d.y-d.parenty)*Math.cos(alpha))+d.parenty;
+        node.angle=node.angle+alpha;
+        n=node.angle;*/
+
+        /*var node:PhyloTreeNode;
+        var alpha:Float;
+        var n:Dynamic;
+        if(undo==true){
+            var auxpop=undolist.pop();
+            d=auxpop.data;
+            node=this.rootNode.nodeIdToNode.get(d.nodeId);
+            node.x=auxpop.x;
+            node.y=auxpop.y;
+            node.angle=auxpop.angle;
+            n=node.angle;
+        }
+        else{
+            if(clock==true)alpha=0.3;
+            else alpha=-0.3;
+            node=this.rootNode.nodeIdToNode.get(d.nodeId);
+            node.x=((d.x-d.parentx)*Math.cos(alpha))-((d.y-d.parenty)*Math.sin(alpha))+d.parentx;
+            node.y=((d.x-d.parentx)*Math.sin(alpha))+((d.y-d.parenty)*Math.cos(alpha))+d.parenty;
+            node.angle=node.angle+alpha;
+            n=node.angle;
+        }
+
+        var i=0;
+        while(i<node.children.length){
+
+            node.children[i].wedge=((node.children[i].l/node.children[i].root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
+            node.children[i].angle=n;
+
+            n=n+node.children[i].wedge;
+
+            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
+                node.children[i].preOrderTraversal2(0);
+            }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
+                node.children[i].preOrderTraversal(0);
+            }
+
+            i++;
+        }*/
+    }
 
 }
 

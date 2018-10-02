@@ -216,12 +216,12 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 'render': afterRender,
 
                 'resize': function(){ redraw(); },
-                'keypress': {
+                /*'keypress': {
                     element: 'el',
                     fn: function(){
                         js.Browser.alert('Hello');
                     }
-                }
+                }*/
             },
             cls: 'x-tree-background'
         });
@@ -240,342 +240,12 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         var leaving=false;
         var current_x,current_y, current_mx, current_my, new_x,new_y, new_mx, new_my: Dynamic;
 
-        /*panel.body.on('mousedown', function(e : Dynamic) {
-
-            if(standaloneMode){
-                var container = getApplication().getSingleAppContainer();
-                container.hideExportSubMenu();
-                container.hideHelpingDiv();
-
-                if(getApplication().getScreenMode() != ScreenMode.DEFAULT){
-                    container.hideSubMenuToolBar();
-                }
-            }
-            //closeAnnotWindows();
-
-            moving='yes';
-            current_mx=e.pageX;
-            current_my=e.pageY;
-
-        });
-        panel.body.on('mouseup', function(e : Dynamic ) {
-            js.Browser.document.body.style.cursor = "auto";
-            moving='no';
-            new_mx=e.pageX - current_mx;
-            new_my=e.pageY - current_my;
-            leaving=false;
-            if(currentView==1){
-                save_centre(new_mx, new_my);
-            }
-            var d = checkPosition(e);
-            if (d!=null) {
-                js.Browser.document.body.style.cursor = "auto";
-                if(d.isAnnot==true){
-                    annotationManager.showScreenData(false,d,e.pageX,e.pageY);
-                }else if(config.editmode==true){
-                    var node:PhyloTreeNode;
-                    node=this.rootNode.nodeIdToNode.get(d.nodeId);
-                    var clock=true;
-                    if(e.parentEvent.shiftKey==true){
-                        clock=false;
-                    }
-                    undolist[undolist.length]={data:d,x:d.x,y:d.y,angle:node.angle, clock:clock};
-                    //we need to check wheter the SHIFT key is pressed
-                    //var a=js.html.event.
-                    moveNode(d,false, clock);
-                }else if(enableColourAdjust){
-                    var node:PhyloTreeNode = this.rootNode.nodeIdToNode.get(d.nodeId);
-
-                    if(d.nodeId == 0){
-                        node = rootNode;
-                    }
-
-                    if(node.parent == rootNode){
-                        for(child in rootNode.children){
-                            colourNode(child);
-                        }
-                    }else{
-                        colourNode(node);
-                    }
-                }else if(enableColourAdjustWedge){
-                    var node:PhyloTreeNode = this.rootNode.nodeIdToNode.get(d.nodeId);
-
-                    if(d.nodeId == 0){
-                        node = rootNode;
-                    }else{
-                        node = node.parent;
-                    }
-
-                    colourWedgeNode(node);
-                }
-            }
-        });
-
-        panel.body.on('dblclick', function(e : Dynamic ) {
-            if(standaloneMode){
-                var container = getApplication().getSingleAppContainer();
-                container.removeAnnotWindows();
-            }
-        });
-
-        panel.body.on('mousewheel', function(e : Dynamic) {
-            if(standaloneMode){
-                var container = getApplication().getSingleAppContainer();
-                container.hideExportSubMenu();
-                container.hideHelpingDiv();
-                container.hideSubMenuToolBar();
-            }
-
-            if(e.getWheelDelta()<0){
-                zoomIn(annotationManager.activeAnnotation);
-            }else{
-                zoomOut(annotationManager.activeAnnotation);
-            }
-        });
-
-        panel.body.on('mousemove', function(e) {
-            //getApplication().getSingleAppContainer().hideExportSubMenu();
-            if(this.rootNode!=null){
-                if(moving=='yes'){
-                    new_mx=e.pageX - current_mx;
-                    new_my=e.pageY - current_my;
-                    newposition(new_mx, new_my);
-
-                    js.Browser.document.body.style.cursor = "move";
-                }
-            }
-        });*/
-
-        //panel.body.on('mouseenter', function(e) {
-           /* WorkspaceApplication.getApplication().debug("enter");
-            if(getApplication().getSingleAppContainer().getAnnotWindow()!=null){
-                getApplication().getSingleAppContainer().closeAnnotWindow();
-            }
-            leaving=false;*/
-        //});
-
-        /*panel.body.on('mouseleave', function(e) {
-             moving="no";
-            // if (leaving==true)showScreenData(true,null,e.pageX,e.pageY);
-             leaving=true;
-        });*/
     }
-
-    /*public function colourNode(node: PhyloTreeNode){
-        node.colour = currentAdjustmentColour;
-
-        newposition(0,0);
-    }
-
-
-    public function colourWedgeNode(node: PhyloTreeNode){
-        node.wedgeColour = currentWedgeColour;
-
-        newposition(0,0);
-    }
-
-
-    public function moveNode(d:PhyloScreenData, undo:Bool, clock:Bool){
-        var node:PhyloTreeNode;
-        var alpha:Float;
-        var n:Dynamic;
-        if(undo==true){
-            var auxpop=undolist.pop();
-            d=auxpop.data;
-            node=this.rootNode.nodeIdToNode.get(d.nodeId);
-            node.x=auxpop.x;
-            node.y=auxpop.y;
-            node.angle=auxpop.angle;
-            n=node.angle;
-        }
-        else{
-            if(clock==true)alpha=0.3;
-            else alpha=-0.3;
-            node=this.rootNode.nodeIdToNode.get(d.nodeId);
-            node.x=((d.x-d.parentx)*Math.cos(alpha))-((d.y-d.parenty)*Math.sin(alpha))+d.parentx;
-            node.y=((d.x-d.parentx)*Math.sin(alpha))+((d.y-d.parenty)*Math.cos(alpha))+d.parenty;
-            node.angle=node.angle+alpha;
-            n=node.angle;
-        }
-
-        var i=0;
-        while(i<node.children.length){
-
-            node.children[i].wedge=((node.children[i].l/node.children[i].root.l)*2*Math.PI)+Math.PI/20; // we scale the angles to avoid label overlapping
-            node.children[i].angle=n;
-
-            n=n+node.children[i].wedge;
-
-            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
-                node.children[i].preOrderTraversal2(0);
-            }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
-                node.children[i].preOrderTraversal(0);
-            }
-
-            i++;
-        }
-        newposition(0,0);
-    }*/
-
-    /*public function checkPosition(e:Dynamic):PhyloScreenData{
-        if(this.canvas == null){
-            //too early
-            return null;
-        }
-
-        var i,j:Int;
-        var sx, sy :Int;
-        var res:Bool;
-        res=false;
-
-        var auxx, auxy:Int;
-
-        auxx=Math.round(e.browserEvent.offsetX);
-        auxy=Math.round(e.browserEvent.offsetY);
-
-        var x,y:Dynamic;
-        x=auxx-Math.round(this.centrex);
-        y=auxy-Math.round(this.centrey);
-
-        var active:Bool;
-        active=false;
-        //if there is a annotation active and at least one of the leaves has an annotation to be shown, the rootNode.screen array won't be empty
-        // we need to go throw all of the array in order to check if the mouse hovers one of them
-        i=0;
-        while((i<this.rootNode.screen.length)&&(res==false)){ //I must be sure the annotation in Screen array are only the ones of Active Annotations. So, that means when an annotation gets inactive, I must remove them from Screen array.!!!!!!!!!!
-            if(this.rootNode.screen[i].checkMouse(x,y)==true) {
-                res=true;
-
-                //WorkspaceApplication.getApplication().debug('target is '+this.rootNode.screen[i].target);
-                this.rootNode.screen[i].root=this.rootNode;
-                this.rootNode.divactive=i;
-            }
-            else this.rootNode.screen[i].created=false; //make sure it's false
-            i=i+1;
-        }
-        if(res==true){
-            return this.rootNode.screen[i-1];
-        }
-        else return null;
-    }*/
-
-
-
-    /*public function save_centre(x:Dynamic, y:Dynamic){
-        this.centrex=this.centrex+x;
-        this.centrey=this.centrey+y;
-        this.canvas.cx=this.centrex;
-        this.canvas.cy=this.centrey;
-    }*/
 
     public function newposition(new_x:Dynamic, new_y:Dynamic){
         this.canvas.newPosition(new_x, new_y);
 
         return;
-
-
-        /*if(currentView==1){
-            this.dom = theComponent.down('component').getEl().dom;
-
-            var newWidth  : Int = this.dom.clientWidth;
-            var newHeight : Int = this.dom.clientHeight;
-
-
-            this.canvas.canvas.width=newWidth;
-            this.canvas.canvas.height=newHeight;
-
-            var ctx=this.canvas.canvas.getContext('2d');
-            ctx.save();
-            ctx.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
-
-            ctx.translate(this.centrex+new_x,this.centrey+new_y);
-
-            ctx.scale(this.canvas.scale, this.canvas.scale);
-
-            this.radialR= new PhyloRadialTreeLayout(this.canvas.canvas.width, this.canvas.canvas.height);
-
-            this.rootNode.screen=new Array();// we need to initizalize the array everytime we render the tree
-
-            this.rootNode.rectangleLeft=Std.int(this.rootNode.children[0].x);
-            this.rootNode.rectangleRight=Std.int(this.rootNode.children[0].x);
-            this.rootNode.rectangleBottom=Std.int(this.rootNode.children[0].y);
-            this.rootNode.rectangleTop=Std.int(this.rootNode.children[0].y);
-
-            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
-                this.radialR.render(this.rootNode, this.canvas, annotationManager.activeAnnotation, annotationManager.annotations);
-            }else if(drawingMode == ChromoHubDrawingMode.CIRCULAR){
-                this.rootNode.dist = 50;
-                this.rootNode.ratio = 0.00006;
-
-                this.radialR.renderCircle(this.rootNode, this.canvas, annotationManager.activeAnnotation, annotationManager.annotations);
-            }
-
-            this.canvas.ctx.save();
-            this.canvas.ctx.beginPath();
-
-            this.canvas.cx=this.centrex;
-            this.canvas.cy=this.centrey;
-            ctx.restore();
-        }*/
-    }
-
-    function centerCanvas(){
-        /*var left,right,top,bottom,w,h:Int;
-        left=this.rootNode.rectangleLeft;
-        right=this.rootNode.rectangleRight;
-        top=this.rootNode.rectangleBottom;
-        bottom=this.rootNode.rectangleTop;
-        w=0;h=0;
-
-        if(left<=0 && right>=0) w=Std.int(Math.abs(left)+right);
-        if(left<=0 && right<=0) w=Std.int(Math.abs(left)-Math.abs(right));
-        if(left>=0 && right>0) w=left-right;
-
-        var x,y:Int;
-        x=left-60;
-
-        if(top<=0 && bottom<=0) h=Std.int(Math.abs(top)-Math.abs(bottom));
-        if(bottom>=0 && top<=0) h=Std.int(Math.abs(top)+bottom);
-        if(top>=0 && bottom>=0) h=bottom-top;
-        if(top>=0 && bottom<=0) h=top-bottom;
-
-
-        if(top>0)y=top+60;
-        else y=top-60;
-
-        w=w+120;
-        h=h+200;
-
-
-        var newWidth  : Int = this.dom.clientWidth;
-        var newHeight : Int = this.dom.clientHeight;
-
-        if(scale!=1.0){
-            scale=1.0;
-            this.canvas.zoomIn(annotationManager.activeAnnotation,annotationManager.annotations,scale);
-        }
-
-
-        if(newWidth<w || newHeight<=h){
-            var fx=1.0; var fy=1.0;
-            if(newWidth<w) fx=newWidth/w;
-            if(newHeight<=h) fy=newHeight/h;
-            var f=0.0;
-            if(fx>fy)f=fy;
-            else f=fx;
-            if(f<0.4) f=0.4;
-            if(f!=1.0){
-                scale=f;
-                this.canvas.zoomIn(annotationManager.activeAnnotation,annotationManager.annotations,scale);
-            }
-        }
-
-        newposition(0, 0);
-       // newposition(new_x, new_y);
-       // WorkspaceApplication.getApplication().debug('the area should be from left-top ('+this.rootNode.rectangleLeft+','+this.rootNode.rectangleTop+') and righ-bottom ('+this.rootNode.rectangleRight+','+this.rootNode.rectangleBottom+')');
-       */
-
-
     }
 
     public function redraw(){
@@ -585,20 +255,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }else{
             this.canvas.redraw();
         }
-
-        /*this.dom = theComponent.down('component').getEl().dom;
-
-        var newWidth  : Int = this.dom.clientWidth;
-        var newHeight : Int = this.dom.clientHeight;
-
-        this.canvas.canvas.width=newWidth;
-        this.canvas.canvas.height=newHeight;
-
-
-        var ctx=this.canvas.canvas.getContext('2d');
-        newposition(0,0);
-
-        ctx.restore();*/
     }
 
 	public function setTreeFromNewickStr( myNewickStr : String ) {
@@ -615,11 +271,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         canvas = PhyloUtil.drawRadialFromNewick(newickStr, parent,config, annotationManager);
 
         rootNode = canvas.rootNode;
-
-
-
-
-
 	}
 
     public function checkAnnotationJSonData():Bool{
@@ -748,10 +399,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }
     }
 
-
-
-
-
     public function fillTipswithJSonData(){
 
         var i=0; var j=0; var z=0;
@@ -791,23 +438,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             container.hideHelpingDiv();
         }
 
-        /*if(this.canvas!=null){
-            this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
-        }
-
-        this.dom = theComponent.down('component').getEl().dom;
-
-        var parentWidth : Int = this.dom.clientWidth;
-        var parentHeight : Int = this.dom.clientHeight;
-        this.canvas = new PhyloCanvasRenderer(parentWidth, parentHeight, this.dom, this.rootNode,config, annotationManager);
-
-        annotationManager.canvas = canvas;
-
-        this.canvas.setConfig(config);*/
-
-        /*this.canvas.cx=Math.round(parentWidth/2);
-        this.canvas.cy=Math.round(parentHeight/2);
-        if(this.scale<=4.0)this.scale=this.scale+0.2;*/
         this.canvas.zoomIn();
 
         newposition(0,0);
@@ -827,21 +457,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             annotationManager.closeAnnotWindows();
         }
 
-        /*if(this.canvas!=null){
-            this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
-        }
-        this.dom = theComponent.down('component').getEl().dom;
-
-        var parentWidth : Int = this.dom.clientWidth;
-        var parentHeight : Int = this.dom.clientHeight;
-        this.canvas = new PhyloCanvasRenderer(parentWidth, parentHeight, this.dom, this.rootNode,config, annotationManager);
-
-        annotationManager.canvas = canvas;
-
-        this.canvas.cx=Math.round(parentWidth/2);
-        this.canvas.cy=Math.round(parentHeight/2);
-        //if(this.scale>=0.2)
-        this.scale=this.scale-0.2;*/
         this.canvas.zoomOut();
         newposition(0,0);
     }
@@ -1118,79 +733,6 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         container.updateOptionsToolBar(active);
     }
 
-    public function setAdjustmentColour(colour :String){
-        this.currentAdjustmentColour = colour;
-
-        enableColourAdjustment(true);
-    }
-
-    public function enableColourAdjustment(enable : Bool){
-        enableColourAdjust = enable;
-
-        if(enable){
-            enableColourAdjustWedge = false;
-        }
-    }
-
-    public function enableWedgeColourAdjustment(enable : Bool){
-        enableColourAdjustWedge = enable;
-
-        if(enable){
-            enableColourAdjust = false;
-        }
-    }
-
-    public function setWedgeColour(colour : String){
-        this.currentWedgeColour = colour;
-    }
-
-    public function setLineWidth(width : Float){
-        _setLineWidth(rootNode,width);
-
-        newposition(0,0);
-    }
-
-    public function _setLineWidth(node : PhyloTreeNode, width : Float){
-        node.lineWidth = width;
-
-        for(i in 0...node.children.length){
-            _setLineWidth(node.children[i], width);
-        }
-    }
-
-    public function setStraightLines(){
-        setLineType(LineMode.STRAIGHT);
-    }
-
-    public function setBezierLines(){
-        setLineType(LineMode.BEZIER);
-    }
-
-    public function setLineType(lineMode: LineMode){
-        _setLineType(rootNode,lineMode);
-
-        newposition(0,0);
-
-    }
-
-    public function toggleBezierLines(){
-        config.bezierLines = ! config.bezierLines;
-
-        if(config.bezierLines){
-            setBezierLines();
-        }else{
-            setStraightLines();
-        }
-    }
-
-    public function _setLineType(node : PhyloTreeNode, lineMode: LineMode){
-        node.lineMode = lineMode;
-
-        for(i in 0...node.children.length){
-            _setLineType(node.children[i], lineMode);
-        }
-    }
-
     private function addControlBtnsToCentralPanel(){
         if(standaloneMode){
             var text:String;
@@ -1204,325 +746,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             config.title = text;
 
             var container=getApplication().getSingleAppContainer();
-            /*container.addComponentToCentralPanel( {
-                xtype: 'label',
-                text: text ,
-                cls:'targetclass-treetitle',
-                top:33,
-                left:10
-            });*/
 
-            /*container.addComponentToCentralPanel({
-                cls :'x-btn-close-options',
-                xtype: 'button',
-                itemId: 'closeAnnotmenu',
-                handler: function(){
-                    var elem=js.Browser.document.getElementById('optionToolBarId');
-                    annotationManager.menuScroll=elem.scrollTop;
-                    if(viewOptionsActive==false){
-                        viewOptionsActive=true;
-                        container.showOptionsToolBar();
-                    }
-                    else{
-                        viewOptionsActive=false;
-                        container.hideOptionsToolBar();
-                        container.hideSubMenuToolBar();
-                        if (controlToolsActive == true) container.showControlToolBar();
-                    }
-                    refreshOptionsToolBar(viewOptionsActive);
-                    newposition(0,0);
-                    var elem=js.Browser.document.getElementById('optionToolBarId');
-                    elem.scrollTop=annotationManager.menuScroll;
-                },
-                listeners:{
-                    mouseover:
-                    function(e){
-                        container.hideExportSubMenu();
-                        container.hideHelpingDiv();
-                    }
-                },
-                //tooltip: {dismissDelay: 10000, text: 'Close Options Tab'}
-            });
-
-
-            var exportItems : Array<Dynamic> = [];
-
-            exportItems.push({
-                text:'PNG',
-                hidden : false,
-                handler: function(){
-                    exportPNG();
-                }
-            });
-
-            exportItems.push({
-                text:'SVG',
-                hidden : false,
-                handler: function(){
-                    exportSVG();
-                }
-            });
-
-
-            var items :Array<Dynamic> = [];
-
-            if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
-                items.push({
-                    text:'Edit Mode',
-                    hidden : false,
-                    handler: function(){
-                        if(config.editmode){
-                            config.editmode = false;
-                            getApplication().getSingleAppContainer().hideEditToolBar();
-                        }else{
-                            config.editmode = true;
-
-                            getApplication().getSingleAppContainer().showEditToolBar();
-                        }
-
-                    }
-                });
-            }
-
-            items.push({
-                text:'Toggle Bezier Lines',
-                hidden : false,
-                handler: function(){
-                    toggleBezierLines();
-                }
-            });
-
-            items.push({
-                text:'Toggle Circular Trees',
-                hidden : false,
-                handler: function(){
-                    toggleCircularTrees();
-                }
-            });
-
-            items.push({
-                text:'Toggle Shadow',
-                hidden : false,
-                handler: function(){
-                    toggleShadow();
-                }
-            });
-
-            var colourPickerItems : Array<Dynamic> = [];
-            colourPickerItems.push( {
-                xtype:'component',
-                autoEl:{
-                    tag:'label',
-                    html:'Choose Colour',
-                    'for':'colour_picker'
-                }
-            });
-
-            colourPickerItems.push({
-                xtype:'component',
-                autoEl: {
-                    html: '<input name="colour_picker" id="colour_picker" type="color"/>'
-                },
-                listeners:{
-                    el:{
-                        delegate: 'input',
-                        change:function(){
-                            var colourField : Dynamic = js.Browser.document.getElementById('colour_picker');
-
-                            setAdjustmentColour(colourField.value);
-                        }
-                    }
-                }
-            });
-
-            items.push({
-                text:'Set edge colour',
-                hidden : false,
-                handler: function(){
-                    var window = Ext.create('Ext.window.Window', {
-                        width: '150px',
-                        height: '150px',
-                        title: 'Set edge colour',
-                        listeners: {
-                            afterrender: function(){
-
-                            }
-                        },
-                        items:colourPickerItems
-                    });
-
-                    window.show();
-                },
-                listeners:{
-                    click:function(){
-                        enableColourAdjustment(true);
-                    }
-                }
-            });
-
-            var colourPickerShadowItems : Array<Dynamic> = [];
-            colourPickerShadowItems.push( {
-                xtype:'component',
-                autoEl:{
-                    tag:'label',
-                    html:'Choose Colour',
-                    'for':'colour_picker'
-                }
-            });
-
-            colourPickerShadowItems.push({
-                xtype:'component',
-                autoEl: {
-                    html: '<input name="colour_picker_shadow" id="colour_picker_shadow" type="color"/>'
-                },
-                listeners:{
-                    el:{
-                        delegate: 'input',
-                        change:function(){
-                            var colourField : Dynamic = js.Browser.document.getElementById('colour_picker_shadow');
-
-                            setShadowColour(colourField.value);
-                        }
-                    }
-                }
-            });
-
-            items.push({
-                text:'Set shadow colour',
-                hidden : false,
-                handler: function(){
-                    var window = Ext.create('Ext.window.Window', {
-                        title: 'Set shadow colour',
-                        width: '150px',
-                        height: '150px',
-                        listeners: {
-                            afterrender: function(){
-
-                            }
-                        },
-                        items:colourPickerShadowItems
-                    });
-
-                    window.show();
-                },
-                listeners:{
-                    click:function(){
-                        enableColourAdjustment(true);
-                    }
-                }
-            });
-
-            var colourPickerWedgeItems : Array<Dynamic> = [];
-            colourPickerWedgeItems.push( {
-                xtype:'component',
-                autoEl:{
-                    tag:'label',
-                    html:'Choose Colour',
-                    'for':'colour_picker'
-                }
-            });
-
-            colourPickerWedgeItems.push({
-                xtype:'component',
-                autoEl: {
-                    html: '<input name="colour_picker_wedge" id="colour_picker_wedge" type="color"/>'
-                },
-                listeners:{
-                    el:{
-                        delegate: 'input',
-                        change:function(){
-                            var colourField : Dynamic = js.Browser.document.getElementById('colour_picker_wedge');
-
-                            setWedgeColour(colourField.value);
-                        }
-                    }
-                }
-            });
-
-            items.push({
-                text:'Set wedge colour',
-                hidden : false,
-                handler: function(){
-                    var window = Ext.create('Ext.window.Window', {
-                        title: 'Set wedge colour',
-                        width: '150px',
-                        height: '150px',
-                        listeners: {
-                            afterrender: function(){
-
-                            }
-                        },
-                        items:colourPickerWedgeItems
-                    });
-
-                    window.show();
-                },
-                listeners:{
-                    click:function(){
-                        enableWedgeColourAdjustment(true);
-                    }
-                }
-            });
-
-            items.push({
-                text:'Set line width',
-                hidden : false,
-                handler: function(){
-                    Ext.Msg.prompt('Enter line width', 'Enter line width', function(btn, text){
-                        if(btn == 'ok'){
-                            setLineWidth(Std.parseFloat(text));
-                        }
-                    });
-                },
-                listeners:{
-                    click:function(){
-                        enableColourAdjustment(true);
-                    }
-                }
-            });
-
-            addCanvasButton({
-                cls :'x-btn-export-single-fake',
-                xtype: 'button',
-                top:40,
-                menu: Ext.create('Ext.menu.Menu',{
-                    items: items
-                }),
-            });
-
-            addCanvasButton({
-                cls :'x-btn-magplus-single',
-                xtype: 'button',
-                top:40,
-                handler: function(){
-                    zoomIn(annotationManager.activeAnnotation);
-                },
-                listeners:{
-                    mouseover:
-                    function(e){
-                        getApplication().getSingleAppContainer().hideExportSubMenu();
-                        getApplication().getSingleAppContainer().hideHelpingDiv();
-                    }
-                },
-                tooltip: {dismissDelay: 10000, text: 'Zoom in on tree'}
-            });
-
-            addCanvasButton({
-                cls : 'x-btn-magminus-single' ,
-                xtype: 'button',
-                top:40,
-                handler: function(){
-                    zoomOut(annotationManager.activeAnnotation);
-                },
-                listeners:{
-                    mouseover:
-                    function(e){
-                        getApplication().getSingleAppContainer().hideExportSubMenu();
-                        getApplication().getSingleAppContainer().hideHelpingDiv();
-                    }
-                },
-                tooltip: {dismissDelay: 10000, text: 'Zoom out of tree'}
-            });*/
         }else{
             addCanvasButton({
                 iconCls :'x-btn-export',
@@ -1588,99 +812,11 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
                 tooltip: {dismissDelay: 10000, text: 'Zoom out of tree'}
             });
         }
-
-        if(standaloneMode){
-            var container=getApplication().getSingleAppContainer();
-
-            /*container.addComponentToCentralPanel({
-                cls : 'x-btn-center-single' ,
-                xtype: 'button',
-                top:40,
-                handler: function(){
-                    //var parentWidth : Int = this.dom.clientWidth;
-                    //var parentHeight : Int = this.dom.clientHeight;
-                    //this.centrex=Math.round(parentWidth/2);
-                    //this.centrey=Math.round(parentHeight/2);
-                    //centerCanvas();
-                    //newposition(0,0);
-                },
-                listeners:{
-                    mouseover:
-                    function(e){
-                        getApplication().getSingleAppContainer().hideExportSubMenu();
-                        getApplication().getSingleAppContainer().hideHelpingDiv();
-                    }
-                },
-                tooltip: {dismissDelay: 10000, text: 'Centre Tree'}
-            });*/
-
-           /* container.addComponentToCentralPanel({
-                cls : 'x-btn-highlight-single' ,
-                xtype: 'button',
-                top:40,
-                handler: function(){
-
-                        var container=getApplication().getSingleAppContainer();
-
-                    annotationManager.closeAnnotWindows();
-    //garsot
-                    if(this.canvas.rootNode.targets.length!=0){
-                        var div :Array<Dynamic>;
-                        div=new Array();
-                        var i=0;
-                        var title=this.canvas.rootNode.targets.length;
-                        for(i in 0 ... this.canvas.rootNode.targets.length){
-                            div[i]={
-                                xtype: "checkboxfield",
-                                boxLabel: this.canvas.rootNode.targets[i],
-                                labelSeparator : "",
-                                name: "gene",
-                                cls: "highlightgene-checkbox",
-                                inputValue: this.canvas.rootNode.targets[i],
-                                id:  "hight-"+i
-                            };
-                        }
-                        var container=getApplication().getSingleAppContainer();
-                        var mydom=js.Browser.document.getElementById('id-centralPanel');
-                        var parentWidth : Int = mydom.clientWidth;
-                        var parentHeight : Int = mydom.clientHeight;
-                        var cx=Math.round(parentWidth/2)-350;
-                        var cy=Math.round(parentHeight/5);
-
-                        container.showHighlightWindow(div,cx,cy,title,this);
-
-                    }
-                },
-                tooltip: {dismissDelay: 10000, text: 'Highlight gene in tree'}
-            });*/
-        }
-    }
-
-    public function toggleCircularTrees(){
-        if(drawingMode == ChromoHubDrawingMode.STRAIGHT){
-            drawingMode = ChromoHubDrawingMode.CIRCULAR;
-        }else{
-            drawingMode = ChromoHubDrawingMode.STRAIGHT;
-        }
-
-        redrawTree();
-    }
-
-    public function toggleShadow(){
-        config.enableShadow = ! config.enableShadow;
-        newposition(0,0);
-    }
-
-    public function setShadowColour(colour : String){
-        config.shadowColour = colour;
-
-        newposition(0,0);
     }
 
     public function redrawTree(){
         setTreeFromNewickStr(newickStr);
     }
-
 
     public function updateAlignment(){
         var self : ChromoHubViewer = this;
@@ -2820,6 +1956,8 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         annotationManager.subtreeName = subtreeName;
         annotationManager.treeType = treeType;
 
+        config.drawingMode = PhyloDrawingMode.CIRCULAR;
+
         WorkspaceApplication.getApplication().debug(name);
         annotationManager.searchedGenes=new Array();
         this.config.highlightedGenes=new Map<String, Bool>();
@@ -3061,195 +2199,189 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
        #elseif UBIHUB
         var level1Items :Array<Dynamic> = [
-            {
-                xtype:'label',
-                text:'E1 & E2',
-                style:{
-                    color: '#4d749f'
-                }
-            },
-            {
-                xtype:'panel',
-                layout:'hbox',
-                items:[
-                    {
-                        margin: '0 10 5 0',
-                        xtype : 'button',
-                        cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
-                        handler: function() {
+             {
+                 xtype:'label',
+                 text:'E1 & E2',
+                 margin: '0 0 5 0',
+                 style:{
+                     color: '#4d749f'
+                 }
+             },
+             {
+                 xtype:'panel',
+                 layout:'hbox',
+                 items:[
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('E1') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e1' else if (mapFam.exists('E1') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e1-gene' else if (mapFam.exists('E1') == false && treeType == 'domain') 'x-btn-target-e1' else 'x-btn-target-e1-gene',
+                         handler: function() {
                             treeName = 'E1';
 
-                            subtreeName = treeName;
+                             subtreeName = treeName;
 
-                            generateTree(treeName, treeType);
-                        },
-                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-                    },
-                    {
-                        margin: '0 10 5 0',
-                        xtype : 'button',
-                        cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
-                        handler: function() {
-                            treeName = 'E2';
+                             generateTree(treeName, treeType);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E1' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     },
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('E2') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e2' else if (mapFam.exists('E2') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e2-gene' else if (mapFam.exists('E2') == false && treeType == 'domain') 'x-btn-target-e2' else 'x-btn-target-e2-gene',
+                         handler: function() {
+                             treeName = 'E2';
 
-                            subtreeName = treeName;
+                             subtreeName = treeName;
 
-                            generateTree(treeName, treeType);
-                        },
-                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E2' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-                    }
-                ]
-            }
-        ];
-
-        var level2Items :Array<Dynamic> = [
-            {
-                xtype:'label',
-                text:'E3 ligases',
-                style:{
-                    color: '#4d749f'
-                }
-            },
-            {
-                xtype:'panel',
-                layout:'hbox',
-                items:[
-                   {
-                    xtype: 'component',
-                    html:'
-                        <form>
-                            <fieldset>
-                            <legend>
-                            Involved in UPS confidence
-                            </legend>
-                            <div style="max-width:400px">
-                            Indicates the confidence level that a protein is involved in the ubiquitin proteasome system.
-            "degrad" found in Uniprot function: 1 point.
-            "degrad" found in Reactome pathway(s): 1 point.
-            "degrad" found in Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point
-                            </div>
-                            <div>
-                                <input type="radio" name="usp_confidence" value="Cluster" />
-                                <label>Any</label>
-                                <input type="radio" name="usp_confidence" value="1" />
-                                <label>confidence >= 1</label>
-                                <input type="radio" name="usp_confidence" value="2"  checked />
-                                <label>confidence >= 2</label>
-                                <input type="radio" name="usp_confidence" value="3"  />
-                                <label>confidence >= 3</label>
-                            </div>
-                            </fieldset>
-                        </form>
-                   '
-                   }
-                ]
-            }
-        ];
-
-        var level3Items :Array<Dynamic> = [
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('E3_Complex') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3_Complex') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3_Complex') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
-                handler: function() {
-                    treeName = 'E3_Complex';
-
-                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
-
-                    subtreeName = treeName + '_' + d.value;
-
-                    generateTree(treeName, treeType,subtreeName);
-                },
-                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Multi-subunit E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-            },
-            {
-                margin: '0 10 5 0',
-                xtype : 'button',
-                cls : if (mapFam.exists('E3_Ligase') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3_Ligase') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3_Ligase') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
-                handler: function() {
-                    treeName = 'E3_Ligase';
-
-                    var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
-
-                    subtreeName = treeName + '_' + d.value;
-
-                    generateTree(treeName, treeType,subtreeName);
-                },
-                tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Simple E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-            }
-        ];
-
-        var level4Items :Array<Dynamic> =[
-            {
-                xtype:'label',
-                text:'DUPs',
-                style:{
-                    color: '#4d749f'
-                }
-            },
-            {
-                xtype:'panel',
-                layout:'hbox',
-                items:[
-                    {
-                        margin: '0 10 5 0',
-                        xtype : 'button',
-                        cls : if (mapFam.exists('NON_USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON_USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON_USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
-                        handler: function() {
-                            treeName = 'NON_USP';
-
-                            subtreeName = treeName;
-
-                            generateTree(treeName, treeType);
-                        },
-                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-                    },
-                    {
-                        margin: '0 10 5 0',
-                        xtype : 'button',
-                        cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
-                        handler: function() {
-                            treeName = 'USP';
-
-                            subtreeName = treeName;
-
-                            generateTree(treeName, treeType);
-                        },
-                        tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
-                    }
+                             generateTree(treeName, treeType);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'E2' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     }
                  ]
              }
         ];
 
-        ubiButtons = [
-            {
-                xtype: 'panel',
-                layout: 'vbox',
-                items:[
+        var level2Items :Array<Dynamic> = [
+             {
+                 xtype:'panel',
+                 layout:'hbox',
+                 items:[
                     {
-                        xtype: 'panel',
-                        layout: 'vbox',
-                        items: level1Items
-                    },
-                    {
-                        xtype: 'panel',
-                        layout: 'vbox',
-                        items: level4Items
-                    },
-                    {
-                        xtype: 'panel',
-                        layout:'vbox',
-                        items:level2Items
-                    },
-                    {
-                        xtype: 'panel',
-                        layout: 'hbox',
-                        items: level3Items
-                    }
-
-                ]
-            }
+                     xtype: 'component',
+                     html:'
+                         <form>
+                             <fieldset>
+                                 <div style="width:100%; padding:10px 0;">
+                                    <span>Show only E3 ligases involved in UPS with confidence <label>&gt=1</label><input type="radio" name="usp_confidence" value="1" />;&nbsp;&nbsp;<label>1&gt2</label><input type="radio" name="usp_confidence" value="2" checked />;&nbsp;&nbsp;<label>&gt=3</label><input type="radio" name="usp_confidence" value="3" />;&nbsp;&nbsp;<label>show all</label><input type="radio" name="usp_confidence" value="Cluster" /> <span class="tooltip">?<span class="tooltiptext">Indicates the confidence level that a protein is involved in the ubiquitin proteasome system. "degrad" found in Uniprot function: 1 point. "degrad" found in Reactome pathway(s): 1 point. "degrad" found in a Reactome pathway enriched among biogrid interactors [pathway must be found in at least 3 interactors and enriched at least 3 fold compared with proteome]: 1 point</span></span>
+                                 </div>
+                             </fieldset>
+                         </form>
+                     '
+                     }
+                 ]
+             }
         ];
+
+        var level3Items :Array<Dynamic> = [
+             {
+                 xtype:'label',
+                 text:'E3 ligases',
+                 margin: '0 0 5 0',
+                 style:{
+                     color: '#4d749f'
+                 }
+             },
+             {
+                 xtype:'panel',
+                 layout:'hbox',
+                 items:[
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('E3_Complex') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-complex' else if (mapFam.exists('E3_Complex') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-complex-gene' else if (mapFam.exists('E3_Complex') == false && treeType == 'domain') 'x-btn-target-e3-complex' else 'x-btn-target-e3-complex-gene',
+                         handler: function() {
+                             treeName = 'E3_Complex';
+
+                             var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                             subtreeName = treeName + '_' + d.value;
+
+                             generateTree(treeName, treeType,subtreeName);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Multi-subunit E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     },
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('E3_Ligase') == true && treeType == 'domain')'x-btn-target-found x-btn-target-e3-simple' else if (mapFam.exists('E3_Ligase') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-e3-simple-gene' else if (mapFam.exists('E3_Ligase') == false && treeType == 'domain') 'x-btn-target-e3-simple' else 'x-btn-target-e3-simple-gene',
+                         handler: function() {
+                             treeName = 'E3_Ligase';
+
+                             var d : Dynamic = js.Browser.document.querySelector('input[name="usp_confidence"]:checked');
+
+                             subtreeName = treeName + '_' + d.value;
+
+                             generateTree(treeName, treeType,subtreeName);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'Simple E3 ligases' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     }
+                 ]
+             }
+        ];
+
+        var level4Items :Array<Dynamic> =[
+             {
+                 xtype:'label',
+                 text:'DUBs',
+                 margin: '0 0 5 0',
+                 style:{
+                     color: '#4d749f'
+                 }
+             },
+             {
+                 xtype:'panel',
+                 layout:'hbox',
+                 items:[
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('NON_USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-non-usp' else if (mapFam.exists('NON_USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-non-usp-gene' else if (mapFam.exists('NON_USP') == false && treeType == 'domain') 'x-btn-target-non-usp' else 'x-btn-target-non-usp-gene',
+                         handler: function() {
+                             treeName = 'NON_USP';
+
+                             subtreeName = treeName;
+
+                             generateTree(treeName, treeType);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'NON-USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     },
+                     {
+                         margin: '0 15 15 0',
+                         xtype : 'button',
+                         cls : if (mapFam.exists('USP') == true && treeType == 'domain')'x-btn-target-found x-btn-target-usp' else if (mapFam.exists('USP') == true && treeType == 'gene') 'x-btn-target-found x-btn-target-usp-gene' else if (mapFam.exists('USP') == false && treeType == 'domain') 'x-btn-target-usp' else 'x-btn-target-usp-gene',
+                         handler: function() {
+                             treeName = 'USP';
+
+                             subtreeName = treeName;
+
+                             generateTree(treeName, treeType);
+                         },
+                         tooltip: {dismissDelay: 10000, text: if (treeType == 'gene') 'USP' else 'There is no domain-based alignment for this family. Select "full length proteins" above to see access this tree.'}
+                     }
+                  ]
+              }
+        ];
+
+        ubiButtons = [
+             {
+                 xtype: 'panel',
+                 layout: 'vbox',
+                 items:[
+                     {
+                         xtype: 'panel',
+                         layout: 'vbox',
+                         items: level1Items
+                     },
+                     {
+                         xtype: 'panel',
+                         layout: 'vbox',
+                         items: level3Items
+                     },
+                     {
+                         xtype: 'panel',
+                         layout:'hbox',
+                         items:level2Items
+                    },
+                     {
+                         xtype: 'panel',
+                         layout: 'vbox',
+                         items: level4Items
+                     }
+
+                 ]
+             }
+        ];
+
        #else
        chmodproWriters = new Array();
        chmodproWriters = [
