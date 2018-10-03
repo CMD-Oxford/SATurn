@@ -1,4 +1,5 @@
 package saturn.client;
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.chromohub.ChromoHubViewer;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.WorkspaceApplication.ScreenMode;
@@ -1228,7 +1229,7 @@ class SingleAppContainer {
     public function addElemToPopUpWindow(elem:Dynamic){
         popUpWindow.add(elem);
     }
-    public function addFormItemToPopUpWindow(item:Dynamic, annot, hasClass, popMethod, tree_type:String, family:String, searchGenes:Array<Dynamic>,viewer:ChromoHubViewer){
+    public function addFormItemToPopUpWindow(item:Dynamic, annot, hasClass, popMethod, tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager){
 
         popUpWindow.add({
             xtype : 'form',
@@ -1254,26 +1255,26 @@ class SingleAppContainer {
                     var form = this.popUpWindow.getComponent('wform');
                     if (form.isValid()) {
 
-                       viewer.annotationManager.cleanAnnotResults(annot);
+                       annotationManager.cleanAnnotResults(annot);
 
                        var hook = Reflect.field(Type.resolveClass(hasClass), popMethod);
-                        hook(annot,form,tree_type,family,searchGenes,viewer, function(){
+                        hook(annot,form,tree_type,family,searchGenes,annotationManager, function(){
 
                         }
                         );
                        // if(viewer.userMessage==true){
                          //   showMessageWindow();
                         //}
-                        addImageToLegend(viewer.annotationManager.annotations[annot].legend, annot);
+                        addImageToLegend(annotationManager.annotations[annot].legend, annot);
                         legendPanel.expand();
                         hidePopUpWindow();
 
-                        viewer.annotationManager.activeAnnotation[annot]=true;
+                        annotationManager.activeAnnotation[annot]=true;
                         clearOptionsToolBar();
-                        viewer.annotationManager.createViewOptions();
-                        addElemToOptionsToolBar(viewer.annotationManager.viewOptions);
+                        annotationManager.createViewOptions();
+                        addElemToOptionsToolBar(annotationManager.viewOptions);
                         var elem=js.Browser.document.getElementById('optionToolBarId');
-                        elem.scrollTop=viewer.annotationManager.menuScroll;
+                        elem.scrollTop=annotationManager.menuScroll;
                     }
                 }
             },

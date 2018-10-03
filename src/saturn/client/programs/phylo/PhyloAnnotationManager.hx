@@ -15,6 +15,20 @@ class PhyloAnnotationManager {
     public var legacyViewer : ChromoHubViewer;
     public var searchedGenes :Array<String>;
 
+    /**
+    *
+    *
+    **/
+
+    var nameAnnot: Array<String>;
+    public var jsonFile : Dynamic;
+    public var viewOptions : Array <Dynamic>;
+    public var activeAnnotation:Array<Bool>;
+    public var alreadyGotAnnotation:Map<String,Bool>;
+    public var selectedAnnotationOptions = [];
+    public var onSubmenu:Bool=false;
+    public var menuScroll=0;
+
     public function new(legacyViewer : ChromoHubViewer) {
         this.legacyViewer = legacyViewer;
         annotations = new Array<PhyloAnnotation>();
@@ -115,19 +129,7 @@ class PhyloAnnotationManager {
         }
     }
 
-    /**
-    *
-    *
-    **/
 
-    var nameAnnot: Array<String>;
-    public var jsonFile : Dynamic;
-    public var viewOptions : Array <Dynamic>;
-    public var activeAnnotation:Array<Bool>;
-    public var alreadyGotAnnotation:Map<String,Bool>;
-    public var selectedAnnotationOptions = [];
-    public var onSubmenu:Bool=false;
-    public var menuScroll=0;
 
 
     public function fillAnnotationwithJSonData(){
@@ -348,7 +350,7 @@ class PhyloAnnotationManager {
                                     container.setPopUpWindowTitle(tit);
 
                                     var optt=jsonFile.btnGroup[ia].buttons[za].windowsData[0];
-                                    container.addFormItemToPopUpWindow(optt.form.items,b.annotCode,optt.hasClass,optt.popMethod, this.treeType, this.treeName, null, legacyViewer );
+                                    container.addFormItemToPopUpWindow(optt.form.items,b.annotCode,optt.hasClass,optt.popMethod, this.treeType, this.treeName, null, this );
                                     container.showPopUpWindow();
                                 };
                             }else {

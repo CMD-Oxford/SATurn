@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
@@ -116,7 +117,7 @@ class ProteinLevelNormalTissuesAnnotation {
         }
     }
 
-    static function hasNormalLevelFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
+    static function hasNormalLevelFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
         var proteinLevels = [];
         var reliability = [];
         var tissueTypes = [];
@@ -175,24 +176,24 @@ class ProteinLevelNormalTissuesAnnotation {
             'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
             'reliabilities': reliability
         }];
-        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
+        annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         // Make web-service call
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevels', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.annotationManager.activeAnnotation[annotation] = true;
+                    annotationManager.activeAnnotation[annotation] = true;
 
-                    if(viewer.treeName == ''){
+                    if(annotationManager.treeName == ''){
                         // We get here for table view
-                        viewer.annotationManager.addAnnotDataGenes(db_results, annotation, function(){
+                        annotationManager.addAnnotDataGenes(db_results, annotation, function(){
                             cb(db_results, null);
                         });
                     }else{
                         // We get here for tree view
-                        viewer.annotationManager.addAnnotData(db_results, annotation, 0, function(){
-                            viewer.newposition(0, 0);
+                        annotationManager.addAnnotData(db_results, annotation, 0, function(){
+                            annotationManager.canvas.redraw();
 
                             cb(db_results, null);
                         });
@@ -304,7 +305,7 @@ class ProteinLevelNormalTissuesAnnotation {
         }
     }
 
-    static function hasNormalLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, viewer : ChromoHubViewer, cb : Dynamic->String->Void){
+    static function hasNormalLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
 
         var proteinLevels = [];
         var reliability = [];
@@ -357,24 +358,24 @@ class ProteinLevelNormalTissuesAnnotation {
             'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
             'reliabilities': reliability
         }];
-        viewer.annotationManager.setSelectedAnnotationOptions(annotation, args);
+        annotationManager.setSelectedAnnotationOptions(annotation, args);
 
         // Make web-service call
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevelsPercentage', args, null, false, function(db_results, error){
             if(error == null){
                 if(db_results != null){
 
-                    viewer.annotationManager.activeAnnotation[annotation] = true;
+                    annotationManager.activeAnnotation[annotation] = true;
 
-                    if(viewer.treeName == ''){
+                    if(annotationManager.treeName == ''){
                         // We get here for table view
-                        viewer.annotationManager.addAnnotDataGenes(db_results, annotation, function(){
+                        annotationManager.addAnnotDataGenes(db_results, annotation, function(){
                             cb(db_results, null);
                         });
                     }else{
                         // We get here for tree view
-                        viewer.annotationManager.addAnnotData(db_results, annotation, 0, function(){
-                            viewer.newposition(0, 0);
+                        annotationManager.addAnnotData(db_results, annotation, 0, function(){
+                            annotationManager.canvas.redraw();
 
                             cb(db_results, null);
                         });
