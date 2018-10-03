@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
@@ -164,7 +165,7 @@ class SHRNAAnnotation {
         }
     }
 
-    static function shRnaFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer,callback : Dynamic->String->Void){
+    static function shRnaFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager: PhyloAnnotationManager,callback : Dynamic->String->Void){
 
         var aux:Dynamic;
         var shrna_flag=false;
@@ -175,7 +176,7 @@ class SHRNAAnnotation {
             if(flag==true) shrna_flag=true;
         }
 
-        viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
+        annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
 
         if(shrna_flag==true){
             var al='shRnaflaq';
@@ -185,7 +186,7 @@ class SHRNAAnnotation {
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery(al,{param : family}, null, true, function(results: Dynamic, error){
                 if(error == null) {
                     if (results!=null){
-                        shRnaContinueFunction (annotation,form,tree_type, family, searchGenes, viewer, results, function(db_results, error){
+                        shRnaContinueFunction (annotation,form,tree_type, family, searchGenes, annotationManager, results, function(db_results, error){
                             callback(db_results,null);
                         });
                     }
@@ -194,13 +195,13 @@ class SHRNAAnnotation {
 
         }else{
             var results=new Array<Dynamic>();
-            shRnaContinueFunction (annotation,form,tree_type, family, searchGenes, viewer, results, function(db_results, error){
+            shRnaContinueFunction (annotation,form,tree_type, family, searchGenes, annotationManager, results, function(db_results, error){
                 callback(db_results,null);
             });
         }
     }
 
-    static function shRnaContinueFunction(annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>, viewer:ChromoHubViewer, flagresults: Array<Dynamic>,callback : Dynamic->String->Void){
+    static function shRnaContinueFunction(annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>, annotationManager:PhyloAnnotationManager, flagresults: Array<Dynamic>,callback : Dynamic->String->Void){
 
         var shrna_cutoff:String;
         var shrna_num_cutoff:String;
@@ -224,9 +225,9 @@ class SHRNAAnnotation {
             shrna_cutoff='-2';
         }
 
-        viewer.annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
-        viewer.annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
-        viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
+        annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
+        annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
+        annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookshRna', [{'treeType':tree_type,'familyTree':family,'shrna_cutoff':shrna_cutoff,'shrna_num_cutoff':shrna_num_cutoff,'shrna_flag':shrna_flag,'flagresults':flagresults,'searchGenes':searchGenes}], null, false,function(db_results:Array<Dynamic>, error){
             if(error == null) {
@@ -322,18 +323,18 @@ class SHRNAAnnotation {
                                     }
                                 }
 
-                                viewer.annotationManager.annotations[annotation].fromresults[3]=shrna_results;
-                                viewer.annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
-                                viewer.annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
-                                viewer.annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
-                                viewer.annotationManager.activeAnnotation[annotation]=true;
-                                if(viewer.treeName==''){
-                                    viewer.annotationManager.addAnnotDataGenes(fresults,annotation,function(){
+                                annotationManager.annotations[annotation].fromresults[3]=shrna_results;
+                                annotationManager.annotations[annotation].fromresults[0]=shrna_cutoff;
+                                annotationManager.annotations[annotation].fromresults[1]=shrna_num_cutoff;
+                                annotationManager.annotations[annotation].fromresults[2]=shrna_flag;
+                                annotationManager.activeAnnotation[annotation]=true;
+                                if(annotationManager.treeName==''){
+                                    annotationManager.addAnnotDataGenes(fresults,annotation,function(){
                                         callback(db_results,null);
                                     });
                                 }else{
-                                    viewer.annotationManager.addAnnotData(fresults,annotation,0,function(){
-                                        viewer.newposition(0,0);
+                                    annotationManager.addAnnotData(fresults,annotation,0,function(){
+                                        annotationManager.canvas.redraw();
                                         callback(db_results,null);
                                     });
                                 }

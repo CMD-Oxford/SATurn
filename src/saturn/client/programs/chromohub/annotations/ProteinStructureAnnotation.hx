@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
@@ -144,7 +145,7 @@ class ProteinStructureAnnotation {
             WorkspaceApplication.getApplication().debug("NOT access db");
     }
 
-    static function structuresFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer, callback:Dynamic->String->Void){
+    static function structuresFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager, callback:Dynamic->String->Void){
         var aux:Dynamic;
         var cutoff:String;
         var option:String;
@@ -172,14 +173,14 @@ class ProteinStructureAnnotation {
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookStructures', [{'treeType':tree_type,'familyTree':family,'st_select':option,'cutoff':cutoff,'xray':xray, 'searchGenes':searchGenes}], null, false,function(db_results, error){
             if(error == null) {
                 if (db_results!=null){
-                    viewer.annotationManager.activeAnnotation[annotation]=true;
-                    if(viewer.treeName==''){
-                        viewer.annotationManager.addAnnotDataGenes(db_results,annotation,function(){
+                    annotationManager.activeAnnotation[annotation]=true;
+                    if(annotationManager.treeName==''){
+                        annotationManager.addAnnotDataGenes(db_results,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.annotationManager.addAnnotData(db_results,annotation,0,function(){
-                            viewer.newposition(0,0);
+                        annotationManager.addAnnotData(db_results,annotation,0,function(){
+                            annotationManager.canvas.redraw();
                             callback(db_results,null);
                         });
                     }

@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
@@ -119,7 +120,7 @@ class InhibitorAnnotation {
             WorkspaceApplication.getApplication().debug("NOT access db");
     }
 
-    static function inhibitorsFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer,callback : Dynamic->String->Void){
+    static function inhibitorsFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,callback : Dynamic->String->Void){
 
         var ligand_select:String;
         var chemi_sel=true;
@@ -138,20 +139,20 @@ class InhibitorAnnotation {
             ligand_select='1';
         }
 
-        viewer.annotationManager.annotations[annotation].fromresults[0]=ligand_select;
-        viewer.annotationManager.annotations[annotation].fromresults[1]=chemi_sel;
+        annotationManager.annotations[annotation].fromresults[0]=ligand_select;
+        annotationManager.annotations[annotation].fromresults[1]=chemi_sel;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookInhibitors',[{'treeType':tree_type,'familyTree':family,'ligand_select':ligand_select,'chemi_sel':chemi_sel,'searchGenes':searchGenes}], null, false,function(db_results, error){
             if(error == null) {
                 if (db_results!=null){
-                    viewer.annotationManager.activeAnnotation[annotation]=true;
-                    if(viewer.treeName==''){
-                        viewer.annotationManager.addAnnotDataGenes(db_results,annotation,function(){
+                    annotationManager.activeAnnotation[annotation]=true;
+                    if(annotationManager.treeName==''){
+                        annotationManager.addAnnotDataGenes(db_results,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.annotationManager.addAnnotData(db_results,annotation,0,function(){
-                            viewer.newposition(0,0);
+                        annotationManager.addAnnotData(db_results,annotation,0,function(){
+                            annotationManager.canvas.redraw();
                             callback(db_results,null);
                         });
                     }

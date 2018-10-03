@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.phylo.PhyloAnnotation;
 import saturn.client.programs.phylo.PhyloScreenData;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
@@ -131,7 +132,7 @@ class RNASeqAnnotation {
         }
     }
 
-    static function rnaSeqFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer,callback : Dynamic->String->Void){
+    static function rnaSeqFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,callback : Dynamic->String->Void){
         //we get the form values
         //type
 
@@ -208,17 +209,17 @@ class RNASeqAnnotation {
                             }
                         }
                     }
-                    viewer.annotationManager.activeAnnotation[annotation]=true;
-                    viewer.annotationManager.annotations[annotation].fromresults[0]=all_results;
-                    viewer.annotationManager.annotations[annotation].fromresults[1]=seqexp_fc_cutoff;
-                    viewer.annotationManager.annotations[annotation].fromresults[2]=seq_evaluator;
-                    if(viewer.treeName==''){
-                        viewer.annotationManager.addAnnotDataGenes(check_results,annotation,function(){
+                    annotationManager.activeAnnotation[annotation]=true;
+                    annotationManager.annotations[annotation].fromresults[0]=all_results;
+                    annotationManager.annotations[annotation].fromresults[1]=seqexp_fc_cutoff;
+                    annotationManager.annotations[annotation].fromresults[2]=seq_evaluator;
+                    if(annotationManager.treeName==''){
+                        annotationManager.addAnnotDataGenes(check_results,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.annotationManager.addAnnotData(check_results,annotation,0,function(){
-                            viewer.newposition(0,0);
+                        annotationManager.addAnnotData(check_results,annotation,0,function(){
+                            annotationManager.canvas.redraw();
                             callback(db_results,null);
                         });
                     }

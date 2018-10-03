@@ -1,5 +1,6 @@
 package saturn.client.programs.chromohub.annotations;
 
+import saturn.client.programs.phylo.PhyloAnnotationManager;
 import saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation;
 import haxe.ds.StringMap;
 import haxe.ds.HashMap;
@@ -219,7 +220,7 @@ class SomaticMutationAnnotation {
         }
     }
 
-    static function somaticMutFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,viewer:ChromoHubViewer,callback : Dynamic->String->Void) {
+    static function somaticMutFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,callback : Dynamic->String->Void) {
 
         if (family=='') {
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery('sm_sig_arr_all_families',{'gene' : searchGenes}, null, true, function(results: Dynamic, error){
@@ -233,7 +234,7 @@ class SomaticMutationAnnotation {
                         mut_sig_arr.set(disease+'-'+gene,qvalue);
                     }
 
-                    somaticMutFunctionContinue (annotation,form,tree_type, family, searchGenes,viewer,mut_sig_arr, function(db_results,error){
+                    somaticMutFunctionContinue (annotation,form,tree_type, family, searchGenes,annotationManager,mut_sig_arr, function(db_results,error){
                         callback(db_results,error);
                     });
                 }else{
@@ -251,7 +252,7 @@ class SomaticMutationAnnotation {
                         var qvalue = results[i].qvalue;
                         mut_sig_arr.set(disease+'-'+gene,qvalue);
                     }
-                    somaticMutFunctionContinue (annotation,form,tree_type, family, searchGenes,viewer,mut_sig_arr, function(db_results,error){
+                    somaticMutFunctionContinue (annotation,form,tree_type, family, searchGenes,annotationManager,mut_sig_arr, function(db_results,error){
                         callback(db_results,error);
                     });
                 }else{
@@ -261,7 +262,7 @@ class SomaticMutationAnnotation {
         }
     }
 
-    static function somaticMutFunctionContinue (annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>,viewer:ChromoHubViewer,mut_sig_arr:Map<String,Int>,callback : Dynamic->String->Void){
+    static function somaticMutFunctionContinue (annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,mut_sig_arr:Map<String,Int>,callback : Dynamic->String->Void){
 
         var mutsig=false;
         var mutated_dynamic=false;
@@ -309,14 +310,14 @@ class SomaticMutationAnnotation {
             results_cutoff=2;
         }
 
-        viewer.annotationManager.annotations[annotation].fromresults[0]=mutsig;
-        viewer.annotationManager.annotations[annotation].fromresults[1]=mutated_dynamic;
-        viewer.annotationManager.annotations[annotation].fromresults[2]=mutated_cutoff_box;
-        viewer.annotationManager.annotations[annotation].fromresults[3]=mutated_cutoff;
-        viewer.annotationManager.annotations[annotation].fromresults[4]=patient_cutoff;
-        viewer.annotationManager.annotations[annotation].fromresults[5]=results_cutoff;
-        viewer.annotationManager.annotations[annotation].fromresults[6]=nonsilent;
-        viewer.annotationManager.annotations[annotation].fromresults[7]=validated;
+        annotationManager.annotations[annotation].fromresults[0]=mutsig;
+        annotationManager.annotations[annotation].fromresults[1]=mutated_dynamic;
+        annotationManager.annotations[annotation].fromresults[2]=mutated_cutoff_box;
+        annotationManager.annotations[annotation].fromresults[3]=mutated_cutoff;
+        annotationManager.annotations[annotation].fromresults[4]=patient_cutoff;
+        annotationManager.annotations[annotation].fromresults[5]=results_cutoff;
+        annotationManager.annotations[annotation].fromresults[6]=nonsilent;
+        annotationManager.annotations[annotation].fromresults[7]=validated;
 
         WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookSomaticMutations', [{'treeType':tree_type,'familyTree':family,'sm_mutsig':mutsig,'sm_mutated_dynamic':mutated_dynamic,'sm_mutated_cutoff_box':mutated_cutoff_box,
             'sm_mutated_cutoff':mutated_cutoff,'sm_patient_cutoff':patient_cutoff,'sm_results_cutoff':results_cutoff,'sm_nonsilent':nonsilent,'sm_validated':validated,'searchGenes':searchGenes}], null, false,function(db_results:Dynamic, error){
@@ -398,15 +399,15 @@ class SomaticMutationAnnotation {
                     }
 
 
-                    viewer.annotationManager.annotations[annotation].fromresults[8]=somatic_mutations_list;
-                    viewer.annotationManager.activeAnnotation[annotation]=true;
-                    if(viewer.treeName==''){
-                        viewer.annotationManager.addAnnotDataGenes(fresults,annotation,function(){
+                    annotationManager.annotations[annotation].fromresults[8]=somatic_mutations_list;
+                    annotationManager.activeAnnotation[annotation]=true;
+                    if(annotationManager.treeName==''){
+                        annotationManager.addAnnotDataGenes(fresults,annotation,function(){
                             callback(db_results,null);
                         });
                     }else{
-                        viewer.annotationManager.addAnnotData(fresults,annotation,0,function(){
-                            viewer.newposition(0,0);
+                        annotationManager.addAnnotData(fresults,annotation,0,function(){
+                            annotationManager.canvas.redraw();
                             callback(db_results,null);
                         });
                     }
