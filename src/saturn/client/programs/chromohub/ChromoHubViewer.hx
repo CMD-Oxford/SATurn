@@ -968,9 +968,10 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         currentView=2;
 
         if(this.canvas!=null){
-            this.canvas.parent.removeChild( this.canvas.canvas);//otherwise, we'll get two trees
+            this.canvas.destroy();
             this.canvas=null;
         }
+
         container.setCentralComponent(theComponent);
         theComponent.doLayout();
 
