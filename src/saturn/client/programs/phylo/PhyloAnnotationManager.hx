@@ -182,6 +182,10 @@ class PhyloAnnotationManager {
                         }
                     }
 
+                    if(jsonFile.btnGroup[i].buttons[j].hidden != null){
+                        annotations[a].hidden = jsonFile.btnGroup[i].buttons[j].hidden;
+                    }
+
                     if(jsonFile.btnGroup[i].buttons[j].submenu==true){
                         var zz:Int;
                         for (zz in 0 ...jsonFile.btnGroup[i].buttons[j].options.length){
@@ -233,6 +237,11 @@ class PhyloAnnotationManager {
 
                 // Hard coded to hide annotations for some of the trees
                 if(b.annotCode == 26 && treeName == 'E1' || b.annotCode == 26 && treeName == 'E2' || b.annotCode == 26 && treeName == 'USP'){
+                    z++;
+                    continue;
+                }
+
+                if(b.hidden == true){
                     z++;
                     continue;
                 }
@@ -294,6 +303,14 @@ class PhyloAnnotationManager {
 
                                 showAnnotation(b.annotCode,false);
 
+                                // Hard coded to close hidden annotations
+                                if (b.annotCode == 25){
+                                    showAnnotation(30,false);
+                                }
+                                if (b.annotCode == 28){
+                                    showAnnotation(29,false);
+                                }
+
                                 container.clearOptionsToolBar();
                                 createViewOptions();
                                 container.addElemToOptionsToolBar(viewOptions);
@@ -352,6 +369,12 @@ class PhyloAnnotationManager {
                                     var optt=jsonFile.btnGroup[ia].buttons[za].windowsData[0];
                                     container.addFormItemToPopUpWindow(optt.form.items,b.annotCode,optt.hasClass,optt.popMethod, this.treeType, this.treeName, null, this );
                                     container.showPopUpWindow();
+
+                                    // Load annotation.js
+                                    var fileref = js.Browser.document.createElement('script');
+                                    fileref.setAttribute("type","text/javascript");
+                                    fileref.setAttribute("src", '/static/js/annotation.js');
+                                    js.Browser.document.head.appendChild(fileref);
                                 };
                             }else {
                                 function(){

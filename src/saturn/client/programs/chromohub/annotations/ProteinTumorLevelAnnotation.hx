@@ -113,6 +113,11 @@ class ProteinTumorLevelAnnotation {
         var cancer_type:String;
         var proteinLevels = [];
 
+        if(form.form.findField('perc_protein_option').lastValue){
+            tumorLevelPercentageFunction(30, form, tree_type, family, searchGenes, annotationManager, cb);
+        }
+
+
         if(form != null){
             // We get here for tree annotation requests
             cancer_type = form.form.findField('cancer_type').lastValue;
@@ -266,7 +271,7 @@ class ProteinTumorLevelAnnotation {
     }
 
     static function tumorLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
-
+        var b = annotationManager;
         var proteinLevels = [];
         var percentage = null;
 
@@ -274,15 +279,15 @@ class ProteinTumorLevelAnnotation {
             // We get here for tree annotation requests
 
             // Process protein levels
-            if(form.form.findField('protein_level_high').lastValue){
+            if(form.form.findField('perc_protein_level_high').lastValue){
                 proteinLevels.push('High');
             }
 
-            if(form.form.findField('protein_level_medium').lastValue){
+            if(form.form.findField('perc_protein_level_medium').lastValue){
                 proteinLevels.push('Medium');
             }
 
-            if(form.form.findField('protein_level_low').lastValue){
+            if(form.form.findField('perc_protein_level_low').lastValue){
                 proteinLevels.push('Low');
             }
 

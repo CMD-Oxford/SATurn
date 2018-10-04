@@ -413,6 +413,50 @@
                       "name": "protein_level_not_detected",
                       "id": "protein_level_not_detected",
                       "inputValue": "Not detected"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Show only tumor types where the protein level is:",
+                      "margin": "15 0 0 0",
+                      "name": "perc_protein_option",
+                      "id": "perc_protein_option",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_high",
+                      "id": "perc_protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_medium",
+                      "id": "perc_protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_low",
+                      "id": "perc_protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "in percent of patients",
+                      "margin": "0 0 0 25",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup perc-protein-in-percentage",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
+                      "value": "at least 1"
                     }
                   ]
                 }
@@ -421,6 +465,7 @@
           {
             "label": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&#12291;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;percentage of tumor types",
             "enabled": true,
+            "hidden" : true,
             "isTitle": false,
             "helpText": "",
             "annotCode": 30,
@@ -461,22 +506,22 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "High",
-                      "name": "protein_level_high",
-                      "id": "protein_level_high",
+                      "name": "perc_protein_level_high",
+                      "id": "perc_protein_level_high",
                       "inputValue": "High"
                     },
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Medium",
-                      "name": "protein_level_medium",
-                      "id": "protein_level_medium",
+                      "name": "perc_protein_level_medium",
+                      "id": "perc_protein_level_medium",
                       "inputValue": "Medium"
                     },
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Low",
-                      "name": "protein_level_low",
-                      "id": "protein_level_low",
+                      "name": "perc_protein_level_low",
+                      "id": "perc_protein_level_low",
                       "inputValue": "Low"
                     },
                     {
@@ -850,6 +895,50 @@
                       "name": "protein_reliability_uncertain",
                       "id": "protein_reliability_uncertain",
                       "inputValue": "Uncertain"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Show only tissues/cell types where the protein level is:",
+                      "margin": "15 0 0 0",
+                      "name": "perc_protein_option",
+                      "id": "perc_protein_option",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "High",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_high",
+                      "id": "perc_protein_level_high",
+                      "inputValue": "High"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Medium",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_medium",
+                      "id": "perc_protein_level_medium",
+                      "inputValue": "Medium"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Low",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_low",
+                      "id": "perc_protein_level_low",
+                      "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "in_percentage",
+                      "fieldLabel": "in percent of patients",
+                      "margin": "0 0 0 25",
+                      "labelSeparator" : "",
+                      "queryMode": "local",
+                      "cls":"x-form-item-finishgroup perc-protein-in-percentage",
+                      "displayField": "name",
+                      "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
+                      "value": "at least 1"
                     }
                   ]
                 }
@@ -859,6 +948,7 @@
           {
             "label": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&#12291;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;percentage of normal tissues",
             "enabled": true,
+            "hidden" : true,
             "isTitle": false,
             "helpText": "",
             "annotCode": 29,

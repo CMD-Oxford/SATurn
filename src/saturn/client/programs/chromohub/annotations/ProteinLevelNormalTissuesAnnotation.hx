@@ -123,6 +123,14 @@ class ProteinLevelNormalTissuesAnnotation {
         var tissueTypes = [];
         var cellTypes = [];
 
+
+        var cancer_type:String;
+
+        if(form.form.findField('perc_protein_option').lastValue){
+            hasNormalLevelPercentageFunction(29, form, tree_type, family, searchGenes, annotationManager, cb);
+        }
+
+
         if(form != null){
             // We get here for tree annotation requests
 
@@ -206,7 +214,7 @@ class ProteinLevelNormalTissuesAnnotation {
     }
 
     static function hasNormalLevelPercentage(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
-        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#800080',used:true},defImage:0};
+        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#793ff3',used:true},defImage:0};
 
         callBack(r);
     }
@@ -315,15 +323,15 @@ class ProteinLevelNormalTissuesAnnotation {
             // We get here for tree annotation requests
 
             // Process protein levels
-            if(form.form.findField('protein_level_high').lastValue){
+            if(form.form.findField('perc_protein_level_high').lastValue){
                 proteinLevels.push('High');
             }
 
-            if(form.form.findField('protein_level_medium').lastValue){
+            if(form.form.findField('perc_protein_level_medium').lastValue){
                 proteinLevels.push('Medium');
             }
 
-            if(form.form.findField('protein_level_low').lastValue){
+            if(form.form.findField('perc_protein_level_low').lastValue){
                 proteinLevels.push('Low');
             }
 
