@@ -77,7 +77,9 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             toolBar = new PhyloToolBar(this);
         }
 
-        createCanvas();
+        //createCanvas();
+
+        redraw(true);
     }
 
     public function getRootNode() : PhyloTreeNode{
@@ -546,16 +548,22 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         //}
     }
 
-    public function redraw(create=true){
+    public function updateActions(){
         if(toolBar != null){
             toolBar.setLineTypeButtonVisible(config.drawingMode == PhyloDrawingMode.STRAIGHT);
+
+            toolBar.setTitle(config.title);
         }
+    }
+
+    public function redraw(create=true){
+       updateActions();
 
         if(create){
             createCanvas();
         }
 
-        toolBar.setTitle(config.title);
+
 
         var newWidth = this.canvas.width * this.scale;
         var newHeight = this.canvas.height * this.scale;
@@ -700,8 +708,19 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function setShadowColour(colour : String){
-        getConfig().shadowColour = colour;
-        getConfig().enableShadow = true;
+        if(colour == null){
+            getConfig().shadowColour = null;
+            getConfig().enableShadow = false;
+        }else{
+            getConfig().shadowColour = colour;
+            getConfig().enableShadow = true;
+        }
+
+        redraw();
+    }
+
+    public function toggleShadow(){
+        getConfig().enableShadow = ! getConfig().enableShadow;
 
         redraw();
     }
@@ -722,6 +741,7 @@ class PhyloCanvasConfiguration{
     public var scale : Float = 1;
     public var enableTools : Bool = false;
     public var enableToolbar : Bool = false;
+    public var verticalToolBar : Bool = false;
     public var title : String;
 
     public function new(){
