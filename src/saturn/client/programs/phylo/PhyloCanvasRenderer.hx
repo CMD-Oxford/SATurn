@@ -43,6 +43,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
     var container : Dynamic;
 
+    var autoFitting = false;
+
     public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager = null){
         this.parent = parentElement;
         this.width = width;
@@ -59,6 +61,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
         this.rootNode=rootNode;
 
+
        var doc:Dynamic;
 
        if(config == null){
@@ -66,6 +69,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
        }
 
         this.config = config;
+
+        config.dataChanged = true;
 
         if(config.enableTools){
             addNodeClickListener(defaultNodeClickListener);
@@ -78,8 +83,12 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }
 
         //createCanvas();
+        if(getConfig().autoFit){
+            autoFitRedraw();
+        }else{
+            redraw(true);
+        }
 
-        redraw(true);
     }
 
     public function getRootNode() : PhyloTreeNode{
@@ -556,23 +565,45 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }
     }
 
+    public function autoFitRedraw(){
+        autoFitting = true;
+
+        config.dataChanged = true;
+
+        redraw(true);
+
+        haxe.Timer.delay(function(){
+            autoFit();
+
+            autoFitting = false;
+
+            this.canvas.style.display = 'block';
+        }, 1);
+    }
+
     public function redraw(create=true){
+        if(! autoFitting && config.autoFit && config.dataChanged){
+            autoFitRedraw();
+
+            return;
+        }
+
        updateActions();
 
         if(create){
             createCanvas();
         }
 
-
+        if(autoFitting){
+            this.canvas.style.display = 'none';
+        }
 
         var newWidth = this.canvas.width * this.scale;
         var newHeight = this.canvas.height * this.scale;
 
-        //translateX = translateX * this.scale;
-        //translateY = translateY * this.scale;
-
         this.ctx.save();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
         this.ctx.translate(translateX,translateY);
         this.ctx.scale(this.scale, this.scale);
         var radialRendererObj  : Dynamic = new PhyloRadialTreeLayout(this.canvas.width, this.canvas.height);
@@ -591,6 +622,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }
 
         this.ctx.restore();
+
+        config.dataChanged = false;
     }
 
     public function setConfig(config : PhyloCanvasConfiguration){
@@ -664,6 +697,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function toggleType(){
+        dataChanged(true);
+
+        translateX = 0;
+        translateY = 0;
+
         if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
             config.drawingMode = PhyloDrawingMode.STRAIGHT;
 
@@ -673,6 +711,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
             rootNode.preOrderTraversal();
         }
+
 
         closeContextMenu();
 
@@ -725,6 +764,86 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         redraw();
     }
 
+    public function autoFit(){
+        var minX = null;
+        var maxX = null;
+        
+        var minY = null;
+        var maxY = null;
+        var screenDataList : Array<PhyloScreenData> = rootNode.screen;
+
+        for(screenData in screenDataList){
+            var x = screenData.x;
+            var y = screenData.y;
+
+            if(minX == null || x < minX){
+                minX = x;
+            }
+
+            if(maxX == null || x > maxX){
+                maxX = x;
+            }
+
+            if(minY == null || y < minY){
+                minY = y;
+            }
+
+            if(maxY == null || y > maxY){
+                maxY = y;
+            }
+        }
+
+        var requiredWidth = maxX - minX + 300;
+        var requiredHeight = maxY - minY + 300;
+
+        var widthScale = 1.;
+        var heightScale = 1.;
+
+        widthScale = width/ requiredWidth;
+
+        heightScale = height / requiredHeight;
+
+        var fitScale = 1.;
+
+        if(widthScale < 1 || heightScale < 1){
+            fitScale = Math.min(widthScale, heightScale);
+        }//else{
+            //fitScale = Math.max(widthScale, heightScale);
+       // }
+
+        if(config.drawingMode != PhyloDrawingMode.CIRCULAR){
+            //translateY = Math.min(minY + 150, 150);// + (cy/2);
+            //translateX = Math.abs(maxX);
+        }
+
+        if(fitScale == scale){
+            // do nothing
+        }else{
+            config.autoFit = true;
+            config.dataChanged = true;
+
+            setScale(fitScale,false);
+        }
+    }
+
+    public function setScale(scale : Float, disableAutoFit = true){
+        this.scale = scale;
+
+        config.scale = scale;
+
+        if(disableAutoFit){
+            config.autoFit = false;
+        }
+
+        redraw(true);
+    }
+
+    public function dataChanged(changed : Bool ){
+        getConfig().scale = 1;
+        scale = 1;
+        getConfig().dataChanged = changed;
+    }
+
     public static function main(){
 
     }
@@ -742,6 +861,8 @@ class PhyloCanvasConfiguration{
     public var enableTools : Bool = false;
     public var enableToolbar : Bool = false;
     public var verticalToolBar : Bool = false;
+    public var autoFit : Bool = true;
+    public var dataChanged : Bool = false;
     public var title : String;
 
     public function new(){

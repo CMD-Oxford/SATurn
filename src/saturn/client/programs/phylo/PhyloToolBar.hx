@@ -69,6 +69,7 @@ class PhyloToolBar {
         addTreeTypeButton();
         addTreeLineTypeButton();
         addShadowTypeButton();
+        addAutoFitButton();
 
         container.appendChild(toolbarContainer);
     }
@@ -331,5 +332,23 @@ class PhyloToolBar {
         toolbarContainer.appendChild(shadowInputColour);
 
         toolbarContainer.appendChild(removeShadowButton);
+    }
+
+    public function addAutoFitButton(){
+        var button = js.Browser.document.createElement('button');
+
+        button.innerText = 'Fit';
+        button.style.border='none';
+        button.style.cursor='pointer';
+        button.style.padding= '3px';
+        button.style.marginLeft = '20px';
+
+        position(button);
+
+        button.addEventListener('click', function(){
+            canvas.autoFit();
+        });
+
+        toolbarContainer.appendChild(button);
     }
 }
