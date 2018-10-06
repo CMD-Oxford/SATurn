@@ -612,22 +612,26 @@ class PhyloAnnotationManager {
     }
 
     public function closeAnnotWindows(){
-        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
-        var annotWindow=container.annotWindow;
-        var key:Int;
-        var numWindows=0;
-        for(key in annotWindow.keys()){
-            numWindows++;
-        }
-        if(numWindows>1){
-            WorkspaceApplication.getApplication().userPrompt('Question', 'You have popup windows opened. Do you want to close them?', function(){
-                container.removeAnnotWindows();
-            });
-        }else{
-            if(numWindows==1){
-                container.removeAnnotWindows();
-            }
+        var app = WorkspaceApplication.getApplication();
 
+        if(app != null){
+            var container = app.getSingleAppContainer();
+            var annotWindow=container.annotWindow;
+            var key:Int;
+            var numWindows=0;
+            for(key in annotWindow.keys()){
+                numWindows++;
+            }
+            if(numWindows>1){
+                WorkspaceApplication.getApplication().userPrompt('Question', 'You have popup windows opened. Do you want to close them?', function(){
+                    container.removeAnnotWindows();
+                });
+            }else{
+                if(numWindows==1){
+                    container.removeAnnotWindows();
+                }
+
+            }
         }
     }
 
