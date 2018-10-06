@@ -37,6 +37,7 @@ class PhyloAnnotation {
     public var legend:String;
     public var legendClazz:String;
     public var legendMethod:String;
+    public var hidden:String;
     public var hasClass:String;
     public var hasMethod: String;
     public var divMethod: String;

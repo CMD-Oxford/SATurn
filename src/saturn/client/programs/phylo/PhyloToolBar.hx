@@ -92,6 +92,7 @@ class PhyloToolBar {
         button.style.backgroundImage = 'url(/static/js/images/center-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
+        button.style.backgroundSize = '30px';
 
         button.style.height='25px';
         button.style.width='25px';
@@ -204,6 +205,7 @@ class PhyloToolBar {
         button.style.backgroundImage = 'url(/static/js/images/hightlight-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
+        button.style.backgroundSize = '30px';
         button.style.height='25px';
         button.style.width='25px';
         button.style.backgroundColor='initial';
@@ -253,6 +255,7 @@ class PhyloToolBar {
         button.innerText = 'Toggle Type';
         button.style.border='none';
         button.style.cursor='pointer';
+        button.style.padding= '3px';
         button.style.marginLeft = '20px';
         button.style.marginRight = '20px';
 
@@ -271,6 +274,7 @@ class PhyloToolBar {
         button.innerText = 'Toggle Line Type';
         button.style.border='none';
         button.style.cursor='pointer';
+        button.style.padding= '3px';
         button.style.marginLeft = '20px';
 
         position(button);

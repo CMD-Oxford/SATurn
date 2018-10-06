@@ -42,6 +42,12 @@ class PhyloHighlightWidget extends PhyloWindowWidget {
 
         var targets = canvas.getRootNode().targets;
 
+        targets.sort(function(a, b) {
+            var targetA = a.toUpperCase();
+            var targetB = b.toUpperCase();
+            return (targetA < targetB) ? -1 : (targetA > targetB) ? 1 : 0;
+        });
+
         var i = 0;
         for(target in targets){
             if(target == null || target == ''){
@@ -56,15 +62,17 @@ class PhyloHighlightWidget extends PhyloWindowWidget {
             inputLabel.setAttribute('for', name);
             inputLabel.innerText = target;
             inputLabel.style.width = '50px';
+            inputLabel.style.marginBottom = '5px';
             inputLabel.style.display = 'inline-block';
 
             var inputElement = js.Browser.document.createElement('input');
             inputElement.setAttribute('type', 'checkbox');
             inputElement.setAttribute('value', target);
             inputElement.setAttribute('name', name);
-            inputElement.style.width = '10px';
+            inputElement.style.width = '15px';
+            inputElement.style.height = '15px';
             inputElement.style.display = 'inline-block';
-            inputElement.style.marginRight = '10px';
+            inputElement.style.marginRight = '15px';
 
             highlightInputs.push(inputElement);
 
