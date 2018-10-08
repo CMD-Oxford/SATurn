@@ -30,10 +30,10 @@ class PhyloNewickParser{
         var rootNode : PhyloTreeNode;
         rootNode = new PhyloTreeNode();
 
+        rootNode.newickString = newickString;
+
         var currentNode=rootNode;
         var a:String;
-
-
 
         var branch:Dynamic;
         var charArray=newickString.split('');

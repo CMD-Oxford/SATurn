@@ -4,9 +4,13 @@ import saturn.client.core.CommonCore;
 class PhyloAnnotationMenuWidget {
     var canvas : PhyloCanvasRenderer;
     var container : Dynamic;
+    var activeAnnotations : Map<String, String>;
 
-    public function new(canvas : PhyloCanvasRenderer) {
+    var items : Array<Dynamic>;
+
+    public function new(canvas : PhyloCanvasRenderer, activeAnnotations : Map<String,String> = null) {
         this.canvas = canvas;
+        this.activeAnnotations = activeAnnotations;
 
         build();
     }
@@ -18,6 +22,20 @@ class PhyloAnnotationMenuWidget {
 
     public function getContainer() : Dynamic {
         return container;
+    }
+
+    public function update(activeAnnotations : Map<String, String>){
+        this.activeAnnotations = activeAnnotations;
+
+        addAnnotationButtons();
+    }
+
+    public function clearAnnotationItems(){
+        if(items != null){
+            for(item in items){
+                container.removeChild(item);
+            }
+        }
     }
 
     public function addContainer(){
@@ -35,6 +53,10 @@ class PhyloAnnotationMenuWidget {
 
     public function addAnnotationButtons(){
         var btnGroups :Array<Dynamic>= canvas.getAnnotationManager().jsonFile.btnGroup;
+
+        clearAnnotationItems();
+
+        items = new Array<Dynamic>();
 
         for(i in  0...btnGroups.length){
             var btnGroupDef = btnGroups[i];
@@ -90,7 +112,15 @@ class PhyloAnnotationMenuWidget {
                 row.appendChild(enabledBtn);
                 row.appendChild(btn);
 
+                items.push(row);
+
                 container.appendChild(row);
+
+                if(activeAnnotations != null && activeAnnotations.exists(btnDef.label)){
+                    canvas.getAnnotationManager().toggleAnnotation(btnDef.annotCode);
+
+                    enabledBtn.innerHTML = '&#9745;';
+                }
             }
         }
     }

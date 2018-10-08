@@ -19,6 +19,7 @@ class PhyloAnnotationManager {
     public var annotationListeners : Array<Void->Void>;
 
     public var annotationData : Array<Dynamic>;
+    public var annotationString : String;
 
 
     /**
@@ -2285,131 +2286,157 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function loadAnnotationsFromString(annotationString : String, configs : Array<PhyloAnnotationConfiguration> = null){
+        this.annotationString = annotationString;
+
         var lines = annotationString.split('\n');
         var header = lines[0];
         var cols = header.split(',');
 
         annotationData = new Array<Dynamic>();
 
-        jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
+        var activeAnnotationNames = new Map<String, String>();
 
-        var configMap = new Map<String, PhyloAnnotationConfiguration>();
+        CommonCore.getDefaultProvider(function(err :String, provider : Provider){
+            if(err == null && provider != null){
+                provider.resetCache();
 
-        if(configs != null){
-            for(config in configs){
-                configMap.set(config.name, config);
-            }
-        }
+                for(i in 0...activeAnnotation.length){
+                    if(activeAnnotation[i]){
+                        activeAnnotationNames.set(annotations[i].label, '');
 
-        for(i in 1...cols.length){
-            annotationData[i-1] = [];
-
-            var hookName = 'STANDALONE_ANNOTATION_' + (i-1);
-
-            var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
-                var colours = ['red', 'blue'];
-                var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
-
-                if(data == null || data.annotation == 'No'){
-                    r.hasAnnot = false;
+                        activeAnnotation[i] = false;
+                    }
                 }
 
-                callBack(r);
-            };
+                if(rootNode != null){
+                    rootNode.clearAnnotations();
+                }
 
-            var legendMethod = function(container){
-                var label = js.Browser.document.createElement('h3');
+                annotations = [];
 
-                label.innerText = cols[i];
+                jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
 
-                container.appendChild(label);
-            }
+                var configMap = new Map<String, PhyloAnnotationConfiguration>();
 
-            var divMethod = function(data: PhyloScreenData, mx: Int, my:Int){
-                var window = new PhyloWindowWidget(js.Browser.document.body,data.target, false);
-                var container = window.getContainer();
+                if(configs != null){
+                    for(config in configs){
+                        configMap.set(config.name, config);
+                    }
+                }
 
-                container.style.left = mx;
-                container.style.top = my;
-                //container.style.paddingTop = '0px';
+                for(i in 1...cols.length){
+                    annotationData[i-1] = [];
 
-                container.style.width = '400px';
-                container.style.height = '200px';
+                    var hookName = 'STANDALONE_ANNOTATION_' + (i-1);
 
-                /*var content = window.getContent();
+                    var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
+                        var colours = ['red', 'blue'];
+                        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
+
+                        if(data == null || data.annotation == 'No'){
+                            r.hasAnnot = false;
+                        }
+
+                        callBack(r);
+                    };
+
+                    var legendMethod = function(container){
+                        var label = js.Browser.document.createElement('h3');
+
+                        label.innerText = cols[i];
+
+                        container.appendChild(label);
+                    }
+
+                    var divMethod = function(data: PhyloScreenData, mx: Int, my:Int){
+                        var window = new PhyloWindowWidget(js.Browser.document.body,data.target, false);
+                        var container = window.getContainer();
+
+                        container.style.left = mx;
+                        container.style.top = my;
+                        //container.style.paddingTop = '0px';
+
+                        container.style.width = '400px';
+                        container.style.height = '200px';
+
+                        /*var content = window.getContent();
                 var msg = js.Browser.document.createElement('p');
                 msg.innerText = 'H2IK';
                 content.appendChild(msg);*/
-            }
+                    }
 
-            var name = cols[i];
+                    var name = cols[i];
 
-            // For now we have to mirror the complicated configured the ChromoHub / UbiHub interface expects
+                    // For now we have to mirror the complicated configured the ChromoHub / UbiHub interface expects
 
-            var def = {
-                label: name,
-                hookName: hookName,
-                annotCode: i,
-                isTitle: false,
-                enabled:true,
-                familyMethod: '',
-                hasMethod: styleAnnotation,
-                hasClass: '',
-                legend: {method:legendMethod},
-                divMethod : divMethod,
-                color: [
-                    {color:"#ed0e2d", used:"false"}
-                ],
-                shape: "cercle",
+                    var def = {
+                        label: name,
+                        hookName: hookName,
+                        annotCode: i,
+                        isTitle: false,
+                        enabled:true,
+                        familyMethod: '',
+                        hasMethod: styleAnnotation,
+                        hasClass: '',
+                        legend: {method:legendMethod},
+                        divMethod : divMethod,
+                        color: [
+                            {color:"#ed0e2d", used:"false"}
+                        ],
+                        shape: "cercle",
+                    };
+
+                    var hookFunction = handleAnnotation;
+
+                    if(configMap.exists(name)){
+                        var config :PhyloAnnotationConfiguration = configMap.get(name);
+
+                        if(config.colour != null){
+                            def.color = config.colour;
+                        }
+
+                        if(config.annotationFunction != null){
+                            hookFunction = config.annotationFunction;
+                        }
+
+                        if(config.styleFunction != null){
+                            def.hasMethod = config.styleFunction;
+                        }
+
+                        if(config.legendFunction != null){
+                            def.legend.method = config.legendFunction;
+                        }
+
+                        if(config.shape != null){
+                            def.shape = config.shape;
+                        }
+                    }
+
+                    jsonFile.btnGroup[0].buttons.push(def);
+
+                    CommonCore.getDefaultProvider(function(error, provider : Provider){
+                        //TODO: Important!!!
+                        provider.resetCache();
+
+                        provider.addHook(hookFunction, hookName);
+                    });
+                }
+
+                for(i in 1...lines.length){
+                    var cols = lines[i].split(',');
+
+                    for(j in 1...cols.length){
+                        annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
+                    }
+                }
+
+                fillAnnotationwithJSonData();
+
+                annotationsChanged(activeAnnotationNames);
             };
+        });
 
-            var hookFunction = handleAnnotation;
 
-            if(configMap.exists(name)){
-                var config :PhyloAnnotationConfiguration = configMap.get(name);
-
-                if(config.colour != null){
-                    def.color = config.colour;
-                }
-
-                if(config.annotationFunction != null){
-                    hookFunction = config.annotationFunction;
-                }
-
-                if(config.styleFunction != null){
-                    def.hasMethod = config.styleFunction;
-                }
-
-                if(config.legendFunction != null){
-                    def.legend.method = config.legendFunction;
-                }
-
-                if(config.shape != null){
-                    def.shape = config.shape;
-                }
-            }
-
-            jsonFile.btnGroup[0].buttons.push(def);
-
-            CommonCore.getDefaultProvider(function(error, provider : Provider){
-                //TODO: Important!!!
-                provider.resetCache();
-
-                provider.addHook(hookFunction, hookName);
-            });
-        }
-
-        for(i in 1...lines.length){
-            var cols = lines[i].split(',');
-
-            for(j in 1...cols.length){
-                annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
-            }
-        }
-
-        fillAnnotationwithJSonData();
-
-        annotationsChanged();
     }
 
     // Below has been added after the creation of ChromoHub and UbiHub and aren't yet used by either
@@ -2424,9 +2451,15 @@ $('.vertical .progress-fill span').each(function(){
         annotationListeners.push(listener);
     }
 
-    public function annotationsChanged(){
+    public function annotationsChanged(activeAnnotationNames : Map<String, String> = null){
         for(listener in annotationListeners){
             listener();
+        }
+
+        if(activeAnnotationNames != null){
+            if(canvas != null && canvas.getConfig().enableAnnotationMenu){
+                canvas.getAnnotationMenu().update(activeAnnotationNames);
+            }
         }
     }
 
@@ -2474,6 +2507,14 @@ $('.vertical .progress-fill span').each(function(){
         }
 
         return annotations;
+    }
+
+    public function getAnnotationString(): String{
+        return annotationString;
+    }
+
+    public function setRootNode(rootNode : PhyloTreeNode){
+        this.rootNode = rootNode;
     }
 }
 

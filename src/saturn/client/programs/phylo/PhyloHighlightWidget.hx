@@ -6,7 +6,7 @@ class PhyloHighlightWidget extends PhyloGlassPaneWidget {
     public function new(parent : Dynamic, canvas : PhyloCanvasRenderer) {
         this.canvas = canvas;
 
-        super(parent,'Select genes to highlight in tree');
+        super(parent,'Select genes to highlight in tree', true);
     }
 
     override public function onClose(){

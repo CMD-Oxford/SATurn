@@ -7,6 +7,7 @@ class PhyloWindowWidget {
     public var header : Dynamic;
     public var title : String;
     public var modal : Bool;
+    public var onCloseFunc : Dynamic;
 
     public function new(parent : Dynamic, title : String = null, modal = false) {
         this.parent = parent;
@@ -14,6 +15,10 @@ class PhyloWindowWidget {
         this.modal = modal;
 
         build();
+    }
+
+    public function setOnCloseEvent(func : Dynamic){
+        onCloseFunc = func;
     }
 
     public function build(){
@@ -110,7 +115,9 @@ class PhyloWindowWidget {
     }
 
     public function onClose(){
-
+        if(onCloseFunc != null){
+            onCloseFunc(this);
+        }
     }
 
     public function installMoveListeners(){

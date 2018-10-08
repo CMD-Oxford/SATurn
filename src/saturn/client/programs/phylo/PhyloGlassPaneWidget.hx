@@ -1,7 +1,9 @@
 package saturn.client.programs.phylo;
+
 class PhyloGlassPaneWidget extends PhyloWindowWidget{
-    public function new(parent : Dynamic, title : String) {
-        super(parent, title);
+
+    public function new(parent : Dynamic, title : String, modal : Bool = true) {
+        super(parent, title, modal);
 
         container.style.width = '100%';
         container.style.height = '100%';
@@ -18,9 +20,7 @@ class PhyloGlassPaneWidget extends PhyloWindowWidget{
         content.style.width = '50%';
     }
 
-
     override public function addContainer(){
         super.addContainer();
     }
-
 }

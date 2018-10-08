@@ -1,8 +1,8 @@
 package saturn.client.programs.phylo;
 
 class PhyloAnnotationConfiguration {
-    public var name : String; // label
-    public var annotationFunction : Dynamic; //hookname
+    public var name : String;
+    public var annotationFunction : Dynamic;
     public var styleFunction : Dynamic;
     public var legendFunction : Dynamic;
     public var infoFunction : Dynamic;

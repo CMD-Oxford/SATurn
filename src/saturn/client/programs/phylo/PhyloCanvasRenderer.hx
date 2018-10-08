@@ -47,6 +47,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     var autoFitting = false;
 
     var legendWidget : PhyloLegendWidget;
+    public var annotationMenu : PhyloAnnotationMenuWidget;
 
     public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager = null){
         this.parent = parentElement;
@@ -114,19 +115,31 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     public function createContainer(){
         container = js.Browser.document.createElement('div');
 
-        if(config.enableAnnotationMenu || config.enableLegend){
+        if(config.enableAnnotationMenu || config.enableLegend || config.enableImport){
             outerContainer = js.Browser.document.createElement('div');
             outerContainer.style.display = 'flex';
             // Required on Firefox
             outerContainer.style.height = '100%';
 
+            var leftContainer = js.Browser.document.createElement('div');
+            leftContainer.style.height = '100%';
+            leftContainer.style.display = 'flex';
+            leftContainer.style.flexDirection = 'column';
 
             if(config.enableAnnotationMenu){
-                var menu = new PhyloAnnotationMenuWidget(this);
+                annotationMenu = new PhyloAnnotationMenuWidget(this);
+                annotationMenu.getContainer().style.flexGrow = '1';
 
-                outerContainer.appendChild(menu.getContainer());
+                leftContainer.appendChild(annotationMenu.getContainer());
             }
 
+            if(config.enableImport){
+                var importWidget = new PhyloImportWidget(this);
+
+                leftContainer.appendChild(importWidget.getContainer());
+            }
+
+            outerContainer.appendChild(leftContainer);
             outerContainer.appendChild(container);
 
             container.style.display = 'inline-block';
@@ -158,7 +171,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function destroy()  {
-        if(config.enableAnnotationMenu || config.enableLegend){
+        if(config.enableAnnotationMenu || config.enableLegend || config.enableImport){
             parent.removeChild(outerContainer);
         }else{
             parent.removeChild(container);
@@ -193,7 +206,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function createCanvas(){
-        if(config.enableLegend || config.enableAnnotationMenu){
+        if(config.enableLegend || config.enableAnnotationMenu || config.enableAnnotationMenu){
             this.width = container.clientWidth;
             this.height = container.clientHeight;
         }
@@ -901,6 +914,56 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         getConfig().dataChanged = changed;
     }
 
+    public function setNewickString(newickString : String){
+        var parser = new PhyloNewickParser();
+
+        var rootNode = parser.parse(newickString);
+
+        rootNode.calculateScale();
+
+        rootNode.postOrderTraversal();
+
+        if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
+            rootNode.preOrderTraversal(1);
+        }else{
+            rootNode.preOrderTraversal2(1);
+        }
+
+        this.rootNode = rootNode;
+
+        getAnnotationManager().setRootNode(rootNode);
+
+        if(getAnnotationManager().getAnnotationString() != null){
+            getAnnotationManager().loadAnnotationsFromString(getAnnotationManager().getAnnotationString());
+        }
+
+        redraw(true);
+    }
+
+    public function getAnnotationMenu() : PhyloAnnotationMenuWidget{
+        return annotationMenu;
+    }
+
+    public function setFromFasta(fasta : String){
+        BioinformaticsServicesClient.getClient().sendPhyloReportRequest(fasta, function(response : Dynamic, error : String){
+            var phyloReport = response.json.phyloReport;
+
+            var location : js.html.Location = js.Browser.window.location;
+
+            var dstURL = location.protocol+'//'+location.hostname+':'+location.port+'/'+phyloReport;
+
+            var fetchFunc = untyped __js__('fetch');
+
+            fetchFunc(dstURL).then(function(response : Dynamic){
+                response.text().then(function(text){
+                    setNewickString(text);
+
+                    rootNode.setFasta(fasta);
+                });
+            });
+        });
+    }
+
     public static function main(){
 
     }
@@ -923,6 +986,8 @@ class PhyloCanvasConfiguration{
     public var title : String;
     public var enableAnnotationMenu = false;
     public var enableLegend = false;
+    public var enableImport = false;
+    public var enableFastaImport = false;
 
     public function new(){
 

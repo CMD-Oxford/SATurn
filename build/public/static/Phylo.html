@@ -1,0 +1,83 @@
+<html>
+ <head>
+     <!-- Global site tag (gtag.js) - Google Analytics -->
+     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108087478-1"></script>
+     <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-108087478-1');
+     </script>
+
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+     <script type="text/javascript" src="js/isPrivateMode.js"></script>
+ <script type="text/javascript" src="js/canvas2svg.js"></script>
+     <script type="text/javascript" src="js/debug/debug.js"></script>
+  <!--link rel="stylesheet" type="text/css" href="js/ext/resources/ext-theme-neptune/ext-theme-neptune-all.css">-->
+  <link rel="stylesheet" type="text/css" href="js/ext/packages/ext-theme-classic/build/resources/ext-theme-classic-all-debug-saturn-chromohub.css">
+     <!--<link rel="stylesheet" type="text/css" href="js/ext/packages/ext-theme-classic/build/resources/ext-theme-classic-all-debug-saturn-green.css">-->
+     <!--<link rel="stylesheet" type="text/css" href="js/ext/packages/saturn/build/resources/saturn-all-debug.css">-->
+  <script type="text/javascript" src="js/ext/ext-all.js"></script>
+  
+  <link rel="stylesheet" href="css/ChromoHub.css">
+  
+  <script src="/socket.io/socket.io.js"></script>
+     <script type="text/javascript" src="js/js.cookie/js.cookie.js"></script>
+  <script type="text/javascript" src="js/ChromoHubClient.js"></script>
+
+  <!--<script type="text/javascript" src="js/IndexedDBShim.min.js"></script>-->
+
+  <script type="text/javascript" src="js/phylo5/external/jquery-1.7.1.min.js"></script>
+  
+  <script type="text/javascript" src="js/gliffy/canvas2svg.js"></script>
+     <script type="text/javascript" src="js/requirejs/require.js"></script>
+
+    <script src="js/external/jquery-1.10.1.min.js"></script>
+    <script src="js/external/jquery-ui.js"></script>
+    <script src="js/external/underscore-min.js"></script>    
+
+<script src="js/external/tree.js"></script>
+
+<script type="text/javascript">
+    function load(){
+
+        var clientCore = saturn.client.core.ClientCore.startClientCore();
+
+        var config =  new saturn.client.programs.phylo.PhyloCanvasConfiguration();
+
+        config.enableShadow = true;
+        config.enableZoom = true;
+        config.enableTools = true;
+        config.enableToolbar = true;
+        config.enableAnnotationMenu = true;
+        config.enableLegend = true;
+        config.enableImport = true;
+        config.enableFastaImport = true;
+
+        if(config.enableFastaImport){
+            clientCore.installNodeSocket();
+	        clientCore.installProviders();
+        }else{
+            var provider = new saturn.db.DefaultProvider();
+            saturn.client.core.CommonCore.setDefaultProvider(provider, 'DEFAULT', true);
+        }
+
+        var configs = [];
+        var def = new saturn.client.programs.phylo.PhyloAnnotationConfiguration();
+        def.name = 'Structure';
+        def.shape = 'square';
+        configs.push(def);
+
+        var annotationManager = new saturn.client.programs.phylo.PhyloAnnotationManager();
+        annotationManager.loadAnnotationsFromString('Name,Structure,Function\nUFSP1,Yes,Yes\nUFSP2,Yes,Yes\n', configs);
+
+        canvasWidget = saturn.client.programs.phylo.PhyloUtil.drawRadialFromNewick('((UFSP1:0.00,UFSP2:0.00):0.77,((((SENP1:0.00,SENP2:0.00):0.70,(SENP3:0.00,SENP5:0.00):0.73):0.82,SENP8:0.00):0.99,(SENP6:0.00,SENP7:0.00):0.77):1.00,((((((((((FAM105B:0.00,(OTUD6A:0.00,OTUD6B:0.00):0.46):0.92,(OTUB1:0.00,OTUB2:0.00):0.55):0.99,OTUD1:0.00):0.99,YOD1:0.00):0.99,(OTUD3:0.00,OTUD5:0.00):0.86):0.99,OTUD4:0.00):0.99,ZRANB1:0.00):0.99,TNFAIP3:0.00):0.99,(OTUD7A:0.00,OTUD7B:0.00):0.48):0.99,VCPIP1:0.00):1.00,(((KHNYN:0.00,NYNRIN:0.00):0.65,N4BP1:0.00):0.86,((ZC3H12A:0.00,(ZC3H12B:0.00,ZC3H12C:0.00):0.53):0.64,ZC3H12D:0.00):0.65):0.94,(BAP1:0.00,((UCHL1:0.00,UCHL3:0.00):0.46,UCHL5:0.00):0.82):0.99,(DESI1:0.00,DESI2:0.00):0.82,(((((((BRCC3:0.00,(COPS5:0.00,PSMD14:0.00):0.74):0.93,(COPS6:0.00,(EIF3F:0.00,PSMD7:0.00):0.79):0.81):0.95,EIF3H:0.00):0.99,MPND:0.00):0.99,(STAMBP:0.00,STAMBPL1:0.00):0.43):0.99,MYSM1:0.00):0.99,PRPF8:0.00):0.99,((ATXN3:0.00,ATXN3L:0.00):0.30,(JOSD1:0.00,JOSD2:0.00):0.51):0.99,((ATG4A:0.00,ATG4B:0.00):0.53,(ATG4C:0.00,ATG4D:0.00):0.63):0.80);', document.body, config, annotationManager);
+}
+</script>
+
+ </head>
+ <body onload="load()">
+
+ </body> 
+</html>

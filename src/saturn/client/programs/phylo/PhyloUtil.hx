@@ -44,7 +44,7 @@ class PhyloUtil {
         return canvas;
     }
 
-    public static function showMessage(message : String){
-        var dialog = new PhyloInfoWidget(js.Browser.document.body, message);
+    public static function showMessage(message : String, title : String){
+        var dialog = new PhyloInfoWidget(js.Browser.document.body, message, title);
     }
 }
