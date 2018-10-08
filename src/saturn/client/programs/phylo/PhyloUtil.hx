@@ -35,17 +35,11 @@ class PhyloUtil {
         var parentWidth = parent.clientWidth;
         var parentHeight = parent.clientHeight;
 
-        var canvas = new saturn.client.programs.phylo.PhyloCanvasRenderer(parentWidth, parentHeight, parent, rootNode, config, annotationManager);
-
         if(config == null){
             config = new saturn.client.programs.phylo.PhyloCanvasRenderer.PhyloCanvasConfiguration();
         }
 
-        canvas.setConfig(config);
-
-        var radialRendererObj = new saturn.client.programs.phylo.PhyloRadialTreeLayout(parentWidth, parentHeight);
-
-        radialRendererObj.renderCircle(rootNode,canvas,[],[]);
+        var canvas = new saturn.client.programs.phylo.PhyloCanvasRenderer(parentWidth, parentHeight, parent, rootNode, config, annotationManager);
 
         return canvas;
     }

@@ -69,7 +69,7 @@ class DefaultProvider implements Provider{
 
     static var r_date =~/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.000Z/;
 
-    private function new(binding_map : Map<String,Map<String,Map<String,Dynamic>>>, config : Dynamic, autoClose : Bool){
+    public function new(binding_map : Map<String,Map<String,Map<String,Dynamic>>>, config : Dynamic, autoClose : Bool){
         setPlatform();
 
         if(binding_map != null){
@@ -92,7 +92,7 @@ class DefaultProvider implements Provider{
     }
 
     public function setPlatform(){
-
+        return null;
     }
 
     public function generateQualifiedName(schemaName : String, tableName : String) : String{
@@ -234,13 +234,15 @@ class DefaultProvider implements Provider{
     public function resetCache(){
         objectCache = new Map<String,Map<String,Map<String,Dynamic>>>();
 
-        for(className in theBindingMap.keys()){
-            theBindingMap.get(className).set('statements', new Map<String,Dynamic>());
+        if(theBindingMap != null){
+            for(className in theBindingMap.keys()){
+                theBindingMap.get(className).set('statements', new Map<String,Dynamic>());
 
-            objectCache.set(className,new Map<String,Map<String,Dynamic>>());
-            if(theBindingMap.get(className).exists('indexes')){
-                for(field in theBindingMap.get(className).get('indexes').keys()){
-                    objectCache.get(className).set(field, new Map<String,Dynamic>());
+                objectCache.set(className,new Map<String,Map<String,Dynamic>>());
+                if(theBindingMap.get(className).exists('indexes')){
+                    for(field in theBindingMap.get(className).get('indexes').keys()){
+                        objectCache.get(className).set(field, new Map<String,Dynamic>());
+                    }
                 }
             }
         }

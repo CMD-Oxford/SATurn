@@ -42,8 +42,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     var toolBar : PhyloToolBar;
 
     var container : Dynamic;
+    var outerContainer : Dynamic;
 
     var autoFitting = false;
+
+    var legendWidget : PhyloLegendWidget;
 
     public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager = null){
         this.parent = parentElement;
@@ -55,6 +58,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         if(this.annotationManager == null){
             this.annotationManager = new PhyloAnnotationManager(null);
         }
+
+        this.annotationManager.addAnnotationListener(onAnnotationChange);
 
         this.annotationManager.rootNode = rootNode;
         this.annotationManager.canvas = this;
@@ -88,17 +93,56 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }else{
             redraw(true);
         }
+    }
 
+    public function onAnnotationChange(){
+        redraw();
+
+        if(config.enableLegend){
+            legendWidget.redraw();
+        }
     }
 
     public function getRootNode() : PhyloTreeNode{
         return rootNode;
     }
 
+    public function getAnnotationManager() : PhyloAnnotationManager{
+        return annotationManager;
+    }
+
     public function createContainer(){
         container = js.Browser.document.createElement('div');
 
-        parent.appendChild(container);
+        if(config.enableAnnotationMenu || config.enableLegend){
+            outerContainer = js.Browser.document.createElement('div');
+            outerContainer.style.display = 'flex';
+            // Required on Firefox
+            outerContainer.style.height = '100%';
+
+
+            if(config.enableAnnotationMenu){
+                var menu = new PhyloAnnotationMenuWidget(this);
+
+                outerContainer.appendChild(menu.getContainer());
+            }
+
+            outerContainer.appendChild(container);
+
+            container.style.display = 'inline-block';
+            container.style.position = 'relative';
+            container.style.flexGrow = '1';
+
+            if(config.enableLegend){
+                legendWidget = new PhyloLegendWidget(this);
+
+                outerContainer.appendChild(legendWidget.getContainer());
+            }
+
+            parent.appendChild(outerContainer);
+        }else{
+            parent.appendChild(container);
+        }
     }
 
     public function getCanvas() : Dynamic {
@@ -114,7 +158,12 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function destroy()  {
-        parent.removeChild(container);
+        if(config.enableAnnotationMenu || config.enableLegend){
+            parent.removeChild(outerContainer);
+        }else{
+            parent.removeChild(container);
+        }
+
     }
 
     public function notifyNodeClickListeners(node : PhyloTreeNode, data : PhyloScreenData, e :Dynamic){
@@ -144,6 +193,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function createCanvas(){
+        if(config.enableLegend || config.enableAnnotationMenu){
+            this.width = container.clientWidth;
+            this.height = container.clientHeight;
+        }
+
         if(this.canvas != null){
             ctx.save();
 
@@ -602,7 +656,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         var newHeight = this.canvas.height * this.scale;
 
         this.ctx.save();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.translate(0,0);
+        this.ctx.scale(1,1);
+        //ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.clearRect(0, 0, width, height);
 
         this.ctx.translate(translateX,translateY);
         this.ctx.scale(this.scale, this.scale);
@@ -864,6 +921,8 @@ class PhyloCanvasConfiguration{
     public var autoFit : Bool = true;
     public var dataChanged : Bool = false;
     public var title : String;
+    public var enableAnnotationMenu = false;
+    public var enableLegend = false;
 
     public function new(){
 

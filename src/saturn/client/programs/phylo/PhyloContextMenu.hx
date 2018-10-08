@@ -39,8 +39,8 @@ class PhyloContextMenu {
         contextContainer.style.position = 'absolute';
         contextContainer.style.left = e.offsetX;
         contextContainer.style.top = e.offsetY;
-        contextContainer.style.background = 'gray';
-        contextContainer.style.color = 'white';
+        contextContainer.style.background = '#f7f8fb';
+        contextContainer.style.color = 'black';
         contextContainer.style.padding = '4px';
     }
 

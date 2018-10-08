@@ -114,15 +114,15 @@ class WorkspaceApplication {
         untyped __js__('debug.enable("haxe:app")');
         debugLogger = untyped __js__('debug("haxe:app")');
 
-        var onError : Dynamic = function(message: Dynamic, url, linenumber){
+        /*var onError : Dynamic = function(message: Dynamic, url, linenumber){
             try{
                 showMessage('Unexpected exception',message);
             }catch(err : Dynamic){
                 js.Browser.alert('Unexpected exception:' + message);
             }
-        }
+        }*/
 
-        js.Browser.window.onerror = onError;
+        //js.Browser.window.onerror = onError;
 
         clientCore = ClientCore.startClientCore();
         clientCore.onProviderUp(onProviderUp);
