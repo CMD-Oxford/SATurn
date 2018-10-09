@@ -72,7 +72,7 @@ class PhyloHighlightWidget extends PhyloGlassPaneWidget {
             formContainer.appendChild(inputLabel);
             formContainer.appendChild(inputElement);
 
-            if(i % 10 == 0){
+            if(i % 7 == 0){
                 formContainer.appendChild(js.Browser.document.createElement('br'));
             }
         }

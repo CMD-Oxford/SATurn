@@ -2368,7 +2368,6 @@ $('.vertical .progress-fill span').each(function(){
                     annotationData = oldData;
                 }
 
-
                 annotationsChanged(activeAnnotationNames);
 
                 cb();
@@ -2474,18 +2473,24 @@ $('.vertical .progress-fill span').each(function(){
             finalConfigs.push(config);
         }
 
-        setAnnotationConfigs(finalConfigs, false, function(){
-            for(i in 1...lines.length){
-                var cols = lines[i].split(',');
+        annotationData = [];
 
-                for(j in 1...cols.length){
-                    annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
-                }
+        var headerCols = header.split(',');
+
+        for(j in 1...headerCols.length){
+            annotationData[j-1] = [];
+        }
+
+        for(i in 1...lines.length){
+            var cols = lines[i].split(',');
+
+            for(j in 1...cols.length){
+                annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
             }
+        }
 
-            fillAnnotationwithJSonData();
-
-            annotationsChanged();
+        setAnnotationConfigs(finalConfigs, true, function(){
+            //
         });
     }
 
@@ -2502,14 +2507,16 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function annotationsChanged(activeAnnotationNames : Map<String, String> = null){
-        for(listener in annotationListeners){
-            listener();
-        }
-
         if(activeAnnotationNames != null){
             if(canvas != null && canvas.getConfig().enableAnnotationMenu){
                 canvas.getAnnotationMenu().update(activeAnnotationNames);
+
+                return;
             }
+        }
+
+        for(listener in annotationListeners){
+            listener();
         }
     }
 
