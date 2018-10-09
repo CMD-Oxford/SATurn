@@ -102,7 +102,7 @@ class PhyloImportWidget {
     }
 
     public function updateAnnotations(dialog : PhyloInputModalWidget){
-        canvas.getAnnotationManager().loadAnnotationsFromString(dialog.getText(), null);
+        canvas.getAnnotationManager().loadAnnotationsFromString(dialog.getText(), canvas.getAnnotationManager().getAnnotationConfigs());
     }
 
     public function addGenerateFromFASTAButton(){

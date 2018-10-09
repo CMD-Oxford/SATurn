@@ -20,6 +20,7 @@ class PhyloAnnotationManager {
 
     public var annotationData : Array<Dynamic>;
     public var annotationString : String;
+    public var annotationConfigs : Array<PhyloAnnotationConfiguration>;
 
 
     /**
@@ -35,6 +36,8 @@ class PhyloAnnotationManager {
     public var selectedAnnotationOptions = [];
     public var onSubmenu:Bool=false;
     public var menuScroll=0;
+
+    public var annotationNameToConfig : Map<String, PhyloAnnotationConfiguration>;
 
     public function new(legacyViewer : ChromoHubViewer) {
         this.legacyViewer = legacyViewer;
@@ -1881,11 +1884,7 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function processAnnotationsSimple(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
-        var toComplete = 0;
-        for(key in mapResults){
-            toComplete += 1;
-        }
-
+        var toComplete = items.length;
         var onDone = function(){
             if(toComplete  == 0){
                 cb();
@@ -2265,7 +2264,6 @@ $('.vertical .progress-fill span').each(function(){
             var leafaux=this.rootNode.leafNameToNode.get(item);
             if(leafaux.annotations[annot]!=null) leafaux.annotations[annot].hasAnnot=false;
         }
-
     }
 
     public function hideAnnotationWindows(){
@@ -2285,12 +2283,24 @@ $('.vertical .progress-fill span').each(function(){
         }
     }
 
-    public function loadAnnotationsFromString(annotationString : String, configs : Array<PhyloAnnotationConfiguration> = null){
-        this.annotationString = annotationString;
+    // Code below is all new and not used by UbiHub or ChromoHub but attempts to remain compatible with their API
 
-        var lines = annotationString.split('\n');
-        var header = lines[0];
-        var cols = header.split(',');
+    public function reloadAnnotationConfigurations(){
+        setAnnotationConfigs(getAnnotationConfigs(), true, function(){
+
+        });
+    }
+
+    public function setAnnotationConfigs(configs : Array<PhyloAnnotationConfiguration>, restoreData : Bool, cb : Void->Void){
+        this.annotationConfigs = configs;
+
+        annotationNameToConfig = new Map<String, PhyloAnnotationConfiguration>();
+
+        for(config in annotationConfigs){
+            annotationNameToConfig.set(config.name, config);
+        }
+
+        var oldData = annotationData;
 
         annotationData = new Array<Dynamic>();
 
@@ -2316,101 +2326,31 @@ $('.vertical .progress-fill span').each(function(){
 
                 jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
 
-                var configMap = new Map<String, PhyloAnnotationConfiguration>();
+                for(i in 0...configs.length){
+                    var config = configs[i];
 
-                if(configs != null){
-                    for(config in configs){
-                        configMap.set(config.name, config);
-                    }
-                }
-
-                for(i in 1...cols.length){
-                    annotationData[i-1] = [];
-
-                    var hookName = 'STANDALONE_ANNOTATION_' + (i-1);
-
-                    var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
-                        var colours = ['red', 'blue'];
-                        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:colours[i-1],used:false},defImage:100};
-
-                        if(data == null || data.annotation == 'No'){
-                            r.hasAnnot = false;
-                        }
-
-                        callBack(r);
-                    };
-
-                    var legendMethod = function(container){
-                        var label = js.Browser.document.createElement('h3');
-
-                        label.innerText = cols[i];
-
-                        container.appendChild(label);
-                    }
-
-                    var divMethod = function(data: PhyloScreenData, mx: Int, my:Int){
-                        var window = new PhyloWindowWidget(js.Browser.document.body,data.target, false);
-                        var container = window.getContainer();
-
-                        container.style.left = mx;
-                        container.style.top = my;
-                        //container.style.paddingTop = '0px';
-
-                        container.style.width = '400px';
-                        container.style.height = '200px';
-
-                        /*var content = window.getContent();
-                var msg = js.Browser.document.createElement('p');
-                msg.innerText = 'H2IK';
-                content.appendChild(msg);*/
-                    }
-
-                    var name = cols[i];
+                    annotationData[i] = [];
 
                     // For now we have to mirror the complicated configured the ChromoHub / UbiHub interface expects
 
+                    var hookName = 'STANDALONE_ANNOTATION_' + (i);
+
                     var def = {
-                        label: name,
+                        label: config.name,
                         hookName: hookName,
-                        annotCode: i,
+                        annotCode: i+1,
                         isTitle: false,
                         enabled:true,
                         familyMethod: '',
-                        hasMethod: styleAnnotation,
+                        hasMethod: config.styleFunction,
                         hasClass: '',
-                        legend: {method:legendMethod},
-                        divMethod : divMethod,
+                        legend: {method:config.legendFunction},
+                        divMethod : config.infoFunction,
                         color: [
-                            {color:"#ed0e2d", used:"false"}
+                            {color:config.colour, used:"false"}
                         ],
-                        shape: "cercle",
+                        shape:config.shape,
                     };
-
-                    var hookFunction = handleAnnotation;
-
-                    if(configMap.exists(name)){
-                        var config :PhyloAnnotationConfiguration = configMap.get(name);
-
-                        if(config.colour != null){
-                            def.color = config.colour;
-                        }
-
-                        if(config.annotationFunction != null){
-                            hookFunction = config.annotationFunction;
-                        }
-
-                        if(config.styleFunction != null){
-                            def.hasMethod = config.styleFunction;
-                        }
-
-                        if(config.legendFunction != null){
-                            def.legend.method = config.legendFunction;
-                        }
-
-                        if(config.shape != null){
-                            def.shape = config.shape;
-                        }
-                    }
 
                     jsonFile.btnGroup[0].buttons.push(def);
 
@@ -2418,25 +2358,135 @@ $('.vertical .progress-fill span').each(function(){
                         //TODO: Important!!!
                         provider.resetCache();
 
-                        provider.addHook(hookFunction, hookName);
+                        provider.addHook(config.annotationFunction, hookName);
                     });
-                }
-
-                for(i in 1...lines.length){
-                    var cols = lines[i].split(',');
-
-                    for(j in 1...cols.length){
-                        annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
-                    }
                 }
 
                 fillAnnotationwithJSonData();
 
+                if(restoreData){
+                    annotationData = oldData;
+                }
+
+
                 annotationsChanged(activeAnnotationNames);
+
+                cb();
             };
         });
+    }
 
+    public function getAnnotationConfigs(): Array<PhyloAnnotationConfiguration> {
+        return this.annotationConfigs;
+    }
 
+    public function getAnnotationConfigByName(name : String) : PhyloAnnotationConfiguration{
+        return annotationNameToConfig.get(name);
+    }
+
+    public function getAnnotationConfigById(id : Int) : PhyloAnnotationConfiguration{
+        return getAnnotationConfigByName(annotations[id].label);
+    }
+
+    public function loadAnnotationsFromString(annotationString : String, configs : Array<PhyloAnnotationConfiguration> = null){
+        this.annotationString = annotationString;
+
+        var lines = annotationString.split('\n');
+        var header = lines[0];
+        var cols = header.split(',');
+
+        var configMap = new Map<String, PhyloAnnotationConfiguration>();
+
+        if(configs != null){
+            for(config in configs){
+                configMap.set(config.name, config);
+            }
+        }
+
+        var finalConfigs = new Array<PhyloAnnotationConfiguration>();
+
+        for(i in 1...cols.length){
+            var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
+                var config = getAnnotationConfigById(selected);
+
+                var r : HasAnnotationType = {hasAnnot: true, text:'',color:config.getColourOldFormat(),defImage:100};
+
+                if(data == null || data.annotation == 'No'){
+                    r.hasAnnot = false;
+                }
+
+                callBack(r);
+            };
+
+            var legendMethod = function(legendWidget : PhyloLegendWidget, config : PhyloAnnotationConfiguration){
+                var row = new PhyloLegendRowWidget(legendWidget, config);
+            }
+
+            var divMethod = function(data: PhyloScreenData, mx: Int, my:Int){
+                var window = new PhyloWindowWidget(js.Browser.document.body,data.target, false);
+                var container = window.getContainer();
+
+                container.style.left = mx;
+                container.style.top = my;
+
+                container.style.width = '400px';
+                container.style.height = '200px';
+            }
+
+            var name = cols[i];
+
+            var hookFunction = handleAnnotation;
+
+            var config :PhyloAnnotationConfiguration = new PhyloAnnotationConfiguration();
+
+            config.shape = 'cercle';
+            config.colour = 'green';
+            config.name = name;
+            config.styleFunction= styleAnnotation;
+            config.annotationFunction = hookFunction;
+            config.infoFunction = divMethod;
+            config.legendFunction = legendMethod;
+
+            if(configMap.exists(name)){
+                var configUser :PhyloAnnotationConfiguration = configMap.get(name);
+
+                if(configUser.colour != null){
+                    config.colour = configUser.colour;
+                }
+
+                if(configUser.annotationFunction != null){
+                    config.annotationFunction = configUser.annotationFunction;
+                }
+
+                if(configUser.styleFunction != null){
+                    config.styleFunction = configUser.styleFunction;
+                }
+
+                if(configUser.legendFunction != null){
+                    config.legendFunction = configUser.legendFunction;
+                }
+
+                if(configUser.shape != null){
+                    config.shape = configUser.shape;
+                }
+            }
+
+            finalConfigs.push(config);
+        }
+
+        setAnnotationConfigs(finalConfigs, false, function(){
+            for(i in 1...lines.length){
+                var cols = lines[i].split(',');
+
+                for(j in 1...cols.length){
+                    annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
+                }
+            }
+
+            fillAnnotationwithJSonData();
+
+            annotationsChanged();
+        });
     }
 
     // Below has been added after the creation of ChromoHub and UbiHub and aren't yet used by either

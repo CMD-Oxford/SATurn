@@ -67,6 +67,13 @@
         var def = new saturn.client.programs.phylo.PhyloAnnotationConfiguration();
         def.name = 'Structure';
         def.shape = 'square';
+        def.colour = 'pink';
+        configs.push(def);
+
+         var def = new saturn.client.programs.phylo.PhyloAnnotationConfiguration();
+        def.name = 'Function';
+        def.shape = 'square';
+        def.colour = 'purple';
         configs.push(def);
 
         var annotationManager = new saturn.client.programs.phylo.PhyloAnnotationManager();

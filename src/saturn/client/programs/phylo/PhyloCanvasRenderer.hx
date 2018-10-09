@@ -934,10 +934,10 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         getAnnotationManager().setRootNode(rootNode);
 
         if(getAnnotationManager().getAnnotationString() != null){
-            getAnnotationManager().loadAnnotationsFromString(getAnnotationManager().getAnnotationString());
+            getAnnotationManager().loadAnnotationsFromString(getAnnotationManager().getAnnotationString(), getAnnotationManager().getAnnotationConfigs());
+        }else{
+            redraw(true);
         }
-
-        redraw(true);
     }
 
     public function getAnnotationMenu() : PhyloAnnotationMenuWidget{

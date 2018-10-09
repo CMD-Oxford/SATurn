@@ -12,4 +12,8 @@ class PhyloAnnotationConfiguration {
     public function new() {
 
     }
+
+    public function getColourOldFormat() : Dynamic{
+        return {color: colour, 'used':'false'};
+    }
 }

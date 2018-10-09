@@ -14,6 +14,10 @@ class PhyloLegendWidget {
         addContainer();
     }
 
+    public function getCanvas() : PhyloCanvasRenderer{
+        return canvas;
+    }
+
     public function getContainer() : Dynamic {
         return container;
     }
@@ -43,6 +47,10 @@ class PhyloLegendWidget {
         }
     }
 
+    public function getLegendContainer(){
+        return legendContainer;
+    }
+
     public function redraw(){
         clearLegendContainer();
 
@@ -51,10 +59,12 @@ class PhyloLegendWidget {
         var activeAnnotations = annotationManager.getActiveAnnotations();
 
         for(annotationDef in activeAnnotations){
-            if(Reflect.hasField(annotationDef, 'legendMethod')){
-                var func = annotationDef.legendMethod;
+            var config = canvas.getAnnotationManager().getAnnotationConfigByName(annotationDef.label);
 
-                func(legendContainer);
+            if(config.legendFunction != null){
+                var func = config.legendFunction;
+
+                func(this, config);
             }
         }
     }
