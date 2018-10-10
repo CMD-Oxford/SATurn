@@ -24,6 +24,7 @@ class PhyloAnnotationManager {
     public var jsonFile : Dynamic;
     public var viewOptions : Array <Dynamic>;
     public var activeAnnotation:Array<Bool>;
+    public var skipAnnotation:Array<Bool>;
     public var alreadyGotAnnotation:Map<String,Bool>;
     public var selectedAnnotationOptions = [];
     public var onSubmenu:Bool=false;
@@ -33,6 +34,7 @@ class PhyloAnnotationManager {
         this.legacyViewer = legacyViewer;
         annotations = new Array<PhyloAnnotation>();
         activeAnnotation=new Array();
+        skipAnnotation = new Array();
         alreadyGotAnnotation=new Map<String, Bool>();
         selectedAnnotationOptions = new Array();
         searchedGenes=new Array();

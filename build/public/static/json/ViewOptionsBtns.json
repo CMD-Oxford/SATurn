@@ -374,7 +374,16 @@
                 "form":{
                   "items":[
                     {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Protein levels in tumors:",
+                      "margin": "15 0 5 0",
+                      "name": "protein_option",
+                      "id": "protein_option",
+                      "inputValue": "1"
+                    },
+                    {
                       "xtype": "combobox",
+                      "margin": "0 0 5 15",
                       "name": "cancer_type",
                       "fieldLabel": "Cancer Type",
                       "listConfig": [
@@ -382,6 +391,7 @@
                       ],
                       "matchFieldWidth" : false,
                       "labelSeparator" : "",
+                      "cls":"x-form-item-finishgroup protein-cancer-type",
                       "queryMode": "local",
                       "store":["All","breast cancer","carcinoid","cervical cancer","colorectal cancer","endometrial cancer","glioma","head and neck cancer","liver cancer","lung cancer","lymphoma","melanoma","ovarian cancer","pancreatic cancer","prostate cancer","renal cancer","skin cancer","stomach cancer","testis cancer","thyroid cancer","urothelial cancer"],
                       "value": "All"
@@ -389,6 +399,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel":"High",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_high",
                       "id": "protein_level_high",
                       "inputValue": "High"
@@ -396,6 +407,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel":"Medium",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_medium",
                       "id": "protein_level_medium",
                       "inputValue": "Medium"
@@ -403,6 +415,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel":"Low",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_low",
                       "id": "protein_level_low",
                       "inputValue": "Low"
@@ -410,6 +423,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel":"Not detected",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_not_detected",
                       "id": "protein_level_not_detected",
                       "inputValue": "Not detected"
@@ -417,7 +431,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Show only tumor types where the protein level is:",
-                      "margin": "15 0 0 0",
+                      "margin": "15 0 5 0",
                       "name": "perc_protein_option",
                       "id": "perc_protein_option",
                       "inputValue": "1"
@@ -661,7 +675,16 @@
                 "form": {
                   "items": [
                     {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Protein levels in normal tissues:",
+                      "margin": "15 0 5 0",
+                      "name": "protein_option",
+                      "id": "protein_option",
+                      "inputValue": "1"
+                    },
+                    {
                       "xtype": "combobox",
+                      "margin": "0 0 5 15",
                       "name": "tissues",
                       "fieldLabel": "Tissue",
                       "listConfig": [
@@ -736,6 +759,7 @@
                     },
                     {
                       "xtype": "combobox",
+                      "margin": "0 0 5 15",
                       "name": "cell_types",
                       "fieldLabel": "Cell Type",
                       "listConfig": [
@@ -834,11 +858,13 @@
                     },
                     {
                       "xtype": "component",
-                      "html": "Protein Level"
+                      "html": "Protein Level",
+                      "style": {"margin": "5 0 5 15"}
                     },
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "High",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_high",
                       "id": "protein_level_high",
                       "inputValue": "High"
@@ -846,6 +872,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Medium",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_medium",
                       "id": "protein_level_medium",
                       "inputValue": "Medium"
@@ -853,6 +880,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Low",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_low",
                       "id": "protein_level_low",
                       "inputValue": "Low"
@@ -860,17 +888,20 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Not detected",
+                      "margin": "0 0 5 15",
                       "name": "protein_level_not_detected",
                       "id": "protein_level_not_detected",
                       "inputValue": "Not detected"
                     },
                     {
                       "xtype": "component",
-                      "html": "Reliability"
+                      "html": "Reliability",
+                      "style": {"margin": "5 0 5 15"}
                     },
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Approved",
+                      "margin": "0 0 5 15",
                       "name": "protein_reliability_approved",
                       "id": "protein_reliability_approved",
                       "inputValue": "Approved"
@@ -879,12 +910,14 @@
                       "xtype": "checkboxfield",
                       "boxLabel": "Enhanced",
                       "name": "protein_reliability_enhanced",
+                      "margin": "0 0 5 15",
                       "id": "protein_reliability_enhanced",
                       "inputValue": "Enhanced"
                     },
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Supported",
+                      "margin": "0 0 5 15",
                       "name": "protein_reliability_supported",
                       "id": "protein_reliability_supported",
                       "inputValue": "Supported"
@@ -892,6 +925,7 @@
                     {
                       "xtype": "checkboxfield",
                       "boxLabel": "Uncertain",
+                      "margin": "0 0 5 15",
                       "name": "protein_reliability_uncertain",
                       "id": "protein_reliability_uncertain",
                       "inputValue": "Uncertain"
