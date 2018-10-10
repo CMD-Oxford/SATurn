@@ -8,6 +8,7 @@ class PhyloAnnotationConfiguration {
     public var infoFunction : Dynamic;
     public var shape : Dynamic;
     public var colour : Dynamic;
+    public var _skipped : Bool;
 
     public function new() {
 
@@ -15,5 +16,9 @@ class PhyloAnnotationConfiguration {
 
     public function getColourOldFormat() : Dynamic{
         return {color: colour, 'used':'false'};
+    }
+
+    public function isSkip() : Bool {
+        return _skipped;
     }
 }
