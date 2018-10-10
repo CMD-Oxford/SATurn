@@ -1,8 +1,10 @@
 package saturn.client.programs.phylo;
+import saturn.db.Provider;
 import saturn.client.WorkspaceApplication;
 import saturn.client.programs.chromohub.ChromoHubViewer;
 import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.core.Util;
+import saturn.client.core.CommonCore;
 
 class PhyloAnnotationManager {
     public var annotations: Array<PhyloAnnotation>;
@@ -14,6 +16,12 @@ class PhyloAnnotationManager {
     public var numTotalAnnot: Int;
     public var legacyViewer : ChromoHubViewer;
     public var searchedGenes :Array<String>;
+    public var annotationListeners : Array<Void->Void>;
+
+    public var annotationData : Array<Dynamic>;
+    public var annotationString : String;
+    public var annotationConfigs : Array<PhyloAnnotationConfiguration>;
+
 
     /**
     *
@@ -30,6 +38,8 @@ class PhyloAnnotationManager {
     public var onSubmenu:Bool=false;
     public var menuScroll=0;
 
+    public var annotationNameToConfig : Map<String, PhyloAnnotationConfiguration>;
+
     public function new(legacyViewer : ChromoHubViewer) {
         this.legacyViewer = legacyViewer;
         annotations = new Array<PhyloAnnotation>();
@@ -38,6 +48,15 @@ class PhyloAnnotationManager {
         alreadyGotAnnotation=new Map<String, Bool>();
         selectedAnnotationOptions = new Array();
         searchedGenes=new Array();
+        annotationListeners = new Array<Void->Void>();
+    }
+
+    public function showAssociatedData(active : Bool,  data: PhyloScreenData, mx: Int, my:Int){
+        var annotation :Dynamic = annotations[data.annotation.type];
+
+        if(!active && annotation.divMethod != null){
+            annotation.divMethod(data, mx, my);
+        }
     }
 
     /**
@@ -47,6 +66,10 @@ class PhyloAnnotationManager {
         if(this.canvas == null){
             return;
         }
+
+        #if PHYLO5
+        showAssociatedData(active, data, mx, my);
+        #else
 
         if(active==false){
             var mxx:String;
@@ -129,6 +152,7 @@ class PhyloAnnotationManager {
 
             }
         }
+        #end
     }
 
 
@@ -180,6 +204,8 @@ class PhyloAnnotationManager {
 
                         if(jsonFile.btnGroup[i].buttons[j].legend.clazz != null) {
                             annotations[a].legendClazz = jsonFile.btnGroup[i].buttons[j].legend.clazz;
+                            annotations[a].legendMethod = jsonFile.btnGroup[i].buttons[j].legend.method;
+                        }else if(jsonFile.btnGroup[i].buttons[j].legend.method != null) {
                             annotations[a].legendMethod = jsonFile.btnGroup[i].buttons[j].legend.method;
                         }
                     }
@@ -637,22 +663,26 @@ class PhyloAnnotationManager {
     }
 
     public function closeAnnotWindows(){
-        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
-        var annotWindow=container.annotWindow;
-        var key:Int;
-        var numWindows=0;
-        for(key in annotWindow.keys()){
-            numWindows++;
-        }
-        if(numWindows>1){
-            WorkspaceApplication.getApplication().userPrompt('Question', 'You have popup windows opened. Do you want to close them?', function(){
-                container.removeAnnotWindows();
-            });
-        }else{
-            if(numWindows==1){
-                container.removeAnnotWindows();
-            }
+        var app = WorkspaceApplication.getApplication();
 
+        if(app != null){
+            var container = app.getSingleAppContainer();
+            var annotWindow=container.annotWindow;
+            var key:Int;
+            var numWindows=0;
+            for(key in annotWindow.keys()){
+                numWindows++;
+            }
+            if(numWindows>1){
+                WorkspaceApplication.getApplication().userPrompt('Question', 'You have popup windows opened. Do you want to close them?', function(){
+                    container.removeAnnotWindows();
+                });
+            }else{
+                if(numWindows==1){
+                    container.removeAnnotWindows();
+                }
+
+            }
         }
     }
 
@@ -667,7 +697,13 @@ class PhyloAnnotationManager {
         //update activeAnnotation array
         activeAnnotation[currentAnnot]=active;
 
-        var container = WorkspaceApplication.getApplication().getSingleAppContainer();
+        var app = WorkspaceApplication.getApplication();
+
+        var container = null;
+
+        if(app != null){
+            container = app.getSingleAppContainer();
+        }
 
         if(active==true){
             var i:Int;
@@ -677,18 +713,27 @@ class PhyloAnnotationManager {
                 if (activeAnnotation[i]==true){
                     if(annotations[i].legend!='' && annotations[i].legendClazz == '') {
                         needToExpandLegend=true;
-                        container.addImageToLegend(annotations[i].legend, i);
+
+                        if(container!= null){
+                            container.addImageToLegend(annotations[i].legend, i);
+                        }
+
+
                     } else if(annotations[i].legend != null && annotations[i].legendClazz != '' && annotations[i].legendMethod != ''){
                         var clazz = Type.resolveClass(annotations[i].legendClazz);
                         var method = Reflect.field(clazz, annotations[i].legendMethod);
                         var legend = method(treeName);
 
-                        container.addImageToLegend(legend, i);
+                        if(container!= null){
+                            container.addImageToLegend(legend, i);
+                        }
                     }
                 }
             }
             if( needToExpandLegend==true){
-                container.legendPanel.expand();
+                if(container!= null){
+                    container.legendPanel.expand();
+                }
             }
             var annot=annotations[currentAnnot];
 
@@ -843,7 +888,12 @@ class PhyloAnnotationManager {
 
         }else{
             legacyViewer.newposition(0,0);
-            container.emptyLegend();
+
+            if(container!= null){
+                container.emptyLegend();
+            }
+
+
             var i:Int;
             var needToExpandLegend=false;
 
@@ -851,12 +901,21 @@ class PhyloAnnotationManager {
                 if (activeAnnotation[i]==true){
                     if(annotations[i].legend!=''){
                         needToExpandLegend=true;
-                        container.addImageToLegend(annotations[i].legend, i);
+
+                        if(container!= null){
+                            container.addImageToLegend(annotations[i].legend, i);
+                        }
+
+
                     }
                 }
             }
             if( needToExpandLegend==false){
-                container.legendPanel.collapse();
+
+
+                if(container!= null){
+                    container.legendPanel.collapse();
+                }
             }
 
         }
@@ -1827,11 +1886,7 @@ $('.vertical .progress-fill span').each(function(){
     }
 
     public function processAnnotationsSimple(items:Array<String>,mapResults: Map<String, Dynamic>,annotation: Int, option:Int, cb:Void->Void){
-        var toComplete = 0;
-        for(key in mapResults){
-            toComplete += 1;
-        }
-
+        var toComplete = items.length;
         var onDone = function(){
             if(toComplete  == 0){
                 cb();
@@ -2211,7 +2266,6 @@ $('.vertical .progress-fill span').each(function(){
             var leafaux=this.rootNode.leafNameToNode.get(item);
             if(leafaux.annotations[annot]!=null) leafaux.annotations[annot].hasAnnot=false;
         }
-
     }
 
     public function hideAnnotationWindows(){
@@ -2231,5 +2285,295 @@ $('.vertical .progress-fill span').each(function(){
         }
     }
 
+    // Code below is all new and not used by UbiHub or ChromoHub but attempts to remain compatible with their API
+
+    public function reloadAnnotationConfigurations(){
+        setAnnotationConfigs(getAnnotationConfigs(), true, function(){
+
+        });
+    }
+
+    public function setAnnotationConfigs(configs : Array<PhyloAnnotationConfiguration>, restoreData : Bool, cb : Void->Void){
+        this.annotationConfigs = configs;
+
+        annotationNameToConfig = new Map<String, PhyloAnnotationConfiguration>();
+
+        for(config in annotationConfigs){
+            annotationNameToConfig.set(config.name, config);
+        }
+
+        var oldData = annotationData;
+
+        annotationData = new Array<Dynamic>();
+
+        var activeAnnotationNames = new Map<String, String>();
+
+        CommonCore.getDefaultProvider(function(err :String, provider : Provider){
+            if(err == null && provider != null){
+                provider.resetCache();
+
+                for(i in 0...activeAnnotation.length){
+                    if(activeAnnotation[i]){
+                        activeAnnotationNames.set(annotations[i].label, '');
+
+                        activeAnnotation[i] = false;
+                    }
+                }
+
+                if(rootNode != null){
+                    rootNode.clearAnnotations();
+                }
+
+                annotations = [];
+
+                jsonFile = {btnGroup:[{title:'Annotations', buttons:[]}]};
+
+                for(i in 0...configs.length){
+                    var config = configs[i];
+
+                    annotationData[i] = [];
+
+                    // For now we have to mirror the complicated configured the ChromoHub / UbiHub interface expects
+
+                    var hookName = 'STANDALONE_ANNOTATION_' + (i);
+
+                    var def = {
+                        label: config.name,
+                        hookName: hookName,
+                        annotCode: i+1,
+                        isTitle: false,
+                        enabled:true,
+                        familyMethod: '',
+                        hasMethod: config.styleFunction,
+                        hasClass: '',
+                        legend: {method:config.legendFunction},
+                        divMethod : config.infoFunction,
+                        color: [
+                            {color:config.colour, used:"false"}
+                        ],
+                        shape:config.shape,
+                    };
+
+                    jsonFile.btnGroup[0].buttons.push(def);
+
+                    CommonCore.getDefaultProvider(function(error, provider : Provider){
+                        //TODO: Important!!!
+                        provider.resetCache();
+
+                        provider.addHook(config.annotationFunction, hookName);
+                    });
+                }
+
+                fillAnnotationwithJSonData();
+
+                if(restoreData){
+                    annotationData = oldData;
+                }
+
+                annotationsChanged(activeAnnotationNames);
+
+                cb();
+            };
+        });
+    }
+
+    public function getAnnotationConfigs(): Array<PhyloAnnotationConfiguration> {
+        return this.annotationConfigs;
+    }
+
+    public function getAnnotationConfigByName(name : String) : PhyloAnnotationConfiguration{
+        return annotationNameToConfig.get(name);
+    }
+
+    public function getAnnotationConfigById(id : Int) : PhyloAnnotationConfiguration{
+        return getAnnotationConfigByName(annotations[id].label);
+    }
+
+    public function loadAnnotationsFromString(annotationString : String, configs : Array<PhyloAnnotationConfiguration> = null){
+        this.annotationString = annotationString;
+
+        var lines = annotationString.split('\n');
+        var header = lines[0];
+        var cols = header.split(',');
+
+        var configMap = new Map<String, PhyloAnnotationConfiguration>();
+
+        if(configs != null){
+            for(config in configs){
+                configMap.set(config.name, config);
+            }
+        }
+
+        var finalConfigs = new Array<PhyloAnnotationConfiguration>();
+
+        for(i in 1...cols.length){
+            var styleAnnotation = function (target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
+                var config = getAnnotationConfigById(selected);
+
+                var r : HasAnnotationType = {hasAnnot: true, text:'',color:config.getColourOldFormat(),defImage:100};
+
+                if(data == null || data.annotation == 'No'){
+                    r.hasAnnot = false;
+                }
+
+                callBack(r);
+            };
+
+            var legendMethod = function(legendWidget : PhyloLegendWidget, config : PhyloAnnotationConfiguration){
+                var row = new PhyloLegendRowWidget(legendWidget, config);
+            }
+
+            var divMethod = function(data: PhyloScreenData, mx: Int, my:Int){
+                var window = new PhyloWindowWidget(js.Browser.document.body,data.target, false);
+                var container = window.getContainer();
+
+                container.style.left = mx;
+                container.style.top = my;
+
+                container.style.width = '400px';
+                container.style.height = '200px';
+            }
+
+            var name = cols[i];
+
+            var hookFunction = handleAnnotation;
+
+            var config :PhyloAnnotationConfiguration = new PhyloAnnotationConfiguration();
+
+            config.shape = 'cercle';
+            config.colour = 'green';
+            config.name = name;
+            config.styleFunction= styleAnnotation;
+            config.annotationFunction = hookFunction;
+            config.infoFunction = divMethod;
+            config.legendFunction = legendMethod;
+
+            if(configMap.exists(name)){
+                var configUser :PhyloAnnotationConfiguration = configMap.get(name);
+
+                if(configUser.colour != null){
+                    config.colour = configUser.colour;
+                }
+
+                if(configUser.annotationFunction != null){
+                    config.annotationFunction = configUser.annotationFunction;
+                }
+
+                if(configUser.styleFunction != null){
+                    config.styleFunction = configUser.styleFunction;
+                }
+
+                if(configUser.legendFunction != null){
+                    config.legendFunction = configUser.legendFunction;
+                }
+
+                if(configUser.shape != null){
+                    config.shape = configUser.shape;
+                }
+            }
+
+            finalConfigs.push(config);
+        }
+
+        annotationData = [];
+
+        var headerCols = header.split(',');
+
+        for(j in 1...headerCols.length){
+            annotationData[j-1] = [];
+        }
+
+        for(i in 1...lines.length){
+            var cols = lines[i].split(',');
+
+            for(j in 1...cols.length){
+                annotationData[j-1].push({'target_id': cols[0], 'annotation': cols[j]});
+            }
+        }
+
+        setAnnotationConfigs(finalConfigs, true, function(){
+            //
+        });
+    }
+
+    // Below has been added after the creation of ChromoHub and UbiHub and aren't yet used by either
+
+    public function handleAnnotation(alias : String, params, clazz, cb : Dynamic->String->Void){
+        var annotationIndex = Std.parseInt(alias.charAt(alias.length-1));
+
+        cb(annotationData[annotationIndex], null);
+    }
+
+    public function addAnnotationListener(listener : Void->Void){
+        annotationListeners.push(listener);
+    }
+
+    public function annotationsChanged(activeAnnotationNames : Map<String, String> = null){
+        if(activeAnnotationNames != null){
+            if(canvas != null && canvas.getConfig().enableAnnotationMenu){
+                canvas.getAnnotationMenu().update(activeAnnotationNames);
+
+                return;
+            }
+        }
+
+        for(listener in annotationListeners){
+            listener();
+        }
+    }
+
+    public function toggleAnnotation(annotCode : Dynamic){
+        if(isAnnotationActive(annotCode)){
+            setActiveAnnotation(annotCode, false);
+        }else{
+            setActiveAnnotation(annotCode, true);
+        }
+    }
+
+    public function isAnnotationActive(annotCode : Dynamic) : Bool {
+        return activeAnnotation[annotCode];
+    }
+
+    public function setActiveAnnotation(annotCode : Dynamic, active: Bool){
+        activeAnnotation[annotCode]=active;
+
+        if(active){
+            var annot=annotations[annotCode];
+
+            CommonCore.getDefaultProvider(function(err : String, provider : Provider){
+                var parameters = canvas.getRootNode().targets;
+
+                provider.getByNamedQuery(annot.hookName,{param : parameters}, null, true, function(db_results, error){
+                    if(error == null) {
+                        canvas.getAnnotationManager().addAnnotData(db_results,annotCode,annotCode, function(){
+                            annotationsChanged();
+                        });
+                    }
+                });
+            });
+        }else{
+            annotationsChanged();
+        }
+    }
+
+    public function getActiveAnnotations() : Array<Dynamic>{
+        var annotations = new Array<Dynamic>();
+
+        for(i in 0...activeAnnotation.length){
+            if(activeAnnotation[i]){
+                annotations.push(this.annotations[i]);
+            }
+        }
+
+        return annotations;
+    }
+
+    public function getAnnotationString(): String{
+        return annotationString;
+    }
+
+    public function setRootNode(rootNode : PhyloTreeNode){
+        this.rootNode = rootNode;
+    }
 }
 

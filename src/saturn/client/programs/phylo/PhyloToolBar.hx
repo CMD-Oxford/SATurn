@@ -69,12 +69,27 @@ class PhyloToolBar {
         addTreeTypeButton();
         addTreeLineTypeButton();
         addShadowTypeButton();
+        addAutoFitButton();
 
         container.appendChild(toolbarContainer);
     }
 
+    public function position(element : Dynamic){
+        if(canvas.getConfig().verticalToolBar){
+            element.style.display = 'block';
+
+            element.style.marginLeft = '0px';
+            element.style.marginBottom = '20px';
+        }else{
+            element.style.display = 'inline-block';
+        }
+    }
+
     public function addCenterButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/center-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -96,6 +111,9 @@ class PhyloToolBar {
 
     public function addZoomInButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/mag_plus-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -116,6 +134,9 @@ class PhyloToolBar {
 
     public function addZoomOutButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/mag_minus-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -135,6 +156,9 @@ class PhyloToolBar {
 
     public function addExportPNGButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/png-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -154,6 +178,9 @@ class PhyloToolBar {
 
     public function addExportSVGButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/svg-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -173,6 +200,9 @@ class PhyloToolBar {
 
     public function addHighlightButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.style.backgroundImage = 'url(/static/js/images/hightlight-single.png)';
         button.style.backgroundRepeat = 'no-repeat';
         button.style.backgroundPosition = 'center center';
@@ -202,11 +232,13 @@ class PhyloToolBar {
         inputLabel.style.display = 'inline-block';
 
         var inputElement :Dynamic = js.Browser.document.createElement('input');
+
         inputElement.setAttribute('type', 'text');
         inputElement.style.width = '30px';
         inputElement.setAttribute('value', '1');
-        inputElement.style.display = 'inline-block';
         inputElement.style.marginLeft = '5px';
+
+        position(inputElement);
 
         inputElement.addEventListener('input', function(e){
             canvas.setLineWidth(Std.parseFloat(inputElement.value));
@@ -218,11 +250,17 @@ class PhyloToolBar {
 
     public function addTreeTypeButton(){
         var button = js.Browser.document.createElement('button');
+
+        position(button);
+
         button.innerText = 'Toggle Type';
         button.style.border='none';
         button.style.cursor='pointer';
         button.style.padding= '3px';
         button.style.marginLeft = '20px';
+        button.style.marginRight = '20px';
+
+        position(button);
 
         button.addEventListener('click', function(){
             canvas.toggleType();
@@ -233,11 +271,14 @@ class PhyloToolBar {
 
     public function addTreeLineTypeButton(){
         var button = js.Browser.document.createElement('button');
+
         button.innerText = 'Toggle Line Type';
         button.style.border='none';
         button.style.cursor='pointer';
         button.style.padding= '3px';
         button.style.marginLeft = '20px';
+
+        position(button);
 
         button.addEventListener('click', function(){
             canvas.toggleLineMode();
@@ -250,7 +291,8 @@ class PhyloToolBar {
 
     public function setLineTypeButtonVisible(visible){
         if(visible){
-            lineTypeButton.style.display = 'inline-block';
+            position(lineTypeButton);
+            //lineTypeButton.style.display = 'inline-block';
         }else{
             lineTypeButton.style.display = 'none';
         }
@@ -259,11 +301,13 @@ class PhyloToolBar {
     public function addShadowTypeButton(){
         var shadowInputColourLabel :Dynamic = js.Browser.document.createElement('label');
         shadowInputColourLabel.innerText = 'Shadow colour';
-        shadowInputColourLabel.style.marginLeft = '20px';
 
         toolbarContainer.appendChild(shadowInputColourLabel);
 
         var shadowInputColour :Dynamic = js.Browser.document.createElement('input');
+
+        var removeShadowButton = js.Browser.document.createElement('button');
+
         shadowInputColour.style.marginLeft = '5px';
         shadowInputColour.setAttribute('type', 'color');
         shadowInputColour.setAttribute('name', 'shadow_colour_input');
@@ -272,6 +316,39 @@ class PhyloToolBar {
             canvas.setShadowColour(shadowInputColour.value);
         });
 
+        removeShadowButton.innerText = 'Toggle Shadow';
+        removeShadowButton.style.border='none';
+        removeShadowButton.style.cursor='pointer';
+        removeShadowButton.style.marginLeft = '20px';
+
+        position(shadowInputColour);
+
+        position(removeShadowButton);
+
+        removeShadowButton.addEventListener('click', function(){
+            canvas.toggleShadow();
+        });
+
         toolbarContainer.appendChild(shadowInputColour);
+
+        toolbarContainer.appendChild(removeShadowButton);
+    }
+
+    public function addAutoFitButton(){
+        var button = js.Browser.document.createElement('button');
+
+        button.innerText = 'Fit';
+        button.style.border='none';
+        button.style.cursor='pointer';
+        button.style.padding= '3px';
+        button.style.marginLeft = '20px';
+
+        position(button);
+
+        button.addEventListener('click', function(){
+            canvas.autoFit();
+        });
+
+        toolbarContainer.appendChild(button);
     }
 }

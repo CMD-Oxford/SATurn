@@ -1,12 +1,12 @@
 package saturn.client.programs.phylo;
-class PhyloHighlightWidget extends PhyloWindowWidget {
+class PhyloHighlightWidget extends PhyloGlassPaneWidget {
     public var highlightInputs : Array<Dynamic>;
     public var canvas : PhyloCanvasRenderer;
 
     public function new(parent : Dynamic, canvas : PhyloCanvasRenderer) {
         this.canvas = canvas;
 
-        super(parent);
+        super(parent,'Select genes to highlight in tree', true);
     }
 
     override public function onClose(){
@@ -28,17 +28,10 @@ class PhyloHighlightWidget extends PhyloWindowWidget {
     }
 
     public function addHighlightList(){
+        var formContainer = js.Browser.document.createElement('div');
+        formContainer.style.margin = 'auto';
+
         highlightInputs = new Array<Dynamic>();
-
-        var heading = js.Browser.document.createElement('label');
-        heading.style.color = 'rgb(28, 102, 224)';
-        heading.style.marginBottom = '5px';
-        heading.style.fontSize = '15px';
-        heading.style.left = '35px';
-        heading.innerText = 'Select genes to highlight in tree';
-        heading.style.display = 'block';
-
-        content.appendChild(heading);
 
         var targets = canvas.getRootNode().targets;
 
@@ -61,7 +54,7 @@ class PhyloHighlightWidget extends PhyloWindowWidget {
             var inputLabel = js.Browser.document.createElement('label');
             inputLabel.setAttribute('for', name);
             inputLabel.innerText = target;
-            inputLabel.style.width = '50px';
+            inputLabel.style.width = '60px';
             inputLabel.style.marginBottom = '5px';
             inputLabel.style.display = 'inline-block';
 
@@ -76,12 +69,14 @@ class PhyloHighlightWidget extends PhyloWindowWidget {
 
             highlightInputs.push(inputElement);
 
-            content.appendChild(inputLabel);
-            content.appendChild(inputElement);
+            formContainer.appendChild(inputLabel);
+            formContainer.appendChild(inputElement);
 
-            if(i % 10 == 0){
-                content.appendChild(js.Browser.document.createElement('br'));
+            if(i % 7 == 0){
+                formContainer.appendChild(js.Browser.document.createElement('br'));
             }
         }
+
+        content.appendChild(formContainer);
     }
 }

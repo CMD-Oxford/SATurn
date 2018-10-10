@@ -42,6 +42,12 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     var toolBar : PhyloToolBar;
 
     var container : Dynamic;
+    var outerContainer : Dynamic;
+
+    var autoFitting = false;
+
+    var legendWidget : PhyloLegendWidget;
+    public var annotationMenu : PhyloAnnotationMenuWidget;
 
     public function new (width:Int, height:Int, parentElement:Dynamic,rootNode:Dynamic, config = null, annotationManager : PhyloAnnotationManager = null){
         this.parent = parentElement;
@@ -54,10 +60,13 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             this.annotationManager = new PhyloAnnotationManager(null);
         }
 
+        this.annotationManager.addAnnotationListener(onAnnotationChange);
+
         this.annotationManager.rootNode = rootNode;
         this.annotationManager.canvas = this;
 
         this.rootNode=rootNode;
+
 
        var doc:Dynamic;
 
@@ -66,6 +75,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
        }
 
         this.config = config;
+
+        config.dataChanged = true;
 
         if(config.enableTools){
             addNodeClickListener(defaultNodeClickListener);
@@ -77,17 +88,74 @@ class PhyloCanvasRenderer implements PhyloRendererI {
             toolBar = new PhyloToolBar(this);
         }
 
-        createCanvas();
+        //createCanvas();
+        if(getConfig().autoFit){
+            autoFitRedraw();
+        }else{
+            redraw(true);
+        }
+    }
+
+    public function onAnnotationChange(){
+        redraw();
+
+        if(config.enableLegend){
+            legendWidget.redraw();
+        }
     }
 
     public function getRootNode() : PhyloTreeNode{
         return rootNode;
     }
 
+    public function getAnnotationManager() : PhyloAnnotationManager{
+        return annotationManager;
+    }
+
     public function createContainer(){
         container = js.Browser.document.createElement('div');
 
-        parent.appendChild(container);
+        if(config.enableAnnotationMenu || config.enableLegend || config.enableImport){
+            outerContainer = js.Browser.document.createElement('div');
+            outerContainer.style.display = 'flex';
+            // Required on Firefox
+            outerContainer.style.height = '100%';
+
+            var leftContainer = js.Browser.document.createElement('div');
+            leftContainer.style.height = '100%';
+            leftContainer.style.display = 'flex';
+            leftContainer.style.flexDirection = 'column';
+
+            if(config.enableAnnotationMenu){
+                annotationMenu = new PhyloAnnotationMenuWidget(this);
+                annotationMenu.getContainer().style.flexGrow = '1';
+
+                leftContainer.appendChild(annotationMenu.getContainer());
+            }
+
+            if(config.enableImport){
+                var importWidget = new PhyloImportWidget(this);
+
+                leftContainer.appendChild(importWidget.getContainer());
+            }
+
+            outerContainer.appendChild(leftContainer);
+            outerContainer.appendChild(container);
+
+            container.style.display = 'inline-block';
+            container.style.position = 'relative';
+            container.style.flexGrow = '1';
+
+            if(config.enableLegend){
+                legendWidget = new PhyloLegendWidget(this);
+
+                outerContainer.appendChild(legendWidget.getContainer());
+            }
+
+            parent.appendChild(outerContainer);
+        }else{
+            parent.appendChild(container);
+        }
     }
 
     public function getCanvas() : Dynamic {
@@ -103,7 +171,12 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function destroy()  {
-        parent.removeChild(container);
+        if(config.enableAnnotationMenu || config.enableLegend || config.enableImport){
+            parent.removeChild(outerContainer);
+        }else{
+            parent.removeChild(container);
+        }
+
     }
 
     public function notifyNodeClickListeners(node : PhyloTreeNode, data : PhyloScreenData, e :Dynamic){
@@ -133,6 +206,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function createCanvas(){
+        if(config.enableLegend || config.enableAnnotationMenu || config.enableAnnotationMenu){
+            this.width = container.clientWidth;
+            this.height = container.clientHeight;
+        }
+
         if(this.canvas != null){
             ctx.save();
 
@@ -546,25 +624,56 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         //}
     }
 
-    public function redraw(create=true){
+    public function updateActions(){
         if(toolBar != null){
             toolBar.setLineTypeButtonVisible(config.drawingMode == PhyloDrawingMode.STRAIGHT);
+
+            toolBar.setTitle(config.title);
         }
+    }
+
+    public function autoFitRedraw(){
+        autoFitting = true;
+
+        config.dataChanged = true;
+
+        redraw(true);
+
+        haxe.Timer.delay(function(){
+            autoFit();
+
+            autoFitting = false;
+
+            this.canvas.style.display = 'block';
+        }, 1);
+    }
+
+    public function redraw(create=true){
+        if(! autoFitting && config.autoFit && config.dataChanged){
+            autoFitRedraw();
+
+            return;
+        }
+
+       updateActions();
 
         if(create){
             createCanvas();
         }
 
-        toolBar.setTitle(config.title);
+        if(autoFitting){
+            this.canvas.style.display = 'none';
+        }
 
         var newWidth = this.canvas.width * this.scale;
         var newHeight = this.canvas.height * this.scale;
 
-        //translateX = translateX * this.scale;
-        //translateY = translateY * this.scale;
-
         this.ctx.save();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.translate(0,0);
+        this.ctx.scale(1,1);
+        //ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.clearRect(0, 0, width, height);
+
         this.ctx.translate(translateX,translateY);
         this.ctx.scale(this.scale, this.scale);
         var radialRendererObj  : Dynamic = new PhyloRadialTreeLayout(this.canvas.width, this.canvas.height);
@@ -583,6 +692,8 @@ class PhyloCanvasRenderer implements PhyloRendererI {
         }
 
         this.ctx.restore();
+
+        config.dataChanged = false;
     }
 
     public function setConfig(config : PhyloCanvasConfiguration){
@@ -656,6 +767,11 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function toggleType(){
+        dataChanged(true);
+
+        translateX = 0;
+        translateY = 0;
+
         if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
             config.drawingMode = PhyloDrawingMode.STRAIGHT;
 
@@ -665,6 +781,7 @@ class PhyloCanvasRenderer implements PhyloRendererI {
 
             rootNode.preOrderTraversal();
         }
+
 
         closeContextMenu();
 
@@ -700,10 +817,151 @@ class PhyloCanvasRenderer implements PhyloRendererI {
     }
 
     public function setShadowColour(colour : String){
-        getConfig().shadowColour = colour;
-        getConfig().enableShadow = true;
+        if(colour == null){
+            getConfig().shadowColour = null;
+            getConfig().enableShadow = false;
+        }else{
+            getConfig().shadowColour = colour;
+            getConfig().enableShadow = true;
+        }
 
         redraw();
+    }
+
+    public function toggleShadow(){
+        getConfig().enableShadow = ! getConfig().enableShadow;
+
+        redraw();
+    }
+
+    public function autoFit(){
+        var minX = null;
+        var maxX = null;
+        
+        var minY = null;
+        var maxY = null;
+        var screenDataList : Array<PhyloScreenData> = rootNode.screen;
+
+        for(screenData in screenDataList){
+            var x = screenData.x;
+            var y = screenData.y;
+
+            if(minX == null || x < minX){
+                minX = x;
+            }
+
+            if(maxX == null || x > maxX){
+                maxX = x;
+            }
+
+            if(minY == null || y < minY){
+                minY = y;
+            }
+
+            if(maxY == null || y > maxY){
+                maxY = y;
+            }
+        }
+
+        var requiredWidth = maxX - minX + 300;
+        var requiredHeight = maxY - minY + 300;
+
+        var widthScale = 1.;
+        var heightScale = 1.;
+
+        widthScale = width/ requiredWidth;
+
+        heightScale = height / requiredHeight;
+
+        var fitScale = 1.;
+
+        if(widthScale < 1 || heightScale < 1){
+            fitScale = Math.min(widthScale, heightScale);
+        }//else{
+            //fitScale = Math.max(widthScale, heightScale);
+       // }
+
+        if(config.drawingMode != PhyloDrawingMode.CIRCULAR){
+            //translateY = Math.min(minY + 150, 150);// + (cy/2);
+            //translateX = Math.abs(maxX);
+        }
+
+        if(fitScale == scale){
+            // do nothing
+        }else{
+            config.autoFit = true;
+            config.dataChanged = true;
+
+            setScale(fitScale,false);
+        }
+    }
+
+    public function setScale(scale : Float, disableAutoFit = true){
+        this.scale = scale;
+
+        config.scale = scale;
+
+        if(disableAutoFit){
+            config.autoFit = false;
+        }
+
+        redraw(true);
+    }
+
+    public function dataChanged(changed : Bool ){
+        getConfig().scale = 1;
+        scale = 1;
+        getConfig().dataChanged = changed;
+    }
+
+    public function setNewickString(newickString : String){
+        var parser = new PhyloNewickParser();
+
+        var rootNode = parser.parse(newickString);
+
+        rootNode.calculateScale();
+
+        rootNode.postOrderTraversal();
+
+        if(config.drawingMode == PhyloDrawingMode.CIRCULAR){
+            rootNode.preOrderTraversal(1);
+        }else{
+            rootNode.preOrderTraversal2(1);
+        }
+
+        this.rootNode = rootNode;
+
+        getAnnotationManager().setRootNode(rootNode);
+
+        if(getAnnotationManager().getAnnotationString() != null){
+            getAnnotationManager().loadAnnotationsFromString(getAnnotationManager().getAnnotationString(), getAnnotationManager().getAnnotationConfigs());
+        }else{
+            redraw(true);
+        }
+    }
+
+    public function getAnnotationMenu() : PhyloAnnotationMenuWidget{
+        return annotationMenu;
+    }
+
+    public function setFromFasta(fasta : String){
+        BioinformaticsServicesClient.getClient().sendPhyloReportRequest(fasta, function(response : Dynamic, error : String){
+            var phyloReport = response.json.phyloReport;
+
+            var location : js.html.Location = js.Browser.window.location;
+
+            var dstURL = location.protocol+'//'+location.hostname+':'+location.port+'/'+phyloReport;
+
+            var fetchFunc = untyped __js__('fetch');
+
+            fetchFunc(dstURL).then(function(response : Dynamic){
+                response.text().then(function(text){
+                    setNewickString(text);
+
+                    rootNode.setFasta(fasta);
+                });
+            });
+        });
     }
 
     public static function main(){
@@ -722,7 +980,14 @@ class PhyloCanvasConfiguration{
     public var scale : Float = 1;
     public var enableTools : Bool = false;
     public var enableToolbar : Bool = false;
+    public var verticalToolBar : Bool = false;
+    public var autoFit : Bool = true;
+    public var dataChanged : Bool = false;
     public var title : String;
+    public var enableAnnotationMenu = false;
+    public var enableLegend = false;
+    public var enableImport = false;
+    public var enableFastaImport = false;
 
     public function new(){
 

@@ -1,11 +1,11 @@
 package saturn.client.programs.phylo;
-class PhyloInfoWidget extends PhyloWindowWidget{
+class PhyloInfoWidget extends PhyloGlassPaneWidget{
     public var message  : String;
 
-    public function new(parent : Dynamic, message : String) {
+    public function new(parent : Dynamic, message : String, title : String) {
         this.message = message;
 
-        super(parent);
+        super(parent, title);
     }
 
     override public function addContent(){

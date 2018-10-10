@@ -67,6 +67,8 @@ class PhyloTreeNode {
     var maxNameLength = -1;
 
     public var wedgeColour : String = null;
+    public var newickString : String;
+    public var fasta : String;
 
     public function new(?parent : PhyloTreeNode, ?name: String, ?leaf : Bool, ?branch: Int){
         this.parent=parent;
@@ -440,6 +442,32 @@ class PhyloTreeNode {
 
             i++;
         }*/
+    }
+
+    public function clearAnnotations(){
+        annotations = new Array<PhyloAnnotation>();
+
+        if(activeAnnotation != null){
+            for(i in 0...activeAnnotation.length){
+                activeAnnotation[i] = false;
+            }
+        }
+
+        for(child in children){
+            child.clearAnnotations();
+        }
+    }
+
+    public function getNewickString() : String{
+        return newickString;
+    }
+
+    public function setFasta(fasta : String){
+        this.fasta = fasta;
+    }
+
+    public function getFasta() : String{
+        return this.fasta;
     }
 
 }
