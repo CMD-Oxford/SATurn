@@ -1,10 +1,10 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotationManager;
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloAnnotationManager;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloTreeNode;
 
 class ProteinCancerEssentialAnnotation {
     public function new() {
@@ -109,7 +109,7 @@ class ProteinCancerEssentialAnnotation {
         }
     }
 
-    static function cancerEssentialFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
+    static function cancerEssentialFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : ChromoHubAnnotationManager, cb : Dynamic->String->Void){
         var cancerScore = null;
         var cancerTypes = null;
 

@@ -145,7 +145,7 @@ class BasicTableViewer extends SimpleExtJSProgram{
         return table;
     }
 
-    override public function saveWait(cb) : Void{
+    override public function saveWait(cb : Dynamic) : Void{
         //Ensure that changes visible in the table are serialised when the current session is
         getUpdatedTable();
 

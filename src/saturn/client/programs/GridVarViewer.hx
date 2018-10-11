@@ -12,7 +12,7 @@ package saturn.client.programs;
 import saturn.client.programs.blocks.GridVarCanvasRenderer;
 import saturn.client.programs.blocks.BaseScrollableCanvas;
 import saturn.client.programs.plugins.GridVarPlugin;
-import jQuery.JQuery;
+
 import saturn.client.programs.SimpleExtJSProgram;
 import saturn.client.core.CommonCore;
 
@@ -784,7 +784,7 @@ class GridVarViewer extends SimpleExtJSProgram{
         }
     }
 
-    override public function saveWait(cb){
+    override public function saveWait(cb : Dynamic){
         gridVarObj.lines = canvasGridVar.lines;
 
         cb();

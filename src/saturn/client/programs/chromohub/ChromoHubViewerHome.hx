@@ -1,7 +1,7 @@
 package saturn.client.programs.chromohub;
 
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloAnnotation;
+import phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.db.Provider;
 import saturn.client.core.CommonCore;
 import saturn.core.Util;

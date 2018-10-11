@@ -1,10 +1,10 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotationManager;
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloAnnotationManager;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class ProteinStructureAnnotation {
@@ -145,7 +145,7 @@ class ProteinStructureAnnotation {
             WorkspaceApplication.getApplication().debug("NOT access db");
     }
 
-    static function structuresFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager, callback:Dynamic->String->Void){
+    static function structuresFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:ChromoHubAnnotationManager, callback:Dynamic->String->Void){
         var aux:Dynamic;
         var cutoff:String;
         var option:String;

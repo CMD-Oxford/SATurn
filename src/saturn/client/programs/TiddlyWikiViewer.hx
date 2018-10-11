@@ -287,7 +287,7 @@ class TiddlyWikiViewer extends SimpleExtJSProgram{
         ];
     }
 
-    override public function saveWait(cb){
+    override public function saveWait(cb : Dynamic){
         var obj = getEntity();
 
         obj.content = getTiddlyWikiContent();

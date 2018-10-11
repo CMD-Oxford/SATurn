@@ -1,10 +1,11 @@
 package saturn.client;
-import saturn.client.programs.phylo.PhyloAnnotationManager;
+import saturn.client.programs.chromohub.ChromoHubAnnotationManager;
+import phylo.PhyloAnnotationManager;
 import saturn.client.programs.chromohub.ChromoHubViewer;
-import saturn.client.programs.phylo.PhyloScreenData;
+import phylo.PhyloScreenData;
 import saturn.client.WorkspaceApplication.ScreenMode;
-import saturn.client.programs.phylo.PhyloTreeNode;
-import saturn.client.programs.phylo.PhyloAnnotation;
+import phylo.PhyloTreeNode;
+import phylo.PhyloAnnotation;
 import bindings.Ext;
 import saturn.core.Util;
 
@@ -1229,7 +1230,7 @@ class SingleAppContainer {
     public function addElemToPopUpWindow(elem:Dynamic){
         popUpWindow.add(elem);
     }
-    public function addFormItemToPopUpWindow(item:Dynamic, annot, hasClass, popMethod, tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager){
+    public function addFormItemToPopUpWindow(item:Dynamic, annot, hasClass, popMethod, tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:ChromoHubAnnotationManager){
 
         popUpWindow.add({
             xtype : 'form',

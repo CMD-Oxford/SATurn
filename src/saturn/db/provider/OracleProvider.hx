@@ -9,7 +9,9 @@
 
 package saturn.db.provider;
 
+#if SERVER_SIDE
 import js.Node;
+#end
 
 import saturn.core.Util;
 

@@ -1,8 +1,8 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloAnnotation;
 import saturn.client.core.CommonCore;
 
 class DomainAnnotation {

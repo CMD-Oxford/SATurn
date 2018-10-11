@@ -1,11 +1,11 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods.LigandType;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods.PdbType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class LigandAnnotation {

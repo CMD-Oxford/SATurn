@@ -96,12 +96,12 @@ class SequenceEditorBlock {
 
                     seqEditor.onBlockBlur(displayBlock);
 
-                    var sel : js.html.DOMSelection = js.Browser.window.getSelection();
+                    var sel : Dynamic = js.Browser.window.getSelection();
 
                     sel.removeAllRanges();
 
                     var range : Dynamic = js.Browser.document.createRange();
-                    var sel : js.html.DOMSelection = js.Browser.window.getSelection();
+                    var sel : Dynamic = js.Browser.window.getSelection();
 
                     /*
                         We cheat here to detect the selection direction from 

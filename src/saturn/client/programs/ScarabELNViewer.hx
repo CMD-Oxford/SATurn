@@ -9,7 +9,6 @@
 
 package saturn.client.programs;
 
-import jQuery.Event;
 import js.html.Blob;
 import saturn.core.scarab.LabPageImage;
 import saturn.core.scarab.LabPageText;

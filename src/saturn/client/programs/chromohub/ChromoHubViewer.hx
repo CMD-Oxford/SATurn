@@ -18,8 +18,8 @@
 
 package saturn.client.programs.chromohub;
 
-import saturn.client.programs.phylo.PhyloUtil;
-import saturn.client.programs.phylo.PhyloAnnotationManager;
+import phylo.PhyloUtil;
+import phylo.PhyloAnnotationManager;
 import saturn.core.Table;
 import saturn.core.domain.Alignment;
 import js.html.Event;
@@ -27,7 +27,7 @@ import saturn.core.Util;
 
 import saturn.client.programs.blocks.BaseTable;
 import js.html.Uint8ClampedArray;
-import saturn.client.programs.phylo.PhyloScreenData;
+import phylo.PhyloScreenData;
 import saturn.client.programs.SimpleExtJSProgram;
 import saturn.util.StringUtils;
 import js.html.CanvasElement;
@@ -41,14 +41,14 @@ import saturn.client.workspace.ChromoHubWorkspaceObject;
 import saturn.client.workspace.DNAWorkspaceObject;
 import saturn.client.workspace.ProteinWorkspaceObject;
 
-import saturn.client.programs.phylo.PhyloRadialTreeLayout;
-import saturn.client.programs.phylo.PhyloCanvasRenderer;
-import saturn.client.programs.phylo.PhyloHubMath;
+import phylo.PhyloRadialTreeLayout;
+import phylo.PhyloCanvasRenderer;
+import phylo.PhyloHubMath;
 //import saturn.client.programs.ChromoHub.ChromoHubSVGRenderer;
-import saturn.client.programs.phylo.PhyloNewickParser;
-import saturn.client.programs.phylo.PhyloRendererI;
-import saturn.client.programs.phylo.PhyloTreeNode;
-import saturn.client.programs.phylo.PhyloAnnotation;
+import phylo.PhyloNewickParser;
+import phylo.PhyloRendererI;
+import phylo.PhyloTreeNode;
+import phylo.PhyloAnnotation;
 
 import saturn.core.DNA;
 import saturn.client.programs.blocks.BaseTable;
@@ -142,7 +142,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
     var enableColourAdjustWedge : Bool = false;
     var currentWedgeColour : String = null;
 
-    public var annotationManager : PhyloAnnotationManager;
+    public var annotationManager : ChromoHubAnnotationManager;
 
     public function new(){
         super();
@@ -152,7 +152,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         super.emptyInit();
 
 
-        annotationManager = new PhyloAnnotationManager(this);
+        annotationManager = new ChromoHubAnnotationManager(this);
 
         config.enableTools = true;
         config.enableZoom = true;
