@@ -181,7 +181,7 @@ class AlleleViewer extends PCRProductViewer {
 		});
 	}
 	
-	override public function onClick(view, rec, item, index) : Void {
+	override public function onClick(view :Dynamic, rec:Dynamic, item:Dynamic, index:Dynamic) : Void {
 		if (rec.data.id == 'ALLELE_PLATE') {
 			if (plateWindowActive == false) {
 				plateWindowActive = true;

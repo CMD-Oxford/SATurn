@@ -12,8 +12,6 @@ package saturn.client.programs.sequenceeditor;
 import saturn.client.programs.sequenceeditor.SequenceEditor;
 import saturn.client.workspace.Workspace.WorkspaceObject;
 
-import jQuery.JQuery;
-
 class AnnotationEditorBlockDiv extends AnnotationEditorBlock{
 	
     public function new(blockNumber : Int, sequenceEditor :SequenceEditor, annotationNumber : Int) {

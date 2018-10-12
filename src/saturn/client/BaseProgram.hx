@@ -45,7 +45,7 @@ class BaseProgram implements Program implements OutlineListener {
         return plugins;
     }
 
-    public function saveWait(cb) : Void{
+    public function saveWait(cb : Dynamic) : Void{
         cb();
     }
 
@@ -405,7 +405,7 @@ class BaseProgram implements Program implements OutlineListener {
 
     }
 
-    public function onClick(view, rec, item, index) : Void {
+    public function onClick(view :Dynamic, rec:Dynamic, item:Dynamic, index:Dynamic) : Void {
 
     }
 

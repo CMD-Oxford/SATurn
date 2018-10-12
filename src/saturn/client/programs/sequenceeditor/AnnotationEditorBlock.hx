@@ -12,8 +12,6 @@ package saturn.client.programs.sequenceeditor;
 import saturn.client.programs.sequenceeditor.SequenceEditor;
 import saturn.client.workspace.Workspace.WorkspaceObject;
 
-import jQuery.JQuery;
-
 class AnnotationEditorBlock {
 	private var elem : Dynamic;
 	private var sequenceEditor : SequenceEditor;
@@ -77,7 +75,7 @@ class AnnotationEditorBlock {
         elem.blockNumber = blockNumber;
         bNum = blockNumber;
 
-        new JQuery(elem).addClass(" molbio-sequenceeditor-block");
+        elem.classList.add(" molbio-sequenceeditor-block");
 
         elem.style.dysplay = "inline-block";
 

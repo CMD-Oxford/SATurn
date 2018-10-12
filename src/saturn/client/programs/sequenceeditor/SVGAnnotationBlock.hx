@@ -9,7 +9,6 @@
 
 package saturn.client.programs.sequenceeditor;
 
-import jQuery.JQuery;
 import js.html.CanvasElement;
 import saturn.client.programs.sequenceeditor.AnnotationEditorBlock;
 
@@ -25,7 +24,7 @@ class SVGAnnotationBlock extends AnnotationEditorBlock{
         //theCanvas = new js.html.svg.SVGElement();
         theCanvas = js.Browser.document.createElementNS("http://www.w3.org/2000/svg","svg");
         //theCanvas.height = 17;
-        new JQuery(theCanvas).addClass('molbio-sequenceeditor-block');
+        theCanvas.classList.add('molbio-sequenceeditor-block');
         theCanvas.setAttribute('style', theCanvas.style + ';margin-top:2px;margin-left:2px;margin-right:2px');
         ////theCanvas.className = theCanvas.className + " molbio-sequenceeditor-block";
         elem = theCanvas;

@@ -19,7 +19,6 @@ import saturn.core.molecule.Molecule;
 import js.Browser;
 import bindings.Ext.Element;
 import bindings.Ext;
-import jQuery.JQuery;
 
 import saturn.client.programs.Sequence;
 import saturn.client.WorkspaceApplication;
@@ -1862,7 +1861,6 @@ class SequenceEditor extends SimpleExtJSProgram{
         is false and removed when it is true
     */
     public static function makeSelectable(elem : js.html.Element, makeSelectable : Bool) {
-		var jElem = new JQuery(elem);
 		if (makeSelectable) {
             elem.classList.remove("molbio-unselectable");
             elem.classList.add("molbio-selectable");

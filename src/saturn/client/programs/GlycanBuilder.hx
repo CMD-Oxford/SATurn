@@ -251,7 +251,7 @@ class GlycanBuilder extends SimpleExtJSProgram{
         ];
     }
 
-    override public function saveWait(cb){
+    override public function saveWait(cb : Dynamic){
         var obj = getActiveObjectObject();
 
         // Get glycan canvas contents as a string

@@ -10,7 +10,9 @@
 package saturn.db.provider;
 
 import saturn.db.provider.GenericRDBMSProvider;
+
 import js.Node;
+
 class MySQLProvider extends GenericRDBMSProvider{
 
     public function new(models : Map<String,Map<String,Map<String,Dynamic>>>, config : Dynamic, autoClose : Bool){

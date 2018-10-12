@@ -9,6 +9,8 @@
 
 package saturn.client.programs;
 
+import phylo.PhyloUtil;
+import phylo.PhyloCanvasRenderer;
 import saturn.client.programs.SimpleExtJSProgram;
 import saturn.util.StringUtils;
 
@@ -28,15 +30,15 @@ import saturn.client.WorkspaceApplication;
 
 class Phylo5Viewer  extends SimpleExtJSProgram  {
 	static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ Phylo5WorkspaceObject ];
-	
+
     var theComponent : Dynamic;
 
     var internalFrameId : String;
-	
-	var canvas : Dynamic;
-	
+
+	var canvas : PhyloCanvasRenderer;
+
 	var newickStr : String = '';
-	
+
 	static var newLineReg = ~/\n/g;
     static var carLineReg = ~/\r/g;
     static var whiteSpaceReg = ~/\s/g;
@@ -52,34 +54,52 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
 
         var self : Phylo5Viewer  = this;
 
+        getApplication().hideMiddleSouthPanel();
+
         theComponent = Ext.create('Ext.panel.Panel', {
             title: 'Phylo5 Viewer',
             width:'100%',
             height: '95%',
             autoScroll : true,
             layout : 'fit',
-            items : [{
-                        xtype : "component",
-                        itemId: internalFrameId,
-                        autoEl : {
-                            tag : "div"
-                        },
-						height : '100%',
-						width : '100%'
-			}],
-            listeners : { 
-                'render' : function() { self.initialiseDOMComponent(); },
-                'keypress': {
-                    element: 'el',
-                    fn: function(){ 
-                        js.Browser.alert('Hello');
-                    }
-                }
+
+            listeners : {
+                'render' : function() { self.initialiseDOMComponent(); }
             },
             cls: 'x-tree-background'
         });
 
         registerDropFolder('Sequences', null, true);
+    }
+
+    override public function initialiseDOMComponent() {
+        super.initialiseDOMComponent();
+
+        var parent : js.html.Element = getComponent().getEl().dom.firstChild;
+
+        newickStr = '((UFSP1:0.00,UFSP2:0.00):0.77,((((SENP1:0.00,SENP2:0.00):0.70,(SENP3:0.00,SENP5:0.00):0.73):0.82,SENP8:0.00):0.99,(SENP6:0.00,SENP7:0.00):0.77):1.00,((((((((((FAM105B:0.00,(OTUD6A:0.00,OTUD6B:0.00):0.46):0.92,(OTUB1:0.00,OTUB2:0.00):0.55):0.99,OTUD1:0.00):0.99,YOD1:0.00):0.99,(OTUD3:0.00,OTUD5:0.00):0.86):0.99,OTUD4:0.00):0.99,ZRANB1:0.00):0.99,TNFAIP3:0.00):0.99,(OTUD7A:0.00,OTUD7B:0.00):0.48):0.99,VCPIP1:0.00):1.00,(((KHNYN:0.00,NYNRIN:0.00):0.65,N4BP1:0.00):0.86,((ZC3H12A:0.00,(ZC3H12B:0.00,ZC3H12C:0.00):0.53):0.64,ZC3H12D:0.00):0.65):0.94,(BAP1:0.00,((UCHL1:0.00,UCHL3:0.00):0.46,UCHL5:0.00):0.82):0.99,(DESI1:0.00,DESI2:0.00):0.82,(((((((BRCC3:0.00,(COPS5:0.00,PSMD14:0.00):0.74):0.93,(COPS6:0.00,(EIF3F:0.00,PSMD7:0.00):0.79):0.81):0.95,EIF3H:0.00):0.99,MPND:0.00):0.99,(STAMBP:0.00,STAMBPL1:0.00):0.43):0.99,MYSM1:0.00):0.99,PRPF8:0.00):0.99,((ATXN3:0.00,ATXN3L:0.00):0.30,(JOSD1:0.00,JOSD2:0.00):0.51):0.99,((ATG4A:0.00,ATG4B:0.00):0.53,(ATG4C:0.00,ATG4D:0.00):0.63):0.80);';
+
+        var parser = new phylo.PhyloNewickParser();
+
+        var rootNode = parser.parse(newickStr);
+
+        rootNode.calculateScale();
+
+        rootNode.postOrderTraversal();
+
+        rootNode.preOrderTraversal(1);
+
+        var parentWidth = getComponent().getEl().getWidth();
+        var parentHeight = getComponent().getEl().getHeight();
+
+        var config = new PhyloCanvasConfiguration();
+
+        config.enableTools = true;
+        config.enableToolbar = true;
+        config.enableZoom = true;
+
+
+        canvas = new phylo.PhyloCanvasRenderer(parentWidth, parentHeight, parent, rootNode, config, null);
     }
 	
 	public function setTree( tree : String ) {
@@ -96,47 +116,8 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
 		}else{
             theComponent.removeCls('x-tree-background');
         }
-		
-		newickStr = whiteSpaceReg.replace(newickStr, "");
-        newickStr = newLineReg.replace(newickStr,"");
-        newickStr = carLineReg.replace(newickStr, "");
-		
-		var newickParser = new Phylo5NewickParser();
-		
-        var rootNode = newickParser.parse(newickStr);
-        rootNode.x = 0;
-        rootNode.y = 0;
-        rootNode.wedge = 2*Math.PI;
-        rootNode.angle = 0;
-            
-        var dist : Int = 40;
-        var ratio : Float = 0.6;
-            
-        rootNode.preOrderTraversal(dist, ratio);
 
-        canvas = theComponent.down('component').getEl().dom;
-            
-        var parentWidth : Int = canvas.clientWidth;
-        var parentHeight : Int = canvas.clientHeight;
-            
-        var minSize : Float = Math.min(parentWidth, parentHeight);
-            
-		canvas = new Phylo5SVGRenderer(parentWidth, parentHeight, canvas);
-            
-        var radialRendererObj  : Dynamic = new Phylo5RadialTreeLayout(parentWidth, parentHeight);
-            
-        radialRendererObj.render(rootNode, [], canvas);
-		
-		var self : Phylo5Viewer = this;
-		
-		// map one key by key code
-		var map = new bindings.KeyMap(theComponent.getEl(), {
-			key: '+',
-			shift : true,
-			fn: function() {
-				zoomIn();
-			}
-		});
+		canvas.setNewickString(newickStr);
 	}
 
     public function zoomIn(){
@@ -170,7 +151,7 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
             }
         });
 		
-		getApplication().getViewMenu().add({
+		/*getApplication().getViewMenu().add({
             text : 'Zoom in',
             handler : function(){
                 zoomIn();
@@ -182,7 +163,7 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
             handler : function(){
                 zoomOut();
             }
-        });
+        });*/
 		
 		getApplication().getFileMenu().add({
             text : 'Import all Protein Sequences',
@@ -198,14 +179,14 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
             }
         });
 
-        getApplication().getToolBar().add({
+        /*getApplication().getToolBar().add({
             iconCls :'x-btn-export',
             text: 'Export',
             handler: function(){
                 export();
             },
             tooltip: {dismissDelay: 10000, text: 'Export tree as SVG (open in Illustrator or Inkscape)'}
-        });
+        });*/
 
         getApplication().getToolBar().add({
             iconCls :'x-btn-copy',
@@ -216,7 +197,7 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
             tooltip: {dismissDelay: 10000, text: 'Update tree with current sequences'}
         });
 
-        getApplication().getToolBar().add({
+        /*getApplication().getToolBar().add({
             iconCls :'x-btn-magplus',
             text: 'Zoom In',
             handler: function(){
@@ -232,7 +213,7 @@ class Phylo5Viewer  extends SimpleExtJSProgram  {
                 self.canvas.zoomOut();
             },
             tooltip: {dismissDelay: 10000, text: 'Zoom out of tree (Shift + Left click)'}
-        });
+        });*/
 
          getApplication().getToolBar().add({
             iconCls :'x-btn-copy',

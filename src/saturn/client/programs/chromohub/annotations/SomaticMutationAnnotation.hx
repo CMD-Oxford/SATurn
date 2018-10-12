@@ -1,16 +1,16 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotationManager;
+import phylo.PhyloAnnotationManager;
 import saturn.client.programs.chromohub.annotations.SomaticMutationAnnotation;
 import haxe.ds.StringMap;
 import haxe.ds.HashMap;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
 import saturn.client.programs.chromohub.ChromoHubAnnotationMethods;
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class SomaticMutationAnnotation {
@@ -220,7 +220,7 @@ class SomaticMutationAnnotation {
         }
     }
 
-    static function somaticMutFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,callback : Dynamic->String->Void) {
+    static function somaticMutFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager:ChromoHubAnnotationManager,callback : Dynamic->String->Void) {
 
         if (family=='') {
             WorkspaceApplication.getApplication().getProvider().getByNamedQuery('sm_sig_arr_all_families',{'gene' : searchGenes}, null, true, function(results: Dynamic, error){
@@ -262,7 +262,7 @@ class SomaticMutationAnnotation {
         }
     }
 
-    static function somaticMutFunctionContinue (annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:PhyloAnnotationManager,mut_sig_arr:Map<String,Int>,callback : Dynamic->String->Void){
+    static function somaticMutFunctionContinue (annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>,annotationManager:ChromoHubAnnotationManager,mut_sig_arr:Map<String,Int>,callback : Dynamic->String->Void){
 
         var mutsig=false;
         var mutated_dynamic=false;

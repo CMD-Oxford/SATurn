@@ -1,10 +1,10 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotationManager;
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloAnnotationManager;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloTreeNode;
 import saturn.client.core.CommonCore;
 
 class SHRNAAnnotation {
@@ -165,7 +165,7 @@ class SHRNAAnnotation {
         }
     }
 
-    static function shRnaFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager: PhyloAnnotationManager,callback : Dynamic->String->Void){
+    static function shRnaFunction (annotation:Int,form:Dynamic,tree_type:String, family:String,searchGenes:Array<Dynamic>,annotationManager: ChromoHubAnnotationManager,callback : Dynamic->String->Void){
 
         var aux:Dynamic;
         var shrna_flag=false;
@@ -201,7 +201,7 @@ class SHRNAAnnotation {
         }
     }
 
-    static function shRnaContinueFunction(annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>, annotationManager:PhyloAnnotationManager, flagresults: Array<Dynamic>,callback : Dynamic->String->Void){
+    static function shRnaContinueFunction(annotation:Int,form:Dynamic,tree_type:String, family:String, searchGenes:Array<Dynamic>, annotationManager:ChromoHubAnnotationManager, flagresults: Array<Dynamic>,callback : Dynamic->String->Void){
 
         var shrna_cutoff:String;
         var shrna_num_cutoff:String;

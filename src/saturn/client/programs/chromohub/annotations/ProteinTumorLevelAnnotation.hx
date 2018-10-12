@@ -1,10 +1,10 @@
 package saturn.client.programs.chromohub.annotations;
 
-import saturn.client.programs.phylo.PhyloAnnotationManager;
-import saturn.client.programs.phylo.PhyloAnnotation;
-import saturn.client.programs.phylo.PhyloScreenData;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
-import saturn.client.programs.phylo.PhyloTreeNode;
+import phylo.PhyloAnnotationManager;
+import phylo.PhyloAnnotation;
+import phylo.PhyloScreenData;
+import phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloTreeNode;
 
 class ProteinTumorLevelAnnotation {
     public function new() {
@@ -109,7 +109,7 @@ class ProteinTumorLevelAnnotation {
         }
     }
 
-    static function tumorLevelFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
+    static function tumorLevelFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : ChromoHubAnnotationManager, cb : Dynamic->String->Void){
         var cancer_type:String;
         var proteinLevels = [];
 
@@ -290,7 +290,7 @@ class ProteinTumorLevelAnnotation {
         }
     }
 
-    static function tumorLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : PhyloAnnotationManager, cb : Dynamic->String->Void){
+    static function tumorLevelPercentageFunction (annotation : Int, form : Dynamic, tree_type : String, family : String, searchGenes : Array<Dynamic>, annotationManager : ChromoHubAnnotationManager, cb : Dynamic->String->Void){
         var b = annotationManager;
         var proteinLevels = [];
         var percentage = null;

@@ -10,6 +10,7 @@
 package saturn.core.annotations;
 import saturn.core.molecule.Molecule;
 import saturn.core.domain.MoleculeAnnotation;
+
 class AnnotationManager {
     var annotationSuppliers : Map<String, AnnotationSupplier> = new Map<String, AnnotationSupplier>();
 

@@ -12,10 +12,10 @@ package saturn.client.programs.chromohub;
 
 import Date;
 import haxe.ds.ArraySort;
-import saturn.client.programs.phylo.PhyloAnnotation.HasAnnotationType;
+import phylo.PhyloAnnotation.HasAnnotationType;
 
 import saturn.core.Util;
-import saturn.client.programs.phylo.PhyloAnnotation;
+import phylo.PhyloAnnotation;
 import bindings.Ext;
 
 import saturn.client.core.CommonCore;
