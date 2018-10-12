@@ -122,6 +122,12 @@ class ProteinTumorLevelAnnotation {
 
 
         if(form.form.findField('protein_option').lastValue){
+
+
+            //var config = new PhyloAnnotationConfiguration();
+            //config._skipped = true;
+
+
             annotationManager.skipAnnotation[annotation] = false;
 
             if(form != null){
@@ -222,6 +228,10 @@ class ProteinTumorLevelAnnotation {
 
             var proteinLevels = [];
             proteinLevels = selectedAnnotations[0].protein_levels;
+            if (proteinLevels.length == 0){
+              proteinLevels = ["High", "Medium", "Low"];
+            }
+
             var percentage = selectedAnnotations[0].in_percentage;
             //searchGenes -> If you have the family name use it otherwise throw an exception.
             var searchGenes = [];
