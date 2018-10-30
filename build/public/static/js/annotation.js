@@ -7,7 +7,7 @@ $("input[componentid^='protein_level'], .protein-cancer-type").click(function(e)
 })
 
 
-$("input[componentid*='perc_protein_level'], .perc-protein-in-percentage").click(function(e) {		
+$("input[componentid*='perc_protein_level'], .perc-protein-in-percentage, input[componentid*='perc_protein_reliability']").click(function(e) {		
 		if ($(this).closest(".x-field").siblings('#perc_protein_option').hasClass('x-form-cb-checked')) {
 		}
 		else {

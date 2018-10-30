@@ -31149,12 +31149,12 @@ a.x-color-picker-item:hover {
 
 .tooltiptext {
 		position: absolute;
-		top: -20px;
-		right: -13px;
+		top: -19px;
+		right: -10px;
 		z-index: 1;
 		visibility: hidden;
 		font-size: 11px;
-		width: 554px;
+		width: 565px;
 		border: 1px solid #8eaace;
 		background: #e9f2ff;
 		border-radius: 3px;
@@ -31164,4 +31164,48 @@ a.x-color-picker-item:hover {
 
 .tooltip:hover .tooltiptext {
     visibility: visible;
+}
+
+.perc-protein-in-percentage > div {
+	width: 120px;
+}
+
+.icons-tooltip > div:nth-child(1) {
+	background: #ffffff !important;
+	border-left: 10px solid #87888a;
+	padding: 5px 10px 20px 10px !important;
+}
+
+.icons-tooltip > div:nth-child(1) span:nth-child(1) {
+	font-size: 12px !important;
+	color: #585b6c !important;
+}
+
+.icons-tooltip > div:nth-child(1) span:nth-child(2) {
+	color: #585b6c !important;
+}
+
+
+.icons-tooltip > div:nth-child(2) {
+	background-color: #ffffff !important;
+	border-left: 10px solid #87888a;
+	padding: 0 10px 10px 10px !important;
+}
+
+.icons-tooltip > div:nth-child(2) p {
+	border-top: 1px solid #c9cbcf;
+	padding-top: 15px;
+	margin-top: 0;
+}
+
+.icons-tooltip > div:nth-child(2) .icons-tooltip-checkbox {
+	text-align: right;
+}
+
+.icons-tooltip > div:nth-child(2) .icons-tooltip-checkbox label {
+	margin-right: 2px;
+}
+
+.icons-tooltip > div:nth-child(2) .icons-tooltip-checkbox input {
+	background: url('images/form/checkbox.gif');
 }

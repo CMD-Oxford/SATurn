@@ -113,8 +113,7 @@
                       "xtype": "radiogroup",
                       "name": "oplist",
                       "items": [
-                        { "boxLabel": "All", "name": "structure", "inputValue": 0, "checked": true },
-                        { "boxLabel": "Domain", "name": "structure", "inputValue": 1}
+                        { "boxLabel": "All", "name": "structure", "inputValue": 0, "checked": true }
                       ]
                     },
                     {
@@ -973,6 +972,43 @@
                       "displayField": "name",
                       "store":["at least 1", "more than 25%", "more than 50%", "more than 75%"],
                       "value": "at least 1"
+                    },
+                    {
+                      "xtype": "component",
+                      "html": "Reliability",
+                      "style": {"margin": "5 0 5 15"}
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Approved",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_reliability_approved",
+                      "id": "perc_protein_reliability_approved",
+                      "inputValue": "Approved"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Enhanced",
+                      "name": "perc_protein_reliability_enhanced",
+                      "margin": "0 0 5 15",
+                      "id": "perc_protein_reliability_enhanced",
+                      "inputValue": "Enhanced"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Supported",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_reliability_supported",
+                      "id": "perc_protein_reliability_supported",
+                      "inputValue": "Supported"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "Uncertain",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_reliability_uncertain",
+                      "id": "perc_protein_reliability_uncertain",
+                      "inputValue": "Uncertain"
                     }
                   ]
                 }

@@ -345,19 +345,19 @@ class ProteinLevelNormalTissuesAnnotation {
             }
 
             // Process reliability
-            if(form.form.findField('protein_reliability_approved').lastValue){
+            if(form.form.findField('perc_protein_reliability_approved').lastValue){
                 reliability.push('Approved');
             }
 
-            if(form.form.findField('protein_reliability_enhanced').lastValue){
+            if(form.form.findField('perc_protein_reliability_enhanced').lastValue){
                 reliability.push('Enhanced');
             }
 
-            if(form.form.findField('protein_reliability_supported').lastValue){
+            if(form.form.findField('perc_protein_reliability_supported').lastValue){
                 reliability.push('Supported');
             }
 
-            if(form.form.findField('protein_reliability_uncertain').lastValue){
+            if(form.form.findField('perc_protein_reliability_uncertain').lastValue){
                 reliability.push('Uncertain');
             }
 
