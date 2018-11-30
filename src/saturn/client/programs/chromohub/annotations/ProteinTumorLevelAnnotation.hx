@@ -114,21 +114,22 @@ class ProteinTumorLevelAnnotation {
         var proteinLevels = [];
 
         if(form.form.findField('perc_protein_option').lastValue){
+            annotationManager.cleanAnnotResults(30);
             tumorLevelPercentageFunction(30, form, tree_type, family, searchGenes, annotationManager, cb);
             annotationManager.activeAnnotation[annotation] = true;
+            annotationManager.skipCurrentLegend[annotation] = true;
+            annotationManager.activeAnnotation[30] = true;
+            WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[30].legend, 30);
+
         } else {
+            annotationManager.activeAnnotation[30] = false;
             annotationManager.cleanAnnotResults(30);
         }
 
-
         if(form.form.findField('protein_option').lastValue){
-
-
+            annotationManager.activeAnnotation[annotation] = true;
             //var config = new PhyloAnnotationConfiguration();
             //config._skipped = true;
-
-
-            annotationManager.skipAnnotation[annotation] = false;
 
             if(form != null){
                 // We get here for tree annotation requests
@@ -181,8 +182,7 @@ class ProteinTumorLevelAnnotation {
                 }
             });
         } else{
-            annotationManager.skipAnnotation[annotation] = true;
-            return;
+            annotationManager.cleanAnnotResults(annotation);
         }
     }
 

@@ -94,8 +94,10 @@ class ProteinStructureAnnotation {
             }
 
             var mapp='';
-            CommonCore.getContent('/static/resources/'+imgSrc+'.txt',function(filetext){
+
+            CommonCore.getContent('/static/' +imgSrc+'.txt',function(filetext){
                 mapp=filetext;
+                //mapp = '<map name="st_' + screenData.target + '">'+ filetext + '</map>';
 
                 var t = '<style type="text/css">
                         .divMainDiv7  { }

@@ -1899,11 +1899,9 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }
     }
 
-
-
     public function showSearchedGenes(targetId :String){
         if(currentView==0){
-            WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getFamilies",{gene: targetId}, null, true, function(db_results, error){
+            WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getFamilies",{gene: '%'+targetId+'%'}, null, true, function(db_results, error){
 
                 if(error == null) {
                     rebuildBtns(db_results);

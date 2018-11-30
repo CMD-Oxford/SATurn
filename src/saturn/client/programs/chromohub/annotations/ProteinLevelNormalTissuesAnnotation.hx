@@ -127,9 +127,15 @@ class ProteinLevelNormalTissuesAnnotation {
         var cancer_type:String;
 
         if(form.form.findField('perc_protein_option').lastValue){
+            annotationManager.cleanAnnotResults(29);
             hasNormalLevelPercentageFunction(29, form, tree_type, family, searchGenes, annotationManager, cb);
             annotationManager.activeAnnotation[annotation] = true;
+            annotationManager.skipCurrentLegend[annotation] = true;
+            annotationManager.activeAnnotation[29] = true;
+            WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[29].legend, 29);
+
         } else {
+            annotationManager.activeAnnotation[29] = false;
             annotationManager.cleanAnnotResults(29);
         }
 
@@ -217,8 +223,7 @@ class ProteinLevelNormalTissuesAnnotation {
                 }
             });
         } else{
-            annotationManager.skipAnnotation[annotation] = true;
-            return;
+            annotationManager.cleanAnnotResults(annotation);
         }
     }
 

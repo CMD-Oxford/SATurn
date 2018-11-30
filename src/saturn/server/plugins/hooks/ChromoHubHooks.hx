@@ -1072,6 +1072,67 @@ class ChromoHubHooks {
         runBasicQuery(sql, boundParameters, cb);
     }
 
+    public static function hookHasCancerEssentialRNAi(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+        var cancerTypes :Array<String> = params[0].cancer_types;
+        var cancerScore = params[0].cancer_score;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+        if(treeType == 'gene'){
+            sql = "
+               SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
+               FROM
+                    family_target_join ftj, variant v, essentiality_cancer_rnai ec
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    ec.target_id = ftj.target_id
+               ";
+        }else{
+            sql = "
+                SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
+                FROM
+                    family_target_join ftj, variant v, essentiality_cancer ec
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = v.target_id AND
+                    ec.target_id = ftj.target_id AND
+                    v.is_default = 1
+            ";
+        }
+
+        if(cancerTypes[0] != 'All'){
+            var placeHolders = [];
+            for(cancerType in cancerTypes){
+                placeHolders.push('?');
+                boundParameters.push(cancerType);
+            }
+
+            sql += ' AND ec.primary_disease IN (' + placeHolders.join(',') + ')';
+        }
+
+        if(cancerScore != null){
+            sql += ' AND ec.median_score <= ?';
+            boundParameters.push(cancerScore);
+        }
+
+
+        runBasicQuery(sql, boundParameters, cb);
+    }
+
     /**
     * hookHasProteinNormalLevels lookups protein expression levels in normal tissues based on the parameters in params
     *

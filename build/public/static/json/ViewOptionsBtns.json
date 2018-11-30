@@ -554,10 +554,10 @@
             ]
           },
           {
-            "label": "Cancer Essentiality",
+            "label": "Essentiality in Cancer",
             "enabled": true,
             "isTitle": false,
-            "helpText": "<strong>Essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types. The gene is essential in a given cell line if Score &lt; -1.0. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017.DOI: 10.1038/ng.3984)",
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
             "annotCode": 27,
             "submenu": false,
             "popUpWindows": true,
@@ -574,7 +574,7 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/essential_cancer.png",
+              "image": "/static/annot/images/essential_cancer_crispr.png",
               "text": "",
               "clazz":"",
               "method": ""
@@ -590,21 +590,32 @@
                 "form": {
                   "items": [
                     {
-                      "xtype": "combobox",
-                      "name": "cancer_score",
-                      "fieldLabel": "Cancer Score < ",
-                      "labelSeparator": "",
-                      "queryMode": "local",
-                      "store": [
-                        -1,
-                        -0.75
-                      ],
-                      "value": "-1"
+                      "xtype": "checkboxfield",
+                      "boxLabel": "CRISPR knock-out essentiality score lower than",
+                      "margin": "0 5 0 0",
+                      "name": "essentiality_crispr",
+                      "id": "essentiality_crispr",
+                      "inputValue": "1"
                     },
                     {
                       "xtype": "combobox",
+                      "name": "cancer_score",
+                      "id": "essentiality_crispr_cancer_score",
+                      "fieldLabel": "",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -0.75,
+                        -1.0
+                      ],
+                      "value": "-0.75"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "margin": "0 0 20 18",
                       "name": "cancer_types",
-                      "fieldLabel": "in Cancer Type",
+                      "id": "essentiality_crispr_cancer_types",
+                      "fieldLabel": "in cancer type",
                       "labelSeparator": "",
                       "queryMode": "local",
                       "store": [
@@ -631,12 +642,223 @@
                       ],
                       "value": "All",
                       "multiSelect": true
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "RNAi knock-down essentiality score lower than",
+                      "margin": "0 5 5 0",
+                      "name": "essentiality_rnai",
+                      "id": "essentiality_rnai",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score_rnai",
+                      "id": "essentiality_rnai_cancer_score",
+                      "fieldLabel": "",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -0.4,
+                        -0.6,
+                        -0.8,
+                        -1.0
+                      ],
+                      "value": "-0.6"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "margin": "0 0 25 18",
+                      "name": "cancer_types_rnai",
+                      "id": "essentiality_rnai_cancer_types",
+                      "fieldLabel": "in cancer type",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "ALL",
+                        "autonomic_ganglia | neuroblastoma",
+                        "bone | Ewings_sarcoma-peripheral_primitive_neuroectodermal_tumour",
+                        "bone | osteosarcoma",
+                        "breast | carcinoma",
+                        "breast | carcinoma | ductal_carcinoma",
+                        "central_nervous_system | glioma",
+                        "central_nervous_system | glioma | astrocytoma",
+                        "central_nervous_system | glioma | astrocytoma_Grade_III",
+                        "central_nervous_system | glioma | astrocytoma_Grade_IV",
+                        "central_nervous_system | primitive_neuroectodermal_tumour-medulloblastoma",
+                        "endometrium | carcinoma | adenocarcinoma",
+                        "haematopoietic_and_lymphoid_tissue | haematopoietic_neoplasm | acute_myeloid_leukaemia",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | acute_lymphoblastic_B_cell_leukaemia",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | diffuse_large_B_cell_lymphoma",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | plasma_cell_myeloma",
+                        "kidney | carcinoma",
+                        "kidney | carcinoma | clear_cell_renal_cell_carcinoma",
+                        "kidney | carcinoma | renal_cell_carcinoma",
+                        "large_intestine | carcinoma",
+                        "large_intestine | carcinoma | adenocarcinoma",
+                        "liver | carcinoma | hepatocellular_carcinoma",
+                        "lung | carcinoma | adenocarcinoma",
+                        "lung | carcinoma | bronchioloalveolar_adenocarcinoma",
+                        "lung | carcinoma | large_cell_carcinoma",
+                        "lung | carcinoma | non_small_cell_carcinoma",
+                        "lung | carcinoma | small_cell_carcinoma",
+                        "lung | carcinoma | squamous_cell_carcinoma",
+                        "oesophagus | carcinoma | squamous_cell_carcinoma",
+                        "ovary | carcinoma",
+                        "ovary | carcinoma | adenocarcinoma",
+                        "ovary | carcinoma | clear_cell_carcinoma",
+                        "ovary | carcinoma | serous_carcinoma",
+                        "pancreas | carcinoma",
+                        "pancreas | carcinoma | ductal_carcinoma",
+                        "pleura | mesothelioma",
+                        "prostate | carcinoma | adenocarcinoma",
+                        "skin | malignant_melanoma",
+                        "soft_tissue | rhabdoid_tumour",
+                        "soft_tissue | rhabdomyosarcoma",
+                        "stomach | carcinoma",
+                        "stomach | carcinoma | adenocarcinoma",
+                        "stomach | carcinoma | diffuse_adenocarcinoma",
+                        "stomach | carcinoma | undifferentiated_adenocarcinoma",
+                        "thyroid | carcinoma | anaplastic_carcinoma",
+                        "upper_aerodigestive_tract | carcinoma | squamous_cell_carcinoma",
+                        "urinary_tract | carcinoma | transitional_cell_carcinoma"
+                      ],
+                      "value": "All",
+                      "multiSelect": true
                     }
                   ]
                 }
               }
             ]
           },
+
+
+          {
+            "label": "Essentiality in Cancer - RNAi",
+            "enabled": true,
+            "hidden": true,
+            "isTitle": false,
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "annotCode": 31,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/essential_cancer_rnai.png",
+              "text": "",
+              "clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasCancerEssentialRNAi",
+            "divMethod": "divCancerEssentialRNAi",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+                "popMethod": "cancerEssentialRNAiFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "RNAi knock-down essentiality score lower than",
+                      "margin": "15 0 5 0",
+                      "name": "essentiality_rnai",
+                      "id": "essentiality_rnai",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score_rnai",
+                      "id": "essentiality_rnai_cancer_score",
+                      "fieldLabel": "",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -0.4,
+                        -0.6,
+                        -0.8,
+                        -1.0
+                      ],
+                      "value": "-0.6"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_types_rnai",
+                      "id": "essentiality_rnai_cancer_types",
+                      "fieldLabel": "in Cancer Type",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "ALL",
+                        "autonomic_ganglia | neuroblastoma",
+                        "bone | Ewings_sarcoma-peripheral_primitive_neuroectodermal_tumour",
+                        "bone | osteosarcoma",
+                        "breast | carcinoma",
+                        "breast | carcinoma | ductal_carcinoma",
+                        "central_nervous_system | glioma",
+                        "central_nervous_system | glioma | astrocytoma",
+                        "central_nervous_system | glioma | astrocytoma_Grade_III",
+                        "central_nervous_system | glioma | astrocytoma_Grade_IV",
+                        "central_nervous_system | primitive_neuroectodermal_tumour-medulloblastoma",
+                        "endometrium | carcinoma | adenocarcinoma",
+                        "haematopoietic_and_lymphoid_tissue | haematopoietic_neoplasm | acute_myeloid_leukaemia",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | acute_lymphoblastic_B_cell_leukaemia",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | diffuse_large_B_cell_lymphoma",
+                        "haematopoietic_and_lymphoid_tissue | lymphoid_neoplasm | plasma_cell_myeloma",
+                        "kidney | carcinoma",
+                        "kidney | carcinoma | clear_cell_renal_cell_carcinoma",
+                        "kidney | carcinoma | renal_cell_carcinoma",
+                        "large_intestine | carcinoma",
+                        "large_intestine | carcinoma | adenocarcinoma",
+                        "liver | carcinoma | hepatocellular_carcinoma",
+                        "lung | carcinoma | adenocarcinoma",
+                        "lung | carcinoma | bronchioloalveolar_adenocarcinoma",
+                        "lung | carcinoma | large_cell_carcinoma",
+                        "lung | carcinoma | non_small_cell_carcinoma",
+                        "lung | carcinoma | small_cell_carcinoma",
+                        "lung | carcinoma | squamous_cell_carcinoma",
+                        "oesophagus | carcinoma | squamous_cell_carcinoma",
+                        "ovary | carcinoma",
+                        "ovary | carcinoma | adenocarcinoma",
+                        "ovary | carcinoma | clear_cell_carcinoma",
+                        "ovary | carcinoma | serous_carcinoma",
+                        "pancreas | carcinoma",
+                        "pancreas | carcinoma | ductal_carcinoma",
+                        "pleura | mesothelioma",
+                        "prostate | carcinoma | adenocarcinoma",
+                        "skin | malignant_melanoma",
+                        "soft_tissue | rhabdoid_tumour",
+                        "soft_tissue | rhabdomyosarcoma",
+                        "stomach | carcinoma",
+                        "stomach | carcinoma | adenocarcinoma",
+                        "stomach | carcinoma | diffuse_adenocarcinoma",
+                        "stomach | carcinoma | undifferentiated_adenocarcinoma",
+                        "thyroid | carcinoma | anaplastic_carcinoma",
+                        "upper_aerodigestive_tract | carcinoma | squamous_cell_carcinoma",
+                        "urinary_tract | carcinoma | transitional_cell_carcinoma"
+                      ],
+                      "value": "All",
+                      "multiSelect": true
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+
+
           {
             "label": "Protein Levels in Normal Tissues",
             "enabled": true,

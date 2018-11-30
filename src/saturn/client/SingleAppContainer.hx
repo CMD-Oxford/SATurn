@@ -1267,19 +1267,21 @@ class SingleAppContainer {
                          //   showMessageWindow();
                         //}
 
-                        if (annotationManager.skipAnnotation[annot] != true){
-                            addImageToLegend(annotationManager.annotations[annot].legend, annot);
+                        if(annotationManager.skipAnnotation[annot] != true){
+                            if(annotationManager.skipCurrentLegend[annot] != true){
+                                addImageToLegend(annotationManager.annotations[annot].legend, annot);
+                            }
                             legendPanel.expand();
                             hidePopUpWindow();
-
-                            annotationManager.activeAnnotation[annot]=true;
+                            if(annotationManager.skipCurrentLegend[annot] != true){
+                                annotationManager.activeAnnotation[annot]=true;
+                            }
                             clearOptionsToolBar();
                             annotationManager.createViewOptions();
                             addElemToOptionsToolBar(annotationManager.viewOptions);
                             var elem=js.Browser.document.getElementById('optionToolBarId');
                             elem.scrollTop=annotationManager.menuScroll;
                         } else {
-
                             hidePopUpWindow();
                             clearOptionsToolBar();
                             annotationManager.createViewOptions();

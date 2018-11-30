@@ -31209,3 +31209,21 @@ a.x-color-picker-item:hover {
 .icons-tooltip > div:nth-child(2) .icons-tooltip-checkbox input {
 	background: url('images/form/checkbox.gif');
 }
+
+#essentiality_crispr, #essentiality_rnai {
+	float: left;
+}
+
+#essentiality_crispr_cancer_score input, #essentiality_rnai_cancer_score input {
+	width: 40px;
+}
+
+#essentiality_crispr_cancer_types .x-form-item-body, #essentiality_rnai_cancer_types .x-form-item-body {
+	max-width: 300px;
+}
+
+#essentiality_crispr_cancer_types input, #essentiality_rnai_cancer_types input {
+	width: 255px;
+}
+
+

@@ -124,6 +124,9 @@ class ChromoHubAnnotationManager extends PhyloAnnotationManager{
                                 if (b.annotCode == 28){
                                     showAnnotation(29,false);
                                 }
+                                if (b.annotCode == 27){
+                                    showAnnotation(31,false);
+                                }
 
                                 container.clearOptionsToolBar();
                                 createViewOptions();
