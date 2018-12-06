@@ -18,7 +18,7 @@
               {"color":"blue", "used":"false"}
             ],
             "legend":{
-              "image": "/static/annot/images/tumorLevel-leg.png",
+              "image": "",
               "text":"",
               "clazz":"saturn.client.programs.chromohub.annotations.ProteinSubFamilyAnnotation",
               "method": "getAnnotationLegend"
@@ -199,7 +199,7 @@
             "label": "Ligands in Structures",
             "enabled": true,
             "isTitle":false,
-            "helpText":  "compounds with MW < 1000 Da and at least 6 carbons complexed to target of interest",
+            "helpText":  "compounds with MW < 1200 Da and at least 6 carbons complexed to target of interest",
             "annotCode":12,
             "submenu": true,
             "hookName": "ligandsInStructures95",
@@ -1182,6 +1182,14 @@
                       "name": "perc_protein_level_low",
                       "id": "perc_protein_level_low",
                       "inputValue": "Low"
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel":"Not detected",
+                      "margin": "0 0 5 15",
+                      "name": "perc_protein_level_not_detected",
+                      "id": "perc_protein_level_not_detected",
+                      "inputValue": "Not detected"
                     },
                     {
                       "xtype": "combobox",
