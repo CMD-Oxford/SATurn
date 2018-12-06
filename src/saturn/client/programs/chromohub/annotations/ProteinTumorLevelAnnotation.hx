@@ -114,60 +114,76 @@ class ProteinTumorLevelAnnotation {
         var proteinLevels = [];
 
         if(form.form.findField('perc_protein_option').lastValue){
+            annotationManager.cleanAnnotResults(30);
             tumorLevelPercentageFunction(30, form, tree_type, family, searchGenes, annotationManager, cb);
+            annotationManager.activeAnnotation[annotation] = true;
+            annotationManager.skipCurrentLegend[annotation] = true;
+            annotationManager.activeAnnotation[30] = true;
+            WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[30].legend, 30);
+
+        } else {
+            annotationManager.activeAnnotation[30] = false;
+            annotationManager.cleanAnnotResults(30);
         }
 
+        if(form.form.findField('protein_option').lastValue){
+            annotationManager.activeAnnotation[annotation] = true;
+            //var config = new PhyloAnnotationConfiguration();
+            //config._skipped = true;
 
-        if(form != null){
-            // We get here for tree annotation requests
-            cancer_type = form.form.findField('cancer_type').lastValue;
-            if(form.form.findField('protein_level_high').lastValue){
-                proteinLevels.push('High');
-            }
+            if(form != null){
+                // We get here for tree annotation requests
+                cancer_type = form.form.findField('cancer_type').lastValue;
+                if(form.form.findField('protein_level_high').lastValue){
+                    proteinLevels.push('High');
+                }
 
-            if(form.form.findField('protein_level_medium').lastValue){
-                proteinLevels.push('Medium');
-            }
+                if(form.form.findField('protein_level_medium').lastValue){
+                    proteinLevels.push('Medium');
+                }
 
-            if(form.form.findField('protein_level_low').lastValue){
-                proteinLevels.push('Low');
-            }
+                if(form.form.findField('protein_level_low').lastValue){
+                    proteinLevels.push('Low');
+                }
 
-            if(form.form.findField('protein_level_not_detected').lastValue){
-                proteinLevels.push('Not detected');
-            }
-        }else{
-            // We get here for table annotation requests
-            cancer_type="All";
-        }
-
-        var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
-        annotationManager.setSelectedAnnotationOptions(annotation, args);
-
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
-            if(error == null){
-                if(db_results != null){
-
-                    annotationManager.activeAnnotation[annotation] = true;
-
-                    if(annotationManager.treeName == ''){
-                        // We get here for table view
-                        annotationManager.addAnnotDataGenes(db_results, annotation, function(){
-                            cb(db_results, null);
-                        });
-                    }else{
-                        // We get here for tree view
-                        annotationManager.addAnnotData(db_results, annotation, 0, function(){
-                            annotationManager.canvas.redraw();
-
-                            cb(db_results, null);
-                        });
-                    }
+                if(form.form.findField('protein_level_not_detected').lastValue){
+                    proteinLevels.push('Not detected');
                 }
             }else{
-                cb(null,error);
+                // We get here for table annotation requests
+                cancer_type="All";
             }
-        });
+
+            var args = [{'treeType' : tree_type, 'familyTree' : family, 'cancer_type' : cancer_type, 'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels}];
+            annotationManager.setSelectedAnnotationOptions(annotation, args);
+
+            WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookTumorLevels', args, null, false, function(db_results, error){
+                if(error == null){
+                    if(db_results != null){
+
+                        annotationManager.activeAnnotation[annotation] = true;
+
+                        if(annotationManager.treeName == ''){
+                            // We get here for table view
+                            annotationManager.addAnnotDataGenes(db_results, annotation, function(){
+                                cb(db_results, null);
+                            });
+                        }else{
+                            // We get here for tree view
+                            annotationManager.addAnnotData(db_results, annotation, 0, function(){
+                                annotationManager.canvas.redraw();
+
+                                cb(db_results, null);
+                            });
+                        }
+                    }
+                }else{
+                    cb(null,error);
+                }
+            });
+        } else{
+            annotationManager.cleanAnnotResults(annotation);
+        }
     }
 
     static function hasTumorLevelPercentage(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
@@ -212,6 +228,10 @@ class ProteinTumorLevelAnnotation {
 
             var proteinLevels = [];
             proteinLevels = selectedAnnotations[0].protein_levels;
+            if (proteinLevels.length == 0){
+              proteinLevels = ["High", "Medium", "Low"];
+            }
+
             var percentage = selectedAnnotations[0].in_percentage;
             //searchGenes -> If you have the family name use it otherwise throw an exception.
             var searchGenes = [];

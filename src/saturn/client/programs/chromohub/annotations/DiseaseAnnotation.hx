@@ -69,7 +69,11 @@ class DiseaseAnnotation {
 
                 leaf.results=[numMax,infN,cancerN,virInfN,neuDisN,metDisN,immDisN,regMedN];
                 for(i in 1...leaf.results.length){
-                    leaf.results[i]=Math.round((leaf.results[i]*10)/leaf.results[0]);
+                    if(infN > 20  || cancerN > 20 || virInfN > 20 || neuDisN > 20 || metDisN > 20 || immDisN > 20 || regMedN > 20) {
+                        leaf.results[i]=Math.round((leaf.results[i]*40)/leaf.results[0]);
+                    } else {
+                        leaf.results[i]=Math.round((leaf.results[i]*10)/leaf.results[0]);
+                    }
                 }
                 leaf.results[9]=0;
 

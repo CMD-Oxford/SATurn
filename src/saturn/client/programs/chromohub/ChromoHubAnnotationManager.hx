@@ -4,6 +4,7 @@ import phylo.PhyloAnnotation;
 import phylo.PhyloTreeNode;
 import phylo.PhyloScreenData;
 import phylo.PhyloAnnotationManager;
+import phylo.PhyloTooltipWidget;
 
 import saturn.client.WorkspaceApplication.ScreenMode;
 
@@ -122,6 +123,9 @@ class ChromoHubAnnotationManager extends PhyloAnnotationManager{
                                 }
                                 if (b.annotCode == 28){
                                     showAnnotation(29,false);
+                                }
+                                if (b.annotCode == 27){
+                                    showAnnotation(31,false);
                                 }
 
                                 container.clearOptionsToolBar();
@@ -1376,6 +1380,13 @@ class ChromoHubAnnotationManager extends PhyloAnnotationManager{
             items[i]=this.rootNode.targets[i];
         }
         processFamilyAnnotations(items, mapResults, annotation, option, callback);
+
+
+        var cookies = untyped __js__('Cookies');
+        var cookie = cookies.getJSON('annot-icons-tip');
+        if(cookie == null) {
+            var dialog = new PhyloTooltipWidget(js.Browser.document.body, 'Click on icons on the tree for more details', 'Tooltip');
+        }
     }
 
     override public function showScreenData(active:Bool, data: PhyloScreenData, mx: Int, my:Int){

@@ -127,90 +127,104 @@ class ProteinLevelNormalTissuesAnnotation {
         var cancer_type:String;
 
         if(form.form.findField('perc_protein_option').lastValue){
+            annotationManager.cleanAnnotResults(29);
             hasNormalLevelPercentageFunction(29, form, tree_type, family, searchGenes, annotationManager, cb);
+            annotationManager.activeAnnotation[annotation] = true;
+            annotationManager.skipCurrentLegend[annotation] = true;
+            annotationManager.activeAnnotation[29] = true;
+            WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[29].legend, 29);
+
+        } else {
+            annotationManager.activeAnnotation[29] = false;
+            annotationManager.cleanAnnotResults(29);
         }
 
+        if(form.form.findField('protein_option').lastValue){
+            annotationManager.skipAnnotation[annotation] = false;
 
-        if(form != null){
-            // We get here for tree annotation requests
+            if(form != null){
+                // We get here for tree annotation requests
 
-            // Process protein levels
-            if(form.form.findField('protein_level_high').lastValue){
-                proteinLevels.push('High');
-            }
-
-            if(form.form.findField('protein_level_medium').lastValue){
-                proteinLevels.push('Medium');
-            }
-
-            if(form.form.findField('protein_level_low').lastValue){
-                proteinLevels.push('Low');
-            }
-
-            if(form.form.findField('protein_level_not_detected').lastValue){
-                proteinLevels.push('Not detected');
-            }
-
-            // Process reliability
-            if(form.form.findField('protein_reliability_approved').lastValue){
-                reliability.push('Approved');
-            }
-
-            if(form.form.findField('protein_reliability_enhanced').lastValue){
-                reliability.push('Enhanced');
-            }
-
-            if(form.form.findField('protein_reliability_supported').lastValue){
-                reliability.push('Supported');
-            }
-
-            if(form.form.findField('protein_reliability_uncertain').lastValue){
-                reliability.push('Uncertain');
-            }
-
-            // Obtain list of selected tissue types
-            tissueTypes = form.form.findField('tissues').lastValue;
-            // Obtain list of selected cell types
-            cellTypes = form.form.findField('cell_types').lastValue;
-        }else{
-            // We aren't planning to support table view for these UbiHub specific annotations
-            throw new saturn.util.HaxeException('Table view not supported for ProteinLevelNormalTissueAnnotation');
-        }
-
-        // Prepare web-service call
-        var args = [{
-            'treeType' : tree_type, 'familyTree' : family,
-            'tissue_types' : tissueTypes, 'cell_types' : cellTypes,
-            'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
-            'reliabilities': reliability
-        }];
-        annotationManager.setSelectedAnnotationOptions(annotation, args);
-
-        // Make web-service call
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevels', args, null, false, function(db_results, error){
-            if(error == null){
-                if(db_results != null){
-
-                    annotationManager.activeAnnotation[annotation] = true;
-
-                    if(annotationManager.treeName == ''){
-                        // We get here for table view
-                        annotationManager.addAnnotDataGenes(db_results, annotation, function(){
-                            cb(db_results, null);
-                        });
-                    }else{
-                        // We get here for tree view
-                        annotationManager.addAnnotData(db_results, annotation, 0, function(){
-                            annotationManager.canvas.redraw();
-
-                            cb(db_results, null);
-                        });
-                    }
+                // Process protein levels
+                if(form.form.findField('protein_level_high').lastValue){
+                    proteinLevels.push('High');
                 }
+
+                if(form.form.findField('protein_level_medium').lastValue){
+                    proteinLevels.push('Medium');
+                }
+
+                if(form.form.findField('protein_level_low').lastValue){
+                    proteinLevels.push('Low');
+                }
+
+                if(form.form.findField('protein_level_not_detected').lastValue){
+                    proteinLevels.push('Not detected');
+                }
+
+                // Process reliability
+                if(form.form.findField('protein_reliability_approved').lastValue){
+                    reliability.push('Approved');
+                }
+
+                if(form.form.findField('protein_reliability_enhanced').lastValue){
+                    reliability.push('Enhanced');
+                }
+
+                if(form.form.findField('protein_reliability_supported').lastValue){
+                    reliability.push('Supported');
+                }
+
+                if(form.form.findField('protein_reliability_uncertain').lastValue){
+                    reliability.push('Uncertain');
+                }
+
+                // Obtain list of selected tissue types
+                tissueTypes = form.form.findField('tissues').lastValue;
+                // Obtain list of selected cell types
+                cellTypes = form.form.findField('cell_types').lastValue;
             }else{
-                cb(null,error);
+                // We aren't planning to support table view for these UbiHub specific annotations
+                throw new saturn.util.HaxeException('Table view not supported for ProteinLevelNormalTissueAnnotation');
             }
-        });
+
+            // Prepare web-service call
+            var args = [{
+                'treeType' : tree_type, 'familyTree' : family,
+                'tissue_types' : tissueTypes, 'cell_types' : cellTypes,
+                'searchGenes' : searchGenes, 'protein_levels' :  proteinLevels,
+                'reliabilities': reliability
+            }];
+            annotationManager.setSelectedAnnotationOptions(annotation, args);
+
+            // Make web-service call
+            WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookProteinNormalLevels', args, null, false, function(db_results, error){
+                if(error == null){
+                    if(db_results != null){
+
+                        annotationManager.activeAnnotation[annotation] = true;
+
+                        if(annotationManager.treeName == ''){
+                            // We get here for table view
+                            annotationManager.addAnnotDataGenes(db_results, annotation, function(){
+                                cb(db_results, null);
+                            });
+                        }else{
+                            // We get here for tree view
+                            annotationManager.addAnnotData(db_results, annotation, 0, function(){
+                                annotationManager.canvas.redraw();
+
+                                cb(db_results, null);
+                            });
+                        }
+                    }
+                }else{
+                    cb(null,error);
+                }
+            });
+        } else{
+            annotationManager.cleanAnnotResults(annotation);
+        }
     }
 
     static function hasNormalLevelPercentage(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, callBack : HasAnnotationType->Void){
@@ -336,19 +350,19 @@ class ProteinLevelNormalTissuesAnnotation {
             }
 
             // Process reliability
-            if(form.form.findField('protein_reliability_approved').lastValue){
+            if(form.form.findField('perc_protein_reliability_approved').lastValue){
                 reliability.push('Approved');
             }
 
-            if(form.form.findField('protein_reliability_enhanced').lastValue){
+            if(form.form.findField('perc_protein_reliability_enhanced').lastValue){
                 reliability.push('Enhanced');
             }
 
-            if(form.form.findField('protein_reliability_supported').lastValue){
+            if(form.form.findField('perc_protein_reliability_supported').lastValue){
                 reliability.push('Supported');
             }
 
-            if(form.form.findField('protein_reliability_uncertain').lastValue){
+            if(form.form.findField('perc_protein_reliability_uncertain').lastValue){
                 reliability.push('Uncertain');
             }
 

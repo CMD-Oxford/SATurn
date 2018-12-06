@@ -37,93 +37,59 @@ class ChromoHubClient extends SaturnClient{
     }
 
     override public function textChanged( app : WorkspaceApplication, queryStr : String, it : Dynamic ) : Void {
-        if(queryStr == 'me'){
-            if(clientCore.getUser() != null){
-                queryStr = clientCore.getUser().fullname;
-            }
-        }
-
         //check if the gene is in any of the families
         var prog = cast(getActiveProgram(), ChromoHubViewer);
         if(prog!=null){
             if(queryStr.length>2){
-                prog.showSearchedGenes(queryStr );
-            }
-        }
+                prog.showSearchedGenes(queryStr);
+
+                var storeList : Array<Dynamic> = new Array<Dynamic>();
 
 
-        var units = new Array<Dynamic>();
+                WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getTargetSynonym",{gene: '%'+queryStr+'%'}, null, true, function(db_results:Array<Dynamic>, error){
 
-        units.push({indexof: null, func: autocomplete_fts_models, minlen: null, name: 'FTS', limit : 40});
+                    if(error == null) {
 
-        var foundItems = new Array<Dynamic>();
+                        if(db_results.length!=0){
 
-        var i = 0;
+                            var model = Type.resolveClass('saturn.core.domain.chromohub.Target');
 
-        var next = null;
-        next = function(items : Array<Dynamic>){
-            if(items != null){
-                for(item in items){
-                    item.id = i++;
-                    foundItems.push(item);
-                }
-            }
+                            for(i in 0 ... db_results.length){
+                                var target = db_results[i].target_id;
+                                var synonym = db_results[i].synonyms;
+                                var targetSynonym;
+                                if(synonym == null) {
+                                    targetSynonym = target;
+                                } else {
+                                    targetSynonym = target + ' - ' + synonym;
+                                }
 
-            if(units.length == 0){
-                js.Browser.window.console.log('Returning');
 
-                var d :Dynamic= js.Browser.window;
-                d.items = foundItems;
+                                var item = { field: 'targetId', group : 'Genes', icon: '', id : i, title : targetSynonym, targetId: target, type : model};
 
-                var auxMap:Map<String,Dynamic>;
-                auxMap=new Map();
-                var i=0;
-                for(i in 0...foundItems.length){
-                    //remove duplicate target in name
-                    if(foundItems[i].title.indexOf('-')!=-1){
-                        var tit=new Array();
-                        tit=foundItems[i].title.split(' - ');
-                        if (tit.length==2 && tit[0]==tit[1]){
-                            foundItems[i].title=tit[0];
+                                storeList.push(item);
+
+                            }
+                            autocomplete_update(storeList);
+                            it.next();
                         }
+
+                    } else {
+                        WorkspaceApplication.getApplication().debug(error);
                     }
-                    if(auxMap.exists(foundItems[i].targetId)==false) auxMap.set(foundItems[i].targetId,foundItems[i]);
-                }
 
-                var newFoundItems:Array<Dynamic>;
-                newFoundItems=new Array();
-                var key:Dynamic;
-                for (key in auxMap.keys()) {
 
-                    newFoundItems.push(auxMap.get(key));
-                }
-                autocomplete_update(newFoundItems);
+                });
 
-                return;
-            }else{
-                var unit = units.pop();
-                var indexof = unit.indexof;
-                var minlen = unit.minlen;
-                var func :Dynamic = unit.func;
-                var name = unit.name;
-                var limit = unit.limit;
 
-                if(indexof != null && queryStr.indexOf(indexof) == -1){
-                    next(null);
-                }else {
-                    if(minlen != null && queryStr.length < minlen){
-                        next(null);
-                    }else{
-                        js.Browser.window.console.log('Running ' + name);
-                        func(queryStr, next, limit);
-                    }
-                }
+
+
+
             }
         }
 
-        next(null);
 
-        it.next();
+
     }
 
     override public function objectSelected( app : WorkspaceApplication, records : Dynamic, it : Dynamic ) : Void {

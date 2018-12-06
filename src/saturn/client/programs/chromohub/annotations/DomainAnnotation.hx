@@ -75,6 +75,7 @@ class DomainAnnotation {
     }
 
     static function familyDomain(targetFamily: String,tree_type:String,callBack : Dynamic->Void){
+        return; //temp
         var aux="";
         if(tree_type=='domain') aux="_DOMAIN";
 
@@ -141,6 +142,7 @@ class DomainAnnotation {
     }
 
     static function familyDomaintable(screenData: PhyloScreenData,x:String,y:String,targetFamily:String,tree_type:String, callBack : Dynamic->Void){
+        return; //temp
         if(screenData.divAccessed==false){
             screenData.divAccessed=true;
 
