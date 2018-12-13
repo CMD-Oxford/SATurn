@@ -88,7 +88,7 @@ class SQLVisitor {
                 var tokenTranslations = new Array<String>();
 
                 if(Std.is(token, Instr)){
-                    if(provider.getProviderType() == 'SQLITE'){
+                    if(provider.getProviderType() == 'SQLITE' || provider.getProviderType() == 'MYSQL'){
                         token.tokens.pop();
                         token.tokens.pop();
                     }
@@ -150,6 +150,8 @@ class SQLVisitor {
                         funcName = 'SUBSTR';
                     }else if(Std.is(token, Length)){
                         funcName = 'LENGTH';
+                    }else if(Std.is(token, Concat)){
+                        funcName = 'CONCAT';
                     }
 
                     sqlTranslation += funcName + '( ' + nestedTranslation + ' )';

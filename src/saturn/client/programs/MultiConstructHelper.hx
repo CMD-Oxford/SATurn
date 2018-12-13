@@ -48,6 +48,8 @@ import saturn.client.workspace.ProteinWorkspaceObject;
 
 import saturn.client.WorkspaceApplication;
 
+import saturn.core.domain.SgcUtil;
+
 class MultiConstructHelper extends TableHelper{
     static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ MultiConstructHelperWO ];
 
@@ -484,18 +486,10 @@ class MultiConstructHelper extends TableHelper{
                 vectorResSites.set(Std.string(vector.res2Id),'');
             }
 
-            var vResSites = new Array<String>();
-            for(vResSite in vectorResSites.keys()){
-                vResSites.push(vResSite);
-            }
-
-            batchFetch.getByPkeys(vResSites,SgcRestrictionSite,'VSITES',null);
-
             batchFetch.onComplete=function(){
                 var alleleToObj = new Map<String,SgcAllele>();
                 var vectorToObj = new Map<String, SgcVector>();
                 var resToObj = new Map<String, SgcRestrictionSite>();
-                var vresToObj = new Map<Int, SgcRestrictionSite>();
 
                 for(allele in alleles){
                     alleleToObj.set(allele.alleleId,allele);
@@ -509,11 +503,6 @@ class MultiConstructHelper extends TableHelper{
                     for(res in ress){
                         resToObj.set(res.enzymeName,res);
                     }
-                }
-
-                var vSites :Array<SgcRestrictionSite> = batchFetch.getObject('VSITES');
-                for(vSite in vSites){
-                    vresToObj.set(vSite.id,vSite);
                 }
 
                 WorkspaceApplication.suspendUpdates();
@@ -554,13 +543,13 @@ class MultiConstructHelper extends TableHelper{
                     }
 
 
-                    var vRes1 : SgcRestrictionSite = vresToObj.get(vector.res1Id);
+                    var vRes1 : SgcRestrictionSite = vector.res1;
                     if(vRes1 == null){
                         setRecordValid(constructModel, 'Restriction Site: ' + vRes1 + ' not found');
                         continue;
                     }
 
-                    var vRes2 : SgcRestrictionSite = vresToObj.get(vector.res2Id);
+                    var vRes2 : SgcRestrictionSite = vector.res2;
                     if(vRes2 == null){
                         setRecordValid(constructModel, 'Restriction Site: ' + vRes2 + ' not found');
                         continue;
@@ -658,16 +647,70 @@ class MultiConstructHelper extends TableHelper{
                 }
 
 
-                theTable.getView().refresh();
-                //theTable.store.update();
-                getApplication().showMessage('Finished','Calculation finished');
-                WorkspaceApplication.resumeUpdates(false);
+                calculateConstructIds(false, function(err){
+                    if(err == null){
+                        getApplication().showMessage('Finished','Calculation finished');
+                    }
+
+                    theTable.getView().refresh();
+                    //theTable.store.update();
+
+                    WorkspaceApplication.resumeUpdates(false);
+                });
             };
 
             batchFetch.execute();
         };
 
         batchFetch.execute();
+    }
+
+    public function calculateConstructIds(overwriteIds,cb){
+        var targetSet = new Map<String, Int>();
+
+        var constructStore = getStore();
+        var constructCount :Int = constructStore.count() -1;
+
+        for(i in 0...constructCount){
+            var constructModel : Dynamic = constructStore.getAt(i);
+            var alleleId = constructModel.get('allele.alleleId');
+
+            if(alleleId != null && alleleId.indexOf('-') > -1){
+                var targetId = alleleId.split('-')[0];
+
+                targetSet.set(targetId, 1);
+            }
+        }
+
+        var targets = new Array<String>();
+        for(target in targetSet.keys()){
+            targets.push(target);
+        }
+
+        SgcUtil.generateNextID(getProvider(), targets, SgcConstruct, function(constructs : Map<String,Int>, err : String){
+            if(err != null){
+                cb(err);
+            }else{
+                for(i in 0...constructCount){
+                    var constructModel : Dynamic = constructStore.getAt(i);
+                    var alleleId = constructModel.get('allele.alleleId');
+
+                    if(alleleId != null && alleleId.indexOf('-') > -1){
+                        var targetId = alleleId.split('-')[0];
+
+                        var constructId = constructModel.get('constructId');
+
+                        if(constructId == null || constructId == '' || overwriteIds){
+                            constructModel.set('constructId', targetId + '-c' + StringTools.lpad(Std.string(constructs.get(targetId)),'0',3));
+
+                            constructs.set(targetId, constructs.get(targetId)+1);
+                        }
+                    }
+                }
+
+                cb(null);
+            }
+        });
     }
 
     override public function insertOrDeletePerformed(){
@@ -863,6 +906,19 @@ class MultiConstructHelper extends TableHelper{
             text: 'Calculate Positions',
             handler: function(){
                 doAlignments();
+            },
+            tooltip: {dismissDelay: 10000, text: 'Calculate start/end positions of construct on target'}
+        });
+
+        getApplication().getToolBar().add({
+            iconCls :'x-btn-calculate',
+            text: 'Update IDs',
+            handler: function(){
+                calculateConstructIds(true, function(err){
+                    if(err != null){
+                        getApplication().showMessage('Error updating IDs', err);
+                    }
+                });
             },
             tooltip: {dismissDelay: 10000, text: 'Calculate start/end positions of construct on target'}
         });

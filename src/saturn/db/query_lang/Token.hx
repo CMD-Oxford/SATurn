@@ -64,7 +64,7 @@ class Token {
         if(Std.is(token, Operator)){
             var n = new Token();
             n.add(this);
-            n.tokens.push(token);
+            n.addToken(token);
 
             return n;
         }else{
@@ -87,13 +87,13 @@ class Token {
     }
 
     public function concat(?token : Dynamic=null) : Token {
-        var c = new Concat(token);
+        var c = new Concat([this,token]);
 
         //if(token != null){
         //    c.add(token);
        // }
 
-        return add(c);
+        return c;
     }
 
     public function substr(position : Dynamic, length: Dynamic) : Token {
