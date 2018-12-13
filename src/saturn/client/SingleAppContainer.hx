@@ -151,9 +151,8 @@ class SingleAppContainer {
             src: image,
             id:id,
             padding: '5 0 15 0',
-            renderTo: Ext.getBody()
+            //renderTo: Ext.getBody()
         });
-
 
         legendPanel.insert(2,changingImage);
         legendPanel.doLayout();
@@ -165,14 +164,15 @@ class SingleAppContainer {
         legendPanel.remove(comp);
     }
     public function expandLegend(){
-//  legendPanel.expand();
+        //  legendPanel.expand();
     }
     public function emptyLegend(){
         var itemslist = legendPanel.items;
 
-// remove the items
+        // remove the items
+        var items : Array<Dynamic> = new Array<Dynamic>();
         itemslist.each(function(item,index,length){
-            legendPanel.remove(item, false);
+            legendPanel.remove(item, true);
         });
 
         legendPanel.doLayout();
@@ -1267,21 +1267,24 @@ class SingleAppContainer {
                          //   showMessageWindow();
                         //}
 
-                        if(annotationManager.skipAnnotation[annot] != true){
-                            if(annotationManager.skipCurrentLegend[annot] != true){
+                        if (annotationManager.skipAnnotation[annot] != true){
+                            if (annotationManager.skipCurrentLegend[annot] != true){
                                 addImageToLegend(annotationManager.annotations[annot].legend, annot);
                             }
                             legendPanel.expand();
                             hidePopUpWindow();
-                            if(annotationManager.skipCurrentLegend[annot] != true){
+
+                            if (annotationManager.skipCurrentLegend[annot] != true){
                                 annotationManager.activeAnnotation[annot]=true;
                             }
+                            annotationManager.activeAnnotation[annot]=true;
                             clearOptionsToolBar();
                             annotationManager.createViewOptions();
                             addElemToOptionsToolBar(annotationManager.viewOptions);
                             var elem=js.Browser.document.getElementById('optionToolBarId');
                             elem.scrollTop=annotationManager.menuScroll;
                         } else {
+
                             hidePopUpWindow();
                             clearOptionsToolBar();
                             annotationManager.createViewOptions();

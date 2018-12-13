@@ -934,7 +934,7 @@ class ChromoHubHooks {
             // The below will look a little redundant, why not just use the value from the user if we know it matches an allowed value?
             // We don't do that because we shouldn't every concatenate a user supplied value to an SQL statement.
             // Think about the classic null-byte injection issues that languages have suffered from over the years
-            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not detected'];
+            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not_detected'];
 
             var levels = [];
 
@@ -993,7 +993,7 @@ class ChromoHubHooks {
             // The below will look a little redundant, why not just use the value from the user if we know it matches an allowed value?
             // We don't do that because we shouldn't every concatenate a user supplied value to an SQL statement.
             // Think about the classic null-byte injection issues that languages have suffered from over the years
-            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not detected'];
+            var allowedProteinLevels = ['High'=>'High', 'Medium'=>'Medium', 'Low'=>'Low', 'Not detected'=> 'Not_detected'];
 
             var levels = [];
 
@@ -1364,9 +1364,37 @@ class ChromoHubHooks {
             ";
         }
 
+
         if(proteinLevels != null && proteinLevels.length == 0){
-            proteinLevels = ['High', 'Medium', 'Low'];
+            proteinLevels = ['High', 'Medium', 'Low', 'Not detected'];
         }
+
+
+        //
+        // Append protein level constraints
+        if(proteinLevels != null && proteinLevels.length > 0){
+            var placeHolders = [];
+            for(proteinLevel in proteinLevels){
+                placeHolders.push('?');
+                boundParameters.push(proteinLevel);
+            }
+
+            sql += ' AND p.protein_level IN (' + placeHolders.join(',') + ')';
+        }
+
+        // Append relaibility constraints
+        if(reliabilities != null && reliabilities.length > 0){
+            var placeHolders = [];
+            for(reliability in reliabilities){
+                placeHolders.push('?');
+                boundParameters.push(reliability);
+            }
+
+            sql += ' AND p.reliability IN (' + placeHolders.join(',') + ')';
+        }
+        //
+
+
 
         // Append protein level constraints
         if(proteinLevels != null && proteinLevels.length > 0){
@@ -1383,6 +1411,9 @@ class ChromoHubHooks {
                 if(proteinLevel == 'Low'){
                     columns.push('s.level_low_num');
                 }
+                if(proteinLevel == 'Not detected'){
+                    columns.push('s.not_detected_num');
+                }
             }
 
             sql += ' AND ((' + columns.join('+') + ') / s.total_num > ?)';
@@ -1398,16 +1429,7 @@ class ChromoHubHooks {
             }
         }
 
-        // Append relaibility constraints
-        if(reliabilities != null && reliabilities.length > 0){
-            var placeHolders = [];
-            for(reliability in reliabilities){
-                placeHolders.push('?');
-                boundParameters.push(reliability);
-            }
 
-            sql += ' AND p.reliability IN (' + placeHolders.join(',') + ')';
-        }
 
         // Run query
         runBasicQuery(sql, boundParameters, cb);
@@ -1448,9 +1470,11 @@ class ChromoHubHooks {
             proteinLevels = ['High', 'Medium', 'Low'];
         }
 
+        var placeHolders = [];
         // Append protein level constraints
         if(proteinLevels != null && proteinLevels.length > 0){
             var columns = [];
+
             for(proteinLevel in proteinLevels){
                 if(proteinLevel == 'High'){
                     columns.push('s.level_high_num');
@@ -1463,7 +1487,15 @@ class ChromoHubHooks {
                 if(proteinLevel == 'Low'){
                     columns.push('s.level_low_num');
                 }
+                if(proteinLevel == 'Not detected'){
+                    columns.push('s.not_detected_num');
+                }
+                placeHolders.push('?');
+                boundParameters.push(proteinLevel);
+
             }
+
+            sql += " AND p.protein_level IN (" + placeHolders.join(',') + ")";
 
             sql += ' AND ((' + columns.join('+') + ') / s.total_num > ?)';
 

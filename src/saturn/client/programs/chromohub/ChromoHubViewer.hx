@@ -1195,7 +1195,7 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         width=Std.int(w*0.6);
         left=Std.int(w*0.2);
         var h= mydom.clientHeight;
-        height=Std.int(h*0.9);
+        height=Std.int(h*1);
         top=Std.int(h*0.15);
         if(container.getTipWindow()==null){
             var title =tips[tipActive].title;

@@ -123,24 +123,23 @@ class ProteinLevelNormalTissuesAnnotation {
         var tissueTypes = [];
         var cellTypes = [];
 
-
         var cancer_type:String;
 
         if(form.form.findField('perc_protein_option').lastValue){
             annotationManager.cleanAnnotResults(29);
             hasNormalLevelPercentageFunction(29, form, tree_type, family, searchGenes, annotationManager, cb);
-            annotationManager.activeAnnotation[annotation] = true;
             annotationManager.skipCurrentLegend[annotation] = true;
             annotationManager.activeAnnotation[29] = true;
             WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[29].legend, 29);
 
         } else {
             annotationManager.activeAnnotation[29] = false;
-            annotationManager.cleanAnnotResults(29);
+            WorkspaceApplication.getApplication().getSingleAppContainer().removeComponentFromLegend(29);
         }
 
         if(form.form.findField('protein_option').lastValue){
-            annotationManager.skipAnnotation[annotation] = false;
+            annotationManager.activeAnnotation[annotation] = true;
+            WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[annotation].legend, annotation);
 
             if(form != null){
                 // We get here for tree annotation requests
@@ -224,6 +223,7 @@ class ProteinLevelNormalTissuesAnnotation {
             });
         } else{
             annotationManager.cleanAnnotResults(annotation);
+            WorkspaceApplication.getApplication().getSingleAppContainer().removeComponentFromLegend(annotation);
         }
     }
 
@@ -347,6 +347,9 @@ class ProteinLevelNormalTissuesAnnotation {
 
             if(form.form.findField('perc_protein_level_low').lastValue){
                 proteinLevels.push('Low');
+            }
+            if(form.form.findField('perc_protein_level_not_detected').lastValue){
+                proteinLevels.push('Not detected');
             }
 
             // Process reliability

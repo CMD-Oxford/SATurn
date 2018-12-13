@@ -12,7 +12,7 @@ class ProteinCancerEssentialAnnotation {
     }
 
     static function hasCancerEssential(target: String, data: Dynamic, selected:Int, annotList:Array<PhyloAnnotation>, item:String, cb : HasAnnotationType->Void){
-        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#793ff3',used:true},defImage:0};
+        var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'#6eab8d',used:true},defImage:0};
 
         // data.family_id
         // data.subfamily
@@ -116,7 +116,6 @@ class ProteinCancerEssentialAnnotation {
         if(form.form.findField('essentiality_rnai').lastValue){
             annotationManager.cleanAnnotResults(31);
             cancerEssentialRNAiFunction(31, form, tree_type, family, searchGenes, annotationManager, cb);
-            annotationManager.activeAnnotation[annotation] = true;
             annotationManager.skipCurrentLegend[annotation] = true;
             annotationManager.activeAnnotation[31] = true;
             WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[31].legend, 31);
@@ -124,12 +123,12 @@ class ProteinCancerEssentialAnnotation {
         } else {
             annotationManager.activeAnnotation[31] = false;
             annotationManager.cleanAnnotResults(31);
+            WorkspaceApplication.getApplication().getSingleAppContainer().removeComponentFromLegend(31);
         }
 
         if(form.form.findField('essentiality_crispr').lastValue){
             annotationManager.activeAnnotation[annotation] = true;
             WorkspaceApplication.getApplication().getSingleAppContainer().addImageToLegend(annotationManager.annotations[annotation].legend, annotation);
-
 
             if(form != null){
                 // We get here for tree annotation requests
@@ -168,6 +167,7 @@ class ProteinCancerEssentialAnnotation {
             });
         } else{
             annotationManager.cleanAnnotResults(annotation);
+            WorkspaceApplication.getApplication().getSingleAppContainer().removeComponentFromLegend(annotation);
         }
     }
 
