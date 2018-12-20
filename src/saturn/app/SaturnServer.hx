@@ -131,7 +131,7 @@ class SaturnServer {
 
         installSocketPlugins();
 
-        server.get(untyped __js__('/static\\/.*/'), restify.plugins.serveStatic({
+        server.get('/static/*', restify.plugins.serveStatic({
             directory: './public'
         }));
 
