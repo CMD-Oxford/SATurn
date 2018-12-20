@@ -43,7 +43,11 @@ class Token {
         this.tokens = tokens;
     }
 
-    public function addToken(token : Token) : Token {
+    public function addToken(token : Dynamic) : Token {
+        if(!Std.is(token, Token)){
+            token = new Value(Token);
+        }
+
         if(tokens == null){
             tokens = new Array<Token>();
         }
@@ -60,7 +64,7 @@ class Token {
         return f;
     }
 
-    public function add(token : Token) : Token{
+    public function add(token : Dynamic) : Token{
         if(Std.is(token, Operator)){
             var n = new Token();
             n.add(this);
@@ -76,7 +80,7 @@ class Token {
         tokens.remove(token);
     }
 
-    public function like(?token : Token=null) : Token{
+    public function like(?token : Dynamic=null) : Token{
         var l = new Like();
 
         if(token != null){

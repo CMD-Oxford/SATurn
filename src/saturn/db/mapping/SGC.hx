@@ -54,7 +54,8 @@ class SGC {
                     'constructComments' => 'CONSTRUCTCOMMENTS',
                     'person' => 'PERSON',
                     'constructStart' => 'CONSTRUCTSTART',
-                    'constructStop'=> 'CONSTRUCTSTOP'
+                    'constructStop'=> 'CONSTRUCTSTOP',
+                    'complex' => 'COMPLEX'
                 ],
                 'defaults'=> [
                     'status' => 'In progress'
@@ -250,7 +251,8 @@ class SGC {
                     'seqSource' => 'SEQSOURCE',
                     'sourceId' => 'SOURCEID',
                     'sequenceConfirmed'=> 'SEQUENCECONFIRMED',
-                    'elnId' => 'ELNEXPERIMENTID'
+                    'elnId' => 'ELNEXPERIMENTID',
+                    'complex' => 'COMPLEX'
                 ],
                 'indexes'=>[
                     'entryCloneId'=>false,
@@ -548,7 +550,9 @@ class SGC {
                     'dnaSeq' => 'NUCLEOTIDESEQUENCE',
                     'activeStatus' => 'ACTIVESTATUS',
                     'pi' => 'PI',
-                    'comments' => 'COMMENTS'
+                    'comments' => 'COMMENTS',
+                    'complexComments' => 'COMPLEXCOMPONENTS',
+                    'complex' => 'COMPLEX'
                 ],
                 'indexes'=>[
                     'targetId'=>false,
@@ -1066,6 +1070,15 @@ class SGC {
                 'options' => [
                     'alias' => 'Construct Plan',
                     'icon'=>'dna_conical_16.png'
+                ]
+            ],
+            'saturn.core.ComplexPlan' =>[
+                'programs'=>[
+                    'saturn.client.programs.ComplexHelper' => false
+                ],
+                'options' => [
+                    'alias' => 'Complex Helper',
+                    'icon'=>'protein_conical_16.png'
                 ]
             ],
 

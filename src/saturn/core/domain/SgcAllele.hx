@@ -23,6 +23,7 @@ class SgcAllele extends DNA{
     public var entryClone : SgcEntryClone;
     public var elnId : String;
     public var alleleStatus : String;
+    public var complex : String;
 
     public var forwardPrimer : SgcForwardPrimer;
     public var reversePrimer : SgcReversePrimer;

@@ -30,9 +30,11 @@ class OracleProvider extends GenericRDBMSProvider{
         // Replicate behaviour of the previous driver
         oracle.outFormat = oracle.OBJECT;
         oracle.fetchAsString = [ oracle.CLOB ];
+        oracle.autoCommit = true;
 
         oracle.getConnection({user:user.username,password:user.password,connectString:config.host+"/"+config.service_name}, function(err : String, connection : Dynamic) {
             connection.oldExecute = connection.execute;
+
 
             connection.execute = function(sql, args, cb){
                 connection.oldExecute(sql, args, function(err, result : Dynamic){

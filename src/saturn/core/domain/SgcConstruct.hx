@@ -39,6 +39,8 @@ class SgcConstruct extends DNA{
     public var proteinSequenceObj : Protein;
     public var proteinSequenceNoTagObj : Protein;
 
+    public var complex : String;
+
     public function new(){
         super(null);
 
