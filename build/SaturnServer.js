@@ -1809,6 +1809,7 @@ saturn.app.SaturnServer.prototype = {
 	,socketPlugins: null
 	,plugins: null
 	,redisClient: null
+	,authPlugin: null
 	,getRedisPort: function() {
 		return this.redisPort;
 	}
@@ -1830,9 +1831,11 @@ saturn.app.SaturnServer.prototype = {
 			saturn.core.Util.debug(saturn.core.Util.string(http_config));
 		}
 		this.server = this.restify.createServer(http_config);
+		this.server["use"](this.restify.plugins.queryParser({ mapParams : true}));
+		this.server["use"](this.restify.plugins.bodyParser({ mapParams : true}));
 		this.installPlugins();
 		this.installSocketPlugins();
-		this.server.get(/static\/.*/,this.restify.plugins.serveStatic({ directory : "./public"}));
+		this.server.get("/static/*",this.restify.plugins.serveStatic({ directory : "./public"}));
 		this.server.get("/",function(req,res,next) {
 			res.header("Location",index_page);
 			res.send(302);
@@ -1967,9 +1970,7 @@ saturn.app.SaturnServer.prototype = {
 		return socket.decoded_token;
 	}
 	,isUserAuthenticated: function(user,cb) {
-		if(user == null) cb(null); else this.redisClient.get(user.uuid,function(err,reply) {
-			if(err || reply == null) cb(null); else cb(user);
-		});
+		this.getAuthenticationPlugin().isUserAuthenticated(user,cb);
 	}
 	,configureRedisClient: function() {
 		var _g = this;
@@ -1982,6 +1983,12 @@ saturn.app.SaturnServer.prototype = {
 	}
 	,getRedisClient: function() {
 		return this.redisClient;
+	}
+	,setAuthenticationPlugin: function(authPlugin) {
+		this.authPlugin = authPlugin;
+	}
+	,getAuthenticationPlugin: function() {
+		return this.authPlugin;
 	}
 	,__class__: saturn.app.SaturnServer
 };
@@ -2785,6 +2792,24 @@ saturn.core.DNA = $hxClasses["saturn.core.DNA"] = function(seq) {
 	saturn.core.molecule.Molecule.call(this,seq);
 };
 saturn.core.DNA.__name__ = ["saturn","core","DNA"];
+saturn.core.DNA.isDNA = function(sequence) {
+	var seqLen = sequence.length;
+	var valid_nucs;
+	var _g = new haxe.ds.StringMap();
+	if(__map_reserved.A != null) _g.setReserved("A",true); else _g.h["A"] = true;
+	if(__map_reserved.T != null) _g.setReserved("T",true); else _g.h["T"] = true;
+	if(__map_reserved.G != null) _g.setReserved("G",true); else _g.h["G"] = true;
+	if(__map_reserved.C != null) _g.setReserved("C",true); else _g.h["C"] = true;
+	if(__map_reserved.U != null) _g.setReserved("U",true); else _g.h["U"] = true;
+	valid_nucs = _g;
+	var _g1 = 0;
+	while(_g1 < seqLen) {
+		var i = _g1++;
+		var nuc = sequence.charAt(i).toUpperCase();
+		if(!((__map_reserved[nuc] != null?valid_nucs.existsReserved(nuc):valid_nucs.h.hasOwnProperty(nuc)) && (__map_reserved[nuc] != null?valid_nucs.getReserved(nuc):valid_nucs.h[nuc]))) return false;
+	}
+	return true;
+};
 saturn.core.DNA.__super__ = saturn.core.molecule.Molecule;
 saturn.core.DNA.prototype = $extend(saturn.core.molecule.Molecule.prototype,{
 	protein: null
@@ -4033,6 +4058,17 @@ saturn.core.Protein.insertTranslation = function(dnaId,dnaAltName,dnaSeq,dnaSour
 		}
 	});
 };
+saturn.core.Protein.isProtein = function(sequence) {
+	var seqLen = sequence.length;
+	var valid_res = saturn.core.GeneticCodeRegistry.getDefault().getAAToCodonTable();
+	var _g = 0;
+	while(_g < seqLen) {
+		var i = _g++;
+		var res = sequence.charAt(i).toUpperCase();
+		if(!(__map_reserved[res] != null?valid_res.existsReserved(res):valid_res.h.hasOwnProperty(res))) return false;
+	}
+	return true;
+};
 saturn.core.Protein.__super__ = saturn.core.molecule.Molecule;
 saturn.core.Protein.prototype = $extend(saturn.core.molecule.Molecule.prototype,{
 	dna: null
@@ -5031,6 +5067,7 @@ saturn.core.domain.SgcAllele.prototype = $extend(saturn.core.DNA.prototype,{
 	,entryClone: null
 	,elnId: null
 	,alleleStatus: null
+	,complex: null
 	,forwardPrimer: null
 	,reversePrimer: null
 	,proteinSequenceObj: null
@@ -5115,6 +5152,7 @@ saturn.core.domain.SgcConstruct.prototype = $extend(saturn.core.DNA.prototype,{
 	,constructComments: null
 	,proteinSequenceObj: null
 	,proteinSequenceNoTagObj: null
+	,complex: null
 	,setup: function() {
 		this.setSequence(this.dnaSeq);
 		this.sequenceField = "dnaSeq";
@@ -5191,6 +5229,7 @@ saturn.core.domain.SgcEntryClone.prototype = $extend(saturn.core.DNA.prototype,{
 	,sourceId: null
 	,sequenceConfirmed: null
 	,elnId: null
+	,complex: null
 	,proteinSequenceObj: null
 	,getMoleculeName: function() {
 		return this.entryCloneId;
@@ -5340,6 +5379,9 @@ saturn.core.domain.SgcTarget.prototype = $extend(saturn.core.DNA.prototype,{
 	,pi: null
 	,comments: null
 	,proteinSequenceObj: null
+	,complexComments: null
+	,eln: null
+	,complex: null
 	,setup: function() {
 		this.setSequence(this.dnaSeq);
 		this.setName(this.targetId);
@@ -5381,7 +5423,7 @@ saturn.core.domain.SgcUtil.generateNextID = function(provider,targets,clazz,cb) 
 	var s = q.getSelect();
 	var model = provider.getModel(clazz);
 	var idField = new saturn.db.query_lang.Field(clazz,model.getFirstKey());
-	q.getSelect().add(idField.substr(0,idField.instr("-",1))["as"]("target"));
+	q.getSelect().add(idField.substr(1,idField.instr("-",1).minus(1))["as"]("target"));
 	q.getSelect().add(idField.substr(idField.instr("-",1).plus(2),idField.length())["as"]("ID"));
 	var _g1 = 0;
 	var _g = targets.length;
@@ -5520,6 +5562,18 @@ saturn.core.domain.TiddlyWiki.prototype = {
 	,setup: function() {
 	}
 	,__class__: saturn.core.domain.TiddlyWiki
+};
+if(!saturn.core.domain.chromohub) saturn.core.domain.chromohub = {};
+saturn.core.domain.chromohub.Target = $hxClasses["saturn.core.domain.chromohub.Target"] = function() {
+};
+saturn.core.domain.chromohub.Target.__name__ = ["saturn","core","domain","chromohub","Target"];
+saturn.core.domain.chromohub.Target.prototype = {
+	id: null
+	,targetId: null
+	,symbol: null
+	,geneid: null
+	,uniprot: null
+	,__class__: saturn.core.domain.chromohub.Target
 };
 saturn.core.molecule.MoleculeFloatAttribute = $hxClasses["saturn.core.molecule.MoleculeFloatAttribute"] = { __ename__ : ["saturn","core","molecule","MoleculeFloatAttribute"], __constructs__ : ["MW","MW_CONDESATION"] };
 saturn.core.molecule.MoleculeFloatAttribute.MW = ["MW",0];
@@ -6042,6 +6096,7 @@ saturn.db.Provider.prototype = {
 	,setName: null
 	,getName: null
 	,getConfig: null
+	,setConfig: null
 	,evictObject: null
 	,getByExample: null
 	,query: null
@@ -6050,6 +6105,7 @@ saturn.db.Provider.prototype = {
 	,getModelByStringName: null
 	,getConnection: null
 	,uploadFile: null
+	,addHook: null
 	,__class__: saturn.db.Provider
 };
 saturn.db.DefaultProvider = $hxClasses["saturn.db.DefaultProvider"] = function(binding_map,config,autoClose) {
@@ -6094,12 +6150,17 @@ saturn.db.DefaultProvider.prototype = {
 	,regexs: null
 	,platform: null
 	,setPlatform: function() {
+		null;
+		return;
 	}
 	,generateQualifiedName: function(schemaName,tableName) {
 		return null;
 	}
 	,getConfig: function() {
 		return this.config;
+	}
+	,setConfig: function(config) {
+		this.config = config;
 	}
 	,setName: function(name) {
 		this.name = name;
@@ -6135,6 +6196,9 @@ saturn.db.DefaultProvider.prototype = {
 		provider.winConversions = this.winConversions;
 		provider.conversions = this.conversions;
 		provider.regexs = this.regexs;
+		provider.namedQueryHookConfigs = this.namedQueryHookConfigs;
+		provider.config = this.config;
+		provider.objectCache = new haxe.ds.StringMap();
 		return provider;
 	}
 	,enableCache: function(cached) {
@@ -6195,6 +6259,7 @@ saturn.db.DefaultProvider.prototype = {
 			var d = this.theBindingMap.get(class_name);
 			var value = this.getName();
 			d.set("provider_name",value);
+			saturn.core.Util.debug(class_name + " on " + this.getName());
 		}
 		if(this.isModel(saturn.core.domain.FileProxy)) {
 			var this1 = this.getModel(saturn.core.domain.FileProxy).getOptions();
@@ -6227,35 +6292,37 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,resetCache: function() {
 		this.objectCache = new haxe.ds.StringMap();
-		var $it0 = this.theBindingMap.keys();
-		while( $it0.hasNext() ) {
-			var className = $it0.next();
-			var this1 = this.theBindingMap.get(className);
-			var value = new haxe.ds.StringMap();
-			this1.set("statements",value);
-			var value1 = new haxe.ds.StringMap();
-			this.objectCache.set(className,value1);
-			if((function($this) {
-				var $r;
-				var this2 = $this.theBindingMap.get(className);
-				$r = this2.exists("indexes");
-				return $r;
-			}(this))) {
-				var $it1 = (function($this) {
+		if(this.theBindingMap != null) {
+			var $it0 = this.theBindingMap.keys();
+			while( $it0.hasNext() ) {
+				var className = $it0.next();
+				var this1 = this.theBindingMap.get(className);
+				var value = new haxe.ds.StringMap();
+				this1.set("statements",value);
+				var value1 = new haxe.ds.StringMap();
+				this.objectCache.set(className,value1);
+				if((function($this) {
 					var $r;
-					var this3;
-					{
-						var this4 = $this.theBindingMap.get(className);
-						this3 = this4.get("indexes");
-					}
-					$r = this3.keys();
+					var this2 = $this.theBindingMap.get(className);
+					$r = this2.exists("indexes");
 					return $r;
-				}(this));
-				while( $it1.hasNext() ) {
-					var field = $it1.next();
-					var this5 = this.objectCache.get(className);
-					var value2 = new haxe.ds.StringMap();
-					this5.set(field,value2);
+				}(this))) {
+					var $it1 = (function($this) {
+						var $r;
+						var this3;
+						{
+							var this4 = $this.theBindingMap.get(className);
+							this3 = this4.get("indexes");
+						}
+						$r = this3.keys();
+						return $r;
+					}(this));
+					while( $it1.hasNext() ) {
+						var field = $it1.next();
+						var this5 = this.objectCache.get(className);
+						var value2 = new haxe.ds.StringMap();
+						this5.set(field,value2);
+					}
 				}
 			}
 		}
@@ -6415,7 +6482,9 @@ saturn.db.DefaultProvider.prototype = {
 		var _g = this;
 		var prefetched = null;
 		var idsToFetch = null;
+		saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 		if(this.useCache) {
+			saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 			var model = this.getModel(clazz);
 			if(model != null) {
 				prefetched = [];
@@ -6490,50 +6559,31 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,getByNamedQuery: function(queryId,parameters,clazz,cache,callBack) {
 		var _g = this;
-		saturn.core.Util.debug("In getByNamedQuery");
+		saturn.core.Util.debug("In getByNamedQuery " + (cache == null?"null":"" + cache));
 		try {
-			var isCached = false;
-			if(cache && this.namedQueryCache.exists(queryId)) {
-				var qResults = null;
+			if(cache) {
+				saturn.core.Util.debug("Looking for cached result");
 				var queries = this.namedQueryCache.get(queryId);
-				var _g1 = 0;
-				while(_g1 < queries.length) {
-					var query = queries[_g1];
-					++_g1;
-					saturn.core.Util.debug("Checking for existing results");
-					var serialParamString = haxe.Serializer.run(parameters);
-					if(query.queryParamSerial == serialParamString) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-				if(qResults != null) {
+				var serialParamString = haxe.Serializer.run(parameters);
+				var crc1 = haxe.crypto.Md5.encode(queryId + "/" + serialParamString);
+				if(this.namedQueryCache.exists(crc1)) {
+					var qResults = this.namedQueryCache.get(crc1).queryResults;
+					saturn.core.Util.debug("Use cached result");
 					callBack(qResults,null);
 					return;
 				}
-			} else {
-				var value = [];
-				this.namedQueryCache.set(queryId,value);
 			}
 			var privateCB = function(toBind,exception) {
-				if(toBind == null) {
-					if(isCached == false && _g.useCache && cache) {
+				if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
+					if(_g.useCache) {
+						saturn.core.Util.debug("Caching result");
 						var namedQuery = new saturn.db.NamedQueryCache();
 						namedQuery.queryName = queryId;
 						namedQuery.queryParams = parameters;
 						namedQuery.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery.queryResults = toBind;
-						_g.namedQueryCache.get(queryId).push(namedQuery);
-					}
-					callBack(toBind,exception);
-				} else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-					if(isCached == false && _g.useCache && cache) {
-						var namedQuery1 = new saturn.db.NamedQueryCache();
-						namedQuery1.queryName = queryId;
-						namedQuery1.queryParams = parameters;
-						namedQuery1.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery1.queryResults = objs;
-						_g.namedQueryCache.get(queryId).push(namedQuery1);
+						namedQuery.queryResults = objs;
+						var crc = haxe.crypto.Md5.encode(queryId + "/" + namedQuery.queryParamSerial);
+						_g.namedQueryCache.set(crc,namedQuery);
 					}
 					callBack(objs,err);
 				},clazz,null,cache);
@@ -6578,53 +6628,35 @@ saturn.db.DefaultProvider.prototype = {
 			this.namedQueryHookConfigs.set(name,value);
 		}
 	}
+	,addHook: function(hook,name) {
+		var value = hook;
+		this.namedQueryHooks.set(name,value);
+	}
 	,_getByNamedQuery: function(queryId,parameters,clazz,callBack) {
 	}
 	,getByIdStartsWith: function(id,field,clazz,limit,callBack) {
 		var _g = this;
+		saturn.core.Util.debug("Starts with using cache " + Std.string(this.useCache));
 		var queryId = "__STARTSWITH_" + Type.getClassName(clazz);
 		var parameters = [];
 		parameters.push(field);
 		parameters.push(id);
-		var isCached = false;
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g1 = 0;
-			while(_g1 < queries.length) {
-				var query = queries[_g1];
-				++_g1;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g11 = qParams.length;
-					while(_g2 < _g11) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-			}
-			if(qResults != null) {
-				callBack(qResults,null);
+		var crc = null;
+		if(this.useCache) {
+			var crc1 = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+			if(this.namedQueryCache.exists(crc1)) {
+				callBack(this.namedQueryCache.get(crc1).queryResults,null);
 				return;
 			}
-		} else {
-			var value = [];
-			this.namedQueryCache.set(queryId,value);
 		}
 		this._getByIdStartsWith(id,field,clazz,limit,function(toBind,exception) {
 			if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-				if(isCached == false && _g.useCache) {
+				if(_g.useCache) {
 					var namedQuery = new saturn.db.NamedQueryCache();
 					namedQuery.queryName = queryId;
 					namedQuery.queryParams = parameters;
 					namedQuery.queryResults = objs;
-					_g.namedQueryCache.get(queryId).push(namedQuery);
+					_g.namedQueryCache.set(crc,namedQuery);
 				}
 				callBack(objs,err);
 			},clazz,null,false,false);
@@ -6700,30 +6732,8 @@ saturn.db.DefaultProvider.prototype = {
 		}
 	}
 	,evictNamedQuery: function(queryId,parameters) {
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g = 0;
-			while(_g < queries.length) {
-				var query = queries[_g];
-				++_g;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g1 = qParams.length;
-					while(_g2 < _g1) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						HxOverrides.remove(queries,query);
-						break;
-					}
-				}
-			}
-			if(queries.length > 0) this.namedQueryCache.remove(queryId); else this.namedQueryCache.set(queryId,queries);
-		}
+		var crc = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+		if(this.namedQueryCache.exists(crc)) this.namedQueryCache.remove(crc);
 	}
 	,updateObjects: function(objs,callBack) {
 		this.synchronizeInternalLinks(objs);
@@ -7191,6 +7201,7 @@ saturn.db.DefaultProvider.prototype = {
 		var $it0 = this.theBindingMap.keys();
 		while( $it0.hasNext() ) {
 			var classStr = $it0.next();
+			saturn.core.Util.debug(classStr);
 			var clazz = Type.resolveClass(classStr);
 			if(clazz != null) this.modelClasses.push(this.getModel(clazz));
 		}
@@ -8375,8 +8386,208 @@ saturn.db.Pool.prototype = {
 	,__class__: saturn.db.Pool
 };
 if(!saturn.db.mapping) saturn.db.mapping = {};
-saturn.db.mapping.FamaPublic = $hxClasses["saturn.db.mapping.FamaPublic"] = function() { };
+saturn.db.mapping.FamaPublic = $hxClasses["saturn.db.mapping.FamaPublic"] = function() {
+	this.buildModels();
+};
 saturn.db.mapping.FamaPublic.__name__ = ["saturn","db","mapping","FamaPublic"];
+saturn.db.mapping.FamaPublic.prototype = {
+	models: null
+	,buildModels: function() {
+		var _g = new haxe.ds.StringMap();
+		var value;
+		var _g1 = new haxe.ds.StringMap();
+		var value1;
+		var _g2 = new haxe.ds.StringMap();
+		if(__map_reserved.path != null) _g2.setReserved("path","PATH"); else _g2.h["path"] = "PATH";
+		if(__map_reserved.content != null) _g2.setReserved("content","CONTENT"); else _g2.h["content"] = "CONTENT";
+		value1 = _g2;
+		if(__map_reserved.fields != null) _g1.setReserved("fields",value1); else _g1.h["fields"] = value1;
+		var value2;
+		var _g3 = new haxe.ds.StringMap();
+		if(__map_reserved.path != null) _g3.setReserved("path",true); else _g3.h["path"] = true;
+		value2 = _g3;
+		if(__map_reserved.indexes != null) _g1.setReserved("indexes",value2); else _g1.h["indexes"] = value2;
+		var value3;
+		var _g4 = new haxe.ds.StringMap();
+		var value4;
+		var _g5 = new haxe.ds.StringMap();
+		if(__map_reserved["/work"] != null) _g5.setReserved("/work","W:"); else _g5.h["/work"] = "W:";
+		if(__map_reserved["/home/share"] != null) _g5.setReserved("/home/share","S:"); else _g5.h["/home/share"] = "S:";
+		value4 = _g5;
+		_g4.set("windows_conversions",value4);
+		var value5;
+		var _g6 = new haxe.ds.StringMap();
+		if(__map_reserved.WORK != null) _g6.setReserved("WORK","^W"); else _g6.h["WORK"] = "^W";
+		value5 = _g6;
+		_g4.set("windows_allowed_paths_regex",value5);
+		var value6;
+		var _g7 = new haxe.ds.StringMap();
+		if(__map_reserved["W:"] != null) _g7.setReserved("W:","/work"); else _g7.h["W:"] = "/work";
+		value6 = _g7;
+		_g4.set("linux_conversions",value6);
+		var value7;
+		var _g8 = new haxe.ds.StringMap();
+		if(__map_reserved.WORK != null) _g8.setReserved("WORK","^/work"); else _g8.h["WORK"] = "^/work";
+		value7 = _g8;
+		_g4.set("linux_allowed_paths_regex",value7);
+		value3 = _g4;
+		if(__map_reserved.options != null) _g1.setReserved("options",value3); else _g1.h["options"] = value3;
+		value = _g1;
+		if(__map_reserved["saturn.core.domain.FileProxy"] != null) _g.setReserved("saturn.core.domain.FileProxy",value); else _g.h["saturn.core.domain.FileProxy"] = value;
+		var value8;
+		var _g9 = new haxe.ds.StringMap();
+		var value9;
+		var _g10 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g10.setReserved("moleculeName","NAME"); else _g10.h["moleculeName"] = "NAME";
+		value9 = _g10;
+		if(__map_reserved.fields != null) _g9.setReserved("fields",value9); else _g9.h["fields"] = value9;
+		var value10;
+		var _g11 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g11.setReserved("moleculeName",true); else _g11.h["moleculeName"] = true;
+		value10 = _g11;
+		if(__map_reserved.indexes != null) _g9.setReserved("indexes",value10); else _g9.h["indexes"] = value10;
+		var value11;
+		var _g12 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g12.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g12.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value11 = _g12;
+		if(__map_reserved.programs != null) _g9.setReserved("programs",value11); else _g9.h["programs"] = value11;
+		var value12;
+		var _g13 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g13.setReserved("alias","DNA"); else _g13.h["alias"] = "DNA";
+		value12 = _g13;
+		if(__map_reserved.options != null) _g9.setReserved("options",value12); else _g9.h["options"] = value12;
+		value8 = _g9;
+		if(__map_reserved["saturn.core.DNA"] != null) _g.setReserved("saturn.core.DNA",value8); else _g.h["saturn.core.DNA"] = value8;
+		var value13;
+		var _g14 = new haxe.ds.StringMap();
+		var value14;
+		var _g15 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g15.setReserved("moleculeName","NAME"); else _g15.h["moleculeName"] = "NAME";
+		value14 = _g15;
+		if(__map_reserved.fields != null) _g14.setReserved("fields",value14); else _g14.h["fields"] = value14;
+		var value15;
+		var _g16 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g16.setReserved("moleculeName",true); else _g16.h["moleculeName"] = true;
+		value15 = _g16;
+		if(__map_reserved.indexes != null) _g14.setReserved("indexes",value15); else _g14.h["indexes"] = value15;
+		var value16;
+		var _g17 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.ProteinSequenceEditor"] != null) _g17.setReserved("saturn.client.programs.ProteinSequenceEditor",true); else _g17.h["saturn.client.programs.ProteinSequenceEditor"] = true;
+		value16 = _g17;
+		if(__map_reserved.programs != null) _g14.setReserved("programs",value16); else _g14.h["programs"] = value16;
+		var value17;
+		var _g18 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g18.setReserved("alias","Proteins"); else _g18.h["alias"] = "Proteins";
+		value17 = _g18;
+		if(__map_reserved.options != null) _g14.setReserved("options",value17); else _g14.h["options"] = value17;
+		value13 = _g14;
+		if(__map_reserved["saturn.core.Protein"] != null) _g.setReserved("saturn.core.Protein",value13); else _g.h["saturn.core.Protein"] = value13;
+		var value18;
+		var _g19 = new haxe.ds.StringMap();
+		var value19;
+		var _g20 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g20.setReserved("name","NAME"); else _g20.h["name"] = "NAME";
+		value19 = _g20;
+		if(__map_reserved.fields != null) _g19.setReserved("fields",value19); else _g19.h["fields"] = value19;
+		var value20;
+		var _g21 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g21.setReserved("name",true); else _g21.h["name"] = true;
+		value20 = _g21;
+		if(__map_reserved.indexes != null) _g19.setReserved("indexes",value20); else _g19.h["indexes"] = value20;
+		var value21;
+		var _g22 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.TextEditor"] != null) _g22.setReserved("saturn.client.programs.TextEditor",true); else _g22.h["saturn.client.programs.TextEditor"] = true;
+		value21 = _g22;
+		if(__map_reserved.programs != null) _g19.setReserved("programs",value21); else _g19.h["programs"] = value21;
+		var value22;
+		var _g23 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g23.setReserved("alias","File"); else _g23.h["alias"] = "File";
+		value22 = _g23;
+		if(__map_reserved.options != null) _g19.setReserved("options",value22); else _g19.h["options"] = value22;
+		value18 = _g19;
+		if(__map_reserved["saturn.core.TextFile"] != null) _g.setReserved("saturn.core.TextFile",value18); else _g.h["saturn.core.TextFile"] = value18;
+		var value23;
+		var _g24 = new haxe.ds.StringMap();
+		var value24;
+		var _g25 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g25.setReserved("saturn.client.programs.BasicTableViewer",true); else _g25.h["saturn.client.programs.BasicTableViewer"] = true;
+		value24 = _g25;
+		if(__map_reserved.programs != null) _g24.setReserved("programs",value24); else _g24.h["programs"] = value24;
+		var value25;
+		var _g26 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g26.setReserved("alias","Results"); else _g26.h["alias"] = "Results";
+		value25 = _g26;
+		if(__map_reserved.options != null) _g24.setReserved("options",value25); else _g24.h["options"] = value25;
+		value23 = _g24;
+		if(__map_reserved["saturn.core.BasicTable"] != null) _g.setReserved("saturn.core.BasicTable",value23); else _g.h["saturn.core.BasicTable"] = value23;
+		var value26;
+		var _g27 = new haxe.ds.StringMap();
+		var value27;
+		var _g28 = new haxe.ds.StringMap();
+		var value28;
+		var _g29 = new haxe.ds.StringMap();
+		if(__map_reserved.SGC != null) _g29.setReserved("SGC",true); else _g29.h["SGC"] = true;
+		value28 = _g29;
+		_g28.set("flags",value28);
+		value27 = _g28;
+		if(__map_reserved.options != null) _g27.setReserved("options",value27); else _g27.h["options"] = value27;
+		value26 = _g27;
+		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value26); else _g.h["saturn.app.SaturnClient"] = value26;
+		var value29;
+		var _g30 = new haxe.ds.StringMap();
+		var value30;
+		var _g31 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g31.setReserved("id","pkey"); else _g31.h["id"] = "pkey";
+		if(__map_reserved.targetId != null) _g31.setReserved("targetId","id"); else _g31.h["targetId"] = "id";
+		if(__map_reserved.symbol != null) _g31.setReserved("symbol","symbol"); else _g31.h["symbol"] = "symbol";
+		if(__map_reserved.geneId != null) _g31.setReserved("geneId","geneid"); else _g31.h["geneId"] = "geneid";
+		if(__map_reserved.uniprot != null) _g31.setReserved("uniprot","uniprot"); else _g31.h["uniprot"] = "uniprot";
+		value30 = _g31;
+		if(__map_reserved.fields != null) _g30.setReserved("fields",value30); else _g30.h["fields"] = value30;
+		var value31;
+		var _g32 = new haxe.ds.StringMap();
+		if(__map_reserved.targetId != null) _g32.setReserved("targetId",false); else _g32.h["targetId"] = false;
+		if(__map_reserved.id != null) _g32.setReserved("id",true); else _g32.h["id"] = true;
+		value31 = _g32;
+		if(__map_reserved.indexes != null) _g30.setReserved("indexes",value31); else _g30.h["indexes"] = value31;
+		var value32;
+		var _g33 = new haxe.ds.StringMap();
+		if(__map_reserved.targetId != null) _g33.setReserved("targetId",null); else _g33.h["targetId"] = null;
+		if(__map_reserved.symbol != null) _g33.setReserved("symbol",null); else _g33.h["symbol"] = null;
+		if(__map_reserved.geneId != null) _g33.setReserved("geneId",null); else _g33.h["geneId"] = null;
+		if(__map_reserved.uniprot != null) _g33.setReserved("uniprot",null); else _g33.h["uniprot"] = null;
+		value32 = _g33;
+		if(__map_reserved.search != null) _g30.setReserved("search",value32); else _g30.h["search"] = value32;
+		var value33;
+		var _g34 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g34.setReserved("schema","probes_tree2"); else _g34.h["schema"] = "probes_tree2";
+		if(__map_reserved.name != null) _g34.setReserved("name","target"); else _g34.h["name"] = "target";
+		value33 = _g34;
+		if(__map_reserved.table_info != null) _g30.setReserved("table_info",value33); else _g30.h["table_info"] = value33;
+		var value34;
+		var _g35 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g35.setReserved("alias","Genes"); else _g35.h["alias"] = "Genes";
+		value34 = _g35;
+		if(__map_reserved.options != null) _g30.setReserved("options",value34); else _g30.h["options"] = value34;
+		value29 = _g30;
+		if(__map_reserved["saturn.core.domain.chromohub.Target"] != null) _g.setReserved("saturn.core.domain.chromohub.Target",value29); else _g.h["saturn.core.domain.chromohub.Target"] = value29;
+		var value35;
+		var _g36 = new haxe.ds.StringMap();
+		var value36;
+		var _g37 = new haxe.ds.StringMap();
+		var value37;
+		var _g38 = new haxe.ds.StringMap();
+		if(__map_reserved.NO_LOGIN != null) _g38.setReserved("NO_LOGIN",true); else _g38.h["NO_LOGIN"] = true;
+		value37 = _g38;
+		_g37.set("flags",value37);
+		value36 = _g37;
+		if(__map_reserved.options != null) _g36.setReserved("options",value36); else _g36.h["options"] = value36;
+		value35 = _g36;
+		if(__map_reserved["saturn.app.ChromoHubClient"] != null) _g.setReserved("saturn.app.ChromoHubClient",value35); else _g.h["saturn.app.ChromoHubClient"] = value35;
+		this.models = _g;
+	}
+	,__class__: saturn.db.mapping.FamaPublic
+};
 saturn.db.mapping.KIR = $hxClasses["saturn.db.mapping.KIR"] = function() {
 	this.buildModels();
 };
@@ -10429,6 +10640,1411 @@ saturn.db.mapping.KISGC.prototype = {
 	}
 	,__class__: saturn.db.mapping.KISGC
 };
+saturn.db.mapping.PSF = $hxClasses["saturn.db.mapping.PSF"] = function() {
+	this.buildModels();
+};
+saturn.db.mapping.PSF.__name__ = ["saturn","db","mapping","PSF"];
+saturn.db.mapping.PSF.getNextAvailableId = function(clazz,value,db,cb) {
+};
+saturn.db.mapping.PSF.prototype = {
+	models: null
+	,buildModels: function() {
+		var _g = new haxe.ds.StringMap();
+		var value;
+		var _g1 = new haxe.ds.StringMap();
+		var value1;
+		var _g2 = new haxe.ds.StringMap();
+		if(__map_reserved.constructId != null) _g2.setReserved("constructId","CONSTRUCTID"); else _g2.h["constructId"] = "CONSTRUCTID";
+		if(__map_reserved.id != null) _g2.setReserved("id","PKEY"); else _g2.h["id"] = "PKEY";
+		if(__map_reserved.proteinSeq != null) _g2.setReserved("proteinSeq","CONSTRUCTPROTSEQ"); else _g2.h["proteinSeq"] = "CONSTRUCTPROTSEQ";
+		if(__map_reserved.proteinSeqNoTag != null) _g2.setReserved("proteinSeqNoTag","CONSTRUCTPROTSEQNOTAG"); else _g2.h["proteinSeqNoTag"] = "CONSTRUCTPROTSEQNOTAG";
+		if(__map_reserved.dnaSeq != null) _g2.setReserved("dnaSeq","CONSTRUCTDNASEQ"); else _g2.h["dnaSeq"] = "CONSTRUCTDNASEQ";
+		if(__map_reserved.docId != null) _g2.setReserved("docId","ELNEXP"); else _g2.h["docId"] = "ELNEXP";
+		if(__map_reserved.vectorId != null) _g2.setReserved("vectorId","SGCVECTOR"); else _g2.h["vectorId"] = "SGCVECTOR";
+		if(__map_reserved.alleleId != null) _g2.setReserved("alleleId","SGCDNAINSERT"); else _g2.h["alleleId"] = "SGCDNAINSERT";
+		if(__map_reserved.res1Id != null) _g2.setReserved("res1Id","SGCRESTRICTIONENZYME1"); else _g2.h["res1Id"] = "SGCRESTRICTIONENZYME1";
+		if(__map_reserved.res2Id != null) _g2.setReserved("res2Id","SGCRESTRICTIONENZYME2"); else _g2.h["res2Id"] = "SGCRESTRICTIONENZYME2";
+		if(__map_reserved.constructPlateId != null) _g2.setReserved("constructPlateId","SGCPLATE"); else _g2.h["constructPlateId"] = "SGCPLATE";
+		if(__map_reserved.wellId != null) _g2.setReserved("wellId","PLATEWELL"); else _g2.h["wellId"] = "PLATEWELL";
+		if(__map_reserved.expectedMass != null) _g2.setReserved("expectedMass","EXPECTEDMASS"); else _g2.h["expectedMass"] = "EXPECTEDMASS";
+		if(__map_reserved.expectedMassNoTag != null) _g2.setReserved("expectedMassNoTag","EXPETCEDMASSNOTAG"); else _g2.h["expectedMassNoTag"] = "EXPETCEDMASSNOTAG";
+		if(__map_reserved.status != null) _g2.setReserved("status","STATUS"); else _g2.h["status"] = "STATUS";
+		if(__map_reserved.location != null) _g2.setReserved("location","SGCLOCATION"); else _g2.h["location"] = "SGCLOCATION";
+		if(__map_reserved.elnId != null) _g2.setReserved("elnId","ELNEXP"); else _g2.h["elnId"] = "ELNEXP";
+		if(__map_reserved.constructComments != null) _g2.setReserved("constructComments","CONSTRUCTCOMMENTS"); else _g2.h["constructComments"] = "CONSTRUCTCOMMENTS";
+		if(__map_reserved.person != null) _g2.setReserved("person","PERSON"); else _g2.h["person"] = "PERSON";
+		if(__map_reserved.constructStart != null) _g2.setReserved("constructStart","CONSTRUCTSTART"); else _g2.h["constructStart"] = "CONSTRUCTSTART";
+		if(__map_reserved.constructStop != null) _g2.setReserved("constructStop","CONSTRUCTSTOP"); else _g2.h["constructStop"] = "CONSTRUCTSTOP";
+		value1 = _g2;
+		if(__map_reserved.fields != null) _g1.setReserved("fields",value1); else _g1.h["fields"] = value1;
+		var value2;
+		var _g3 = new haxe.ds.StringMap();
+		if(__map_reserved.status != null) _g3.setReserved("status","In progress"); else _g3.h["status"] = "In progress";
+		value2 = _g3;
+		if(__map_reserved.defaults != null) _g1.setReserved("defaults",value2); else _g1.h["defaults"] = value2;
+		var value3;
+		var _g4 = new haxe.ds.StringMap();
+		if(__map_reserved.PERSON != null) _g4.setReserved("PERSON","insert.username"); else _g4.h["PERSON"] = "insert.username";
+		value3 = _g4;
+		if(__map_reserved.auto_functions != null) _g1.setReserved("auto_functions",value3); else _g1.h["auto_functions"] = value3;
+		var value4;
+		var _g5 = new haxe.ds.StringMap();
+		if(__map_reserved.wellId != null) _g5.setReserved("wellId","1"); else _g5.h["wellId"] = "1";
+		if(__map_reserved.constructPlateId != null) _g5.setReserved("constructPlateId","1"); else _g5.h["constructPlateId"] = "1";
+		if(__map_reserved.constructId != null) _g5.setReserved("constructId","1"); else _g5.h["constructId"] = "1";
+		if(__map_reserved.alleleId != null) _g5.setReserved("alleleId","1"); else _g5.h["alleleId"] = "1";
+		if(__map_reserved.vectorId != null) _g5.setReserved("vectorId","1"); else _g5.h["vectorId"] = "1";
+		value4 = _g5;
+		if(__map_reserved.required != null) _g1.setReserved("required",value4); else _g1.h["required"] = value4;
+		var value5;
+		var _g6 = new haxe.ds.StringMap();
+		if(__map_reserved.constructId != null) _g6.setReserved("constructId",false); else _g6.h["constructId"] = false;
+		if(__map_reserved.id != null) _g6.setReserved("id",true); else _g6.h["id"] = true;
+		value5 = _g6;
+		if(__map_reserved.indexes != null) _g1.setReserved("indexes",value5); else _g1.h["indexes"] = value5;
+		var value6;
+		var _g7 = new haxe.ds.StringMap();
+		if(__map_reserved["Construct ID"] != null) _g7.setReserved("Construct ID","constructId"); else _g7.h["Construct ID"] = "constructId";
+		if(__map_reserved["Construct Plate"] != null) _g7.setReserved("Construct Plate","constructPlate.plateName"); else _g7.h["Construct Plate"] = "constructPlate.plateName";
+		if(__map_reserved["Well ID"] != null) _g7.setReserved("Well ID","wellId"); else _g7.h["Well ID"] = "wellId";
+		if(__map_reserved["Vector ID"] != null) _g7.setReserved("Vector ID","vector.vectorId"); else _g7.h["Vector ID"] = "vector.vectorId";
+		if(__map_reserved["Allele ID"] != null) _g7.setReserved("Allele ID","allele.alleleId"); else _g7.h["Allele ID"] = "allele.alleleId";
+		if(__map_reserved.Status != null) _g7.setReserved("Status","status"); else _g7.h["Status"] = "status";
+		if(__map_reserved["Protein Sequence"] != null) _g7.setReserved("Protein Sequence","proteinSeq"); else _g7.h["Protein Sequence"] = "proteinSeq";
+		if(__map_reserved["Expected Mass"] != null) _g7.setReserved("Expected Mass","expectedMass"); else _g7.h["Expected Mass"] = "expectedMass";
+		if(__map_reserved["Restriction Site 1"] != null) _g7.setReserved("Restriction Site 1","res1.enzymeName"); else _g7.h["Restriction Site 1"] = "res1.enzymeName";
+		if(__map_reserved["Restriction Site 2"] != null) _g7.setReserved("Restriction Site 2","res2.enzymeName"); else _g7.h["Restriction Site 2"] = "res2.enzymeName";
+		if(__map_reserved["Protein Sequence (No Tag)"] != null) _g7.setReserved("Protein Sequence (No Tag)","proteinSeqNoTag"); else _g7.h["Protein Sequence (No Tag)"] = "proteinSeqNoTag";
+		if(__map_reserved["Expected Mass (No Tag)"] != null) _g7.setReserved("Expected Mass (No Tag)","expectedMassNoTag"); else _g7.h["Expected Mass (No Tag)"] = "expectedMassNoTag";
+		if(__map_reserved["Construct DNA Sequence"] != null) _g7.setReserved("Construct DNA Sequence","dnaSeq"); else _g7.h["Construct DNA Sequence"] = "dnaSeq";
+		if(__map_reserved.Location != null) _g7.setReserved("Location","location"); else _g7.h["Location"] = "location";
+		if(__map_reserved["ELN ID"] != null) _g7.setReserved("ELN ID","elnId"); else _g7.h["ELN ID"] = "elnId";
+		if(__map_reserved["Construct Comments"] != null) _g7.setReserved("Construct Comments","constructComments"); else _g7.h["Construct Comments"] = "constructComments";
+		if(__map_reserved.Creator != null) _g7.setReserved("Creator","person"); else _g7.h["Creator"] = "person";
+		if(__map_reserved["Construct Start"] != null) _g7.setReserved("Construct Start","constructStart"); else _g7.h["Construct Start"] = "constructStart";
+		if(__map_reserved["Construct Stop"] != null) _g7.setReserved("Construct Stop","constructStop"); else _g7.h["Construct Stop"] = "constructStop";
+		if(__map_reserved.__HIDDEN__PKEY__ != null) _g7.setReserved("__HIDDEN__PKEY__","id"); else _g7.h["__HIDDEN__PKEY__"] = "id";
+		value6 = _g7;
+		if(__map_reserved.model != null) _g1.setReserved("model",value6); else _g1.h["model"] = value6;
+		var value7;
+		var _g8 = new haxe.ds.StringMap();
+		var value8;
+		var _g9 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g9.setReserved("field","alleleId"); else _g9.h["field"] = "alleleId";
+		if(__map_reserved["class"] != null) _g9.setReserved("class","saturn.core.domain.SgcAllele"); else _g9.h["class"] = "saturn.core.domain.SgcAllele";
+		if(__map_reserved.fk_field != null) _g9.setReserved("fk_field","alleleId"); else _g9.h["fk_field"] = "alleleId";
+		value8 = _g9;
+		_g8.set("allele",value8);
+		var value9;
+		var _g10 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g10.setReserved("field","vectorId"); else _g10.h["field"] = "vectorId";
+		if(__map_reserved["class"] != null) _g10.setReserved("class","saturn.core.domain.SgcVector"); else _g10.h["class"] = "saturn.core.domain.SgcVector";
+		if(__map_reserved.fk_field != null) _g10.setReserved("fk_field","vectorId"); else _g10.h["fk_field"] = "vectorId";
+		value9 = _g10;
+		_g8.set("vector",value9);
+		var value10;
+		var _g11 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g11.setReserved("field","res1Id"); else _g11.h["field"] = "res1Id";
+		if(__map_reserved["class"] != null) _g11.setReserved("class","saturn.core.domain.SgcRestrictionSite"); else _g11.h["class"] = "saturn.core.domain.SgcRestrictionSite";
+		if(__map_reserved.fk_field != null) _g11.setReserved("fk_field","enzymeName"); else _g11.h["fk_field"] = "enzymeName";
+		value10 = _g11;
+		_g8.set("res1",value10);
+		var value11;
+		var _g12 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g12.setReserved("field","res2Id"); else _g12.h["field"] = "res2Id";
+		if(__map_reserved["class"] != null) _g12.setReserved("class","saturn.core.domain.SgcRestrictionSite"); else _g12.h["class"] = "saturn.core.domain.SgcRestrictionSite";
+		if(__map_reserved.fk_field != null) _g12.setReserved("fk_field","enzymeName"); else _g12.h["fk_field"] = "enzymeName";
+		value11 = _g12;
+		_g8.set("res2",value11);
+		var value12;
+		var _g13 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g13.setReserved("field","constructPlateId"); else _g13.h["field"] = "constructPlateId";
+		if(__map_reserved["class"] != null) _g13.setReserved("class","saturn.core.domain.SgcConstructPlate"); else _g13.h["class"] = "saturn.core.domain.SgcConstructPlate";
+		if(__map_reserved.fk_field != null) _g13.setReserved("fk_field","plateName"); else _g13.h["fk_field"] = "plateName";
+		value12 = _g13;
+		_g8.set("constructPlate",value12);
+		var value13;
+		var _g14 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g14.setReserved("field","proteinSeq"); else _g14.h["field"] = "proteinSeq";
+		if(__map_reserved["class"] != null) _g14.setReserved("class","saturn.core.Protein"); else _g14.h["class"] = "saturn.core.Protein";
+		if(__map_reserved.fk_field != null) _g14.setReserved("fk_field",null); else _g14.h["fk_field"] = null;
+		value13 = _g14;
+		_g8.set("proteinSequenceObj",value13);
+		var value14;
+		var _g15 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g15.setReserved("field","proteinSeqNoTag"); else _g15.h["field"] = "proteinSeqNoTag";
+		if(__map_reserved["class"] != null) _g15.setReserved("class","saturn.core.Protein"); else _g15.h["class"] = "saturn.core.Protein";
+		if(__map_reserved.fk_field != null) _g15.setReserved("fk_field",null); else _g15.h["fk_field"] = null;
+		value14 = _g15;
+		_g8.set("proteinSequenceNoTagObj",value14);
+		value7 = _g8;
+		if(__map_reserved["fields.synthetic"] != null) _g1.setReserved("fields.synthetic",value7); else _g1.h["fields.synthetic"] = value7;
+		var value15;
+		var _g16 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g16.setReserved("schema","PSF"); else _g16.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g16.setReserved("name","CONSTRUCT"); else _g16.h["name"] = "CONSTRUCT";
+		value15 = _g16;
+		if(__map_reserved.table_info != null) _g1.setReserved("table_info",value15); else _g1.h["table_info"] = value15;
+		var value16;
+		var _g17 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g17.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g17.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value16 = _g17;
+		if(__map_reserved.programs != null) _g1.setReserved("programs",value16); else _g1.h["programs"] = value16;
+		var value17;
+		var _g18 = new haxe.ds.StringMap();
+		if(__map_reserved.constructId != null) _g18.setReserved("constructId",true); else _g18.h["constructId"] = true;
+		value17 = _g18;
+		if(__map_reserved.search != null) _g1.setReserved("search",value17); else _g1.h["search"] = value17;
+		var value18;
+		var _g19 = new haxe.ds.StringMap();
+		if(__map_reserved.id_pattern != null) _g19.setReserved("id_pattern","-c"); else _g19.h["id_pattern"] = "-c";
+		if(__map_reserved.alias != null) _g19.setReserved("alias","Construct"); else _g19.h["alias"] = "Construct";
+		if(__map_reserved["file.new.label"] != null) _g19.setReserved("file.new.label","Construct"); else _g19.h["file.new.label"] = "Construct";
+		if(__map_reserved.icon != null) _g19.setReserved("icon","dna_conical_16.png"); else _g19.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g19.setReserved("auto_activate","3"); else _g19.h["auto_activate"] = "3";
+		var value19;
+		var _g20 = new haxe.ds.StringMap();
+		var value20;
+		var _g21 = new haxe.ds.StringMap();
+		var value21;
+		var _g22 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g22.setReserved("user_suffix","Protein"); else _g22.h["user_suffix"] = "Protein";
+		if(__map_reserved["function"] != null) _g22.setReserved("function","saturn.core.domain.SgcConstruct.loadProtein"); else _g22.h["function"] = "saturn.core.domain.SgcConstruct.loadProtein";
+		if(__map_reserved.icon != null) _g22.setReserved("icon","structure_16.png"); else _g22.h["icon"] = "structure_16.png";
+		value21 = _g22;
+		if(__map_reserved.protein != null) _g21.setReserved("protein",value21); else _g21.h["protein"] = value21;
+		var value22;
+		var _g23 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g23.setReserved("user_suffix","Protein No Tag"); else _g23.h["user_suffix"] = "Protein No Tag";
+		if(__map_reserved["function"] != null) _g23.setReserved("function","saturn.core.domain.SgcConstruct.loadProteinNoTag"); else _g23.h["function"] = "saturn.core.domain.SgcConstruct.loadProteinNoTag";
+		if(__map_reserved.icon != null) _g23.setReserved("icon","structure_16.png"); else _g23.h["icon"] = "structure_16.png";
+		value22 = _g23;
+		if(__map_reserved.proteinNoTag != null) _g21.setReserved("proteinNoTag",value22); else _g21.h["proteinNoTag"] = value22;
+		value20 = _g21;
+		if(__map_reserved.search_bar != null) _g20.setReserved("search_bar",value20); else _g20.h["search_bar"] = value20;
+		value19 = _g20;
+		_g19.set("actions",value19);
+		value18 = _g19;
+		if(__map_reserved.options != null) _g1.setReserved("options",value18); else _g1.h["options"] = value18;
+		value = _g1;
+		if(__map_reserved["saturn.core.domain.SgcConstruct"] != null) _g.setReserved("saturn.core.domain.SgcConstruct",value); else _g.h["saturn.core.domain.SgcConstruct"] = value;
+		var value23;
+		var _g24 = new haxe.ds.StringMap();
+		var value24;
+		var _g25 = new haxe.ds.StringMap();
+		if(__map_reserved.alleleId != null) _g25.setReserved("alleleId","DNAINSERTID"); else _g25.h["alleleId"] = "DNAINSERTID";
+		if(__map_reserved.allelePlateId != null) _g25.setReserved("allelePlateId","SGCPLATE"); else _g25.h["allelePlateId"] = "SGCPLATE";
+		if(__map_reserved.id != null) _g25.setReserved("id","PKEY"); else _g25.h["id"] = "PKEY";
+		if(__map_reserved.entryCloneId != null) _g25.setReserved("entryCloneId","SGCENTRYCLONE"); else _g25.h["entryCloneId"] = "SGCENTRYCLONE";
+		if(__map_reserved.forwardPrimerId != null) _g25.setReserved("forwardPrimerId","SGCPRIMER"); else _g25.h["forwardPrimerId"] = "SGCPRIMER";
+		if(__map_reserved.reversePrimerId != null) _g25.setReserved("reversePrimerId","SGCPRIMERREV"); else _g25.h["reversePrimerId"] = "SGCPRIMERREV";
+		if(__map_reserved.dnaSeq != null) _g25.setReserved("dnaSeq","DNAINSERTSEQUENCERAW"); else _g25.h["dnaSeq"] = "DNAINSERTSEQUENCERAW";
+		if(__map_reserved.proteinSeq != null) _g25.setReserved("proteinSeq","DNAINSERTPROTSEQ"); else _g25.h["proteinSeq"] = "DNAINSERTPROTSEQ";
+		if(__map_reserved.status != null) _g25.setReserved("status","DNAINSERTSTATUS"); else _g25.h["status"] = "DNAINSERTSTATUS";
+		if(__map_reserved.location != null) _g25.setReserved("location","SGCLOCATION"); else _g25.h["location"] = "SGCLOCATION";
+		if(__map_reserved.comments != null) _g25.setReserved("comments","COMMENTS"); else _g25.h["comments"] = "COMMENTS";
+		if(__map_reserved.elnId != null) _g25.setReserved("elnId","ELNEXP"); else _g25.h["elnId"] = "ELNEXP";
+		if(__map_reserved.dateStamp != null) _g25.setReserved("dateStamp","DATESTAMP"); else _g25.h["dateStamp"] = "DATESTAMP";
+		if(__map_reserved.person != null) _g25.setReserved("person","PERSON"); else _g25.h["person"] = "PERSON";
+		if(__map_reserved.plateWell != null) _g25.setReserved("plateWell","PLATEWELL"); else _g25.h["plateWell"] = "PLATEWELL";
+		if(__map_reserved.dnaSeqLen != null) _g25.setReserved("dnaSeqLen","DNAINSERTSEQLENGTH"); else _g25.h["dnaSeqLen"] = "DNAINSERTSEQLENGTH";
+		if(__map_reserved.complex != null) _g25.setReserved("complex","COMPLEX"); else _g25.h["complex"] = "COMPLEX";
+		if(__map_reserved.domainSummary != null) _g25.setReserved("domainSummary","DOMAINSUMMARY"); else _g25.h["domainSummary"] = "DOMAINSUMMARY";
+		if(__map_reserved.domainStartDelta != null) _g25.setReserved("domainStartDelta","DOMAINSTARTDELTA"); else _g25.h["domainStartDelta"] = "DOMAINSTARTDELTA";
+		if(__map_reserved.domainStopDelta != null) _g25.setReserved("domainStopDelta","DOMAINSTOPDELTA"); else _g25.h["domainStopDelta"] = "DOMAINSTOPDELTA";
+		if(__map_reserved.containsPharmaDomain != null) _g25.setReserved("containsPharmaDomain","CONTAINSPHARMADOMAIN"); else _g25.h["containsPharmaDomain"] = "CONTAINSPHARMADOMAIN";
+		if(__map_reserved.domainSummaryLong != null) _g25.setReserved("domainSummaryLong","DOMAINSUMMARYLONG"); else _g25.h["domainSummaryLong"] = "DOMAINSUMMARYLONG";
+		if(__map_reserved.impPI != null) _g25.setReserved("impPI","IMPPI"); else _g25.h["impPI"] = "IMPPI";
+		if(__map_reserved.alleleStatus != null) _g25.setReserved("alleleStatus","ALLELE_STATUS"); else _g25.h["alleleStatus"] = "ALLELE_STATUS";
+		value24 = _g25;
+		if(__map_reserved.fields != null) _g24.setReserved("fields",value24); else _g24.h["fields"] = value24;
+		var value25;
+		var _g26 = new haxe.ds.StringMap();
+		if(__map_reserved.status != null) _g26.setReserved("status","In process"); else _g26.h["status"] = "In process";
+		value25 = _g26;
+		if(__map_reserved.defaults != null) _g24.setReserved("defaults",value25); else _g24.h["defaults"] = value25;
+		var value26;
+		var _g27 = new haxe.ds.StringMap();
+		if(__map_reserved["DNA Insert ID"] != null) _g27.setReserved("DNA Insert ID","alleleId"); else _g27.h["DNA Insert ID"] = "alleleId";
+		if(__map_reserved.Plate != null) _g27.setReserved("Plate","plate.plateName"); else _g27.h["Plate"] = "plate.plateName";
+		if(__map_reserved["Entry Clone ID"] != null) _g27.setReserved("Entry Clone ID","entryClone.entryCloneId"); else _g27.h["Entry Clone ID"] = "entryClone.entryCloneId";
+		if(__map_reserved["Forward Primer ID"] != null) _g27.setReserved("Forward Primer ID","forwardPrimer.primerId"); else _g27.h["Forward Primer ID"] = "forwardPrimer.primerId";
+		if(__map_reserved["Reverse Primer ID"] != null) _g27.setReserved("Reverse Primer ID","reversePrimer.primerId"); else _g27.h["Reverse Primer ID"] = "reversePrimer.primerId";
+		if(__map_reserved["DNA Sequence"] != null) _g27.setReserved("DNA Sequence","dnaSeq"); else _g27.h["DNA Sequence"] = "dnaSeq";
+		if(__map_reserved["Protein Sequence"] != null) _g27.setReserved("Protein Sequence","proteinSeq"); else _g27.h["Protein Sequence"] = "proteinSeq";
+		if(__map_reserved.Status != null) _g27.setReserved("Status","status"); else _g27.h["Status"] = "status";
+		if(__map_reserved.Location != null) _g27.setReserved("Location","location"); else _g27.h["Location"] = "location";
+		if(__map_reserved.Comments != null) _g27.setReserved("Comments","comments"); else _g27.h["Comments"] = "comments";
+		if(__map_reserved["ELN ID"] != null) _g27.setReserved("ELN ID","elnId"); else _g27.h["ELN ID"] = "elnId";
+		if(__map_reserved["Date Record"] != null) _g27.setReserved("Date Record","dateStamp"); else _g27.h["Date Record"] = "dateStamp";
+		if(__map_reserved.Person != null) _g27.setReserved("Person","person"); else _g27.h["Person"] = "person";
+		if(__map_reserved["Plate Well"] != null) _g27.setReserved("Plate Well","plateWell"); else _g27.h["Plate Well"] = "plateWell";
+		if(__map_reserved["DNA Length"] != null) _g27.setReserved("DNA Length","dnaSeqLen"); else _g27.h["DNA Length"] = "dnaSeqLen";
+		if(__map_reserved.Complex != null) _g27.setReserved("Complex","complex"); else _g27.h["Complex"] = "complex";
+		if(__map_reserved["Domain Summary"] != null) _g27.setReserved("Domain Summary","domainSummary"); else _g27.h["Domain Summary"] = "domainSummary";
+		if(__map_reserved["Domain  Start Delta"] != null) _g27.setReserved("Domain  Start Delta","domainStartDelta"); else _g27.h["Domain  Start Delta"] = "domainStartDelta";
+		if(__map_reserved["Domain Stop Delta"] != null) _g27.setReserved("Domain Stop Delta","domainStopDelta"); else _g27.h["Domain Stop Delta"] = "domainStopDelta";
+		if(__map_reserved["Contains Pharma Domain"] != null) _g27.setReserved("Contains Pharma Domain","containsPharmaDomain"); else _g27.h["Contains Pharma Domain"] = "containsPharmaDomain";
+		if(__map_reserved["Domain Summary Long"] != null) _g27.setReserved("Domain Summary Long","domainSummaryLong"); else _g27.h["Domain Summary Long"] = "domainSummaryLong";
+		if(__map_reserved["IMP PI"] != null) _g27.setReserved("IMP PI","impPI"); else _g27.h["IMP PI"] = "impPI";
+		if(__map_reserved.__HIDDEN__PKEY__ != null) _g27.setReserved("__HIDDEN__PKEY__","id"); else _g27.h["__HIDDEN__PKEY__"] = "id";
+		value26 = _g27;
+		if(__map_reserved.model != null) _g24.setReserved("model",value26); else _g24.h["model"] = value26;
+		var value27;
+		var _g28 = new haxe.ds.StringMap();
+		if(__map_reserved.alleleId != null) _g28.setReserved("alleleId",false); else _g28.h["alleleId"] = false;
+		if(__map_reserved.id != null) _g28.setReserved("id",true); else _g28.h["id"] = true;
+		value27 = _g28;
+		if(__map_reserved.indexes != null) _g24.setReserved("indexes",value27); else _g24.h["indexes"] = value27;
+		var value28;
+		var _g29 = new haxe.ds.StringMap();
+		var value29;
+		var _g30 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g30.setReserved("field","entryCloneId"); else _g30.h["field"] = "entryCloneId";
+		if(__map_reserved["class"] != null) _g30.setReserved("class","saturn.core.domain.SgcEntryClone"); else _g30.h["class"] = "saturn.core.domain.SgcEntryClone";
+		if(__map_reserved.fk_field != null) _g30.setReserved("fk_field","entryCloneId"); else _g30.h["fk_field"] = "entryCloneId";
+		value29 = _g30;
+		_g29.set("entryClone",value29);
+		var value30;
+		var _g31 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g31.setReserved("field","forwardPrimerId"); else _g31.h["field"] = "forwardPrimerId";
+		if(__map_reserved["class"] != null) _g31.setReserved("class","saturn.core.domain.SgcForwardPrimer"); else _g31.h["class"] = "saturn.core.domain.SgcForwardPrimer";
+		if(__map_reserved.fk_field != null) _g31.setReserved("fk_field","primerId"); else _g31.h["fk_field"] = "primerId";
+		value30 = _g31;
+		_g29.set("forwardPrimer",value30);
+		var value31;
+		var _g32 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g32.setReserved("field","reversePrimerId"); else _g32.h["field"] = "reversePrimerId";
+		if(__map_reserved["class"] != null) _g32.setReserved("class","saturn.core.domain.SgcReversePrimer"); else _g32.h["class"] = "saturn.core.domain.SgcReversePrimer";
+		if(__map_reserved.fk_field != null) _g32.setReserved("fk_field","primerId"); else _g32.h["fk_field"] = "primerId";
+		value31 = _g32;
+		_g29.set("reversePrimer",value31);
+		var value32;
+		var _g33 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g33.setReserved("field","allelePlateId"); else _g33.h["field"] = "allelePlateId";
+		if(__map_reserved["class"] != null) _g33.setReserved("class","saturn.core.domain.SgcAllelePlate"); else _g33.h["class"] = "saturn.core.domain.SgcAllelePlate";
+		if(__map_reserved.fk_field != null) _g33.setReserved("fk_field","id"); else _g33.h["fk_field"] = "id";
+		value32 = _g33;
+		_g29.set("plate",value32);
+		var value33;
+		var _g34 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g34.setReserved("field","proteinSeq"); else _g34.h["field"] = "proteinSeq";
+		if(__map_reserved["class"] != null) _g34.setReserved("class","saturn.core.Protein"); else _g34.h["class"] = "saturn.core.Protein";
+		if(__map_reserved.fk_field != null) _g34.setReserved("fk_field",null); else _g34.h["fk_field"] = null;
+		value33 = _g34;
+		_g29.set("proteinSequenceObj",value33);
+		value28 = _g29;
+		if(__map_reserved["fields.synthetic"] != null) _g24.setReserved("fields.synthetic",value28); else _g24.h["fields.synthetic"] = value28;
+		var value34;
+		var _g35 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g35.setReserved("schema","PSF"); else _g35.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g35.setReserved("name","DNAINSERT"); else _g35.h["name"] = "DNAINSERT";
+		value34 = _g35;
+		if(__map_reserved.table_info != null) _g24.setReserved("table_info",value34); else _g24.h["table_info"] = value34;
+		var value35;
+		var _g36 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g36.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g36.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value35 = _g36;
+		if(__map_reserved.programs != null) _g24.setReserved("programs",value35); else _g24.h["programs"] = value35;
+		var value36;
+		var _g37 = new haxe.ds.StringMap();
+		if(__map_reserved.alleleId != null) _g37.setReserved("alleleId",true); else _g37.h["alleleId"] = true;
+		value36 = _g37;
+		if(__map_reserved.search != null) _g24.setReserved("search",value36); else _g24.h["search"] = value36;
+		var value37;
+		var _g38 = new haxe.ds.StringMap();
+		if(__map_reserved.id_pattern != null) _g38.setReserved("id_pattern","-a"); else _g38.h["id_pattern"] = "-a";
+		if(__map_reserved.alias != null) _g38.setReserved("alias","Allele"); else _g38.h["alias"] = "Allele";
+		if(__map_reserved["file.new.label"] != null) _g38.setReserved("file.new.label","Allele"); else _g38.h["file.new.label"] = "Allele";
+		if(__map_reserved.icon != null) _g38.setReserved("icon","dna_conical_16.png"); else _g38.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g38.setReserved("auto_activate","3"); else _g38.h["auto_activate"] = "3";
+		var value38;
+		var _g39 = new haxe.ds.StringMap();
+		var value39;
+		var _g40 = new haxe.ds.StringMap();
+		var value40;
+		var _g41 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g41.setReserved("user_suffix","Protein"); else _g41.h["user_suffix"] = "Protein";
+		if(__map_reserved["function"] != null) _g41.setReserved("function","saturn.core.domain.SgcAllele.loadProtein"); else _g41.h["function"] = "saturn.core.domain.SgcAllele.loadProtein";
+		if(__map_reserved.icon != null) _g41.setReserved("icon","structure_16.png"); else _g41.h["icon"] = "structure_16.png";
+		value40 = _g41;
+		if(__map_reserved.protein != null) _g40.setReserved("protein",value40); else _g40.h["protein"] = value40;
+		value39 = _g40;
+		if(__map_reserved.search_bar != null) _g39.setReserved("search_bar",value39); else _g39.h["search_bar"] = value39;
+		value38 = _g39;
+		_g38.set("actions",value38);
+		value37 = _g38;
+		if(__map_reserved.options != null) _g24.setReserved("options",value37); else _g24.h["options"] = value37;
+		value23 = _g24;
+		if(__map_reserved["saturn.core.domain.SgcAllele"] != null) _g.setReserved("saturn.core.domain.SgcAllele",value23); else _g.h["saturn.core.domain.SgcAllele"] = value23;
+		var value41;
+		var _g42 = new haxe.ds.StringMap();
+		var value42;
+		var _g43 = new haxe.ds.StringMap();
+		if(__map_reserved.entryCloneId != null) _g43.setReserved("entryCloneId","ENTRYCLONEID"); else _g43.h["entryCloneId"] = "ENTRYCLONEID";
+		if(__map_reserved.id != null) _g43.setReserved("id","PKEY"); else _g43.h["id"] = "PKEY";
+		if(__map_reserved.dnaSeq != null) _g43.setReserved("dnaSeq","DNARAWSEQUENCE"); else _g43.h["dnaSeq"] = "DNARAWSEQUENCE";
+		if(__map_reserved.targetId != null) _g43.setReserved("targetId","SGCTARGET_PKEY"); else _g43.h["targetId"] = "SGCTARGET_PKEY";
+		if(__map_reserved.seqSource != null) _g43.setReserved("seqSource","SEQSOURCE"); else _g43.h["seqSource"] = "SEQSOURCE";
+		if(__map_reserved.sourceId != null) _g43.setReserved("sourceId","SOURCEID"); else _g43.h["sourceId"] = "SOURCEID";
+		if(__map_reserved.sequenceConfirmed != null) _g43.setReserved("sequenceConfirmed","SEQUENCECONFIRMED"); else _g43.h["sequenceConfirmed"] = "SEQUENCECONFIRMED";
+		if(__map_reserved.elnId != null) _g43.setReserved("elnId","ELNEXPERIMENTID"); else _g43.h["elnId"] = "ELNEXPERIMENTID";
+		value42 = _g43;
+		if(__map_reserved.fields != null) _g42.setReserved("fields",value42); else _g42.h["fields"] = value42;
+		var value43;
+		var _g44 = new haxe.ds.StringMap();
+		if(__map_reserved.entryCloneId != null) _g44.setReserved("entryCloneId",false); else _g44.h["entryCloneId"] = false;
+		if(__map_reserved.id != null) _g44.setReserved("id",true); else _g44.h["id"] = true;
+		value43 = _g44;
+		if(__map_reserved.indexes != null) _g42.setReserved("indexes",value43); else _g42.h["indexes"] = value43;
+		var value44;
+		var _g45 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g45.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g45.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value44 = _g45;
+		if(__map_reserved.programs != null) _g42.setReserved("programs",value44); else _g42.h["programs"] = value44;
+		var value45;
+		var _g46 = new haxe.ds.StringMap();
+		if(__map_reserved.entryCloneId != null) _g46.setReserved("entryCloneId",true); else _g46.h["entryCloneId"] = true;
+		value45 = _g46;
+		if(__map_reserved.search != null) _g42.setReserved("search",value45); else _g42.h["search"] = value45;
+		var value46;
+		var _g47 = new haxe.ds.StringMap();
+		if(__map_reserved.id_pattern != null) _g47.setReserved("id_pattern","-s"); else _g47.h["id_pattern"] = "-s";
+		var value47;
+		var _g48 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g48.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g48.h["saturn.client.programs.DNASequenceEditor"] = true;
+		if(__map_reserved["saturn.client.programs.ProteinSequenceEditor"] != null) _g48.setReserved("saturn.client.programs.ProteinSequenceEditor",true); else _g48.h["saturn.client.programs.ProteinSequenceEditor"] = true;
+		value47 = _g48;
+		_g47.set("canSave",value47);
+		if(__map_reserved.alias != null) _g47.setReserved("alias","Entry Clone"); else _g47.h["alias"] = "Entry Clone";
+		if(__map_reserved["file.new.label"] != null) _g47.setReserved("file.new.label","Entry Clone"); else _g47.h["file.new.label"] = "Entry Clone";
+		if(__map_reserved.icon != null) _g47.setReserved("icon","dna_conical_16.png"); else _g47.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g47.setReserved("auto_activate","3"); else _g47.h["auto_activate"] = "3";
+		var value48;
+		var _g49 = new haxe.ds.StringMap();
+		var value49;
+		var _g50 = new haxe.ds.StringMap();
+		var value50;
+		var _g51 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g51.setReserved("user_suffix","Translation"); else _g51.h["user_suffix"] = "Translation";
+		if(__map_reserved["function"] != null) _g51.setReserved("function","saturn.core.domain.SgcEntryClone.loadTranslation"); else _g51.h["function"] = "saturn.core.domain.SgcEntryClone.loadTranslation";
+		if(__map_reserved.icon != null) _g51.setReserved("icon","structure_16.png"); else _g51.h["icon"] = "structure_16.png";
+		value50 = _g51;
+		if(__map_reserved.translation != null) _g50.setReserved("translation",value50); else _g50.h["translation"] = value50;
+		value49 = _g50;
+		if(__map_reserved.search_bar != null) _g49.setReserved("search_bar",value49); else _g49.h["search_bar"] = value49;
+		value48 = _g49;
+		_g47.set("actions",value48);
+		value46 = _g47;
+		if(__map_reserved.options != null) _g42.setReserved("options",value46); else _g42.h["options"] = value46;
+		var value51;
+		var _g52 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g52.setReserved("schema","PSF"); else _g52.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g52.setReserved("name","ENTRYCLONE"); else _g52.h["name"] = "ENTRYCLONE";
+		value51 = _g52;
+		if(__map_reserved.table_info != null) _g42.setReserved("table_info",value51); else _g42.h["table_info"] = value51;
+		var value52;
+		var _g53 = new haxe.ds.StringMap();
+		if(__map_reserved["Entry Clone ID"] != null) _g53.setReserved("Entry Clone ID","entryCloneId"); else _g53.h["Entry Clone ID"] = "entryCloneId";
+		if(__map_reserved["Target ID"] != null) _g53.setReserved("Target ID","target.targetId"); else _g53.h["Target ID"] = "target.targetId";
+		value52 = _g53;
+		if(__map_reserved.model != null) _g42.setReserved("model",value52); else _g42.h["model"] = value52;
+		var value53;
+		var _g54 = new haxe.ds.StringMap();
+		var value54;
+		var _g55 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g55.setReserved("field","targetId"); else _g55.h["field"] = "targetId";
+		if(__map_reserved["class"] != null) _g55.setReserved("class","saturn.core.domain.SgcTarget"); else _g55.h["class"] = "saturn.core.domain.SgcTarget";
+		if(__map_reserved.fk_field != null) _g55.setReserved("fk_field","id"); else _g55.h["fk_field"] = "id";
+		value54 = _g55;
+		_g54.set("target",value54);
+		value53 = _g54;
+		if(__map_reserved["fields.synthetic"] != null) _g42.setReserved("fields.synthetic",value53); else _g42.h["fields.synthetic"] = value53;
+		value41 = _g42;
+		if(__map_reserved["saturn.core.domain.SgcEntryClone"] != null) _g.setReserved("saturn.core.domain.SgcEntryClone",value41); else _g.h["saturn.core.domain.SgcEntryClone"] = value41;
+		var value55;
+		var _g56 = new haxe.ds.StringMap();
+		var value56;
+		var _g57 = new haxe.ds.StringMap();
+		if(__map_reserved.enzymeName != null) _g57.setReserved("enzymeName","RESTRICTIONENZYMENAME"); else _g57.h["enzymeName"] = "RESTRICTIONENZYMENAME";
+		if(__map_reserved.cutSequence != null) _g57.setReserved("cutSequence","RESTRICTIONENZYMESEQUENCERAW"); else _g57.h["cutSequence"] = "RESTRICTIONENZYMESEQUENCERAW";
+		if(__map_reserved.id != null) _g57.setReserved("id","PKEY"); else _g57.h["id"] = "PKEY";
+		value56 = _g57;
+		if(__map_reserved.fields != null) _g56.setReserved("fields",value56); else _g56.h["fields"] = value56;
+		var value57;
+		var _g58 = new haxe.ds.StringMap();
+		if(__map_reserved.enzymeName != null) _g58.setReserved("enzymeName",false); else _g58.h["enzymeName"] = false;
+		if(__map_reserved.id != null) _g58.setReserved("id",true); else _g58.h["id"] = true;
+		value57 = _g58;
+		if(__map_reserved.indexes != null) _g56.setReserved("indexes",value57); else _g56.h["indexes"] = value57;
+		var value58;
+		var _g59 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g59.setReserved("schema","PSF"); else _g59.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g59.setReserved("name","RESTRICTIONENZYME"); else _g59.h["name"] = "RESTRICTIONENZYME";
+		value58 = _g59;
+		if(__map_reserved.table_info != null) _g56.setReserved("table_info",value58); else _g56.h["table_info"] = value58;
+		var value59;
+		var _g60 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g60.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g60.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value59 = _g60;
+		if(__map_reserved.programs != null) _g56.setReserved("programs",value59); else _g56.h["programs"] = value59;
+		var value60;
+		var _g61 = new haxe.ds.StringMap();
+		if(__map_reserved["Enzyme Name"] != null) _g61.setReserved("Enzyme Name","enzymeName"); else _g61.h["Enzyme Name"] = "enzymeName";
+		value60 = _g61;
+		if(__map_reserved.model != null) _g56.setReserved("model",value60); else _g56.h["model"] = value60;
+		var value61;
+		var _g62 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g62.setReserved("alias","Restriction site"); else _g62.h["alias"] = "Restriction site";
+		if(__map_reserved["file.new.label"] != null) _g62.setReserved("file.new.label","Restriction Site"); else _g62.h["file.new.label"] = "Restriction Site";
+		value61 = _g62;
+		if(__map_reserved.options != null) _g56.setReserved("options",value61); else _g56.h["options"] = value61;
+		var value62;
+		var _g63 = new haxe.ds.StringMap();
+		if(__map_reserved.enzymeName != null) _g63.setReserved("enzymeName",null); else _g63.h["enzymeName"] = null;
+		value62 = _g63;
+		if(__map_reserved.search != null) _g56.setReserved("search",value62); else _g56.h["search"] = value62;
+		value55 = _g56;
+		if(__map_reserved["saturn.core.domain.SgcRestrictionSite"] != null) _g.setReserved("saturn.core.domain.SgcRestrictionSite",value55); else _g.h["saturn.core.domain.SgcRestrictionSite"] = value55;
+		var value63;
+		var _g64 = new haxe.ds.StringMap();
+		var value64;
+		var _g65 = new haxe.ds.StringMap();
+		if(__map_reserved.vectorId != null) _g65.setReserved("vectorId","VECTORNAME"); else _g65.h["vectorId"] = "VECTORNAME";
+		if(__map_reserved.id != null) _g65.setReserved("id","PKEY"); else _g65.h["id"] = "PKEY";
+		if(__map_reserved.sequence != null) _g65.setReserved("sequence","VECTORSEQUENCERAW"); else _g65.h["sequence"] = "VECTORSEQUENCERAW";
+		if(__map_reserved.vectorComments != null) _g65.setReserved("vectorComments","VECTORCOMMENTS"); else _g65.h["vectorComments"] = "VECTORCOMMENTS";
+		if(__map_reserved.proteaseName != null) _g65.setReserved("proteaseName","PROTEASENAME"); else _g65.h["proteaseName"] = "PROTEASENAME";
+		if(__map_reserved.proteaseCutSequence != null) _g65.setReserved("proteaseCutSequence","PROTEASECUTSEQUENCE"); else _g65.h["proteaseCutSequence"] = "PROTEASECUTSEQUENCE";
+		if(__map_reserved.proteaseProduct != null) _g65.setReserved("proteaseProduct","PROTEASEPRODUCT"); else _g65.h["proteaseProduct"] = "PROTEASEPRODUCT";
+		if(__map_reserved.antibiotic != null) _g65.setReserved("antibiotic","ANTIBIOTIC"); else _g65.h["antibiotic"] = "ANTIBIOTIC";
+		if(__map_reserved.organism != null) _g65.setReserved("organism","ORGANISM"); else _g65.h["organism"] = "ORGANISM";
+		if(__map_reserved.res1Id != null) _g65.setReserved("res1Id","SGCRESTRICTENZ1"); else _g65.h["res1Id"] = "SGCRESTRICTENZ1";
+		if(__map_reserved.res2Id != null) _g65.setReserved("res2Id","SGCRESTRICTENZ2"); else _g65.h["res2Id"] = "SGCRESTRICTENZ2";
+		if(__map_reserved.addStopCodon != null) _g65.setReserved("addStopCodon","REQUIRES_STOP_CODON"); else _g65.h["addStopCodon"] = "REQUIRES_STOP_CODON";
+		if(__map_reserved.requiredForwardExtension != null) _g65.setReserved("requiredForwardExtension","REQUIRED_EXTENSION_FORWARD"); else _g65.h["requiredForwardExtension"] = "REQUIRED_EXTENSION_FORWARD";
+		if(__map_reserved.requiredReverseExtension != null) _g65.setReserved("requiredReverseExtension","REQUIRED_EXTENSION_REVERSE"); else _g65.h["requiredReverseExtension"] = "REQUIRED_EXTENSION_REVERSE";
+		value64 = _g65;
+		if(__map_reserved.fields != null) _g64.setReserved("fields",value64); else _g64.h["fields"] = value64;
+		var value65;
+		var _g66 = new haxe.ds.StringMap();
+		if(__map_reserved.vectorId != null) _g66.setReserved("vectorId",null); else _g66.h["vectorId"] = null;
+		value65 = _g66;
+		if(__map_reserved.search != null) _g64.setReserved("search",value65); else _g64.h["search"] = value65;
+		var value66;
+		var _g67 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g67.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g67.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value66 = _g67;
+		if(__map_reserved.programs != null) _g64.setReserved("programs",value66); else _g64.h["programs"] = value66;
+		var value67;
+		var _g68 = new haxe.ds.StringMap();
+		if(__map_reserved.vectorId != null) _g68.setReserved("vectorId",false); else _g68.h["vectorId"] = false;
+		if(__map_reserved.id != null) _g68.setReserved("id",true); else _g68.h["id"] = true;
+		value67 = _g68;
+		if(__map_reserved.indexes != null) _g64.setReserved("indexes",value67); else _g64.h["indexes"] = value67;
+		var value68;
+		var _g69 = new haxe.ds.StringMap();
+		var value69;
+		var _g70 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g70.setReserved("field","res1Id"); else _g70.h["field"] = "res1Id";
+		if(__map_reserved["class"] != null) _g70.setReserved("class","saturn.core.domain.SgcRestrictionSite"); else _g70.h["class"] = "saturn.core.domain.SgcRestrictionSite";
+		if(__map_reserved.fk_field != null) _g70.setReserved("fk_field","enzymeName"); else _g70.h["fk_field"] = "enzymeName";
+		value69 = _g70;
+		_g69.set("res1",value69);
+		var value70;
+		var _g71 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g71.setReserved("field","res2Id"); else _g71.h["field"] = "res2Id";
+		if(__map_reserved["class"] != null) _g71.setReserved("class","saturn.core.domain.SgcRestrictionSite"); else _g71.h["class"] = "saturn.core.domain.SgcRestrictionSite";
+		if(__map_reserved.fk_field != null) _g71.setReserved("fk_field","enzymeName"); else _g71.h["fk_field"] = "enzymeName";
+		value70 = _g71;
+		_g69.set("res2",value70);
+		value68 = _g69;
+		if(__map_reserved["fields.synthetic"] != null) _g64.setReserved("fields.synthetic",value68); else _g64.h["fields.synthetic"] = value68;
+		var value71;
+		var _g72 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g72.setReserved("schema","PSF"); else _g72.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g72.setReserved("name","VECTOR"); else _g72.h["name"] = "VECTOR";
+		value71 = _g72;
+		if(__map_reserved.table_info != null) _g64.setReserved("table_info",value71); else _g64.h["table_info"] = value71;
+		var value72;
+		var _g73 = new haxe.ds.StringMap();
+		if(__map_reserved.auto_activate != null) _g73.setReserved("auto_activate","3"); else _g73.h["auto_activate"] = "3";
+		if(__map_reserved.alias != null) _g73.setReserved("alias","Vector"); else _g73.h["alias"] = "Vector";
+		if(__map_reserved["file.new.label"] != null) _g73.setReserved("file.new.label","Vector"); else _g73.h["file.new.label"] = "Vector";
+		value72 = _g73;
+		if(__map_reserved.options != null) _g64.setReserved("options",value72); else _g64.h["options"] = value72;
+		var value73;
+		var _g74 = new haxe.ds.StringMap();
+		if(__map_reserved.Name != null) _g74.setReserved("Name","vectorId"); else _g74.h["Name"] = "vectorId";
+		if(__map_reserved.Comments != null) _g74.setReserved("Comments","vectorComments"); else _g74.h["Comments"] = "vectorComments";
+		if(__map_reserved.Protease != null) _g74.setReserved("Protease","proteaseName"); else _g74.h["Protease"] = "proteaseName";
+		if(__map_reserved["Protease cut sequence"] != null) _g74.setReserved("Protease cut sequence","proteaseCutSequence"); else _g74.h["Protease cut sequence"] = "proteaseCutSequence";
+		if(__map_reserved["Protease product"] != null) _g74.setReserved("Protease product","proteaseProduct"); else _g74.h["Protease product"] = "proteaseProduct";
+		if(__map_reserved["Forward extension"] != null) _g74.setReserved("Forward extension","requiredForwardExtension"); else _g74.h["Forward extension"] = "requiredForwardExtension";
+		if(__map_reserved["Reverse extension"] != null) _g74.setReserved("Reverse extension","requiredReverseExtension"); else _g74.h["Reverse extension"] = "requiredReverseExtension";
+		if(__map_reserved["Restriction site 1"] != null) _g74.setReserved("Restriction site 1","res1.enzymeName"); else _g74.h["Restriction site 1"] = "res1.enzymeName";
+		if(__map_reserved["Restriction site 2"] != null) _g74.setReserved("Restriction site 2","res2.enzymeName"); else _g74.h["Restriction site 2"] = "res2.enzymeName";
+		value73 = _g74;
+		if(__map_reserved.model != null) _g64.setReserved("model",value73); else _g64.h["model"] = value73;
+		value63 = _g64;
+		if(__map_reserved["saturn.core.domain.SgcVector"] != null) _g.setReserved("saturn.core.domain.SgcVector",value63); else _g.h["saturn.core.domain.SgcVector"] = value63;
+		var value74;
+		var _g75 = new haxe.ds.StringMap();
+		var value75;
+		var _g76 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g76.setReserved("primerId","PRIMERID"); else _g76.h["primerId"] = "PRIMERID";
+		if(__map_reserved.id != null) _g76.setReserved("id","PKEY"); else _g76.h["id"] = "PKEY";
+		if(__map_reserved.dnaSequence != null) _g76.setReserved("dnaSequence","PRIMERRAWSEQUENCE"); else _g76.h["dnaSequence"] = "PRIMERRAWSEQUENCE";
+		value75 = _g76;
+		if(__map_reserved.fields != null) _g75.setReserved("fields",value75); else _g75.h["fields"] = value75;
+		var value76;
+		var _g77 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g77.setReserved("primerId",false); else _g77.h["primerId"] = false;
+		if(__map_reserved.id != null) _g77.setReserved("id",true); else _g77.h["id"] = true;
+		value76 = _g77;
+		if(__map_reserved.indexes != null) _g75.setReserved("indexes",value76); else _g75.h["indexes"] = value76;
+		var value77;
+		var _g78 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g78.setReserved("schema","PSF"); else _g78.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g78.setReserved("name","PRIMER"); else _g78.h["name"] = "PRIMER";
+		value77 = _g78;
+		if(__map_reserved.table_info != null) _g75.setReserved("table_info",value77); else _g75.h["table_info"] = value77;
+		var value78;
+		var _g79 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g79.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g79.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value78 = _g79;
+		if(__map_reserved.programs != null) _g75.setReserved("programs",value78); else _g75.h["programs"] = value78;
+		var value79;
+		var _g80 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g80.setReserved("primerId",true); else _g80.h["primerId"] = true;
+		value79 = _g80;
+		if(__map_reserved.search != null) _g75.setReserved("search",value79); else _g75.h["search"] = value79;
+		var value80;
+		var _g81 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g81.setReserved("alias","Forward Primer"); else _g81.h["alias"] = "Forward Primer";
+		if(__map_reserved["file.new.label"] != null) _g81.setReserved("file.new.label","Forward Primer"); else _g81.h["file.new.label"] = "Forward Primer";
+		if(__map_reserved.icon != null) _g81.setReserved("icon","dna_conical_16.png"); else _g81.h["icon"] = "dna_conical_16.png";
+		value80 = _g81;
+		if(__map_reserved.options != null) _g75.setReserved("options",value80); else _g75.h["options"] = value80;
+		var value81;
+		var _g82 = new haxe.ds.StringMap();
+		if(__map_reserved["Primer ID"] != null) _g82.setReserved("Primer ID","primerId"); else _g82.h["Primer ID"] = "primerId";
+		value81 = _g82;
+		if(__map_reserved.model != null) _g75.setReserved("model",value81); else _g75.h["model"] = value81;
+		value74 = _g75;
+		if(__map_reserved["saturn.core.domain.SgcForwardPrimer"] != null) _g.setReserved("saturn.core.domain.SgcForwardPrimer",value74); else _g.h["saturn.core.domain.SgcForwardPrimer"] = value74;
+		var value82;
+		var _g83 = new haxe.ds.StringMap();
+		var value83;
+		var _g84 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g84.setReserved("primerId","PRIMERREVID"); else _g84.h["primerId"] = "PRIMERREVID";
+		if(__map_reserved.id != null) _g84.setReserved("id","PKEY"); else _g84.h["id"] = "PKEY";
+		if(__map_reserved.dnaSequence != null) _g84.setReserved("dnaSequence","PRIMERRAWSEQUENCE"); else _g84.h["dnaSequence"] = "PRIMERRAWSEQUENCE";
+		value83 = _g84;
+		if(__map_reserved.fields != null) _g83.setReserved("fields",value83); else _g83.h["fields"] = value83;
+		var value84;
+		var _g85 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g85.setReserved("primerId",false); else _g85.h["primerId"] = false;
+		if(__map_reserved.id != null) _g85.setReserved("id",true); else _g85.h["id"] = true;
+		value84 = _g85;
+		if(__map_reserved.indexes != null) _g83.setReserved("indexes",value84); else _g83.h["indexes"] = value84;
+		var value85;
+		var _g86 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g86.setReserved("schema","PSF"); else _g86.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g86.setReserved("name","PRIMERREV"); else _g86.h["name"] = "PRIMERREV";
+		value85 = _g86;
+		if(__map_reserved.table_info != null) _g83.setReserved("table_info",value85); else _g83.h["table_info"] = value85;
+		var value86;
+		var _g87 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g87.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g87.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value86 = _g87;
+		if(__map_reserved.programs != null) _g83.setReserved("programs",value86); else _g83.h["programs"] = value86;
+		var value87;
+		var _g88 = new haxe.ds.StringMap();
+		if(__map_reserved.primerId != null) _g88.setReserved("primerId",true); else _g88.h["primerId"] = true;
+		value87 = _g88;
+		if(__map_reserved.search != null) _g83.setReserved("search",value87); else _g83.h["search"] = value87;
+		var value88;
+		var _g89 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g89.setReserved("alias","Reverse Primer"); else _g89.h["alias"] = "Reverse Primer";
+		if(__map_reserved["file.new.label"] != null) _g89.setReserved("file.new.label","Reverse Primer"); else _g89.h["file.new.label"] = "Reverse Primer";
+		if(__map_reserved.icon != null) _g89.setReserved("icon","dna_conical_16.png"); else _g89.h["icon"] = "dna_conical_16.png";
+		value88 = _g89;
+		if(__map_reserved.options != null) _g83.setReserved("options",value88); else _g83.h["options"] = value88;
+		var value89;
+		var _g90 = new haxe.ds.StringMap();
+		if(__map_reserved["Primer ID"] != null) _g90.setReserved("Primer ID","primerId"); else _g90.h["Primer ID"] = "primerId";
+		value89 = _g90;
+		if(__map_reserved.model != null) _g83.setReserved("model",value89); else _g83.h["model"] = value89;
+		value82 = _g83;
+		if(__map_reserved["saturn.core.domain.SgcReversePrimer"] != null) _g.setReserved("saturn.core.domain.SgcReversePrimer",value82); else _g.h["saturn.core.domain.SgcReversePrimer"] = value82;
+		var value90;
+		var _g91 = new haxe.ds.StringMap();
+		var value91;
+		var _g92 = new haxe.ds.StringMap();
+		if(__map_reserved.purificationId != null) _g92.setReserved("purificationId","PURIFICATIONID"); else _g92.h["purificationId"] = "PURIFICATIONID";
+		if(__map_reserved.id != null) _g92.setReserved("id","PKEY"); else _g92.h["id"] = "PKEY";
+		if(__map_reserved.expressionId != null) _g92.setReserved("expressionId","EXPRESSION_PKEY"); else _g92.h["expressionId"] = "EXPRESSION_PKEY";
+		if(__map_reserved.column != null) _g92.setReserved("column","COLUMN1"); else _g92.h["column"] = "COLUMN1";
+		if(__map_reserved.elnId != null) _g92.setReserved("elnId","ELNEXP"); else _g92.h["elnId"] = "ELNEXP";
+		if(__map_reserved.comments != null) _g92.setReserved("comments","COMMENTS"); else _g92.h["comments"] = "COMMENTS";
+		value91 = _g92;
+		if(__map_reserved.fields != null) _g91.setReserved("fields",value91); else _g91.h["fields"] = value91;
+		var value92;
+		var _g93 = new haxe.ds.StringMap();
+		if(__map_reserved.purificationId != null) _g93.setReserved("purificationId",false); else _g93.h["purificationId"] = false;
+		if(__map_reserved.id != null) _g93.setReserved("id",true); else _g93.h["id"] = true;
+		value92 = _g93;
+		if(__map_reserved.indexes != null) _g91.setReserved("indexes",value92); else _g91.h["indexes"] = value92;
+		var value93;
+		var _g94 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g94.setReserved("schema","PSF"); else _g94.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g94.setReserved("name","PURIFICATION"); else _g94.h["name"] = "PURIFICATION";
+		value93 = _g94;
+		if(__map_reserved.table_info != null) _g91.setReserved("table_info",value93); else _g91.h["table_info"] = value93;
+		var value94;
+		var _g95 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.EmptyViewer"] != null) _g95.setReserved("saturn.client.programs.EmptyViewer",true); else _g95.h["saturn.client.programs.EmptyViewer"] = true;
+		value94 = _g95;
+		if(__map_reserved.programs != null) _g91.setReserved("programs",value94); else _g91.h["programs"] = value94;
+		var value95;
+		var _g96 = new haxe.ds.StringMap();
+		var value96;
+		var _g97 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g97.setReserved("field","expressionId"); else _g97.h["field"] = "expressionId";
+		if(__map_reserved["class"] != null) _g97.setReserved("class","saturn.core.domain.SgcExpression"); else _g97.h["class"] = "saturn.core.domain.SgcExpression";
+		if(__map_reserved.fk_field != null) _g97.setReserved("fk_field","id"); else _g97.h["fk_field"] = "id";
+		value96 = _g97;
+		_g96.set("expression",value96);
+		value95 = _g96;
+		if(__map_reserved["fields.synthetic"] != null) _g91.setReserved("fields.synthetic",value95); else _g91.h["fields.synthetic"] = value95;
+		var value97;
+		var _g98 = new haxe.ds.StringMap();
+		if(__map_reserved["Purification ID"] != null) _g98.setReserved("Purification ID","purificationId"); else _g98.h["Purification ID"] = "purificationId";
+		if(__map_reserved["Expression ID"] != null) _g98.setReserved("Expression ID","expressionId"); else _g98.h["Expression ID"] = "expressionId";
+		if(__map_reserved["ELN ID"] != null) _g98.setReserved("ELN ID","elnId"); else _g98.h["ELN ID"] = "elnId";
+		if(__map_reserved.Comments != null) _g98.setReserved("Comments","comments"); else _g98.h["Comments"] = "comments";
+		value97 = _g98;
+		if(__map_reserved.model != null) _g91.setReserved("model",value97); else _g91.h["model"] = value97;
+		var value98;
+		var _g99 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g99.setReserved("alias","Purifications"); else _g99.h["alias"] = "Purifications";
+		if(__map_reserved["file.new.label"] != null) _g99.setReserved("file.new.label","Purification"); else _g99.h["file.new.label"] = "Purification";
+		if(__map_reserved.icon != null) _g99.setReserved("icon","dna_conical_16.png"); else _g99.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g99.setReserved("auto_activate","3"); else _g99.h["auto_activate"] = "3";
+		value98 = _g99;
+		if(__map_reserved.options != null) _g91.setReserved("options",value98); else _g91.h["options"] = value98;
+		value90 = _g91;
+		if(__map_reserved["saturn.core.domain.SgcPurification"] != null) _g.setReserved("saturn.core.domain.SgcPurification",value90); else _g.h["saturn.core.domain.SgcPurification"] = value90;
+		var value99;
+		var _g100 = new haxe.ds.StringMap();
+		var value100;
+		var _g101 = new haxe.ds.StringMap();
+		if(__map_reserved.cloneId != null) _g101.setReserved("cloneId","CLONE_ID"); else _g101.h["cloneId"] = "CLONE_ID";
+		if(__map_reserved.id != null) _g101.setReserved("id","PKEY"); else _g101.h["id"] = "PKEY";
+		if(__map_reserved.constructId != null) _g101.setReserved("constructId","SGCCONSTRUCT1_PKEY"); else _g101.h["constructId"] = "SGCCONSTRUCT1_PKEY";
+		if(__map_reserved.elnId != null) _g101.setReserved("elnId","ELNEXP"); else _g101.h["elnId"] = "ELNEXP";
+		if(__map_reserved.comments != null) _g101.setReserved("comments","COMMENTS"); else _g101.h["comments"] = "COMMENTS";
+		value100 = _g101;
+		if(__map_reserved.fields != null) _g100.setReserved("fields",value100); else _g100.h["fields"] = value100;
+		var value101;
+		var _g102 = new haxe.ds.StringMap();
+		if(__map_reserved.cloneId != null) _g102.setReserved("cloneId",false); else _g102.h["cloneId"] = false;
+		if(__map_reserved.id != null) _g102.setReserved("id",true); else _g102.h["id"] = true;
+		value101 = _g102;
+		if(__map_reserved.indexes != null) _g100.setReserved("indexes",value101); else _g100.h["indexes"] = value101;
+		var value102;
+		var _g103 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g103.setReserved("alias","Clones"); else _g103.h["alias"] = "Clones";
+		if(__map_reserved["file.new.label"] != null) _g103.setReserved("file.new.label","Clone"); else _g103.h["file.new.label"] = "Clone";
+		if(__map_reserved.icon != null) _g103.setReserved("icon","dna_conical_16.png"); else _g103.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g103.setReserved("auto_activate","3"); else _g103.h["auto_activate"] = "3";
+		value102 = _g103;
+		if(__map_reserved.options != null) _g100.setReserved("options",value102); else _g100.h["options"] = value102;
+		var value103;
+		var _g104 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g104.setReserved("schema","PSF"); else _g104.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g104.setReserved("name","CLONE"); else _g104.h["name"] = "CLONE";
+		value103 = _g104;
+		if(__map_reserved.table_info != null) _g100.setReserved("table_info",value103); else _g100.h["table_info"] = value103;
+		var value104;
+		var _g105 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.EmptyViewer"] != null) _g105.setReserved("saturn.client.programs.EmptyViewer",true); else _g105.h["saturn.client.programs.EmptyViewer"] = true;
+		value104 = _g105;
+		if(__map_reserved.programs != null) _g100.setReserved("programs",value104); else _g100.h["programs"] = value104;
+		var value105;
+		var _g106 = new haxe.ds.StringMap();
+		var value106;
+		var _g107 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g107.setReserved("field","constructId"); else _g107.h["field"] = "constructId";
+		if(__map_reserved["class"] != null) _g107.setReserved("class","saturn.core.domain.SgcConstruct"); else _g107.h["class"] = "saturn.core.domain.SgcConstruct";
+		if(__map_reserved.fk_field != null) _g107.setReserved("fk_field","id"); else _g107.h["fk_field"] = "id";
+		value106 = _g107;
+		_g106.set("construct",value106);
+		value105 = _g106;
+		if(__map_reserved["fields.synthetic"] != null) _g100.setReserved("fields.synthetic",value105); else _g100.h["fields.synthetic"] = value105;
+		var value107;
+		var _g108 = new haxe.ds.StringMap();
+		if(__map_reserved["Clone ID"] != null) _g108.setReserved("Clone ID","cloneId"); else _g108.h["Clone ID"] = "cloneId";
+		if(__map_reserved["Construct ID"] != null) _g108.setReserved("Construct ID","construct.constructId"); else _g108.h["Construct ID"] = "construct.constructId";
+		if(__map_reserved["ELN ID"] != null) _g108.setReserved("ELN ID","elnId"); else _g108.h["ELN ID"] = "elnId";
+		if(__map_reserved.Comments != null) _g108.setReserved("Comments","comments"); else _g108.h["Comments"] = "comments";
+		value107 = _g108;
+		if(__map_reserved.model != null) _g100.setReserved("model",value107); else _g100.h["model"] = value107;
+		value99 = _g100;
+		if(__map_reserved["saturn.core.domain.SgcClone"] != null) _g.setReserved("saturn.core.domain.SgcClone",value99); else _g.h["saturn.core.domain.SgcClone"] = value99;
+		var value108;
+		var _g109 = new haxe.ds.StringMap();
+		var value109;
+		var _g110 = new haxe.ds.StringMap();
+		if(__map_reserved.expressionId != null) _g110.setReserved("expressionId","EXPRESSION_ID"); else _g110.h["expressionId"] = "EXPRESSION_ID";
+		if(__map_reserved.id != null) _g110.setReserved("id","PKEY"); else _g110.h["id"] = "PKEY";
+		if(__map_reserved.cloneId != null) _g110.setReserved("cloneId","SGCCLONE_PKEY"); else _g110.h["cloneId"] = "SGCCLONE_PKEY";
+		if(__map_reserved.elnId != null) _g110.setReserved("elnId","ELNEXP"); else _g110.h["elnId"] = "ELNEXP";
+		if(__map_reserved.comments != null) _g110.setReserved("comments","COMMENTS"); else _g110.h["comments"] = "COMMENTS";
+		value109 = _g110;
+		if(__map_reserved.fields != null) _g109.setReserved("fields",value109); else _g109.h["fields"] = value109;
+		var value110;
+		var _g111 = new haxe.ds.StringMap();
+		if(__map_reserved.expressionId != null) _g111.setReserved("expressionId",false); else _g111.h["expressionId"] = false;
+		if(__map_reserved.id != null) _g111.setReserved("id",true); else _g111.h["id"] = true;
+		value110 = _g111;
+		if(__map_reserved.indexes != null) _g109.setReserved("indexes",value110); else _g109.h["indexes"] = value110;
+		var value111;
+		var _g112 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g112.setReserved("schema","PSF"); else _g112.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g112.setReserved("name","EXPRESSIONSCREENING"); else _g112.h["name"] = "EXPRESSIONSCREENING";
+		value111 = _g112;
+		if(__map_reserved.table_info != null) _g109.setReserved("table_info",value111); else _g109.h["table_info"] = value111;
+		var value112;
+		var _g113 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.EmptyViewer"] != null) _g113.setReserved("saturn.client.programs.EmptyViewer",true); else _g113.h["saturn.client.programs.EmptyViewer"] = true;
+		value112 = _g113;
+		if(__map_reserved.programs != null) _g109.setReserved("programs",value112); else _g109.h["programs"] = value112;
+		var value113;
+		var _g114 = new haxe.ds.StringMap();
+		var value114;
+		var _g115 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g115.setReserved("field","cloneId"); else _g115.h["field"] = "cloneId";
+		if(__map_reserved["class"] != null) _g115.setReserved("class","saturn.core.domain.SgcClone"); else _g115.h["class"] = "saturn.core.domain.SgcClone";
+		if(__map_reserved.fk_field != null) _g115.setReserved("fk_field","id"); else _g115.h["fk_field"] = "id";
+		value114 = _g115;
+		_g114.set("clone",value114);
+		value113 = _g114;
+		if(__map_reserved["fields.synthetic"] != null) _g109.setReserved("fields.synthetic",value113); else _g109.h["fields.synthetic"] = value113;
+		var value115;
+		var _g116 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g116.setReserved("alias","Expressions"); else _g116.h["alias"] = "Expressions";
+		if(__map_reserved["file.new.label"] != null) _g116.setReserved("file.new.label","Expression"); else _g116.h["file.new.label"] = "Expression";
+		if(__map_reserved.icon != null) _g116.setReserved("icon","dna_conical_16.png"); else _g116.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.auto_activate != null) _g116.setReserved("auto_activate","3"); else _g116.h["auto_activate"] = "3";
+		value115 = _g116;
+		if(__map_reserved.options != null) _g109.setReserved("options",value115); else _g109.h["options"] = value115;
+		var value116;
+		var _g117 = new haxe.ds.StringMap();
+		if(__map_reserved["Expression ID"] != null) _g117.setReserved("Expression ID","expressionId"); else _g117.h["Expression ID"] = "expressionId";
+		if(__map_reserved["Clone ID"] != null) _g117.setReserved("Clone ID","clone.cloneId"); else _g117.h["Clone ID"] = "clone.cloneId";
+		if(__map_reserved["ELN ID"] != null) _g117.setReserved("ELN ID","elnId"); else _g117.h["ELN ID"] = "elnId";
+		if(__map_reserved.Comments != null) _g117.setReserved("Comments","comments"); else _g117.h["Comments"] = "comments";
+		value116 = _g117;
+		if(__map_reserved.model != null) _g109.setReserved("model",value116); else _g109.h["model"] = value116;
+		value108 = _g109;
+		if(__map_reserved["saturn.core.domain.SgcExpression"] != null) _g.setReserved("saturn.core.domain.SgcExpression",value108); else _g.h["saturn.core.domain.SgcExpression"] = value108;
+		var value117;
+		var _g118 = new haxe.ds.StringMap();
+		var value118;
+		var _g119 = new haxe.ds.StringMap();
+		if(__map_reserved.targetId != null) _g119.setReserved("targetId","TARGETNAME"); else _g119.h["targetId"] = "TARGETNAME";
+		if(__map_reserved.id != null) _g119.setReserved("id","PKEY"); else _g119.h["id"] = "PKEY";
+		if(__map_reserved.gi != null) _g119.setReserved("gi","GENBANK_ID"); else _g119.h["gi"] = "GENBANK_ID";
+		if(__map_reserved.geneId != null) _g119.setReserved("geneId","NCBIGENEID"); else _g119.h["geneId"] = "NCBIGENEID";
+		if(__map_reserved.proteinSeq != null) _g119.setReserved("proteinSeq","PROTEINSEQUENCE"); else _g119.h["proteinSeq"] = "PROTEINSEQUENCE";
+		if(__map_reserved.dnaSeq != null) _g119.setReserved("dnaSeq","NUCLEOTIDESEQUENCE"); else _g119.h["dnaSeq"] = "NUCLEOTIDESEQUENCE";
+		if(__map_reserved.activeStatus != null) _g119.setReserved("activeStatus","ACTIVESTATUS"); else _g119.h["activeStatus"] = "ACTIVESTATUS";
+		if(__map_reserved.pi != null) _g119.setReserved("pi","PI"); else _g119.h["pi"] = "PI";
+		if(__map_reserved.comments != null) _g119.setReserved("comments","COMMENTS"); else _g119.h["comments"] = "COMMENTS";
+		value118 = _g119;
+		if(__map_reserved.fields != null) _g118.setReserved("fields",value118); else _g118.h["fields"] = value118;
+		var value119;
+		var _g120 = new haxe.ds.StringMap();
+		if(__map_reserved.targetId != null) _g120.setReserved("targetId",false); else _g120.h["targetId"] = false;
+		if(__map_reserved.id != null) _g120.setReserved("id",true); else _g120.h["id"] = true;
+		value119 = _g120;
+		if(__map_reserved.indexes != null) _g118.setReserved("indexes",value119); else _g118.h["indexes"] = value119;
+		var value120;
+		var _g121 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g121.setReserved("schema","PSF"); else _g121.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g121.setReserved("name","TARGET"); else _g121.h["name"] = "TARGET";
+		if(__map_reserved.human_name != null) _g121.setReserved("human_name","Target"); else _g121.h["human_name"] = "Target";
+		if(__map_reserved.human_name_plural != null) _g121.setReserved("human_name_plural","Targets"); else _g121.h["human_name_plural"] = "Targets";
+		value120 = _g121;
+		if(__map_reserved.table_info != null) _g118.setReserved("table_info",value120); else _g118.h["table_info"] = value120;
+		var value121;
+		var _g122 = new haxe.ds.StringMap();
+		if(__map_reserved["Target ID"] != null) _g122.setReserved("Target ID","targetId"); else _g122.h["Target ID"] = "targetId";
+		if(__map_reserved["Genbank ID"] != null) _g122.setReserved("Genbank ID","gi"); else _g122.h["Genbank ID"] = "gi";
+		if(__map_reserved["DNA Sequence"] != null) _g122.setReserved("DNA Sequence","dnaSeq"); else _g122.h["DNA Sequence"] = "dnaSeq";
+		if(__map_reserved["Protein Sequence"] != null) _g122.setReserved("Protein Sequence","proteinSeq"); else _g122.h["Protein Sequence"] = "proteinSeq";
+		if(__map_reserved.__HIDDEN__PKEY__ != null) _g122.setReserved("__HIDDEN__PKEY__","id"); else _g122.h["__HIDDEN__PKEY__"] = "id";
+		value121 = _g122;
+		if(__map_reserved.model != null) _g118.setReserved("model",value121); else _g118.h["model"] = value121;
+		var value122;
+		var _g123 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g123.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g123.h["saturn.client.programs.DNASequenceEditor"] = true;
+		value122 = _g123;
+		if(__map_reserved.programs != null) _g118.setReserved("programs",value122); else _g118.h["programs"] = value122;
+		var value123;
+		var _g124 = new haxe.ds.StringMap();
+		var value124;
+		var _g125 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g125.setReserved("field","proteinSeq"); else _g125.h["field"] = "proteinSeq";
+		if(__map_reserved["class"] != null) _g125.setReserved("class","saturn.core.Protein"); else _g125.h["class"] = "saturn.core.Protein";
+		if(__map_reserved.fk_field != null) _g125.setReserved("fk_field",null); else _g125.h["fk_field"] = null;
+		value124 = _g125;
+		_g124.set("proteinSequenceObj",value124);
+		value123 = _g124;
+		if(__map_reserved["fields.synthetic"] != null) _g118.setReserved("fields.synthetic",value123); else _g118.h["fields.synthetic"] = value123;
+		var value125;
+		var _g126 = new haxe.ds.StringMap();
+		if(__map_reserved.id_pattern != null) _g126.setReserved("id_pattern",".*"); else _g126.h["id_pattern"] = ".*";
+		if(__map_reserved.alias != null) _g126.setReserved("alias","Targets"); else _g126.h["alias"] = "Targets";
+		if(__map_reserved["file.new.label"] != null) _g126.setReserved("file.new.label","Target"); else _g126.h["file.new.label"] = "Target";
+		if(__map_reserved.icon != null) _g126.setReserved("icon","protein_16.png"); else _g126.h["icon"] = "protein_16.png";
+		if(__map_reserved.auto_activate != null) _g126.setReserved("auto_activate","3"); else _g126.h["auto_activate"] = "3";
+		value125 = _g126;
+		if(__map_reserved.options != null) _g118.setReserved("options",value125); else _g118.h["options"] = value125;
+		value117 = _g118;
+		if(__map_reserved["saturn.core.domain.SgcTarget"] != null) _g.setReserved("saturn.core.domain.SgcTarget",value117); else _g.h["saturn.core.domain.SgcTarget"] = value117;
+		var value126;
+		var _g127 = new haxe.ds.StringMap();
+		var value127;
+		var _g128 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g128.setReserved("id","PKEY"); else _g128.h["id"] = "PKEY";
+		if(__map_reserved.accession != null) _g128.setReserved("accession","IDENTIFIER"); else _g128.h["accession"] = "IDENTIFIER";
+		if(__map_reserved.start != null) _g128.setReserved("start","SEQSTART"); else _g128.h["start"] = "SEQSTART";
+		if(__map_reserved.stop != null) _g128.setReserved("stop","SEQSTOP"); else _g128.h["stop"] = "SEQSTOP";
+		if(__map_reserved.targetId != null) _g128.setReserved("targetId","SGCTARGET_PKEY"); else _g128.h["targetId"] = "SGCTARGET_PKEY";
+		value127 = _g128;
+		if(__map_reserved.fields != null) _g127.setReserved("fields",value127); else _g127.h["fields"] = value127;
+		var value128;
+		var _g129 = new haxe.ds.StringMap();
+		if(__map_reserved.accession != null) _g129.setReserved("accession",false); else _g129.h["accession"] = false;
+		if(__map_reserved.id != null) _g129.setReserved("id",true); else _g129.h["id"] = true;
+		value128 = _g129;
+		if(__map_reserved.indexes != null) _g127.setReserved("indexes",value128); else _g127.h["indexes"] = value128;
+		value126 = _g127;
+		if(__map_reserved["saturn.core.domain.SgcDomain"] != null) _g.setReserved("saturn.core.domain.SgcDomain",value126); else _g.h["saturn.core.domain.SgcDomain"] = value126;
+		var value129;
+		var _g130 = new haxe.ds.StringMap();
+		var value130;
+		var _g131 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g131.setReserved("id","PKEY"); else _g131.h["id"] = "PKEY";
+		if(__map_reserved.plateName != null) _g131.setReserved("plateName","PLATENAME"); else _g131.h["plateName"] = "PLATENAME";
+		if(__map_reserved.elnRef != null) _g131.setReserved("elnRef","ELNREF"); else _g131.h["elnRef"] = "ELNREF";
+		value130 = _g131;
+		if(__map_reserved.fields != null) _g130.setReserved("fields",value130); else _g130.h["fields"] = value130;
+		var value131;
+		var _g132 = new haxe.ds.StringMap();
+		if(__map_reserved.plateName != null) _g132.setReserved("plateName",false); else _g132.h["plateName"] = false;
+		if(__map_reserved.id != null) _g132.setReserved("id",true); else _g132.h["id"] = true;
+		value131 = _g132;
+		if(__map_reserved.indexes != null) _g130.setReserved("indexes",value131); else _g130.h["indexes"] = value131;
+		var value132;
+		var _g133 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g133.setReserved("schema","PSF"); else _g133.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g133.setReserved("name","PLATE"); else _g133.h["name"] = "PLATE";
+		value132 = _g133;
+		if(__map_reserved.table_info != null) _g130.setReserved("table_info",value132); else _g130.h["table_info"] = value132;
+		var value133;
+		var _g134 = new haxe.ds.StringMap();
+		if(__map_reserved.icon != null) _g134.setReserved("icon","dna_conical_16.png"); else _g134.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.alias != null) _g134.setReserved("alias","Construct Plate"); else _g134.h["alias"] = "Construct Plate";
+		if(__map_reserved["file.new.label"] != null) _g134.setReserved("file.new.label","Construct Plate"); else _g134.h["file.new.label"] = "Construct Plate";
+		if(__map_reserved.id_pattern != null) _g134.setReserved("id_pattern","cp-"); else _g134.h["id_pattern"] = "cp-";
+		if(__map_reserved.strip_id_prefix != null) _g134.setReserved("strip_id_prefix",true); else _g134.h["strip_id_prefix"] = true;
+		var value134;
+		var _g135 = new haxe.ds.StringMap();
+		var value135;
+		var _g136 = new haxe.ds.StringMap();
+		var value136;
+		var _g137 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g137.setReserved("user_suffix","A"); else _g137.h["user_suffix"] = "A";
+		if(__map_reserved["function"] != null) _g137.setReserved("function","saturn.core.domain.SgcConstructPlate.loadPlate"); else _g137.h["function"] = "saturn.core.domain.SgcConstructPlate.loadPlate";
+		value136 = _g137;
+		if(__map_reserved.DEFAULT != null) _g136.setReserved("DEFAULT",value136); else _g136.h["DEFAULT"] = value136;
+		value135 = _g136;
+		if(__map_reserved.search_bar != null) _g135.setReserved("search_bar",value135); else _g135.h["search_bar"] = value135;
+		value134 = _g135;
+		_g134.set("actions",value134);
+		value133 = _g134;
+		if(__map_reserved.options != null) _g130.setReserved("options",value133); else _g130.h["options"] = value133;
+		var value137;
+		var _g138 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.EmptyViewer"] != null) _g138.setReserved("saturn.client.programs.EmptyViewer",true); else _g138.h["saturn.client.programs.EmptyViewer"] = true;
+		value137 = _g138;
+		if(__map_reserved.programs != null) _g130.setReserved("programs",value137); else _g130.h["programs"] = value137;
+		var value138;
+		var _g139 = new haxe.ds.StringMap();
+		if(__map_reserved.plateName != null) _g139.setReserved("plateName",true); else _g139.h["plateName"] = true;
+		value138 = _g139;
+		if(__map_reserved.search != null) _g130.setReserved("search",value138); else _g130.h["search"] = value138;
+		var value139;
+		var _g140 = new haxe.ds.StringMap();
+		if(__map_reserved["Plate Name"] != null) _g140.setReserved("Plate Name","plateName"); else _g140.h["Plate Name"] = "plateName";
+		value139 = _g140;
+		if(__map_reserved.model != null) _g130.setReserved("model",value139); else _g130.h["model"] = value139;
+		value129 = _g130;
+		if(__map_reserved["saturn.core.domain.SgcConstructPlate"] != null) _g.setReserved("saturn.core.domain.SgcConstructPlate",value129); else _g.h["saturn.core.domain.SgcConstructPlate"] = value129;
+		var value140;
+		var _g141 = new haxe.ds.StringMap();
+		var value141;
+		var _g142 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g142.setReserved("id","PKEY"); else _g142.h["id"] = "PKEY";
+		if(__map_reserved.plateName != null) _g142.setReserved("plateName","PLATENAME"); else _g142.h["plateName"] = "PLATENAME";
+		if(__map_reserved.elnRef != null) _g142.setReserved("elnRef","ELNREF"); else _g142.h["elnRef"] = "ELNREF";
+		value141 = _g142;
+		if(__map_reserved.fields != null) _g141.setReserved("fields",value141); else _g141.h["fields"] = value141;
+		var value142;
+		var _g143 = new haxe.ds.StringMap();
+		if(__map_reserved.plateName != null) _g143.setReserved("plateName",false); else _g143.h["plateName"] = false;
+		if(__map_reserved.id != null) _g143.setReserved("id",true); else _g143.h["id"] = true;
+		value142 = _g143;
+		if(__map_reserved.indexes != null) _g141.setReserved("indexes",value142); else _g141.h["indexes"] = value142;
+		var value143;
+		var _g144 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g144.setReserved("schema","PSF"); else _g144.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g144.setReserved("name","PLATE"); else _g144.h["name"] = "PLATE";
+		value143 = _g144;
+		if(__map_reserved.table_info != null) _g141.setReserved("table_info",value143); else _g141.h["table_info"] = value143;
+		var value144;
+		var _g145 = new haxe.ds.StringMap();
+		if(__map_reserved.icon != null) _g145.setReserved("icon","dna_conical_16.png"); else _g145.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.alias != null) _g145.setReserved("alias","Allele Plate"); else _g145.h["alias"] = "Allele Plate";
+		if(__map_reserved["file.new.label"] != null) _g145.setReserved("file.new.label","Allele Plate"); else _g145.h["file.new.label"] = "Allele Plate";
+		if(__map_reserved.id_pattern != null) _g145.setReserved("id_pattern","ap-"); else _g145.h["id_pattern"] = "ap-";
+		if(__map_reserved.strip_id_prefix != null) _g145.setReserved("strip_id_prefix",true); else _g145.h["strip_id_prefix"] = true;
+		var value145;
+		var _g146 = new haxe.ds.StringMap();
+		var value146;
+		var _g147 = new haxe.ds.StringMap();
+		var value147;
+		var _g148 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g148.setReserved("user_suffix","A"); else _g148.h["user_suffix"] = "A";
+		if(__map_reserved["function"] != null) _g148.setReserved("function","saturn.core.domain.SgcAllelePlate.loadPlate"); else _g148.h["function"] = "saturn.core.domain.SgcAllelePlate.loadPlate";
+		value147 = _g148;
+		if(__map_reserved.DEFAULT != null) _g147.setReserved("DEFAULT",value147); else _g147.h["DEFAULT"] = value147;
+		value146 = _g147;
+		if(__map_reserved.search_bar != null) _g146.setReserved("search_bar",value146); else _g146.h["search_bar"] = value146;
+		value145 = _g146;
+		_g145.set("actions",value145);
+		if(__map_reserved.auto_activate != null) _g145.setReserved("auto_activate","3"); else _g145.h["auto_activate"] = "3";
+		value144 = _g145;
+		if(__map_reserved.options != null) _g141.setReserved("options",value144); else _g141.h["options"] = value144;
+		var value148;
+		var _g149 = new haxe.ds.StringMap();
+		if(__map_reserved.plateName != null) _g149.setReserved("plateName",true); else _g149.h["plateName"] = true;
+		value148 = _g149;
+		if(__map_reserved.search != null) _g141.setReserved("search",value148); else _g141.h["search"] = value148;
+		var value149;
+		var _g150 = new haxe.ds.StringMap();
+		if(__map_reserved["Plate Name"] != null) _g150.setReserved("Plate Name","plateName"); else _g150.h["Plate Name"] = "plateName";
+		value149 = _g150;
+		if(__map_reserved.model != null) _g141.setReserved("model",value149); else _g141.h["model"] = value149;
+		var value150;
+		var _g151 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.EmptyViewer"] != null) _g151.setReserved("saturn.client.programs.EmptyViewer",true); else _g151.h["saturn.client.programs.EmptyViewer"] = true;
+		value150 = _g151;
+		if(__map_reserved.programs != null) _g141.setReserved("programs",value150); else _g141.h["programs"] = value150;
+		value140 = _g141;
+		if(__map_reserved["saturn.core.domain.SgcAllelePlate"] != null) _g.setReserved("saturn.core.domain.SgcAllelePlate",value140); else _g.h["saturn.core.domain.SgcAllelePlate"] = value140;
+		var value151;
+		var _g152 = new haxe.ds.StringMap();
+		var value152;
+		var _g153 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g153.setReserved("id","PKEY"); else _g153.h["id"] = "PKEY";
+		if(__map_reserved.barcode != null) _g153.setReserved("barcode","BARCODE"); else _g153.h["barcode"] = "BARCODE";
+		if(__map_reserved.purificationId != null) _g153.setReserved("purificationId","SGCPURIFICATION_PKEY"); else _g153.h["purificationId"] = "SGCPURIFICATION_PKEY";
+		value152 = _g153;
+		if(__map_reserved.fields != null) _g152.setReserved("fields",value152); else _g152.h["fields"] = value152;
+		var value153;
+		var _g154 = new haxe.ds.StringMap();
+		if(__map_reserved.barcode != null) _g154.setReserved("barcode",false); else _g154.h["barcode"] = false;
+		if(__map_reserved.id != null) _g154.setReserved("id",true); else _g154.h["id"] = true;
+		value153 = _g154;
+		if(__map_reserved.indexes != null) _g152.setReserved("indexes",value153); else _g152.h["indexes"] = value153;
+		var value154;
+		var _g155 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g155.setReserved("schema","PSF"); else _g155.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g155.setReserved("name","XTAL_PLATES"); else _g155.h["name"] = "XTAL_PLATES";
+		value154 = _g155;
+		if(__map_reserved.table_info != null) _g152.setReserved("table_info",value154); else _g152.h["table_info"] = value154;
+		var value155;
+		var _g156 = new haxe.ds.StringMap();
+		var value156;
+		var _g157 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g157.setReserved("field","purificationId"); else _g157.h["field"] = "purificationId";
+		if(__map_reserved["class"] != null) _g157.setReserved("class","saturn.core.domain.SgcPurification"); else _g157.h["class"] = "saturn.core.domain.SgcPurification";
+		if(__map_reserved.fk_field != null) _g157.setReserved("fk_field","id"); else _g157.h["fk_field"] = "id";
+		value156 = _g157;
+		_g156.set("purification",value156);
+		value155 = _g156;
+		if(__map_reserved["fields.synthetic"] != null) _g152.setReserved("fields.synthetic",value155); else _g152.h["fields.synthetic"] = value155;
+		var value157;
+		var _g158 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g158.setReserved("alias","Xtal Plates"); else _g158.h["alias"] = "Xtal Plates";
+		value157 = _g158;
+		if(__map_reserved.options != null) _g152.setReserved("options",value157); else _g152.h["options"] = value157;
+		value151 = _g152;
+		if(__map_reserved["saturn.core.domain.XtalPlate"] != null) _g.setReserved("saturn.core.domain.XtalPlate",value151); else _g.h["saturn.core.domain.XtalPlate"] = value151;
+		var value158;
+		var _g159 = new haxe.ds.StringMap();
+		var value159;
+		var _g160 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g160.setReserved("id","PKEY"); else _g160.h["id"] = "PKEY";
+		if(__map_reserved.modelId != null) _g160.setReserved("modelId","MODELID"); else _g160.h["modelId"] = "MODELID";
+		if(__map_reserved.pathToPdb != null) _g160.setReserved("pathToPdb","PATHTOPDB"); else _g160.h["pathToPdb"] = "PATHTOPDB";
+		value159 = _g160;
+		if(__map_reserved.fields != null) _g159.setReserved("fields",value159); else _g159.h["fields"] = value159;
+		var value160;
+		var _g161 = new haxe.ds.StringMap();
+		if(__map_reserved.modelId != null) _g161.setReserved("modelId",false); else _g161.h["modelId"] = false;
+		if(__map_reserved.id != null) _g161.setReserved("id",true); else _g161.h["id"] = true;
+		value160 = _g161;
+		if(__map_reserved.indexes != null) _g159.setReserved("indexes",value160); else _g159.h["indexes"] = value160;
+		var value161;
+		var _g162 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g162.setReserved("schema","PSF"); else _g162.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g162.setReserved("name","MODEL"); else _g162.h["name"] = "MODEL";
+		value161 = _g162;
+		if(__map_reserved.table_info != null) _g159.setReserved("table_info",value161); else _g159.h["table_info"] = value161;
+		var value162;
+		var _g163 = new haxe.ds.StringMap();
+		var value163;
+		var _g164 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g164.setReserved("field","pathToPdb"); else _g164.h["field"] = "pathToPdb";
+		if(__map_reserved["class"] != null) _g164.setReserved("class","saturn.core.domain.FileProxy"); else _g164.h["class"] = "saturn.core.domain.FileProxy";
+		if(__map_reserved.fk_field != null) _g164.setReserved("fk_field","path"); else _g164.h["fk_field"] = "path";
+		value163 = _g164;
+		_g163.set("pdb",value163);
+		value162 = _g163;
+		if(__map_reserved["fields.synthetic"] != null) _g159.setReserved("fields.synthetic",value162); else _g159.h["fields.synthetic"] = value162;
+		var value164;
+		var _g165 = new haxe.ds.StringMap();
+		if(__map_reserved.id_pattern != null) _g165.setReserved("id_pattern","\\w+-m"); else _g165.h["id_pattern"] = "\\w+-m";
+		if(__map_reserved.workspace_wrapper != null) _g165.setReserved("workspace_wrapper","saturn.client.workspace.StructureModelWO"); else _g165.h["workspace_wrapper"] = "saturn.client.workspace.StructureModelWO";
+		if(__map_reserved.icon != null) _g165.setReserved("icon","structure_16.png"); else _g165.h["icon"] = "structure_16.png";
+		if(__map_reserved.alias != null) _g165.setReserved("alias","Models"); else _g165.h["alias"] = "Models";
+		value164 = _g165;
+		if(__map_reserved.options != null) _g159.setReserved("options",value164); else _g159.h["options"] = value164;
+		var value165;
+		var _g166 = new haxe.ds.StringMap();
+		if(__map_reserved.modelId != null) _g166.setReserved("modelId","\\w+-m"); else _g166.h["modelId"] = "\\w+-m";
+		value165 = _g166;
+		if(__map_reserved.search != null) _g159.setReserved("search",value165); else _g159.h["search"] = value165;
+		var value166;
+		var _g167 = new haxe.ds.StringMap();
+		if(__map_reserved["Model ID"] != null) _g167.setReserved("Model ID","modelId"); else _g167.h["Model ID"] = "modelId";
+		if(__map_reserved["Path to PDB"] != null) _g167.setReserved("Path to PDB","pathToPdb"); else _g167.h["Path to PDB"] = "pathToPdb";
+		value166 = _g167;
+		if(__map_reserved.model != null) _g159.setReserved("model",value166); else _g159.h["model"] = value166;
+		value158 = _g159;
+		if(__map_reserved["saturn.core.domain.StructureModel"] != null) _g.setReserved("saturn.core.domain.StructureModel",value158); else _g.h["saturn.core.domain.StructureModel"] = value158;
+		var value167;
+		var _g168 = new haxe.ds.StringMap();
+		var value168;
+		var _g169 = new haxe.ds.StringMap();
+		if(__map_reserved.path != null) _g169.setReserved("path","PATH"); else _g169.h["path"] = "PATH";
+		if(__map_reserved.content != null) _g169.setReserved("content","CONTENT"); else _g169.h["content"] = "CONTENT";
+		value168 = _g169;
+		if(__map_reserved.fields != null) _g168.setReserved("fields",value168); else _g168.h["fields"] = value168;
+		var value169;
+		var _g170 = new haxe.ds.StringMap();
+		if(__map_reserved.path != null) _g170.setReserved("path",true); else _g170.h["path"] = true;
+		value169 = _g170;
+		if(__map_reserved.indexes != null) _g168.setReserved("indexes",value169); else _g168.h["indexes"] = value169;
+		var value170;
+		var _g171 = new haxe.ds.StringMap();
+		var value171;
+		var _g172 = new haxe.ds.StringMap();
+		if(__map_reserved["/work"] != null) _g172.setReserved("/work","W:"); else _g172.h["/work"] = "W:";
+		if(__map_reserved["/home/share"] != null) _g172.setReserved("/home/share","S:"); else _g172.h["/home/share"] = "S:";
+		value171 = _g172;
+		_g171.set("windows_conversions",value171);
+		var value172;
+		var _g173 = new haxe.ds.StringMap();
+		if(__map_reserved.WORK != null) _g173.setReserved("WORK","^W"); else _g173.h["WORK"] = "^W";
+		value172 = _g173;
+		_g171.set("windows_allowed_paths_regex",value172);
+		var value173;
+		var _g174 = new haxe.ds.StringMap();
+		if(__map_reserved["W:"] != null) _g174.setReserved("W:","/work"); else _g174.h["W:"] = "/work";
+		value173 = _g174;
+		_g171.set("linux_conversions",value173);
+		var value174;
+		var _g175 = new haxe.ds.StringMap();
+		if(__map_reserved.WORK != null) _g175.setReserved("WORK","^/work"); else _g175.h["WORK"] = "^/work";
+		value174 = _g175;
+		_g171.set("linux_allowed_paths_regex",value174);
+		value170 = _g171;
+		if(__map_reserved.options != null) _g168.setReserved("options",value170); else _g168.h["options"] = value170;
+		value167 = _g168;
+		if(__map_reserved["saturn.core.domain.FileProxy"] != null) _g.setReserved("saturn.core.domain.FileProxy",value167); else _g.h["saturn.core.domain.FileProxy"] = value167;
+		var value175;
+		var _g176 = new haxe.ds.StringMap();
+		var value176;
+		var _g177 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g177.setReserved("moleculeName","NAME"); else _g177.h["moleculeName"] = "NAME";
+		value176 = _g177;
+		if(__map_reserved.fields != null) _g176.setReserved("fields",value176); else _g176.h["fields"] = value176;
+		var value177;
+		var _g178 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g178.setReserved("moleculeName",true); else _g178.h["moleculeName"] = true;
+		value177 = _g178;
+		if(__map_reserved.indexes != null) _g176.setReserved("indexes",value177); else _g176.h["indexes"] = value177;
+		var value178;
+		var _g179 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g179.setReserved("saturn.client.programs.DNASequenceEditor",false); else _g179.h["saturn.client.programs.DNASequenceEditor"] = false;
+		value178 = _g179;
+		if(__map_reserved.programs != null) _g176.setReserved("programs",value178); else _g176.h["programs"] = value178;
+		var value179;
+		var _g180 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g180.setReserved("alias","DNA"); else _g180.h["alias"] = "DNA";
+		if(__map_reserved.icon != null) _g180.setReserved("icon","dna_conical_16.png"); else _g180.h["icon"] = "dna_conical_16.png";
+		value179 = _g180;
+		if(__map_reserved.options != null) _g176.setReserved("options",value179); else _g176.h["options"] = value179;
+		value175 = _g176;
+		if(__map_reserved["saturn.core.DNA"] != null) _g.setReserved("saturn.core.DNA",value175); else _g.h["saturn.core.DNA"] = value175;
+		var value180;
+		var _g181 = new haxe.ds.StringMap();
+		var value181;
+		var _g182 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g182.setReserved("moleculeName","NAME"); else _g182.h["moleculeName"] = "NAME";
+		value181 = _g182;
+		if(__map_reserved.fields != null) _g181.setReserved("fields",value181); else _g181.h["fields"] = value181;
+		var value182;
+		var _g183 = new haxe.ds.StringMap();
+		if(__map_reserved.moleculeName != null) _g183.setReserved("moleculeName",true); else _g183.h["moleculeName"] = true;
+		value182 = _g183;
+		if(__map_reserved.indexes != null) _g181.setReserved("indexes",value182); else _g181.h["indexes"] = value182;
+		var value183;
+		var _g184 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.ProteinSequenceEditor"] != null) _g184.setReserved("saturn.client.programs.ProteinSequenceEditor",false); else _g184.h["saturn.client.programs.ProteinSequenceEditor"] = false;
+		value183 = _g184;
+		if(__map_reserved.programs != null) _g181.setReserved("programs",value183); else _g181.h["programs"] = value183;
+		var value184;
+		var _g185 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g185.setReserved("alias","Proteins"); else _g185.h["alias"] = "Proteins";
+		if(__map_reserved.icon != null) _g185.setReserved("icon","structure_16.png"); else _g185.h["icon"] = "structure_16.png";
+		value184 = _g185;
+		if(__map_reserved.options != null) _g181.setReserved("options",value184); else _g181.h["options"] = value184;
+		value180 = _g181;
+		if(__map_reserved["saturn.core.Protein"] != null) _g.setReserved("saturn.core.Protein",value180); else _g.h["saturn.core.Protein"] = value180;
+		var value185;
+		var _g186 = new haxe.ds.StringMap();
+		var value186;
+		var _g187 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g187.setReserved("id","PKEY"); else _g187.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g187.setReserved("name","NAME"); else _g187.h["name"] = "NAME";
+		if(__map_reserved.value != null) _g187.setReserved("value","VALUE"); else _g187.h["value"] = "VALUE";
+		value186 = _g187;
+		if(__map_reserved.fields != null) _g186.setReserved("fields",value186); else _g186.h["fields"] = value186;
+		var value187;
+		var _g188 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g188.setReserved("name",false); else _g188.h["name"] = false;
+		if(__map_reserved.id != null) _g188.setReserved("id",true); else _g188.h["id"] = true;
+		value187 = _g188;
+		if(__map_reserved.indexes != null) _g186.setReserved("indexes",value187); else _g186.h["indexes"] = value187;
+		var value188;
+		var _g189 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.TextEditor"] != null) _g189.setReserved("saturn.client.programs.TextEditor",true); else _g189.h["saturn.client.programs.TextEditor"] = true;
+		value188 = _g189;
+		if(__map_reserved.programs != null) _g186.setReserved("programs",value188); else _g186.h["programs"] = value188;
+		var value189;
+		var _g190 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g190.setReserved("alias","Scripts"); else _g190.h["alias"] = "Scripts";
+		if(__map_reserved["file.new.label"] != null) _g190.setReserved("file.new.label","Script"); else _g190.h["file.new.label"] = "Script";
+		if(__map_reserved.icon != null) _g190.setReserved("icon","dna_conical_16.png"); else _g190.h["icon"] = "dna_conical_16.png";
+		value189 = _g190;
+		if(__map_reserved.options != null) _g186.setReserved("options",value189); else _g186.h["options"] = value189;
+		value185 = _g186;
+		if(__map_reserved["saturn.core.domain.TextFile"] != null) _g.setReserved("saturn.core.domain.TextFile",value185); else _g.h["saturn.core.domain.TextFile"] = value185;
+		var value190;
+		var _g191 = new haxe.ds.StringMap();
+		var value191;
+		var _g192 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g192.setReserved("saturn.client.programs.BasicTableViewer",true); else _g192.h["saturn.client.programs.BasicTableViewer"] = true;
+		value191 = _g192;
+		if(__map_reserved.programs != null) _g191.setReserved("programs",value191); else _g191.h["programs"] = value191;
+		var value192;
+		var _g193 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g193.setReserved("alias","Results"); else _g193.h["alias"] = "Results";
+		value192 = _g193;
+		if(__map_reserved.options != null) _g191.setReserved("options",value192); else _g191.h["options"] = value192;
+		value190 = _g191;
+		if(__map_reserved["saturn.core.BasicTable"] != null) _g.setReserved("saturn.core.BasicTable",value190); else _g.h["saturn.core.BasicTable"] = value190;
+		var value193;
+		var _g194 = new haxe.ds.StringMap();
+		var value194;
+		var _g195 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.ConstructDesigner"] != null) _g195.setReserved("saturn.client.programs.ConstructDesigner",false); else _g195.h["saturn.client.programs.ConstructDesigner"] = false;
+		value194 = _g195;
+		if(__map_reserved.programs != null) _g194.setReserved("programs",value194); else _g194.h["programs"] = value194;
+		var value195;
+		var _g196 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g196.setReserved("alias","Construct Plan"); else _g196.h["alias"] = "Construct Plan";
+		if(__map_reserved.icon != null) _g196.setReserved("icon","dna_conical_16.png"); else _g196.h["icon"] = "dna_conical_16.png";
+		value195 = _g196;
+		if(__map_reserved.options != null) _g194.setReserved("options",value195); else _g194.h["options"] = value195;
+		value193 = _g194;
+		if(__map_reserved["saturn.core.ConstructDesignTable"] != null) _g.setReserved("saturn.core.ConstructDesignTable",value193); else _g.h["saturn.core.ConstructDesignTable"] = value193;
+		var value196;
+		var _g197 = new haxe.ds.StringMap();
+		var value197;
+		var _g198 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.PurificationHelper"] != null) _g198.setReserved("saturn.client.programs.PurificationHelper",false); else _g198.h["saturn.client.programs.PurificationHelper"] = false;
+		value197 = _g198;
+		if(__map_reserved.programs != null) _g197.setReserved("programs",value197); else _g197.h["programs"] = value197;
+		var value198;
+		var _g199 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g199.setReserved("alias","Purifiaction Helper"); else _g199.h["alias"] = "Purifiaction Helper";
+		value198 = _g199;
+		if(__map_reserved.options != null) _g197.setReserved("options",value198); else _g197.h["options"] = value198;
+		value196 = _g197;
+		if(__map_reserved["saturn.core.PurificationHelperTable"] != null) _g.setReserved("saturn.core.PurificationHelperTable",value196); else _g.h["saturn.core.PurificationHelperTable"] = value196;
+		var value199;
+		var _g200 = new haxe.ds.StringMap();
+		var value200;
+		var _g201 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.SHRNADesigner"] != null) _g201.setReserved("saturn.client.programs.SHRNADesigner",false); else _g201.h["saturn.client.programs.SHRNADesigner"] = false;
+		value200 = _g201;
+		if(__map_reserved.programs != null) _g200.setReserved("programs",value200); else _g200.h["programs"] = value200;
+		var value201;
+		var _g202 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g202.setReserved("alias","shRNA Designer"); else _g202.h["alias"] = "shRNA Designer";
+		if(__map_reserved.icon != null) _g202.setReserved("icon","shrna_16.png"); else _g202.h["icon"] = "shrna_16.png";
+		value201 = _g202;
+		if(__map_reserved.options != null) _g200.setReserved("options",value201); else _g200.h["options"] = value201;
+		value199 = _g200;
+		if(__map_reserved["saturn.core.SHRNADesignTable"] != null) _g.setReserved("saturn.core.SHRNADesignTable",value199); else _g.h["saturn.core.SHRNADesignTable"] = value199;
+		var value202;
+		var _g203 = new haxe.ds.StringMap();
+		var value203;
+		var _g204 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g204.setReserved("saturn.client.programs.BasicTableViewer",false); else _g204.h["saturn.client.programs.BasicTableViewer"] = false;
+		value203 = _g204;
+		if(__map_reserved.programs != null) _g203.setReserved("programs",value203); else _g203.h["programs"] = value203;
+		var value204;
+		var _g205 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g205.setReserved("alias","Table"); else _g205.h["alias"] = "Table";
+		value204 = _g205;
+		if(__map_reserved.options != null) _g203.setReserved("options",value204); else _g203.h["options"] = value204;
+		value202 = _g203;
+		if(__map_reserved["saturn.core.Table"] != null) _g.setReserved("saturn.core.Table",value202); else _g.h["saturn.core.Table"] = value202;
+		var value205;
+		var _g206 = new haxe.ds.StringMap();
+		var value206;
+		var _g207 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g207.setReserved("id","PKEY"); else _g207.h["id"] = "PKEY";
+		if(__map_reserved.compoundId != null) _g207.setReserved("compoundId","COMPOUNDID"); else _g207.h["compoundId"] = "COMPOUNDID";
+		if(__map_reserved.shortCompoundId != null) _g207.setReserved("shortCompoundId","COMPOUND_ID"); else _g207.h["shortCompoundId"] = "COMPOUND_ID";
+		if(__map_reserved.supplierId != null) _g207.setReserved("supplierId","SUPPLIER_ID"); else _g207.h["supplierId"] = "SUPPLIER_ID";
+		if(__map_reserved.sdf != null) _g207.setReserved("sdf","SDF"); else _g207.h["sdf"] = "SDF";
+		if(__map_reserved.supplier != null) _g207.setReserved("supplier","SUPPLIER"); else _g207.h["supplier"] = "SUPPLIER";
+		if(__map_reserved.description != null) _g207.setReserved("description","DESCRIPTION"); else _g207.h["description"] = "DESCRIPTION";
+		if(__map_reserved.concentration != null) _g207.setReserved("concentration","CONCENTRATION"); else _g207.h["concentration"] = "CONCENTRATION";
+		if(__map_reserved.location != null) _g207.setReserved("location","LOCATION"); else _g207.h["location"] = "LOCATION";
+		if(__map_reserved.comments != null) _g207.setReserved("comments","COMMENTS"); else _g207.h["comments"] = "COMMENTS";
+		if(__map_reserved.solute != null) _g207.setReserved("solute","SOLUTE"); else _g207.h["solute"] = "SOLUTE";
+		if(__map_reserved.mw != null) _g207.setReserved("mw","MW"); else _g207.h["mw"] = "MW";
+		if(__map_reserved.confidential != null) _g207.setReserved("confidential","CONFIDENTIAL"); else _g207.h["confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.inchi != null) _g207.setReserved("inchi","INCHI"); else _g207.h["inchi"] = "INCHI";
+		if(__map_reserved.smiles != null) _g207.setReserved("smiles","SMILES"); else _g207.h["smiles"] = "SMILES";
+		if(__map_reserved.datestamp != null) _g207.setReserved("datestamp","DATESTAMP"); else _g207.h["datestamp"] = "DATESTAMP";
+		if(__map_reserved.person != null) _g207.setReserved("person","PERSON"); else _g207.h["person"] = "PERSON";
+		if(__map_reserved.oldSGCGLobalId != null) _g207.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g207.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
+		value206 = _g207;
+		if(__map_reserved.fields != null) _g206.setReserved("fields",value206); else _g206.h["fields"] = value206;
+		var value207;
+		var _g208 = new haxe.ds.StringMap();
+		if(__map_reserved.compoundId != null) _g208.setReserved("compoundId",false); else _g208.h["compoundId"] = false;
+		if(__map_reserved.id != null) _g208.setReserved("id",true); else _g208.h["id"] = true;
+		value207 = _g208;
+		if(__map_reserved.indexes != null) _g206.setReserved("indexes",value207); else _g206.h["indexes"] = value207;
+		var value208;
+		var _g209 = new haxe.ds.StringMap();
+		if(__map_reserved.compoundId != null) _g209.setReserved("compoundId",null); else _g209.h["compoundId"] = null;
+		value208 = _g209;
+		if(__map_reserved.search != null) _g206.setReserved("search",value208); else _g206.h["search"] = value208;
+		var value209;
+		var _g210 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g210.setReserved("schema","PSF"); else _g210.h["schema"] = "PSF";
+		if(__map_reserved.name != null) _g210.setReserved("name","COMPOUND"); else _g210.h["name"] = "COMPOUND";
+		value209 = _g210;
+		if(__map_reserved.table_info != null) _g206.setReserved("table_info",value209); else _g206.h["table_info"] = value209;
+		var value210;
+		var _g211 = new haxe.ds.StringMap();
+		if(__map_reserved.workspace_wrapper != null) _g211.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g211.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
+		if(__map_reserved.icon != null) _g211.setReserved("icon","compound_16.png"); else _g211.h["icon"] = "compound_16.png";
+		if(__map_reserved.alias != null) _g211.setReserved("alias","Compounds"); else _g211.h["alias"] = "Compounds";
+		var value211;
+		var _g212 = new haxe.ds.StringMap();
+		var value212;
+		var _g213 = new haxe.ds.StringMap();
+		var value213;
+		var _g214 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g214.setReserved("user_suffix","Assay Results"); else _g214.h["user_suffix"] = "Assay Results";
+		if(__map_reserved["function"] != null) _g214.setReserved("function","saturn.core.domain.Compound.assaySearch"); else _g214.h["function"] = "saturn.core.domain.Compound.assaySearch";
+		value213 = _g214;
+		if(__map_reserved.assay_results != null) _g213.setReserved("assay_results",value213); else _g213.h["assay_results"] = value213;
+		value212 = _g213;
+		if(__map_reserved.search_bar != null) _g212.setReserved("search_bar",value212); else _g212.h["search_bar"] = value212;
+		value211 = _g212;
+		_g211.set("actions",value211);
+		value210 = _g211;
+		if(__map_reserved.options != null) _g206.setReserved("options",value210); else _g206.h["options"] = value210;
+		var value214;
+		var _g215 = new haxe.ds.StringMap();
+		if(__map_reserved["Global ID"] != null) _g215.setReserved("Global ID","compoundId"); else _g215.h["Global ID"] = "compoundId";
+		if(__map_reserved["Oxford ID"] != null) _g215.setReserved("Oxford ID","shortCompoundId"); else _g215.h["Oxford ID"] = "shortCompoundId";
+		if(__map_reserved["Supplier ID"] != null) _g215.setReserved("Supplier ID","supplierId"); else _g215.h["Supplier ID"] = "supplierId";
+		if(__map_reserved.Supplier != null) _g215.setReserved("Supplier","supplier"); else _g215.h["Supplier"] = "supplier";
+		if(__map_reserved.Description != null) _g215.setReserved("Description","description"); else _g215.h["Description"] = "description";
+		if(__map_reserved.Concentration != null) _g215.setReserved("Concentration","concentration"); else _g215.h["Concentration"] = "concentration";
+		if(__map_reserved.Location != null) _g215.setReserved("Location","location"); else _g215.h["Location"] = "location";
+		if(__map_reserved.Solute != null) _g215.setReserved("Solute","solute"); else _g215.h["Solute"] = "solute";
+		if(__map_reserved.Comments != null) _g215.setReserved("Comments","comments"); else _g215.h["Comments"] = "comments";
+		if(__map_reserved.MW != null) _g215.setReserved("MW","mw"); else _g215.h["MW"] = "mw";
+		if(__map_reserved.Confidential != null) _g215.setReserved("Confidential","CONFIDENTIAL"); else _g215.h["Confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.Date != null) _g215.setReserved("Date","datestamp"); else _g215.h["Date"] = "datestamp";
+		if(__map_reserved.Person != null) _g215.setReserved("Person","person"); else _g215.h["Person"] = "person";
+		if(__map_reserved.InChi != null) _g215.setReserved("InChi","inchi"); else _g215.h["InChi"] = "inchi";
+		if(__map_reserved.smiles != null) _g215.setReserved("smiles","smiles"); else _g215.h["smiles"] = "smiles";
+		value214 = _g215;
+		if(__map_reserved.model != null) _g206.setReserved("model",value214); else _g206.h["model"] = value214;
+		var value215;
+		var _g216 = new haxe.ds.StringMap();
+		if(__map_reserved["saturn.client.programs.CompoundViewer"] != null) _g216.setReserved("saturn.client.programs.CompoundViewer",true); else _g216.h["saturn.client.programs.CompoundViewer"] = true;
+		value215 = _g216;
+		if(__map_reserved.programs != null) _g206.setReserved("programs",value215); else _g206.h["programs"] = value215;
+		value205 = _g206;
+		if(__map_reserved["saturn.core.domain.Compound"] != null) _g.setReserved("saturn.core.domain.Compound",value205); else _g.h["saturn.core.domain.Compound"] = value205;
+		var value216;
+		var _g217 = new haxe.ds.StringMap();
+		var value217;
+		var _g218 = new haxe.ds.StringMap();
+		var value218;
+		var _g219 = new haxe.ds.StringMap();
+		if(__map_reserved.SGC != null) _g219.setReserved("SGC",true); else _g219.h["SGC"] = true;
+		value218 = _g219;
+		_g218.set("flags",value218);
+		value217 = _g218;
+		if(__map_reserved.options != null) _g217.setReserved("options",value217); else _g217.h["options"] = value217;
+		value216 = _g217;
+		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value216); else _g.h["saturn.app.SaturnClient"] = value216;
+		this.models = _g;
+	}
+	,__class__: saturn.db.mapping.PSF
+};
 saturn.db.mapping.SGC = $hxClasses["saturn.db.mapping.SGC"] = function() {
 	this.buildModels();
 };
@@ -10464,6 +12080,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.person != null) _g2.setReserved("person","PERSON"); else _g2.h["person"] = "PERSON";
 		if(__map_reserved.constructStart != null) _g2.setReserved("constructStart","CONSTRUCTSTART"); else _g2.h["constructStart"] = "CONSTRUCTSTART";
 		if(__map_reserved.constructStop != null) _g2.setReserved("constructStop","CONSTRUCTSTOP"); else _g2.h["constructStop"] = "CONSTRUCTSTOP";
+		if(__map_reserved.complex != null) _g2.setReserved("complex","COMPLEX"); else _g2.h["complex"] = "COMPLEX";
 		value1 = _g2;
 		if(__map_reserved.fields != null) _g1.setReserved("fields",value1); else _g1.h["fields"] = value1;
 		var value2;
@@ -10799,6 +12416,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.sourceId != null) _g47.setReserved("sourceId","SOURCEID"); else _g47.h["sourceId"] = "SOURCEID";
 		if(__map_reserved.sequenceConfirmed != null) _g47.setReserved("sequenceConfirmed","SEQUENCECONFIRMED"); else _g47.h["sequenceConfirmed"] = "SEQUENCECONFIRMED";
 		if(__map_reserved.elnId != null) _g47.setReserved("elnId","ELNEXPERIMENTID"); else _g47.h["elnId"] = "ELNEXPERIMENTID";
+		if(__map_reserved.complex != null) _g47.setReserved("complex","COMPLEX"); else _g47.h["complex"] = "COMPLEX";
 		value46 = _g47;
 		if(__map_reserved.fields != null) _g46.setReserved("fields",value46); else _g46.h["fields"] = value46;
 		var value47;
@@ -11273,6 +12891,8 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.activeStatus != null) _g123.setReserved("activeStatus","ACTIVESTATUS"); else _g123.h["activeStatus"] = "ACTIVESTATUS";
 		if(__map_reserved.pi != null) _g123.setReserved("pi","PI"); else _g123.h["pi"] = "PI";
 		if(__map_reserved.comments != null) _g123.setReserved("comments","COMMENTS"); else _g123.h["comments"] = "COMMENTS";
+		if(__map_reserved.complexComments != null) _g123.setReserved("complexComments","COMPLEXCOMPONENTS"); else _g123.h["complexComments"] = "COMPLEXCOMPONENTS";
+		if(__map_reserved.complex != null) _g123.setReserved("complex","COMPLEX"); else _g123.h["complex"] = "COMPLEX";
 		value122 = _g123;
 		if(__map_reserved.fields != null) _g122.setReserved("fields",value122); else _g122.h["fields"] = value122;
 		var value123;
@@ -11320,7 +12940,6 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.alias != null) _g130.setReserved("alias","Targets"); else _g130.h["alias"] = "Targets";
 		if(__map_reserved["file.new.label"] != null) _g130.setReserved("file.new.label","Target"); else _g130.h["file.new.label"] = "Target";
 		if(__map_reserved.icon != null) _g130.setReserved("icon","protein_16.png"); else _g130.h["icon"] = "protein_16.png";
-		_g130.set("actions",[]);
 		if(__map_reserved.auto_activate != null) _g130.setReserved("auto_activate","3"); else _g130.h["auto_activate"] = "3";
 		value129 = _g130;
 		if(__map_reserved.options != null) _g122.setReserved("options",value129); else _g122.h["options"] = value129;
@@ -12147,420 +13766,435 @@ saturn.db.mapping.SGC.prototype = {
 		var _g274 = new haxe.ds.StringMap();
 		var value274;
 		var _g275 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.PurificationHelper"] != null) _g275.setReserved("saturn.client.programs.PurificationHelper",false); else _g275.h["saturn.client.programs.PurificationHelper"] = false;
+		if(__map_reserved["saturn.client.programs.ComplexHelper"] != null) _g275.setReserved("saturn.client.programs.ComplexHelper",false); else _g275.h["saturn.client.programs.ComplexHelper"] = false;
 		value274 = _g275;
 		if(__map_reserved.programs != null) _g274.setReserved("programs",value274); else _g274.h["programs"] = value274;
 		var value275;
 		var _g276 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g276.setReserved("alias","Purifiaction Helper"); else _g276.h["alias"] = "Purifiaction Helper";
+		if(__map_reserved.alias != null) _g276.setReserved("alias","Complex Helper"); else _g276.h["alias"] = "Complex Helper";
+		if(__map_reserved.icon != null) _g276.setReserved("icon","protein_conical_16.png"); else _g276.h["icon"] = "protein_conical_16.png";
 		value275 = _g276;
 		if(__map_reserved.options != null) _g274.setReserved("options",value275); else _g274.h["options"] = value275;
 		value273 = _g274;
-		if(__map_reserved["saturn.core.PurificationHelperTable"] != null) _g.setReserved("saturn.core.PurificationHelperTable",value273); else _g.h["saturn.core.PurificationHelperTable"] = value273;
+		if(__map_reserved["saturn.core.ComplexPlan"] != null) _g.setReserved("saturn.core.ComplexPlan",value273); else _g.h["saturn.core.ComplexPlan"] = value273;
 		var value276;
 		var _g277 = new haxe.ds.StringMap();
 		var value277;
 		var _g278 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.SHRNADesigner"] != null) _g278.setReserved("saturn.client.programs.SHRNADesigner",false); else _g278.h["saturn.client.programs.SHRNADesigner"] = false;
+		if(__map_reserved["saturn.client.programs.PurificationHelper"] != null) _g278.setReserved("saturn.client.programs.PurificationHelper",false); else _g278.h["saturn.client.programs.PurificationHelper"] = false;
 		value277 = _g278;
 		if(__map_reserved.programs != null) _g277.setReserved("programs",value277); else _g277.h["programs"] = value277;
 		var value278;
 		var _g279 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g279.setReserved("alias","shRNA Designer"); else _g279.h["alias"] = "shRNA Designer";
-		if(__map_reserved.icon != null) _g279.setReserved("icon","shrna_16.png"); else _g279.h["icon"] = "shrna_16.png";
+		if(__map_reserved.alias != null) _g279.setReserved("alias","Purifiaction Helper"); else _g279.h["alias"] = "Purifiaction Helper";
 		value278 = _g279;
 		if(__map_reserved.options != null) _g277.setReserved("options",value278); else _g277.h["options"] = value278;
 		value276 = _g277;
-		if(__map_reserved["saturn.core.SHRNADesignTable"] != null) _g.setReserved("saturn.core.SHRNADesignTable",value276); else _g.h["saturn.core.SHRNADesignTable"] = value276;
+		if(__map_reserved["saturn.core.PurificationHelperTable"] != null) _g.setReserved("saturn.core.PurificationHelperTable",value276); else _g.h["saturn.core.PurificationHelperTable"] = value276;
 		var value279;
 		var _g280 = new haxe.ds.StringMap();
 		var value280;
 		var _g281 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g281.setReserved("saturn.client.programs.BasicTableViewer",false); else _g281.h["saturn.client.programs.BasicTableViewer"] = false;
+		if(__map_reserved["saturn.client.programs.SHRNADesigner"] != null) _g281.setReserved("saturn.client.programs.SHRNADesigner",false); else _g281.h["saturn.client.programs.SHRNADesigner"] = false;
 		value280 = _g281;
 		if(__map_reserved.programs != null) _g280.setReserved("programs",value280); else _g280.h["programs"] = value280;
 		var value281;
 		var _g282 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g282.setReserved("alias","Table"); else _g282.h["alias"] = "Table";
+		if(__map_reserved.alias != null) _g282.setReserved("alias","shRNA Designer"); else _g282.h["alias"] = "shRNA Designer";
+		if(__map_reserved.icon != null) _g282.setReserved("icon","shrna_16.png"); else _g282.h["icon"] = "shrna_16.png";
 		value281 = _g282;
 		if(__map_reserved.options != null) _g280.setReserved("options",value281); else _g280.h["options"] = value281;
 		value279 = _g280;
-		if(__map_reserved["saturn.core.Table"] != null) _g.setReserved("saturn.core.Table",value279); else _g.h["saturn.core.Table"] = value279;
+		if(__map_reserved["saturn.core.SHRNADesignTable"] != null) _g.setReserved("saturn.core.SHRNADesignTable",value279); else _g.h["saturn.core.SHRNADesignTable"] = value279;
 		var value282;
 		var _g283 = new haxe.ds.StringMap();
 		var value283;
 		var _g284 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g284.setReserved("id","PKEY"); else _g284.h["id"] = "PKEY";
-		if(__map_reserved.compoundId != null) _g284.setReserved("compoundId","SGCGLOBALID"); else _g284.h["compoundId"] = "SGCGLOBALID";
-		if(__map_reserved.shortCompoundId != null) _g284.setReserved("shortCompoundId","COMPOUND_ID"); else _g284.h["shortCompoundId"] = "COMPOUND_ID";
-		if(__map_reserved.supplierId != null) _g284.setReserved("supplierId","SUPPLIER_ID"); else _g284.h["supplierId"] = "SUPPLIER_ID";
-		if(__map_reserved.sdf != null) _g284.setReserved("sdf","SDF"); else _g284.h["sdf"] = "SDF";
-		if(__map_reserved.supplier != null) _g284.setReserved("supplier","SUPPLIER"); else _g284.h["supplier"] = "SUPPLIER";
-		if(__map_reserved.description != null) _g284.setReserved("description","DESCRIPTION"); else _g284.h["description"] = "DESCRIPTION";
-		if(__map_reserved.concentration != null) _g284.setReserved("concentration","CONCENTRATION"); else _g284.h["concentration"] = "CONCENTRATION";
-		if(__map_reserved.location != null) _g284.setReserved("location","LOCATION"); else _g284.h["location"] = "LOCATION";
-		if(__map_reserved.comments != null) _g284.setReserved("comments","COMMENTS"); else _g284.h["comments"] = "COMMENTS";
-		if(__map_reserved.solute != null) _g284.setReserved("solute","SOLUTE"); else _g284.h["solute"] = "SOLUTE";
-		if(__map_reserved.mw != null) _g284.setReserved("mw","MW"); else _g284.h["mw"] = "MW";
-		if(__map_reserved.confidential != null) _g284.setReserved("confidential","CONFIDENTIAL"); else _g284.h["confidential"] = "CONFIDENTIAL";
-		if(__map_reserved.inchi != null) _g284.setReserved("inchi","INCHI"); else _g284.h["inchi"] = "INCHI";
-		if(__map_reserved.smiles != null) _g284.setReserved("smiles","SMILES"); else _g284.h["smiles"] = "SMILES";
-		if(__map_reserved.datestamp != null) _g284.setReserved("datestamp","DATESTAMP"); else _g284.h["datestamp"] = "DATESTAMP";
-		if(__map_reserved.person != null) _g284.setReserved("person","PERSON"); else _g284.h["person"] = "PERSON";
-		if(__map_reserved.oldSGCGLobalId != null) _g284.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g284.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
+		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g284.setReserved("saturn.client.programs.BasicTableViewer",false); else _g284.h["saturn.client.programs.BasicTableViewer"] = false;
 		value283 = _g284;
-		if(__map_reserved.fields != null) _g283.setReserved("fields",value283); else _g283.h["fields"] = value283;
+		if(__map_reserved.programs != null) _g283.setReserved("programs",value283); else _g283.h["programs"] = value283;
 		var value284;
 		var _g285 = new haxe.ds.StringMap();
-		if(__map_reserved.compoundId != null) _g285.setReserved("compoundId",false); else _g285.h["compoundId"] = false;
-		if(__map_reserved.id != null) _g285.setReserved("id",true); else _g285.h["id"] = true;
+		if(__map_reserved.alias != null) _g285.setReserved("alias","Table"); else _g285.h["alias"] = "Table";
 		value284 = _g285;
-		if(__map_reserved.indexes != null) _g283.setReserved("indexes",value284); else _g283.h["indexes"] = value284;
+		if(__map_reserved.options != null) _g283.setReserved("options",value284); else _g283.h["options"] = value284;
+		value282 = _g283;
+		if(__map_reserved["saturn.core.Table"] != null) _g.setReserved("saturn.core.Table",value282); else _g.h["saturn.core.Table"] = value282;
 		var value285;
 		var _g286 = new haxe.ds.StringMap();
-		if(__map_reserved.compoundId != null) _g286.setReserved("compoundId",null); else _g286.h["compoundId"] = null;
-		if(__map_reserved.shortCompoundId != null) _g286.setReserved("shortCompoundId",null); else _g286.h["shortCompoundId"] = null;
-		if(__map_reserved.supplierId != null) _g286.setReserved("supplierId",null); else _g286.h["supplierId"] = null;
-		if(__map_reserved.supplier != null) _g286.setReserved("supplier",null); else _g286.h["supplier"] = null;
-		if(__map_reserved.oldSGCGlobalId != null) _g286.setReserved("oldSGCGlobalId",null); else _g286.h["oldSGCGlobalId"] = null;
-		value285 = _g286;
-		if(__map_reserved.search != null) _g283.setReserved("search",value285); else _g283.h["search"] = value285;
 		var value286;
 		var _g287 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g287.setReserved("schema","SGC"); else _g287.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g287.setReserved("name","SGCCOMPOUND"); else _g287.h["name"] = "SGCCOMPOUND";
+		if(__map_reserved.id != null) _g287.setReserved("id","PKEY"); else _g287.h["id"] = "PKEY";
+		if(__map_reserved.compoundId != null) _g287.setReserved("compoundId","SGCGLOBALID"); else _g287.h["compoundId"] = "SGCGLOBALID";
+		if(__map_reserved.shortCompoundId != null) _g287.setReserved("shortCompoundId","COMPOUND_ID"); else _g287.h["shortCompoundId"] = "COMPOUND_ID";
+		if(__map_reserved.supplierId != null) _g287.setReserved("supplierId","SUPPLIER_ID"); else _g287.h["supplierId"] = "SUPPLIER_ID";
+		if(__map_reserved.sdf != null) _g287.setReserved("sdf","SDF"); else _g287.h["sdf"] = "SDF";
+		if(__map_reserved.supplier != null) _g287.setReserved("supplier","SUPPLIER"); else _g287.h["supplier"] = "SUPPLIER";
+		if(__map_reserved.description != null) _g287.setReserved("description","DESCRIPTION"); else _g287.h["description"] = "DESCRIPTION";
+		if(__map_reserved.concentration != null) _g287.setReserved("concentration","CONCENTRATION"); else _g287.h["concentration"] = "CONCENTRATION";
+		if(__map_reserved.location != null) _g287.setReserved("location","LOCATION"); else _g287.h["location"] = "LOCATION";
+		if(__map_reserved.comments != null) _g287.setReserved("comments","COMMENTS"); else _g287.h["comments"] = "COMMENTS";
+		if(__map_reserved.solute != null) _g287.setReserved("solute","SOLUTE"); else _g287.h["solute"] = "SOLUTE";
+		if(__map_reserved.mw != null) _g287.setReserved("mw","MW"); else _g287.h["mw"] = "MW";
+		if(__map_reserved.confidential != null) _g287.setReserved("confidential","CONFIDENTIAL"); else _g287.h["confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.inchi != null) _g287.setReserved("inchi","INCHI"); else _g287.h["inchi"] = "INCHI";
+		if(__map_reserved.smiles != null) _g287.setReserved("smiles","SMILES"); else _g287.h["smiles"] = "SMILES";
+		if(__map_reserved.datestamp != null) _g287.setReserved("datestamp","DATESTAMP"); else _g287.h["datestamp"] = "DATESTAMP";
+		if(__map_reserved.person != null) _g287.setReserved("person","PERSON"); else _g287.h["person"] = "PERSON";
+		if(__map_reserved.oldSGCGLobalId != null) _g287.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g287.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
 		value286 = _g287;
-		if(__map_reserved.table_info != null) _g283.setReserved("table_info",value286); else _g283.h["table_info"] = value286;
+		if(__map_reserved.fields != null) _g286.setReserved("fields",value286); else _g286.h["fields"] = value286;
 		var value287;
 		var _g288 = new haxe.ds.StringMap();
-		if(__map_reserved.workspace_wrapper != null) _g288.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g288.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
-		if(__map_reserved.icon != null) _g288.setReserved("icon","compound_16.png"); else _g288.h["icon"] = "compound_16.png";
-		if(__map_reserved.alias != null) _g288.setReserved("alias","Compounds"); else _g288.h["alias"] = "Compounds";
+		if(__map_reserved.compoundId != null) _g288.setReserved("compoundId",false); else _g288.h["compoundId"] = false;
+		if(__map_reserved.id != null) _g288.setReserved("id",true); else _g288.h["id"] = true;
+		value287 = _g288;
+		if(__map_reserved.indexes != null) _g286.setReserved("indexes",value287); else _g286.h["indexes"] = value287;
 		var value288;
 		var _g289 = new haxe.ds.StringMap();
+		if(__map_reserved.compoundId != null) _g289.setReserved("compoundId",null); else _g289.h["compoundId"] = null;
+		if(__map_reserved.shortCompoundId != null) _g289.setReserved("shortCompoundId",null); else _g289.h["shortCompoundId"] = null;
+		if(__map_reserved.supplierId != null) _g289.setReserved("supplierId",null); else _g289.h["supplierId"] = null;
+		if(__map_reserved.supplier != null) _g289.setReserved("supplier",null); else _g289.h["supplier"] = null;
+		if(__map_reserved.oldSGCGlobalId != null) _g289.setReserved("oldSGCGlobalId",null); else _g289.h["oldSGCGlobalId"] = null;
+		value288 = _g289;
+		if(__map_reserved.search != null) _g286.setReserved("search",value288); else _g286.h["search"] = value288;
 		var value289;
 		var _g290 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g290.setReserved("schema","SGC"); else _g290.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g290.setReserved("name","SGCCOMPOUND"); else _g290.h["name"] = "SGCCOMPOUND";
+		value289 = _g290;
+		if(__map_reserved.table_info != null) _g286.setReserved("table_info",value289); else _g286.h["table_info"] = value289;
 		var value290;
 		var _g291 = new haxe.ds.StringMap();
-		if(__map_reserved.user_suffix != null) _g291.setReserved("user_suffix","Assay Results"); else _g291.h["user_suffix"] = "Assay Results";
-		if(__map_reserved["function"] != null) _g291.setReserved("function","saturn.core.domain.Compound.assaySearch"); else _g291.h["function"] = "saturn.core.domain.Compound.assaySearch";
-		value290 = _g291;
-		if(__map_reserved.assay_results != null) _g290.setReserved("assay_results",value290); else _g290.h["assay_results"] = value290;
-		value289 = _g290;
-		if(__map_reserved.search_bar != null) _g289.setReserved("search_bar",value289); else _g289.h["search_bar"] = value289;
-		value288 = _g289;
-		_g288.set("actions",value288);
-		value287 = _g288;
-		if(__map_reserved.options != null) _g283.setReserved("options",value287); else _g283.h["options"] = value287;
+		if(__map_reserved.workspace_wrapper != null) _g291.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g291.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
+		if(__map_reserved.icon != null) _g291.setReserved("icon","compound_16.png"); else _g291.h["icon"] = "compound_16.png";
+		if(__map_reserved.alias != null) _g291.setReserved("alias","Compounds"); else _g291.h["alias"] = "Compounds";
 		var value291;
 		var _g292 = new haxe.ds.StringMap();
-		if(__map_reserved["Global ID"] != null) _g292.setReserved("Global ID","compoundId"); else _g292.h["Global ID"] = "compoundId";
-		if(__map_reserved["Oxford ID"] != null) _g292.setReserved("Oxford ID","shortCompoundId"); else _g292.h["Oxford ID"] = "shortCompoundId";
-		if(__map_reserved["Supplier ID"] != null) _g292.setReserved("Supplier ID","supplierId"); else _g292.h["Supplier ID"] = "supplierId";
-		if(__map_reserved.Supplier != null) _g292.setReserved("Supplier","supplier"); else _g292.h["Supplier"] = "supplier";
-		if(__map_reserved.Description != null) _g292.setReserved("Description","description"); else _g292.h["Description"] = "description";
-		if(__map_reserved.Concentration != null) _g292.setReserved("Concentration","concentration"); else _g292.h["Concentration"] = "concentration";
-		if(__map_reserved.Location != null) _g292.setReserved("Location","location"); else _g292.h["Location"] = "location";
-		if(__map_reserved.Solute != null) _g292.setReserved("Solute","solute"); else _g292.h["Solute"] = "solute";
-		if(__map_reserved.Comments != null) _g292.setReserved("Comments","comments"); else _g292.h["Comments"] = "comments";
-		if(__map_reserved.MW != null) _g292.setReserved("MW","mw"); else _g292.h["MW"] = "mw";
-		if(__map_reserved.Confidential != null) _g292.setReserved("Confidential","CONFIDENTIAL"); else _g292.h["Confidential"] = "CONFIDENTIAL";
-		if(__map_reserved.Date != null) _g292.setReserved("Date","datestamp"); else _g292.h["Date"] = "datestamp";
-		if(__map_reserved.Person != null) _g292.setReserved("Person","person"); else _g292.h["Person"] = "person";
-		if(__map_reserved.InChi != null) _g292.setReserved("InChi","inchi"); else _g292.h["InChi"] = "inchi";
-		if(__map_reserved.smiles != null) _g292.setReserved("smiles","smiles"); else _g292.h["smiles"] = "smiles";
-		value291 = _g292;
-		if(__map_reserved.model != null) _g283.setReserved("model",value291); else _g283.h["model"] = value291;
 		var value292;
 		var _g293 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.CompoundViewer"] != null) _g293.setReserved("saturn.client.programs.CompoundViewer",true); else _g293.h["saturn.client.programs.CompoundViewer"] = true;
-		value292 = _g293;
-		if(__map_reserved.programs != null) _g283.setReserved("programs",value292); else _g283.h["programs"] = value292;
-		value282 = _g283;
-		if(__map_reserved["saturn.core.domain.Compound"] != null) _g.setReserved("saturn.core.domain.Compound",value282); else _g.h["saturn.core.domain.Compound"] = value282;
 		var value293;
 		var _g294 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g294.setReserved("user_suffix","Assay Results"); else _g294.h["user_suffix"] = "Assay Results";
+		if(__map_reserved["function"] != null) _g294.setReserved("function","saturn.core.domain.Compound.assaySearch"); else _g294.h["function"] = "saturn.core.domain.Compound.assaySearch";
+		value293 = _g294;
+		if(__map_reserved.assay_results != null) _g293.setReserved("assay_results",value293); else _g293.h["assay_results"] = value293;
+		value292 = _g293;
+		if(__map_reserved.search_bar != null) _g292.setReserved("search_bar",value292); else _g292.h["search_bar"] = value292;
+		value291 = _g292;
+		_g291.set("actions",value291);
+		value290 = _g291;
+		if(__map_reserved.options != null) _g286.setReserved("options",value290); else _g286.h["options"] = value290;
 		var value294;
 		var _g295 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g295.setReserved("id","PKEY"); else _g295.h["id"] = "PKEY";
-		if(__map_reserved.glycanId != null) _g295.setReserved("glycanId","GLYCANID"); else _g295.h["glycanId"] = "GLYCANID";
-		if(__map_reserved.content != null) _g295.setReserved("content","CONTENT"); else _g295.h["content"] = "CONTENT";
-		if(__map_reserved.contentType != null) _g295.setReserved("contentType","CONTENT_TYPE"); else _g295.h["contentType"] = "CONTENT_TYPE";
-		if(__map_reserved.description != null) _g295.setReserved("description","DESCRIPTION"); else _g295.h["description"] = "DESCRIPTION";
+		if(__map_reserved["Global ID"] != null) _g295.setReserved("Global ID","compoundId"); else _g295.h["Global ID"] = "compoundId";
+		if(__map_reserved["Oxford ID"] != null) _g295.setReserved("Oxford ID","shortCompoundId"); else _g295.h["Oxford ID"] = "shortCompoundId";
+		if(__map_reserved["Supplier ID"] != null) _g295.setReserved("Supplier ID","supplierId"); else _g295.h["Supplier ID"] = "supplierId";
+		if(__map_reserved.Supplier != null) _g295.setReserved("Supplier","supplier"); else _g295.h["Supplier"] = "supplier";
+		if(__map_reserved.Description != null) _g295.setReserved("Description","description"); else _g295.h["Description"] = "description";
+		if(__map_reserved.Concentration != null) _g295.setReserved("Concentration","concentration"); else _g295.h["Concentration"] = "concentration";
+		if(__map_reserved.Location != null) _g295.setReserved("Location","location"); else _g295.h["Location"] = "location";
+		if(__map_reserved.Solute != null) _g295.setReserved("Solute","solute"); else _g295.h["Solute"] = "solute";
+		if(__map_reserved.Comments != null) _g295.setReserved("Comments","comments"); else _g295.h["Comments"] = "comments";
+		if(__map_reserved.MW != null) _g295.setReserved("MW","mw"); else _g295.h["MW"] = "mw";
+		if(__map_reserved.Confidential != null) _g295.setReserved("Confidential","CONFIDENTIAL"); else _g295.h["Confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.Date != null) _g295.setReserved("Date","datestamp"); else _g295.h["Date"] = "datestamp";
+		if(__map_reserved.Person != null) _g295.setReserved("Person","person"); else _g295.h["Person"] = "person";
+		if(__map_reserved.InChi != null) _g295.setReserved("InChi","inchi"); else _g295.h["InChi"] = "inchi";
+		if(__map_reserved.smiles != null) _g295.setReserved("smiles","smiles"); else _g295.h["smiles"] = "smiles";
 		value294 = _g295;
-		if(__map_reserved.fields != null) _g294.setReserved("fields",value294); else _g294.h["fields"] = value294;
+		if(__map_reserved.model != null) _g286.setReserved("model",value294); else _g286.h["model"] = value294;
 		var value295;
 		var _g296 = new haxe.ds.StringMap();
-		if(__map_reserved.glycanId != null) _g296.setReserved("glycanId",false); else _g296.h["glycanId"] = false;
-		if(__map_reserved.id != null) _g296.setReserved("id",true); else _g296.h["id"] = true;
+		if(__map_reserved["saturn.client.programs.CompoundViewer"] != null) _g296.setReserved("saturn.client.programs.CompoundViewer",true); else _g296.h["saturn.client.programs.CompoundViewer"] = true;
 		value295 = _g296;
-		if(__map_reserved.indexes != null) _g294.setReserved("indexes",value295); else _g294.h["indexes"] = value295;
+		if(__map_reserved.programs != null) _g286.setReserved("programs",value295); else _g286.h["programs"] = value295;
+		value285 = _g286;
+		if(__map_reserved["saturn.core.domain.Compound"] != null) _g.setReserved("saturn.core.domain.Compound",value285); else _g.h["saturn.core.domain.Compound"] = value285;
 		var value296;
 		var _g297 = new haxe.ds.StringMap();
-		if(__map_reserved.glycanId != null) _g297.setReserved("glycanId",null); else _g297.h["glycanId"] = null;
-		value296 = _g297;
-		if(__map_reserved.search != null) _g294.setReserved("search",value296); else _g294.h["search"] = value296;
 		var value297;
 		var _g298 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g298.setReserved("schema","SGC"); else _g298.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g298.setReserved("name","GLYCAN"); else _g298.h["name"] = "GLYCAN";
+		if(__map_reserved.id != null) _g298.setReserved("id","PKEY"); else _g298.h["id"] = "PKEY";
+		if(__map_reserved.glycanId != null) _g298.setReserved("glycanId","GLYCANID"); else _g298.h["glycanId"] = "GLYCANID";
+		if(__map_reserved.content != null) _g298.setReserved("content","CONTENT"); else _g298.h["content"] = "CONTENT";
+		if(__map_reserved.contentType != null) _g298.setReserved("contentType","CONTENT_TYPE"); else _g298.h["contentType"] = "CONTENT_TYPE";
+		if(__map_reserved.description != null) _g298.setReserved("description","DESCRIPTION"); else _g298.h["description"] = "DESCRIPTION";
 		value297 = _g298;
-		if(__map_reserved.table_info != null) _g294.setReserved("table_info",value297); else _g294.h["table_info"] = value297;
+		if(__map_reserved.fields != null) _g297.setReserved("fields",value297); else _g297.h["fields"] = value297;
 		var value298;
 		var _g299 = new haxe.ds.StringMap();
-		if(__map_reserved.workspace_wrapper != null) _g299.setReserved("workspace_wrapper","saturn.client.workspace.GlycanWO"); else _g299.h["workspace_wrapper"] = "saturn.client.workspace.GlycanWO";
-		if(__map_reserved.icon != null) _g299.setReserved("icon","glycan_16.png"); else _g299.h["icon"] = "glycan_16.png";
-		if(__map_reserved.alias != null) _g299.setReserved("alias","Glycans"); else _g299.h["alias"] = "Glycans";
+		if(__map_reserved.glycanId != null) _g299.setReserved("glycanId",false); else _g299.h["glycanId"] = false;
+		if(__map_reserved.id != null) _g299.setReserved("id",true); else _g299.h["id"] = true;
 		value298 = _g299;
-		if(__map_reserved.options != null) _g294.setReserved("options",value298); else _g294.h["options"] = value298;
+		if(__map_reserved.indexes != null) _g297.setReserved("indexes",value298); else _g297.h["indexes"] = value298;
 		var value299;
 		var _g300 = new haxe.ds.StringMap();
-		if(__map_reserved["Glycan ID"] != null) _g300.setReserved("Glycan ID","glycanId"); else _g300.h["Glycan ID"] = "glycanId";
-		if(__map_reserved.Description != null) _g300.setReserved("Description","description"); else _g300.h["Description"] = "description";
-		if(__map_reserved.content != null) _g300.setReserved("content","content"); else _g300.h["content"] = "content";
-		if(__map_reserved.contentType != null) _g300.setReserved("contentType","contentType"); else _g300.h["contentType"] = "contentType";
+		if(__map_reserved.glycanId != null) _g300.setReserved("glycanId",null); else _g300.h["glycanId"] = null;
 		value299 = _g300;
-		if(__map_reserved.model != null) _g294.setReserved("model",value299); else _g294.h["model"] = value299;
+		if(__map_reserved.search != null) _g297.setReserved("search",value299); else _g297.h["search"] = value299;
 		var value300;
 		var _g301 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.GlycanBuilder"] != null) _g301.setReserved("saturn.client.programs.GlycanBuilder",true); else _g301.h["saturn.client.programs.GlycanBuilder"] = true;
+		if(__map_reserved.schema != null) _g301.setReserved("schema","SGC"); else _g301.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g301.setReserved("name","GLYCAN"); else _g301.h["name"] = "GLYCAN";
 		value300 = _g301;
-		if(__map_reserved.programs != null) _g294.setReserved("programs",value300); else _g294.h["programs"] = value300;
-		value293 = _g294;
-		if(__map_reserved["saturn.core.domain.Glycan"] != null) _g.setReserved("saturn.core.domain.Glycan",value293); else _g.h["saturn.core.domain.Glycan"] = value293;
+		if(__map_reserved.table_info != null) _g297.setReserved("table_info",value300); else _g297.h["table_info"] = value300;
 		var value301;
 		var _g302 = new haxe.ds.StringMap();
+		if(__map_reserved.workspace_wrapper != null) _g302.setReserved("workspace_wrapper","saturn.client.workspace.GlycanWO"); else _g302.h["workspace_wrapper"] = "saturn.client.workspace.GlycanWO";
+		if(__map_reserved.icon != null) _g302.setReserved("icon","glycan_16.png"); else _g302.h["icon"] = "glycan_16.png";
+		if(__map_reserved.alias != null) _g302.setReserved("alias","Glycans"); else _g302.h["alias"] = "Glycans";
+		value301 = _g302;
+		if(__map_reserved.options != null) _g297.setReserved("options",value301); else _g297.h["options"] = value301;
 		var value302;
 		var _g303 = new haxe.ds.StringMap();
+		if(__map_reserved["Glycan ID"] != null) _g303.setReserved("Glycan ID","glycanId"); else _g303.h["Glycan ID"] = "glycanId";
+		if(__map_reserved.Description != null) _g303.setReserved("Description","description"); else _g303.h["Description"] = "description";
+		if(__map_reserved.content != null) _g303.setReserved("content","content"); else _g303.h["content"] = "content";
+		if(__map_reserved.contentType != null) _g303.setReserved("contentType","contentType"); else _g303.h["contentType"] = "contentType";
+		value302 = _g303;
+		if(__map_reserved.model != null) _g297.setReserved("model",value302); else _g297.h["model"] = value302;
 		var value303;
 		var _g304 = new haxe.ds.StringMap();
-		if(__map_reserved.SGC != null) _g304.setReserved("SGC",true); else _g304.h["SGC"] = true;
+		if(__map_reserved["saturn.client.programs.GlycanBuilder"] != null) _g304.setReserved("saturn.client.programs.GlycanBuilder",true); else _g304.h["saturn.client.programs.GlycanBuilder"] = true;
 		value303 = _g304;
-		_g303.set("flags",value303);
-		value302 = _g303;
-		if(__map_reserved.options != null) _g302.setReserved("options",value302); else _g302.h["options"] = value302;
-		value301 = _g302;
-		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value301); else _g.h["saturn.app.SaturnClient"] = value301;
+		if(__map_reserved.programs != null) _g297.setReserved("programs",value303); else _g297.h["programs"] = value303;
+		value296 = _g297;
+		if(__map_reserved["saturn.core.domain.Glycan"] != null) _g.setReserved("saturn.core.domain.Glycan",value296); else _g.h["saturn.core.domain.Glycan"] = value296;
 		var value304;
 		var _g305 = new haxe.ds.StringMap();
 		var value305;
 		var _g306 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g306.setReserved("id","PKEY"); else _g306.h["id"] = "PKEY";
-		if(__map_reserved.username != null) _g306.setReserved("username","USERID"); else _g306.h["username"] = "USERID";
-		if(__map_reserved.fullname != null) _g306.setReserved("fullname","FULLNAME"); else _g306.h["fullname"] = "FULLNAME";
-		value305 = _g306;
-		if(__map_reserved.fields != null) _g305.setReserved("fields",value305); else _g305.h["fields"] = value305;
 		var value306;
 		var _g307 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g307.setReserved("id",true); else _g307.h["id"] = true;
-		if(__map_reserved.username != null) _g307.setReserved("username",false); else _g307.h["username"] = false;
+		if(__map_reserved.SGC != null) _g307.setReserved("SGC",true); else _g307.h["SGC"] = true;
 		value306 = _g307;
-		if(__map_reserved.indexes != null) _g305.setReserved("indexes",value306); else _g305.h["indexes"] = value306;
+		_g306.set("flags",value306);
+		value305 = _g306;
+		if(__map_reserved.options != null) _g305.setReserved("options",value305); else _g305.h["options"] = value305;
+		value304 = _g305;
+		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value304); else _g.h["saturn.app.SaturnClient"] = value304;
 		var value307;
 		var _g308 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g308.setReserved("schema","HIVE"); else _g308.h["schema"] = "HIVE";
-		if(__map_reserved.name != null) _g308.setReserved("name","USER_DETAILS"); else _g308.h["name"] = "USER_DETAILS";
-		value307 = _g308;
-		if(__map_reserved.table_info != null) _g305.setReserved("table_info",value307); else _g305.h["table_info"] = value307;
-		value304 = _g305;
-		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value304); else _g.h["saturn.core.User"] = value304;
 		var value308;
 		var _g309 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g309.setReserved("id","PKEY"); else _g309.h["id"] = "PKEY";
+		if(__map_reserved.username != null) _g309.setReserved("username","USERID"); else _g309.h["username"] = "USERID";
+		if(__map_reserved.fullname != null) _g309.setReserved("fullname","FULLNAME"); else _g309.h["fullname"] = "FULLNAME";
+		value308 = _g309;
+		if(__map_reserved.fields != null) _g308.setReserved("fields",value308); else _g308.h["fields"] = value308;
 		var value309;
 		var _g310 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g310.setReserved("id","PKEY"); else _g310.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g310.setReserved("name","NAME"); else _g310.h["name"] = "NAME";
+		if(__map_reserved.id != null) _g310.setReserved("id",true); else _g310.h["id"] = true;
+		if(__map_reserved.username != null) _g310.setReserved("username",false); else _g310.h["username"] = false;
 		value309 = _g310;
-		if(__map_reserved.fields != null) _g309.setReserved("fields",value309); else _g309.h["fields"] = value309;
+		if(__map_reserved.indexes != null) _g308.setReserved("indexes",value309); else _g308.h["indexes"] = value309;
 		var value310;
 		var _g311 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g311.setReserved("id",true); else _g311.h["id"] = true;
-		if(__map_reserved.name != null) _g311.setReserved("name",false); else _g311.h["name"] = false;
+		if(__map_reserved.schema != null) _g311.setReserved("schema","HIVE"); else _g311.h["schema"] = "HIVE";
+		if(__map_reserved.name != null) _g311.setReserved("name","USER_DETAILS"); else _g311.h["name"] = "USER_DETAILS";
 		value310 = _g311;
-		if(__map_reserved.index != null) _g309.setReserved("index",value310); else _g309.h["index"] = value310;
+		if(__map_reserved.table_info != null) _g308.setReserved("table_info",value310); else _g308.h["table_info"] = value310;
+		value307 = _g308;
+		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value307); else _g.h["saturn.core.User"] = value307;
 		var value311;
 		var _g312 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g312.setReserved("schema","SGC"); else _g312.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g312.setReserved("name","SATURNPERMISSION"); else _g312.h["name"] = "SATURNPERMISSION";
-		value311 = _g312;
-		if(__map_reserved.table_info != null) _g309.setReserved("table_info",value311); else _g309.h["table_info"] = value311;
-		value308 = _g309;
-		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value308); else _g.h["saturn.core.Permission"] = value308;
 		var value312;
 		var _g313 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g313.setReserved("id","PKEY"); else _g313.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g313.setReserved("name","NAME"); else _g313.h["name"] = "NAME";
+		value312 = _g313;
+		if(__map_reserved.fields != null) _g312.setReserved("fields",value312); else _g312.h["fields"] = value312;
 		var value313;
 		var _g314 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g314.setReserved("id","PKEY"); else _g314.h["id"] = "PKEY";
-		if(__map_reserved.permissionId != null) _g314.setReserved("permissionId","PERMISSIONID"); else _g314.h["permissionId"] = "PERMISSIONID";
-		if(__map_reserved.userId != null) _g314.setReserved("userId","USERID"); else _g314.h["userId"] = "USERID";
+		if(__map_reserved.id != null) _g314.setReserved("id",true); else _g314.h["id"] = true;
+		if(__map_reserved.name != null) _g314.setReserved("name",false); else _g314.h["name"] = false;
 		value313 = _g314;
-		if(__map_reserved.fields != null) _g313.setReserved("fields",value313); else _g313.h["fields"] = value313;
+		if(__map_reserved.index != null) _g312.setReserved("index",value313); else _g312.h["index"] = value313;
 		var value314;
 		var _g315 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g315.setReserved("id",true); else _g315.h["id"] = true;
+		if(__map_reserved.schema != null) _g315.setReserved("schema","SGC"); else _g315.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g315.setReserved("name","SATURNPERMISSION"); else _g315.h["name"] = "SATURNPERMISSION";
 		value314 = _g315;
-		if(__map_reserved.index != null) _g313.setReserved("index",value314); else _g313.h["index"] = value314;
+		if(__map_reserved.table_info != null) _g312.setReserved("table_info",value314); else _g312.h["table_info"] = value314;
+		value311 = _g312;
+		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value311); else _g.h["saturn.core.Permission"] = value311;
 		var value315;
 		var _g316 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g316.setReserved("schema","SGC"); else _g316.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g316.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g316.h["name"] = "SATURNUSER_TO_PERMISSION";
-		value315 = _g316;
-		if(__map_reserved.table_info != null) _g313.setReserved("table_info",value315); else _g313.h["table_info"] = value315;
-		value312 = _g313;
-		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value312); else _g.h["saturn.core.UserToPermission"] = value312;
 		var value316;
 		var _g317 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g317.setReserved("id","PKEY"); else _g317.h["id"] = "PKEY";
+		if(__map_reserved.permissionId != null) _g317.setReserved("permissionId","PERMISSIONID"); else _g317.h["permissionId"] = "PERMISSIONID";
+		if(__map_reserved.userId != null) _g317.setReserved("userId","USERID"); else _g317.h["userId"] = "USERID";
+		value316 = _g317;
+		if(__map_reserved.fields != null) _g316.setReserved("fields",value316); else _g316.h["fields"] = value316;
 		var value317;
 		var _g318 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g318.setReserved("id","PKEY"); else _g318.h["id"] = "PKEY";
-		if(__map_reserved.userName != null) _g318.setReserved("userName","USERNAME"); else _g318.h["userName"] = "USERNAME";
-		if(__map_reserved.isPublic != null) _g318.setReserved("isPublic","ISPUBLIC"); else _g318.h["isPublic"] = "ISPUBLIC";
-		if(__map_reserved.sessionContent != null) _g318.setReserved("sessionContent","SESSIONCONTENTS"); else _g318.h["sessionContent"] = "SESSIONCONTENTS";
-		if(__map_reserved.sessionName != null) _g318.setReserved("sessionName","SESSIONNAME"); else _g318.h["sessionName"] = "SESSIONNAME";
+		if(__map_reserved.id != null) _g318.setReserved("id",true); else _g318.h["id"] = true;
 		value317 = _g318;
-		if(__map_reserved.fields != null) _g317.setReserved("fields",value317); else _g317.h["fields"] = value317;
+		if(__map_reserved.index != null) _g316.setReserved("index",value317); else _g316.h["index"] = value317;
 		var value318;
 		var _g319 = new haxe.ds.StringMap();
-		if(__map_reserved.sessionName != null) _g319.setReserved("sessionName",false); else _g319.h["sessionName"] = false;
-		if(__map_reserved.id != null) _g319.setReserved("id",true); else _g319.h["id"] = true;
+		if(__map_reserved.schema != null) _g319.setReserved("schema","SGC"); else _g319.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g319.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g319.h["name"] = "SATURNUSER_TO_PERMISSION";
 		value318 = _g319;
-		if(__map_reserved.indexes != null) _g317.setReserved("indexes",value318); else _g317.h["indexes"] = value318;
+		if(__map_reserved.table_info != null) _g316.setReserved("table_info",value318); else _g316.h["table_info"] = value318;
+		value315 = _g316;
+		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value315); else _g.h["saturn.core.UserToPermission"] = value315;
 		var value319;
 		var _g320 = new haxe.ds.StringMap();
-		if(__map_reserved["user.fullname"] != null) _g320.setReserved("user.fullname",null); else _g320.h["user.fullname"] = null;
-		value319 = _g320;
-		if(__map_reserved.search != null) _g317.setReserved("search",value319); else _g317.h["search"] = value319;
 		var value320;
 		var _g321 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g321.setReserved("schema","SGC"); else _g321.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g321.setReserved("name","SATURNSESSION"); else _g321.h["name"] = "SATURNSESSION";
+		if(__map_reserved.id != null) _g321.setReserved("id","PKEY"); else _g321.h["id"] = "PKEY";
+		if(__map_reserved.userName != null) _g321.setReserved("userName","USERNAME"); else _g321.h["userName"] = "USERNAME";
+		if(__map_reserved.isPublic != null) _g321.setReserved("isPublic","ISPUBLIC"); else _g321.h["isPublic"] = "ISPUBLIC";
+		if(__map_reserved.sessionContent != null) _g321.setReserved("sessionContent","SESSIONCONTENTS"); else _g321.h["sessionContent"] = "SESSIONCONTENTS";
+		if(__map_reserved.sessionName != null) _g321.setReserved("sessionName","SESSIONNAME"); else _g321.h["sessionName"] = "SESSIONNAME";
 		value320 = _g321;
-		if(__map_reserved.table_info != null) _g317.setReserved("table_info",value320); else _g317.h["table_info"] = value320;
+		if(__map_reserved.fields != null) _g320.setReserved("fields",value320); else _g320.h["fields"] = value320;
 		var value321;
 		var _g322 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g322.setReserved("alias","Session"); else _g322.h["alias"] = "Session";
-		if(__map_reserved.auto_activate != null) _g322.setReserved("auto_activate","3"); else _g322.h["auto_activate"] = "3";
+		if(__map_reserved.sessionName != null) _g322.setReserved("sessionName",false); else _g322.h["sessionName"] = false;
+		if(__map_reserved.id != null) _g322.setReserved("id",true); else _g322.h["id"] = true;
+		value321 = _g322;
+		if(__map_reserved.indexes != null) _g320.setReserved("indexes",value321); else _g320.h["indexes"] = value321;
 		var value322;
 		var _g323 = new haxe.ds.StringMap();
-		if(__map_reserved.user_constraint_field != null) _g323.setReserved("user_constraint_field","userName"); else _g323.h["user_constraint_field"] = "userName";
-		if(__map_reserved.public_constraint_field != null) _g323.setReserved("public_constraint_field","isPublic"); else _g323.h["public_constraint_field"] = "isPublic";
+		if(__map_reserved["user.fullname"] != null) _g323.setReserved("user.fullname",null); else _g323.h["user.fullname"] = null;
 		value322 = _g323;
-		_g322.set("constraints",value322);
+		if(__map_reserved.search != null) _g320.setReserved("search",value322); else _g320.h["search"] = value322;
 		var value323;
 		var _g324 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g324.setReserved("schema","SGC"); else _g324.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g324.setReserved("name","SATURNSESSION"); else _g324.h["name"] = "SATURNSESSION";
+		value323 = _g324;
+		if(__map_reserved.table_info != null) _g320.setReserved("table_info",value323); else _g320.h["table_info"] = value323;
 		var value324;
 		var _g325 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g325.setReserved("alias","Session"); else _g325.h["alias"] = "Session";
+		if(__map_reserved.auto_activate != null) _g325.setReserved("auto_activate","3"); else _g325.h["auto_activate"] = "3";
 		var value325;
 		var _g326 = new haxe.ds.StringMap();
-		if(__map_reserved.user_suffix != null) _g326.setReserved("user_suffix",""); else _g326.h["user_suffix"] = "";
-		if(__map_reserved["function"] != null) _g326.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g326.h["function"] = "saturn.core.domain.SaturnSession.load";
+		if(__map_reserved.user_constraint_field != null) _g326.setReserved("user_constraint_field","userName"); else _g326.h["user_constraint_field"] = "userName";
+		if(__map_reserved.public_constraint_field != null) _g326.setReserved("public_constraint_field","isPublic"); else _g326.h["public_constraint_field"] = "isPublic";
 		value325 = _g326;
-		if(__map_reserved.DEFAULT != null) _g325.setReserved("DEFAULT",value325); else _g325.h["DEFAULT"] = value325;
-		value324 = _g325;
-		if(__map_reserved.search_bar != null) _g324.setReserved("search_bar",value324); else _g324.h["search_bar"] = value324;
-		value323 = _g324;
-		_g322.set("actions",value323);
-		value321 = _g322;
-		if(__map_reserved.options != null) _g317.setReserved("options",value321); else _g317.h["options"] = value321;
+		_g325.set("constraints",value325);
 		var value326;
 		var _g327 = new haxe.ds.StringMap();
-		if(__map_reserved.USERNAME != null) _g327.setReserved("USERNAME","insert.username"); else _g327.h["USERNAME"] = "insert.username";
-		value326 = _g327;
-		if(__map_reserved.auto_functions != null) _g317.setReserved("auto_functions",value326); else _g317.h["auto_functions"] = value326;
 		var value327;
 		var _g328 = new haxe.ds.StringMap();
 		var value328;
 		var _g329 = new haxe.ds.StringMap();
-		if(__map_reserved.field != null) _g329.setReserved("field","userName"); else _g329.h["field"] = "userName";
-		if(__map_reserved["class"] != null) _g329.setReserved("class","saturn.core.User"); else _g329.h["class"] = "saturn.core.User";
-		if(__map_reserved.fk_field != null) _g329.setReserved("fk_field","username"); else _g329.h["fk_field"] = "username";
+		if(__map_reserved.user_suffix != null) _g329.setReserved("user_suffix",""); else _g329.h["user_suffix"] = "";
+		if(__map_reserved["function"] != null) _g329.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g329.h["function"] = "saturn.core.domain.SaturnSession.load";
 		value328 = _g329;
-		_g328.set("user",value328);
+		if(__map_reserved.DEFAULT != null) _g328.setReserved("DEFAULT",value328); else _g328.h["DEFAULT"] = value328;
 		value327 = _g328;
-		if(__map_reserved["fields.synthetic"] != null) _g317.setReserved("fields.synthetic",value327); else _g317.h["fields.synthetic"] = value327;
-		value316 = _g317;
-		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value316); else _g.h["saturn.core.domain.SaturnSession"] = value316;
+		if(__map_reserved.search_bar != null) _g327.setReserved("search_bar",value327); else _g327.h["search_bar"] = value327;
+		value326 = _g327;
+		_g325.set("actions",value326);
+		value324 = _g325;
+		if(__map_reserved.options != null) _g320.setReserved("options",value324); else _g320.h["options"] = value324;
 		var value329;
 		var _g330 = new haxe.ds.StringMap();
+		if(__map_reserved.USERNAME != null) _g330.setReserved("USERNAME","insert.username"); else _g330.h["USERNAME"] = "insert.username";
+		value329 = _g330;
+		if(__map_reserved.auto_functions != null) _g320.setReserved("auto_functions",value329); else _g320.h["auto_functions"] = value329;
 		var value330;
 		var _g331 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g331.setReserved("id","PKEY"); else _g331.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g331.setReserved("name","NAME"); else _g331.h["name"] = "NAME";
-		if(__map_reserved.traceDataJson != null) _g331.setReserved("traceDataJson","TRACE_JSON"); else _g331.h["traceDataJson"] = "TRACE_JSON";
-		value330 = _g331;
-		if(__map_reserved.fields != null) _g330.setReserved("fields",value330); else _g330.h["fields"] = value330;
 		var value331;
 		var _g332 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g332.setReserved("name",false); else _g332.h["name"] = false;
-		if(__map_reserved.id != null) _g332.setReserved("id",true); else _g332.h["id"] = true;
+		if(__map_reserved.field != null) _g332.setReserved("field","userName"); else _g332.h["field"] = "userName";
+		if(__map_reserved["class"] != null) _g332.setReserved("class","saturn.core.User"); else _g332.h["class"] = "saturn.core.User";
+		if(__map_reserved.fk_field != null) _g332.setReserved("fk_field","username"); else _g332.h["fk_field"] = "username";
 		value331 = _g332;
-		if(__map_reserved.indexes != null) _g330.setReserved("indexes",value331); else _g330.h["indexes"] = value331;
+		_g331.set("user",value331);
+		value330 = _g331;
+		if(__map_reserved["fields.synthetic"] != null) _g320.setReserved("fields.synthetic",value330); else _g320.h["fields.synthetic"] = value330;
+		value319 = _g320;
+		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value319); else _g.h["saturn.core.domain.SaturnSession"] = value319;
 		var value332;
 		var _g333 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g333.setReserved("saturn.client.programs.ABITraceViewer",true); else _g333.h["saturn.client.programs.ABITraceViewer"] = true;
-		value332 = _g333;
-		if(__map_reserved.programs != null) _g330.setReserved("programs",value332); else _g330.h["programs"] = value332;
 		var value333;
 		var _g334 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g334.setReserved("alias","Trace Data"); else _g334.h["alias"] = "Trace Data";
-		if(__map_reserved.icon != null) _g334.setReserved("icon","dna_conical_16.png"); else _g334.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g334.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g334.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
+		if(__map_reserved.id != null) _g334.setReserved("id","PKEY"); else _g334.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g334.setReserved("name","NAME"); else _g334.h["name"] = "NAME";
+		if(__map_reserved.traceDataJson != null) _g334.setReserved("traceDataJson","TRACE_JSON"); else _g334.h["traceDataJson"] = "TRACE_JSON";
 		value333 = _g334;
-		if(__map_reserved.options != null) _g330.setReserved("options",value333); else _g330.h["options"] = value333;
+		if(__map_reserved.fields != null) _g333.setReserved("fields",value333); else _g333.h["fields"] = value333;
 		var value334;
 		var _g335 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g335.setReserved("schema","SGC"); else _g335.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g335.setReserved("name","TRACES"); else _g335.h["name"] = "TRACES";
+		if(__map_reserved.name != null) _g335.setReserved("name",false); else _g335.h["name"] = false;
+		if(__map_reserved.id != null) _g335.setReserved("id",true); else _g335.h["id"] = true;
 		value334 = _g335;
-		if(__map_reserved.table_info != null) _g330.setReserved("table_info",value334); else _g330.h["table_info"] = value334;
+		if(__map_reserved.indexes != null) _g333.setReserved("indexes",value334); else _g333.h["indexes"] = value334;
 		var value335;
 		var _g336 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g336.setReserved("name",true); else _g336.h["name"] = true;
+		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g336.setReserved("saturn.client.programs.ABITraceViewer",true); else _g336.h["saturn.client.programs.ABITraceViewer"] = true;
 		value335 = _g336;
-		if(__map_reserved.search != null) _g330.setReserved("search",value335); else _g330.h["search"] = value335;
-		value329 = _g330;
-		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value329); else _g.h["saturn.core.domain.ABITrace"] = value329;
+		if(__map_reserved.programs != null) _g333.setReserved("programs",value335); else _g333.h["programs"] = value335;
 		var value336;
 		var _g337 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g337.setReserved("alias","Trace Data"); else _g337.h["alias"] = "Trace Data";
+		if(__map_reserved.icon != null) _g337.setReserved("icon","dna_conical_16.png"); else _g337.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g337.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g337.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
+		value336 = _g337;
+		if(__map_reserved.options != null) _g333.setReserved("options",value336); else _g333.h["options"] = value336;
 		var value337;
 		var _g338 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g338.setReserved("id","PKEY"); else _g338.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g338.setReserved("name","NAME"); else _g338.h["name"] = "NAME";
-		if(__map_reserved.content != null) _g338.setReserved("content","CONTENT"); else _g338.h["content"] = "CONTENT";
-		if(__map_reserved.url != null) _g338.setReserved("url","URL"); else _g338.h["url"] = "URL";
+		if(__map_reserved.schema != null) _g338.setReserved("schema","SGC"); else _g338.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g338.setReserved("name","TRACES"); else _g338.h["name"] = "TRACES";
 		value337 = _g338;
-		if(__map_reserved.fields != null) _g337.setReserved("fields",value337); else _g337.h["fields"] = value337;
+		if(__map_reserved.table_info != null) _g333.setReserved("table_info",value337); else _g333.h["table_info"] = value337;
 		var value338;
 		var _g339 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g339.setReserved("name",false); else _g339.h["name"] = false;
-		if(__map_reserved.id != null) _g339.setReserved("id",true); else _g339.h["id"] = true;
+		if(__map_reserved.name != null) _g339.setReserved("name",true); else _g339.h["name"] = true;
 		value338 = _g339;
-		if(__map_reserved.indexes != null) _g337.setReserved("indexes",value338); else _g337.h["indexes"] = value338;
+		if(__map_reserved.search != null) _g333.setReserved("search",value338); else _g333.h["search"] = value338;
+		value332 = _g333;
+		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value332); else _g.h["saturn.core.domain.ABITrace"] = value332;
 		var value339;
 		var _g340 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g340.setReserved("saturn.client.programs.AlignmentViewer",true); else _g340.h["saturn.client.programs.AlignmentViewer"] = true;
-		value339 = _g340;
-		if(__map_reserved.programs != null) _g337.setReserved("programs",value339); else _g337.h["programs"] = value339;
 		var value340;
 		var _g341 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g341.setReserved("alias","Alignments"); else _g341.h["alias"] = "Alignments";
-		if(__map_reserved.icon != null) _g341.setReserved("icon","dna_conical_16.png"); else _g341.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g341.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g341.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		if(__map_reserved.id != null) _g341.setReserved("id","PKEY"); else _g341.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g341.setReserved("name","NAME"); else _g341.h["name"] = "NAME";
+		if(__map_reserved.content != null) _g341.setReserved("content","CONTENT"); else _g341.h["content"] = "CONTENT";
+		if(__map_reserved.url != null) _g341.setReserved("url","URL"); else _g341.h["url"] = "URL";
 		value340 = _g341;
-		if(__map_reserved.options != null) _g337.setReserved("options",value340); else _g337.h["options"] = value340;
+		if(__map_reserved.fields != null) _g340.setReserved("fields",value340); else _g340.h["fields"] = value340;
 		var value341;
 		var _g342 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g342.setReserved("schema","SGC"); else _g342.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g342.setReserved("name","ALIGNMENTS"); else _g342.h["name"] = "ALIGNMENTS";
+		if(__map_reserved.name != null) _g342.setReserved("name",false); else _g342.h["name"] = false;
+		if(__map_reserved.id != null) _g342.setReserved("id",true); else _g342.h["id"] = true;
 		value341 = _g342;
-		if(__map_reserved.table_info != null) _g337.setReserved("table_info",value341); else _g337.h["table_info"] = value341;
+		if(__map_reserved.indexes != null) _g340.setReserved("indexes",value341); else _g340.h["indexes"] = value341;
 		var value342;
 		var _g343 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g343.setReserved("name",true); else _g343.h["name"] = true;
+		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g343.setReserved("saturn.client.programs.AlignmentViewer",true); else _g343.h["saturn.client.programs.AlignmentViewer"] = true;
 		value342 = _g343;
-		if(__map_reserved.search != null) _g337.setReserved("search",value342); else _g337.h["search"] = value342;
-		value336 = _g337;
-		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value336); else _g.h["saturn.core.domain.Alignment"] = value336;
+		if(__map_reserved.programs != null) _g340.setReserved("programs",value342); else _g340.h["programs"] = value342;
+		var value343;
+		var _g344 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g344.setReserved("alias","Alignments"); else _g344.h["alias"] = "Alignments";
+		if(__map_reserved.icon != null) _g344.setReserved("icon","dna_conical_16.png"); else _g344.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g344.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g344.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		value343 = _g344;
+		if(__map_reserved.options != null) _g340.setReserved("options",value343); else _g340.h["options"] = value343;
+		var value344;
+		var _g345 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g345.setReserved("schema","SGC"); else _g345.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g345.setReserved("name","ALIGNMENTS"); else _g345.h["name"] = "ALIGNMENTS";
+		value344 = _g345;
+		if(__map_reserved.table_info != null) _g340.setReserved("table_info",value344); else _g340.h["table_info"] = value344;
+		var value345;
+		var _g346 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g346.setReserved("name",true); else _g346.h["name"] = true;
+		value345 = _g346;
+		if(__map_reserved.search != null) _g340.setReserved("search",value345); else _g340.h["search"] = value345;
+		value339 = _g340;
+		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value339); else _g.h["saturn.core.domain.Alignment"] = value339;
 		this.models = _g;
 	}
 	,__class__: saturn.db.mapping.SGC
@@ -12762,9 +14396,10 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 			};
 			this.getColumns(connection,schemaName,tableName,func);
 		} else if(modelClazzes.length == 0 && this.modelsToProcess == 1) {
+			this.postConfigureModels();
 			this.closeConnection(connection);
 			if(cb != null) {
-				this.debug("All Models have been processed (handing back control to caller callback)");
+				this.debug("All Models have been processed (handing back control to caller callback2)");
 				cb(null);
 			}
 		} else {
@@ -13025,7 +14660,6 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 				_g.debug("startswith" + sql);
 				try {
 					connection.execute(sql,[id],function(err1,results) {
-						_g.debug("startswith" + err1);
 						if(err1 != null) callBack(null,err1); else callBack(results,null);
 						_g.closeConnection(connection);
 					});
@@ -13525,12 +15159,13 @@ saturn.db.provider.MySQLProvider.prototype = $extend(saturn.db.provider.GenericR
 			});
 			connection.on("error",function(err) {
 				_g.debug("Error connecting " + Std.string(err));
-				if(!err.fatal) return;
-				if(err.code != "PROTOCOL_CONNECTION_LOST") throw new js._Boot.HaxeError(err);
-				_g.debug("Reconnecting!!!!");
-				_g._getConnection(function(err1,conn) {
-					if(err1 != null) throw new js._Boot.HaxeError("Unable to reconnect MySQL session"); else _g.theConnection = conn;
-				});
+				_g.debug("Waiting to attempt reconnect");
+				if(_g.config.auto_reconnect) haxe.Timer.delay(function() {
+					_g.debug("Reconnecting");
+					_g._getConnection(function(err1,conn) {
+						if(err1 != null) throw new js._Boot.HaxeError("Unable to reconnect MySQL session"); else _g.theConnection = conn;
+					});
+				},500);
 			});
 		} catch( e ) {
 			if (e instanceof js._Boot.HaxeError) e = e.val;
@@ -13552,10 +15187,18 @@ saturn.db.provider.OracleProvider.__super__ = saturn.db.provider.GenericRDBMSPro
 saturn.db.provider.OracleProvider.prototype = $extend(saturn.db.provider.GenericRDBMSProvider.prototype,{
 	_getConnection: function(cb) {
 		this.debug("Opening new connection as " + this.user.username);
-		var oracle = js.Node.require("oracle");
-		var connString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + Std.string(this.config.host) + ")(PORT=" + Std.string(this.config.port) + "))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=" + Std.string(this.config.service_name) + ")))";
-		var connectData = { 'tns' : connString, 'user' : this.user.username, 'password' : this.user.password};
-		oracle.connect(connectData,function(err,connection) {
+		var oracle = js.Node.require("oracledb");
+		oracle.outFormat = oracle.OBJECT;
+		oracle.fetchAsString = [oracle.CLOB];
+		oracle.autoCommit = true;
+		oracle.getConnection({ user : this.user.username, password : this.user.password, connectString : Std.string(this.config.host) + "/" + Std.string(this.config.service_name)},function(err,connection) {
+			connection.oldExecute = connection.execute;
+			connection.execute = function(sql,args,cb1) {
+				connection.oldExecute(sql,args,function(err1,result) {
+					if(err1 == null) result = result.rows;
+					cb1(err1,result);
+				});
+			};
 			cb(err,connection);
 		});
 	}
@@ -13806,6 +15449,7 @@ saturn.db.query_lang.Token.prototype = {
 		this.tokens = tokens;
 	}
 	,addToken: function(token) {
+		if(!js.Boot.__instanceof(token,saturn.db.query_lang.Token)) token = new saturn.db.query_lang.Value(saturn.db.query_lang.Token);
 		if(this.tokens == null) this.tokens = [];
 		this.tokens.push(token);
 		return this;
@@ -13819,7 +15463,7 @@ saturn.db.query_lang.Token.prototype = {
 		if(js.Boot.__instanceof(token,saturn.db.query_lang.Operator)) {
 			var n = new saturn.db.query_lang.Token();
 			n.add(this);
-			n.tokens.push(token);
+			n.addToken(token);
 			return n;
 		} else return this.addToken(token);
 	}
@@ -13832,8 +15476,8 @@ saturn.db.query_lang.Token.prototype = {
 		return this.add(l);
 	}
 	,concat: function(token) {
-		var c = new saturn.db.query_lang.Concat(token);
-		return this.add(c);
+		var c = new saturn.db.query_lang.Concat([this,token]);
+		return c;
 	}
 	,substr: function(position,length) {
 		return new saturn.db.query_lang.Substr(this,position,length);
@@ -13898,6 +15542,22 @@ saturn.db.query_lang.And.__super__ = saturn.db.query_lang.Operator;
 saturn.db.query_lang.And.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
 	__class__: saturn.db.query_lang.And
 });
+saturn.db.query_lang.Function = $hxClasses["saturn.db.query_lang.Function"] = function(tokens) {
+	saturn.db.query_lang.Token.call(this,tokens);
+};
+saturn.db.query_lang.Function.__name__ = ["saturn","db","query_lang","Function"];
+saturn.db.query_lang.Function.__super__ = saturn.db.query_lang.Token;
+saturn.db.query_lang.Function.prototype = $extend(saturn.db.query_lang.Token.prototype,{
+	__class__: saturn.db.query_lang.Function
+});
+saturn.db.query_lang.Cast = $hxClasses["saturn.db.query_lang.Cast"] = function(expression,type) {
+	saturn.db.query_lang.Function.call(this,[expression,type]);
+};
+saturn.db.query_lang.Cast.__name__ = ["saturn","db","query_lang","Cast"];
+saturn.db.query_lang.Cast.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.Cast.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.Cast
+});
 saturn.db.query_lang.ClassToken = $hxClasses["saturn.db.query_lang.ClassToken"] = function(clazz) {
 	this.setClass(clazz);
 	saturn.db.query_lang.Token.call(this,null);
@@ -13918,21 +15578,21 @@ saturn.db.query_lang.ClassToken.prototype = $extend(saturn.db.query_lang.Token.p
 	}
 	,__class__: saturn.db.query_lang.ClassToken
 });
-saturn.db.query_lang.Concat = $hxClasses["saturn.db.query_lang.Concat"] = function(value) {
-	if(value == null) saturn.db.query_lang.Operator.call(this,null); else saturn.db.query_lang.Operator.call(this,value);
+saturn.db.query_lang.Concat = $hxClasses["saturn.db.query_lang.Concat"] = function(tokens) {
+	saturn.db.query_lang.Function.call(this,tokens);
 };
 saturn.db.query_lang.Concat.__name__ = ["saturn","db","query_lang","Concat"];
-saturn.db.query_lang.Concat.__super__ = saturn.db.query_lang.Operator;
-saturn.db.query_lang.Concat.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
+saturn.db.query_lang.Concat.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.Concat.prototype = $extend(saturn.db.query_lang.Function.prototype,{
 	__class__: saturn.db.query_lang.Concat
 });
-saturn.db.query_lang.Function = $hxClasses["saturn.db.query_lang.Function"] = function(tokens) {
-	saturn.db.query_lang.Token.call(this,tokens);
+saturn.db.query_lang.ConcatOperator = $hxClasses["saturn.db.query_lang.ConcatOperator"] = function(token) {
+	saturn.db.query_lang.Operator.call(this,token);
 };
-saturn.db.query_lang.Function.__name__ = ["saturn","db","query_lang","Function"];
-saturn.db.query_lang.Function.__super__ = saturn.db.query_lang.Token;
-saturn.db.query_lang.Function.prototype = $extend(saturn.db.query_lang.Token.prototype,{
-	__class__: saturn.db.query_lang.Function
+saturn.db.query_lang.ConcatOperator.__name__ = ["saturn","db","query_lang","ConcatOperator"];
+saturn.db.query_lang.ConcatOperator.__super__ = saturn.db.query_lang.Operator;
+saturn.db.query_lang.ConcatOperator.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
+	__class__: saturn.db.query_lang.ConcatOperator
 });
 saturn.db.query_lang.Count = $hxClasses["saturn.db.query_lang.Count"] = function(token) {
 	saturn.db.query_lang.Function.call(this,[token]);
@@ -14480,6 +16140,14 @@ saturn.db.query_lang.QueryVisitor.prototype = {
 	translateQuery: null
 	,__class__: saturn.db.query_lang.QueryVisitor
 };
+saturn.db.query_lang.RegexpLike = $hxClasses["saturn.db.query_lang.RegexpLike"] = function(field,expression) {
+	saturn.db.query_lang.Function.call(this,[field,expression]);
+};
+saturn.db.query_lang.RegexpLike.__name__ = ["saturn","db","query_lang","RegexpLike"];
+saturn.db.query_lang.RegexpLike.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.RegexpLike.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.RegexpLike
+});
 saturn.db.query_lang.SQLVisitor = $hxClasses["saturn.db.query_lang.SQLVisitor"] = function(provider,valPos,aliasToGenerated,nextAliasId) {
 	if(nextAliasId == null) nextAliasId = 0;
 	if(valPos == null) valPos = 1;
@@ -14535,7 +16203,7 @@ saturn.db.query_lang.SQLVisitor.prototype = {
 			if(token.getTokens() != null) {
 				var tokenTranslations = [];
 				if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) {
-					if(this.provider.getProviderType() == "SQLITE") {
+					if(this.provider.getProviderType() == "SQLITE" || this.provider.getProviderType() == "MYSQL") {
 						token.tokens.pop();
 						token.tokens.pop();
 					}
@@ -14575,7 +16243,7 @@ saturn.db.query_lang.SQLVisitor.prototype = {
 					if(this.provider.getProviderType() == "SQLITE") sqlTranslation += "ltrim(" + nestedTranslation + ",'0'" + ")"; else sqlTranslation += "Trim( leading '0' from " + nestedTranslation + ")";
 				} else {
 					var funcName = "";
-					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH";
+					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Concat)) funcName = "CONCAT";
 					sqlTranslation += funcName + "( " + nestedTranslation + " )";
 				}
 			} else if(js.Boot.__instanceof(token,saturn.db.query_lang.Select)) sqlTranslation += " SELECT " + nestedTranslation; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Field)) {
@@ -14821,7 +16489,7 @@ saturn.server.plugins.core.AuthenticationPlugin = $hxClasses["saturn.server.plug
 	saturn.server.plugins.core.BaseServerPlugin.call(this,server,config);
 	this.configureAuthenticationManager();
 	this.installAuth();
-	if(config.password_in_token) this.debug("Warning storing user passwords in tokens is probably a very bad idea!!!!!!!!!!!");
+	if(config.password_in_token) this.debug("Warning passwords will be stored in JSON web tokens using AES encryption.  " + "To disable set password_in_token to false in your confirguation file");
 };
 saturn.server.plugins.core.AuthenticationPlugin.__name__ = ["saturn","server","plugins","core","AuthenticationPlugin"];
 saturn.server.plugins.core.AuthenticationPlugin.__super__ = saturn.server.plugins.core.BaseServerPlugin;
@@ -14831,20 +16499,24 @@ saturn.server.plugins.core.AuthenticationPlugin.prototype = $extend(saturn.serve
 		var _g = this;
 		var jwt = js.Node.require("jsonwebtoken");
 		var uuid = js.Node.require("node-uuid");
+		var crypto = js.Node.require("crypto");
 		this.saturn.getServer().post("/login",function(req,res,next) {
 			var username = req.params.username;
 			var password = req.params.password;
 			_g.authManager.authenticate(username,password,function(user) {
+				var db = _g.saturn.getRedisClient();
 				user.uuid = uuid.v4();
 				user.username = username;
 				if(_g.config.password_in_token) {
-					saturn.core.Util.debug("Storing password in token!!!!");
-					user.password = password;
+					var iv = crypto.randomBytes(_g.config.encrypt_iv_length);
+					var cipher = crypto.createCipheriv(_g.config.algorithm,new Buffer(_g.config.encrypt_password),iv);
+					var crypted = cipher.update(password,"utf8","hex");
+					crypted += cipher["final"]("hex");
+					password = crypted;
+					user.password = iv.toString("hex") + ":" + password;
 				}
-				var db = _g.saturn.getRedisClient();
-				db.set(user.uuid,user.username);
-				saturn.core.Util.debug("a");
-				var token = jwt.sign(user,_g.config.jwt_secret,{ expiresInMinutes : _g.config.jwt_timeout});
+				db.set("USER_UUID: " + user.uuid,user.username);
+				var token = jwt.sign({ firstname : user.firstname, lastname : user.lastname, email : user.email, uuid : user.uuid, username : user.username, password : user.password},_g.config.jwt_secret,{ expiresIn : Std.string(_g.config.jwt_timeout) + "m"});
 				res.send(200,{ token : token, full_name : user.firstname + " " + user.lastname, email : user.email, 'projects' : user.projects});
 				next();
 			},function(err) {
@@ -14857,33 +16529,48 @@ saturn.server.plugins.core.AuthenticationPlugin.prototype = $extend(saturn.serve
 			socket.on("logout",function(data) {
 				_g.saturn.getSocketUser(socket,function(authUser) {
 					if(authUser != null) {
-						js.Node.console.log("Logging " + authUser.username + " out");
 						var db1 = _g.saturn.getRedisClient();
-						db1.del(authUser.uuid);
+						db1.del("USER_UUID: " + authUser.uuid);
 						_g.saturn.setUser(socket,null);
 					}
 				});
 			});
 		});
+		this.saturn.setAuthenticationPlugin(this);
 	}
 	,configureAuthenticationManager: function() {
 		var clazzStr = this.config.authentication_manager.clazz;
 		var clazz = Type.resolveClass(clazzStr);
-		this.authManager = Type.createInstance(clazz,[this.config.authentication_manager]);
+		this.authManager = Type.createInstance(clazz,[this.config.authentication_manager,this]);
 		if(!js.Boot.__instanceof(this.authManager,saturn.server.plugins.core.AuthenticationManager)) throw new js._Boot.HaxeError("Unable to setup authentication manager\n" + clazzStr + " should implement " + Std.string(saturn.server.plugins.core.AuthenticationManager));
 	}
 	,additionalAuth: function(user,onSuccess,onFailure) {
-		var _g = this;
-		js.Node.console.log("Validating jwt token is current");
 		var db = this.saturn.getRedisClient();
-		this.debug("Got redis");
 		this.saturn.isUserAuthenticated(user,function(authUser) {
-			_g.debug("here");
-			if(authUser != null) onSuccess(); else {
-				_g.debug("Returning failure");
-				onFailure("On Error","invalid_token");
-			}
+			if(authUser != null) onSuccess(); else onFailure("On Error","invalid_token");
 		});
+	}
+	,decryptUserPassword: function(user,cb) {
+		var crypto = js.Node.require("crypto");
+		var dBuffer = Buffer;
+		var parts = user.password.split(":");
+		var decipher = crypto.createDecipheriv(this.config.algorithm,new Buffer(this.config.encrypt_password),dBuffer.from(parts[0],"hex"));
+		var dec = decipher.update(parts[1],"hex","utf8");
+		dec += decipher["final"]("utf8");
+		var userClone = new saturn.core.User();
+		userClone.firstname = user.firstname;
+		userClone.lastname = user.lastname;
+		userClone.password = dec;
+		userClone.username = user.username;
+		cb(null,userClone);
+	}
+	,isUserAuthenticated: function(user,cb) {
+		if(user == null) cb(null); else {
+			var db = this.saturn.getRedisClient();
+			db.get("USER_UUID: " + user.uuid,function(err,reply) {
+				if(err || reply == null) cb(null); else cb(user);
+			});
+		}
 	}
 	,__class__: saturn.server.plugins.core.AuthenticationPlugin
 });
@@ -14938,14 +16625,14 @@ saturn.server.plugins.core.DefaultProviderPlugin.prototype = $extend(saturn.serv
 					cb(err,provider);
 					_g.debug(err);
 				});
-				provider.enableCache(false);
+				provider.enableCache(_g.config.enable_cache);
 			},function(resource) {
 			});
 			saturn.client.core.CommonCore.setPool(this.config.name,pool,this.config.default_provider);
 		} else {
 			this.debug("Configuring provider");
 			var provider1 = Type.createInstance(clazz,[models,this.config.connection,false]);
-			provider1.enableCache(false);
+			provider1.enableCache(this.config.enable_cache);
 			provider1.dataBinding(false);
 			provider1.readModels(function(err1) {
 				if(err1 != null) {
@@ -14986,14 +16673,14 @@ saturn.server.plugins.core.DefaultProviderPlugin.prototype = $extend(saturn.serv
 					cb(err,provider);
 					_g.debug(err);
 				});
-				provider.enableCache(false);
+				provider.enableCache(config.enable_cache);
 			},function(resource) {
 			});
 			saturn.client.core.CommonCore.setPool(config.name,pool,config.default_provider);
 		} else {
 			this.debug("Configuring provider");
 			var provider1 = Type.createInstance(clazz,[models,config,false]);
-			provider1.enableCache(false);
+			provider1.enableCache(config.enable_cache);
 			provider1.dataBinding(false);
 			provider1.setName(config.name);
 			provider1.readModels(function(err1) {
@@ -15050,6 +16737,7 @@ saturn.server.plugins.core.MySQLAuthPlugin.prototype = {
 	config: null
 	,authenticate: function(username,password,onSuccess,onFailure,src) {
 		var mysql = js.Node.require("mysql2");
+		saturn.core.Util.debug("Connecting as " + username + " to " + username + " with password " + password + " on " + Std.string(this.config.hostname));
 		var connection = mysql.createConnection({ host : this.config.hostname, user : username, password : password, database : username});
 		connection.on("connect",function(connect) {
 			if(connect) connection.query("\r\n                    SELECT\r\n                     *\r\n                    FROM\r\n                        icmdb_page_secure.V_USERS\r\n                    WHERE\r\n                        Name=?\r\n                ",[username],function(err,res) {
@@ -15080,7 +16768,6 @@ saturn.server.plugins.core.MySQLAuthPlugin.prototype = {
 		connection.on("error",function(err1) {
 			js.Node.console.log("Error: " + (err1 == null?"null":"" + err1));
 			onFailure("Unable to connect");
-			connection.end();
 		});
 	}
 	,__class__: saturn.server.plugins.core.MySQLAuthPlugin
@@ -15193,6 +16880,1021 @@ saturn.server.plugins.core.SocketPlugin.prototype = $extend(saturn.server.plugin
 	}
 	,__class__: saturn.server.plugins.core.SocketPlugin
 });
+if(!saturn.server.plugins.hooks) saturn.server.plugins.hooks = {};
+saturn.server.plugins.hooks.ChromoHubHooks = $hxClasses["saturn.server.plugins.hooks.ChromoHubHooks"] = function() { };
+saturn.server.plugins.hooks.ChromoHubHooks.__name__ = ["saturn","server","plugins","hooks","ChromoHubHooks"];
+saturn.server.plugins.hooks.ChromoHubHooks.hookInsertUpdatedTree = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	boundParameters.push(params[0].family);
+	boundParameters.push(params[0].domain);
+	sql = "DELETE FROM probes_tree2.updated_trees WHERE familyName = ? and domainbase = ?";
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) cb(null,err1); else {
+					var boundParameters1;
+					boundParameters1 = [];
+					sql = "INSERT INTO updated_trees (nodeId, familyName, domainbase, nodeX, nodeY, angle, clock) VALUES";
+					var blocks = [];
+					while(params.length > 0) {
+						var auxpop = params.pop();
+						var s = "(?,?,?,?,?,?,?)";
+						blocks.push(s);
+						boundParameters1.push(auxpop.nodeId);
+						boundParameters1.push(auxpop.family);
+						boundParameters1.push(auxpop.domain);
+						boundParameters1.push(auxpop.nodeX);
+						boundParameters1.push(auxpop.nodeY);
+						boundParameters1.push(auxpop.angle);
+						boundParameters1.push(auxpop.clock);
+					}
+					var i = 0;
+					var _g1 = 0;
+					var _g = blocks.length - 1;
+					while(_g1 < _g) {
+						var i1 = _g1++;
+						sql = sql + blocks[i1] + ",";
+					}
+					sql = sql + blocks[i];
+					saturn.core.Util.debug(sql);
+					provider.getConnection(null,function(err2,connection1) {
+						if(err2 != null) cb(null,err2); else try {
+							connection1.execute(sql,boundParameters1,function(err3,results1) {
+								saturn.core.Util.debug("Named query returning");
+								if(err3 != null) cb(null,err3); else cb(results1,null);
+								provider.closeConnection(connection1);
+							});
+						} catch( e ) {
+							if (e instanceof js._Boot.HaxeError) e = e.val;
+							provider.closeConnection(connection1);
+							cb(null,e);
+						}
+					});
+					cb(results,null);
+				}
+				provider.closeConnection(connection);
+			});
+		} catch( e1 ) {
+			if (e1 instanceof js._Boot.HaxeError) e1 = e1.val;
+			provider.closeConnection(connection);
+			cb(null,e1);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookDeleteUpdatedTree = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	boundParameters.push(params[0].family);
+	boundParameters.push(params[0].domain);
+	sql = "DELETE FROM probes_tree2.updated_trees WHERE familyName = ? and domainbase = ?";
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) cb(null,err1); else cb(results,null);
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasInhibitors = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	boundParameters[0] = params[0].familyTree;
+	var ligand_select = params[0].ligand_select;
+	var chemi_sel = params[0].chemi_sel;
+	var img_lig_per_row = 4;
+	var lig_cond = "";
+	switch(ligand_select) {
+	case "1":
+		lig_cond = "";
+		break;
+	case "5":
+		lig_cond = " AND tlj.ic50 < 5";
+		break;
+	case "2":
+		lig_cond = " AND tlj.ic50 < 2";
+		break;
+	case "0":
+		lig_cond = " AND tlj.ic50 < 0.5";
+		break;
+	}
+	if(chemi_sel == true) lig_cond += " AND tlj.is_chemical_probe IS NOT NULL AND tlj.is_chemical_probe='yes' ";
+	var st_family_or_genes = "";
+	if(params[0].searchGenes == null) st_family_or_genes = " ftj.family_id = ? "; else {
+		var placeholders = [];
+		var i = 0;
+		var searchGenes = params[0].searchGenes;
+		var _g = 0;
+		while(_g < searchGenes.length) {
+			var key = searchGenes[_g];
+			++_g;
+			placeholders.push("?");
+		}
+		st_family_or_genes = " ftj.target_id IN (" + placeholders.join(",") + ") ";
+		boundParameters = params[0].searchGenes;
+	}
+	if(params[0].treeType == "gene") sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, tlj.ic50, tlj.tmshift, tlj.type, l.pkey, l.name, l.smiles, tlj.pmid_list as pmid,\r\n\t\t\t\t\ttlj.reference as ref\r\n\t\t\t\t\tFROM target_ligand_join tlj,  ligand l, family_target_join ftj, variant v\r\n\t\t\t\t\tWHERE " + st_family_or_genes + "\r\n\t\t\t\t\t\tAND ftj.target_id=v.target_id\r\n\t\t\t\t\t\tAND v.is_default=1\r\n\t\t\t\t\t\tAND ftj.pkey=tlj.family_target_join_pkey\r\n\t\t\t\t\t\tAND tlj.ligand_pkey = l.pkey " + lig_cond; else sql = "select distinct dh.target_id, dh.name_index target_name_index, dh.variant_index, tlj.ic50, tlj.tmshift, tlj.type, l.pkey, l.name, l.smiles, tlj.pmid_list as pmid, tlj.reference as ref\r\n\t\t\t\t\tFROM target_ligand_join tlj, ligand l, family_target_join ftj, domain_highlighted dh, target_ligand_join_domainremoved\r\n\t\t\t\t\tWHERE " + st_family_or_genes + "\r\n\t\t\t\t\tAND ftj.pkey = tlj.family_target_join_pkey\r\n\t\t\t\t\tAND dh.on_tree=1\r\n\t\t\t\t\tAND ftj.family_id=dh.family_id\r\n\t\t\t\t\tAND ftj.target_id= dh.target_id\r\n\t\t\t\t\tAND dh.pkey NOT IN (SELECT domain_highlighted_pkey FROM target_ligand_join_domainremoved WHERE ligand_pkey=tlj.ligand_pkey)\r\n\t\t\t\t\tand tlj.ligand_pkey = l.pkey" + lig_cond;
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) cb(null,err1); else {
+					var l = "lenght is:" + results.length;
+					saturn.core.Util.debug(l);
+					cb(results,null);
+				}
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasStructure = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	boundParameters[0] = params[0].familyTree;
+	var st_type_cond = "";
+	var _g = params[0].st_select;
+	switch(_g) {
+	case 2:
+		st_type_cond = " and s.type REGEXP 'cofactor' ";
+		break;
+	case 3:
+		st_type_cond = " and s.type REGEXP 'peptide' ";
+		break;
+	case 4:
+		st_type_cond = " and s.type REGEXP 'inhibitor' ";
+		break;
+	}
+	var st_cutoff = "";
+	var st_percent_cond = " and s.percent_id IS NOT NULL ";
+	var _g1 = params[0].cutoff;
+	switch(_g1) {
+	case "best":
+		st_cutoff = "_best";
+		break;
+	case "low":
+		st_cutoff = "_40";
+		break;
+	default:
+		st_cutoff = "";
+		st_percent_cond += " and s.percent_id >= 94.5 ";
+	}
+	var xray_cond = "";
+	if(params[0].xray == "true") xray_cond = " and pdb.has_xray = 1 "; else xray_cond = "";
+	var st_family_or_genes = "";
+	if(params[0].searchGenes == null) st_family_or_genes = " ftj.family_id = ?"; else {
+		var placeholders = [];
+		var i = 0;
+		var searchGenes = params[0].searchGenes;
+		var _g2 = 0;
+		while(_g2 < searchGenes.length) {
+			var key = searchGenes[_g2];
+			++_g2;
+			placeholders.push("?");
+		}
+		st_family_or_genes = " ftj.target_id IN (" + placeholders.join(",") + ") ";
+		boundParameters = params[0].searchGenes;
+	}
+	if(params[0].st_select == "1") {
+		if(params[0].treeType == "gene") sql = "SELECT distinct d.target_id, null target_name_index, v.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray\tFROM structure_highlighted sh, structure s, domain_highlighted d, pdb, variant v, family_target_join ftj WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND dh.variant_index = v.variant_index and d.target_id=v.target_id and v.is_default=1 AND " + st_family_or_genes + " " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, target_name_index, v.variant_index ORDER BY d.target_id, target_name_index, v.variant_index"; else sql = "SELECT distinct d.target_id, d.name_index target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure_highlighted sh, structure s, family_target_join ftj, domain_highlighted d, pdb WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND on_tree=1 AND " + st_family_or_genes + " and d.target_id = ftj.target_id " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, d.name_index, d.variant_index ORDER BY d.target_id, d.name_index, d.variant_index";
+	} else if(params[0].treeType == "gene") sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, pdb, variant v WHERE " + st_family_or_genes + " and ftj.target_id = v.target_id and pdb.id=s.pdb_id and v.is_default=1 and v.pkey=s.variant_pkey " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY ftj.target_id, target_name_index, variant_index ORDER BY ftj.target_id, target_name_index, variant_index"; else sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE " + st_family_or_genes + " and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 and d.target_id = ftj.target_id" + st_type_cond + st_percent_cond + xray_cond + " GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
+	saturn.core.Util.debug(sql);
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) cb(null,err1); else cb(results,null);
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasshRna = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	var flagged = params[0].shrna_flag;
+	var shrna_cutoff = params[0].shrna_cutoff;
+	var shrna_num_cutoff = params[0].shrna_num_cutoff;
+	var ftree = params[0].familyTree;
+	var typetree = params[0].treeType;
+	var flagresults = params[0].flagresults;
+	var st_family_or_genes = "";
+	var st_family_or_genes_domain = "";
+	if(params[0].searchGenes == null) {
+		st_family_or_genes = "ftj.family_id = ?";
+		st_family_or_genes_domain = "dh.family_id = ?";
+		boundParameters[0] = ftree;
+	} else {
+		st_family_or_genes = "ftj.target_id = ?";
+		st_family_or_genes_domain = "dh.target_id = ?";
+		var genes = params[0].searchGenes;
+		var _g = 0;
+		while(_g < genes.length) {
+			var gene = genes[_g];
+			++_g;
+			boundParameters.push(gene);
+		}
+	}
+	boundParameters.push(shrna_cutoff);
+	var allpar = "";
+	var _g1 = 0;
+	while(_g1 < boundParameters.length) {
+		var paramString = boundParameters[_g1];
+		++_g1;
+		allpar += Std.string(paramString) + " + ";
+	}
+	var sql1 = "";
+	if(typetree == "domain") {
+		sql1 = "select * from (select dh.target_id, dh.name_index, dh.variant_index, cl.cell_line, cl.log2\r\n            from domain_highlighted dh, cancer_cell_lines_shrna cl, target t\r\n            where " + st_family_or_genes_domain + " and (dh.target_id = t.symbol) and t.geneid = cl.geneid\r\n            and dh.on_tree = 1 and cl.log2 <= ? ";
+		sql1 += " union all select dh.target_id, dh.name_index, dh.variant_index, cl.cell_line, cl.log2\r\n            from domain_highlighted dh, cancer_cell_lines_shrna cl, target t\r\n            where " + st_family_or_genes_domain + " and (dh.target_id = t.id and t.id <> t.symbol) and t.geneid = cl.geneid\r\n            and dh.on_tree = 1 and cl.log2 <= ?)a order by a.target_id, a.name_index, a.variant_index, a.cell_line, a.log2";
+		var newBoundParameters = [];
+		var _g2 = 0;
+		while(_g2 < 2) {
+			var i = _g2++;
+			var _g11 = 0;
+			while(_g11 < boundParameters.length) {
+				var item = boundParameters[_g11];
+				++_g11;
+				newBoundParameters.push(item);
+			}
+		}
+		boundParameters = newBoundParameters;
+	} else {
+		sql1 = "select * from (select ftj.target_id, null name_index, v.variant_index, cl.cell_line, cl.log2\r\n            from family_target_join ftj, variant v, cancer_cell_lines_shrna cl, target t\r\n            where " + st_family_or_genes + " and ftj.target_id = v.target_id and\r\n            (ftj.target_id = t.symbol or ftj.target_id = t.id) and t.geneid = cl.geneid\r\n            and v.is_default = 1 and cl.log2 <= ? ";
+		sql1 += "union all select ftj.target_id, null name_index, v.variant_index, cl.cell_line,cl.log2\r\n            from family_target_join ftj, variant v, cancer_cell_lines_shrna cl, target t\r\n            where " + st_family_or_genes + " and ftj.target_id = v.target_id and\r\n            (ftj.target_id = t.symbol or ftj.target_id = t.id) and t.geneid = cl.geneid\r\n            and v.is_default = 1 and cl.log2 <= ?) a\r\n            order by a.target_id, a.name_index, a.variant_index, a.cell_line, a.log2";
+		var newBoundParameters1 = [];
+		var _g3 = 0;
+		while(_g3 < 2) {
+			var i1 = _g3++;
+			var _g12 = 0;
+			while(_g12 < boundParameters.length) {
+				var item1 = boundParameters[_g12];
+				++_g12;
+				newBoundParameters1.push(item1);
+			}
+		}
+		boundParameters = newBoundParameters1;
+	}
+	saturn.core.Util.debug(sql1);
+	provider.getConnection(null,function(err,connection1) {
+		if(err != null) cb(null,err); else try {
+			connection1.execute(sql1,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) {
+					saturn.core.Util.debug("error-1");
+					cb(null,err1);
+				} else {
+					var represented_celllines;
+					represented_celllines = new haxe.ds.StringMap();
+					var on_tree = [];
+					var j = 0;
+					var _g13 = 0;
+					var _g4 = results.length;
+					while(_g13 < _g4) {
+						var j1 = _g13++;
+						var combo = Std.string(results[j1].cell_line) + "-" + Std.string(results[j1].target_id) + Std.string(results[j1].variant_index);
+						if((__map_reserved[combo] != null?represented_celllines.existsReserved(combo):represented_celllines.h.hasOwnProperty(combo)) == false) {
+							if(__map_reserved[combo] != null) represented_celllines.setReserved(combo,1); else represented_celllines.h[combo] = 1;
+						} else {
+							var res;
+							res = __map_reserved[combo] != null?represented_celllines.getReserved(combo):represented_celllines.h[combo];
+							res = res + 1;
+							if(__map_reserved[combo] != null) represented_celllines.setReserved(combo,res); else represented_celllines.h[combo] = res;
+						}
+					}
+					var results1;
+					results1 = [];
+					var i2 = 0;
+					var $it0 = represented_celllines.keys();
+					while( $it0.hasNext() ) {
+						var key = $it0.next();
+						results1[i2] = { combo : key, value : __map_reserved[key] != null?represented_celllines.getReserved(key):represented_celllines.h[key]};
+						i2++;
+					}
+					cb(results1,null);
+				}
+				provider.closeConnection(connection1);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection1);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasRnaSeq = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	var ftree = params[0].familyTree;
+	var typetree = params[0].treeType;
+	var seq_evaluator = params[0].seq_evaluator;
+	var seqexp_fc_cutoff = params[0].seqexp_fc_cutoff;
+	var seqexp_freq_cutoff = params[0].seqexp_freq_cutoff;
+	var patient_seq_cutoff = params[0].patient_seq_cutoff;
+	var seqexp_rank_cutoff = params[0].seqexp_rank_cutoff;
+	var r = 7.5;
+	var draw_graph = 0;
+	if(seq_evaluator == "greater") seq_evaluator = ">=";
+	if(seq_evaluator == "less") seq_evaluator = "<=";
+	var st_family_or_genes = "";
+	if(params[0].searchGenes == null) {
+		st_family_or_genes = " ftj.family_id = ? ";
+		boundParameters.push(ftree);
+	} else {
+		var placeholders = [];
+		var i = 0;
+		var searchGenes = params[0].searchGenes;
+		var _g = 0;
+		while(_g < searchGenes.length) {
+			var key = searchGenes[_g];
+			++_g;
+			placeholders.push("?");
+		}
+		st_family_or_genes = " ftj.target_id IN (" + placeholders.join(",") + ") ";
+		var genes = params[0].searchGenes;
+		var _g1 = 0;
+		while(_g1 < genes.length) {
+			var gene = genes[_g1];
+			++_g1;
+			boundParameters.push(gene);
+		}
+	}
+	boundParameters.push(seqexp_fc_cutoff);
+	boundParameters.push(seq_evaluator);
+	if(typetree == "domain") sql = "SELECT dh.target_id, dh.name_index, dh.variant_index, c.disease, c.count, c.total, c.rank FROM cancer.rnaseq_fc_freq c, probes_tree2.domain_highlighted dh, probes_tree2.family_target_join ftj\r\n            \t\twhere c.gene = dh.target_id and\r\n            \t\tdh.target_id = ftj.target_id\r\n                    and " + st_family_or_genes + "\r\n\t\t\t\t\tand dh.on_tree = 1\r\n                    and c.fc_cutoff = ?\r\n                    and c.evaluator = ?\r\n\t\t\t\t\torder by  dh.target_id, dh.name_index, dh.variant_index"; else sql = "SELECT distinct ftj.target_id, null name_index, v.variant_index, c.disease, c.count, c.total, c.rank FROM cancer.rnaseq_fc_freq c, probes_tree2.family_target_join ftj, probes_tree2.variant v\r\n\t\t            where c.gene = ftj.target_id\r\n                    and " + st_family_or_genes + "\r\n                    and c.fc_cutoff = ?\r\n                    and c.evaluator = ?\r\n\t\t\t\t\tand v.is_default = 1\r\n\t\t            and v.target_id = ftj.target_id";
+	var finalresults;
+	finalresults = [];
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug(sql);
+				if(err1 != null) {
+					saturn.core.Util.debug("error");
+					cb(null,err1);
+				} else {
+					var i1 = 0;
+					var _g11 = 0;
+					var _g2 = results.length;
+					while(_g11 < _g2) {
+						var i2 = _g11++;
+						var tobeadded = true;
+						var gene1 = results[i2].target_id;
+						var disease = results[i2].disease;
+						var count = results[i2].count;
+						var total = results[i2].total;
+						var rank_comment = results[i2].rank;
+						var rank_exp = rank_comment.split("/");
+						var rank = rank_exp[0];
+						var total_genes = rank_exp[1];
+						var num = seqexp_rank_cutoff;
+						var res = rank - num;
+						if(seqexp_rank_cutoff != null && res > 0) tobeadded = false; else {
+							results[i2].freq = Math.round(100 * (count / total));
+							results[i2].total_genes = total_genes;
+							results[i2].seqexp_freq_cutoff = seqexp_freq_cutoff;
+							results[i2].patient_seq_cutoff = patient_seq_cutoff;
+							results[i2].seqexp_rank_cutoff = seqexp_rank_cutoff;
+							finalresults.push(results[i2]);
+							saturn.core.Util.debug("Gene added in results" + gene1);
+						}
+					}
+					cb(finalresults,null);
+				}
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasSomaticMutations = function(query,params,clazz,cb) {
+	var provider = saturn.core.Util.getProvider();
+	var sql = "";
+	var boundParameters;
+	boundParameters = [];
+	var mutsig = params[0].sm_mutsig;
+	var sm_mutated_dynamic = params[0].sm_mutated_dynamic;
+	var sm_mutated_cutoff_box = params[0].sm_mutated_cutoff_box;
+	var sm_mutated_cutoff = params[0].sm_mutated_cutoff;
+	var patient_cutoff = params[0].sm_patient_cutoff;
+	var sm_results_cutoff = params[0].sm_results_cutoff;
+	var sm_nonsilent = params[0].sm_nonsilent;
+	var sm_validated = params[0].sm_validated;
+	var familyTree = params[0].familyTree;
+	var treeType = params[0].treeType;
+	var somatic_table = "";
+	if(familyTree == "rna") somatic_table = "somatic_mutations_methsome"; else somatic_table = "somatic_mutations";
+	var sm_patient_cutoff = " and d.num_patients >= ?";
+	var sm_validated_sql = "";
+	var sm_validated_opt = "";
+	var mutated_genes = "";
+	if(sm_validated == true) {
+		sm_validated_sql = " and sm.validation_status = 'validated' ";
+		sm_validated_opt = "&validated=1";
+		mutated_genes = "validated_mutated_genes";
+	} else mutated_genes = "mutated_genes";
+	var sm_nonsilent_sql = "";
+	var sm_nonsilent_opt = "";
+	if(sm_nonsilent == true) {
+		sm_nonsilent_sql = "and sm.variant_classification not in ('Silent', 'synonymous_coding', 'Silent_Mutation', 'intronic', 'downstream', 'upstream', 'Intron', 'UTR',\r\n\t\t\t'5_prime_UTR_variant',\r\n\t\t\t'3_prime_UTR_variant',\r\n\t\t\t'3prime_utr',\r\n\t\t\t'5-UTR',\r\n\t\t\t'5prime_utr',\r\n\t\t\t'3-UTR',\r\n\t\t\t'intronic',\r\n\t\t\t'intron_variant',\r\n\t\t\t'Intron',\r\n\t\t\t'intergenic_variant',\r\n\t\t\t'splice_site,intronic', 'non_coding_exon_variant', 'noncoding_rna')";
+		sm_nonsilent_opt = "&nonsilent=1";
+	}
+	var sm_page = "";
+	var cutoff_sql = "";
+	var metadata_sql = "";
+	var dynamic_cutoff_chk;
+	if(sm_mutated_dynamic == false) {
+		if(sm_mutated_cutoff_box == true) {
+			dynamic_cutoff_chk = 0;
+			cutoff_sql = "and p." + mutated_genes + " <= " + sm_mutated_cutoff;
+			metadata_sql = "and d.cutoff = " + sm_mutated_cutoff;
+		} else {
+			dynamic_cutoff_chk = 0;
+			cutoff_sql = "";
+			metadata_sql = "and d.cutoff is NULL";
+			sm_mutated_cutoff = "NULL";
+		}
+	}
+	if(mutsig == "true") {
+		dynamic_cutoff_chk = 0;
+		cutoff_sql = "";
+		metadata_sql = "and d.cutoff is NULL";
+		sm_mutated_cutoff = "NULL";
+	}
+	boundParameters.push(patient_cutoff);
+	var st_family_or_genes = "";
+	if(params[0].searchGenes == null) {
+		st_family_or_genes = "ftj.family_id = ?";
+		boundParameters.push(familyTree);
+	} else {
+		var searchGenes = params[0].searchGenes;
+		st_family_or_genes = "ftj.target_id = ?";
+		boundParameters.push(searchGenes);
+	}
+	var allpar = "";
+	var _g = 0;
+	while(_g < boundParameters.length) {
+		var paramString = boundParameters[_g];
+		++_g;
+		allpar += Std.string(paramString) + " + ";
+	}
+	var sm_control_sql = "";
+	var freq_cutoff;
+	if(sm_mutated_dynamic == true) {
+		freq_cutoff = 1.5;
+		if(treeType == "domain") sql = "select t.id as target_id, nt.gene_name, nt.source, dh.variant_index, dh.name_index, nt.disease, nt.freq, nt.count, nt.total, nt.chromosome, nt.cancer_group\r\n                            from\r\n                            (SELECT sm.gene_name, g.geneid, sm.disease, 100*count(distinct sm.barcode)/d.num_patients freq, sm.source,\r\n                            count(distinct sm.barcode) count, d.num_patients total, sm.chromosome, cd.cancer_group\r\n                            FROM cancer." + somatic_table + " sm, cancer.somatic_mutations_patients p,\r\n                            cancer.somatic_mutations_metadata_cutoff d, cancer.gene g, cancer.disease cd\r\n                            WHERE  d.disease=sm.disease and d.cutoff not in (100,200,300,400,500) and sm.include = 1 and sm.barcode  = p.barcode  and p.disease=sm.disease\r\n                            and g.gene_name = sm.gene_name " + sm_nonsilent_sql + " " + sm_control_sql + " and cd.name=sm.disease and sm.source = cd.source and\r\n                            d.source = sm.source and p.source = sm.source " + sm_validated_sql + " and d.num_patients >= ? and p." + mutated_genes + " <= d.cutoff\r\n                            group by sm.gene_name, sm.disease, sm.source\r\n                            order by sm.gene_name) nt, target t, family_target_join ftj, domain_highlighted dh\r\n                            where nt.geneid  = t.geneid and " + st_family_or_genes + "\r\n                            and ftj.target_id=t.id and dh.target_id=t.id and dh.family_id=ftj.family_id and dh.on_tree=1 and nt.freq >= " + Std.string(freq_cutoff) + "\r\n                            order by nt.freq desc"; else sql = "select t.id as target_id, nt.gene_name, nt.source, v.variant_index, null name_index, nt.disease, nt.freq, nt.count, nt.total, nt.chromosome, nt.cancer_group\r\n                            from\r\n                            (SELECT sm.gene_name, g.geneid, sm.disease, 100*count(distinct sm.barcode)/d.num_patients freq, sm.source,\r\n                            count(distinct sm.barcode) count, d.num_patients total, sm.chromosome, cd.cancer_group\r\n                            FROM cancer." + somatic_table + " sm, cancer.somatic_mutations_patients p,\r\n                            cancer.somatic_mutations_metadata_cutoff d, cancer.gene g, cancer.disease cd\r\n                            WHERE  d.disease=sm.disease and d.cutoff not in (100,200,300,400,500) and sm.include = 1 and sm.barcode = p.barcode and p.disease=sm.disease and cd.name=sm.disease\r\n                            and g.gene_name = sm.gene_name and sm.source = cd.source and d.source = sm.source and p.source = sm.source " + sm_nonsilent_sql + " " + sm_control_sql + " " + sm_validated_sql + " and d.num_patients >= ? and p." + mutated_genes + " <= d.cutoff\r\n                            group by sm.gene_name, sm.disease, sm.source\r\n                            order by sm.gene_name) nt, target t, family_target_join ftj, variant v\r\n                            where nt.geneid  = t.geneid and " + st_family_or_genes + "\r\n                            and ftj.target_id=t.id and v.target_id=t.id and v.is_default=1 and nt.freq >= " + Std.string(freq_cutoff) + "\r\n                            order by nt.freq desc";
+	} else {
+		freq_cutoff = 1.5;
+		if(treeType == "domain") sql = "select DISTINCT t.id as target_id, nt.gene_name, nt.source, dh.variant_index, dh.name_index, nt.disease, nt.freq, nt.count, nt.total, nt.chromosome, nt.cancer_group\r\n                            from\r\n                            (SELECT sm.gene_name, g.geneid, sm.disease, 100*count(distinct sm.barcode)/d.num_patients freq, sm.source,\r\n                            count(distinct sm.barcode) count, d.num_patients total, sm.chromosome, cd.cancer_group\r\n                            FROM cancer." + somatic_table + " sm, cancer.somatic_mutations_patients p,\r\n                            cancer.somatic_mutations_metadata_cutoff d, cancer.gene g, cancer.disease cd\r\n                            WHERE  d.disease=sm.disease " + metadata_sql + " and sm.include = 1 and sm.barcode  = p.barcode  and p.disease=sm.disease\r\n                            and g.gene_name = sm.gene_name " + sm_nonsilent_sql + " " + sm_control_sql + " and cd.name=sm.disease " + sm_validated_sql + " and d.num_patients >= ?  " + cutoff_sql + "\r\n                            and sm.source = cd.source and d.source = sm.source and p.source = sm.source\r\n                            group by sm.gene_name, sm.disease, sm.source\r\n                            order by sm.gene_name) nt, target t, family_target_join ftj, domain_highlighted dh\r\n                            where nt.geneid  = t.geneid and " + st_family_or_genes + "\r\n                            and ftj.target_id=t.id and dh.target_id=t.id and dh.family_id=ftj.family_id and dh.on_tree=1 and nt.freq >= " + Std.string(freq_cutoff) + "\r\n                            order by nt.freq desc"; else sql = "select DISTINCT t.id as target_id, nt.gene_name, nt.source, v.variant_index, null name_index, nt.disease, nt.freq, nt.count, nt.total, nt.chromosome, nt.cancer_group\r\n                            from\r\n                            (SELECT sm.gene_name, g.geneid, sm.disease, 100*count(distinct sm.barcode)/d.num_patients freq, sm.source,\r\n                            count(distinct sm.barcode) count, d.num_patients total, sm.chromosome, cd.cancer_group\r\n                            FROM cancer." + somatic_table + " sm, cancer.somatic_mutations_patients p,\r\n                            cancer.somatic_mutations_metadata_cutoff d, cancer.gene g, cancer.disease cd\r\n                            WHERE  d.disease=sm.disease " + metadata_sql + " and sm.include = 1 and sm.barcode = p.barcode and p.disease=sm.disease and cd.name=sm.disease\r\n                            and g.gene_name = sm.gene_name " + sm_nonsilent_sql + " " + sm_control_sql + "\r\n                            and sm.source = cd.source and d.source = sm.source and p.source = sm.source " + sm_validated_sql + " and d.num_patients >= ? " + cutoff_sql + "\r\n                            group by sm.gene_name, sm.disease, sm.source\r\n                            order by sm.gene_name) nt, target t, family_target_join ftj, variant v\r\n                            where nt.geneid  = t.geneid and " + st_family_or_genes + "\r\n                            and ftj.target_id=t.id and v.target_id=t.id and v.is_default=1 and nt.freq >= " + Std.string(freq_cutoff) + "\r\n                            order by nt.freq desc";
+	}
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) {
+					saturn.core.Util.debug("error");
+					cb(null,err1);
+				} else cb(results,null);
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint = function(params) {
+	var boundParameters = [];
+	var searchGenes = params[0].searchGenes;
+	var familyTree = params[0].familyTree;
+	var sqlFamilyOrListConstraint = "";
+	if(searchGenes != null) {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < searchGenes.length) {
+			var gene = searchGenes[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(gene);
+		}
+		sqlFamilyOrListConstraint = " ftj.target_id IN (" + placeHolders.join(",") + ") ";
+	} else if(familyTree != null) {
+		sqlFamilyOrListConstraint = "ftj.family_id = ?";
+		boundParameters.push(familyTree);
+	} else throw new js._Boot.HaxeError(new saturn.util.HaxeException("Please set familyTree or searchGenes"));
+	return { 'params' : boundParameters, 'sql' : sqlFamilyOrListConstraint};
+};
+saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery = function(sql,boundParameters,cb) {
+	var provider = saturn.core.Util.getProvider();
+	provider.getConnection(null,function(err,connection) {
+		if(err != null) cb(null,err); else try {
+			saturn.core.Util.debug(sql);
+			connection.execute(sql,boundParameters,function(err1,results) {
+				saturn.core.Util.debug("Named query returning");
+				if(err1 != null) cb(null,err1); else cb(results,null);
+				provider.closeConnection(connection);
+			});
+		} catch( e ) {
+			if (e instanceof js._Boot.HaxeError) e = e.val;
+			provider.closeConnection(connection);
+			cb(null,e);
+		}
+	});
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasTumorLevel = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var sql = "";
+	var treeType = params[0].treeType;
+	var cancerType = params[0].cancer_type;
+	var proteinLevels = params[0].protein_levels;
+	if(treeType) sql = "\r\n                SELECT\r\n                    DISTINCT ftj.target_id, null target_name_index, variant_index\r\n                FROM\r\n                    protein_tumor p, family_target_join ftj, variant v\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    v.is_default = 1 AND\r\n                    ftj.target_id = p.target_id\r\n            ";
+	if(cancerType != "All") {
+		sql += " AND p.cancer_type = ?";
+		boundParameters.push(cancerType);
+	}
+	if(proteinLevels != null) {
+		var allowedProteinLevels;
+		var _g = new haxe.ds.StringMap();
+		if(__map_reserved.High != null) _g.setReserved("High","High"); else _g.h["High"] = "High";
+		if(__map_reserved.Medium != null) _g.setReserved("Medium","Medium"); else _g.h["Medium"] = "Medium";
+		if(__map_reserved.Low != null) _g.setReserved("Low","Low"); else _g.h["Low"] = "Low";
+		if(__map_reserved["Not detected"] != null) _g.setReserved("Not detected","Not_detected"); else _g.h["Not detected"] = "Not_detected";
+		allowedProteinLevels = _g;
+		var levels = [];
+		var _g1 = 0;
+		while(_g1 < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g1];
+			++_g1;
+			if(proteinLevel != null && (__map_reserved[proteinLevel] != null?allowedProteinLevels.existsReserved(proteinLevel):allowedProteinLevels.h.hasOwnProperty(proteinLevel))) levels.push("`" + (__map_reserved[proteinLevel] != null?allowedProteinLevels.getReserved(proteinLevel):allowedProteinLevels.h[proteinLevel]) + "`");
+		}
+		if(levels.length > 0) sql += " AND (" + levels.join(" IS NOT NULL OR ") + " IS NOT NULL)";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasTumorLevelDiv = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var sql = "";
+	var treeType = params[0].treeType;
+	var cancerType = params[0].cancer_type;
+	var proteinLevels = params[0].protein_levels;
+	if(treeType) sql = "\r\n                SELECT\r\n                    p.cancer_type, IFNULL(p.high,'') AS high, IFNULL(p.medium,'') AS medium, IFNULL(p.low,'') AS low, IFNULL(p.not_detected,'') AS not_detected\r\n                FROM\r\n                    protein_tumor p\r\n                WHERE\r\n                    p.target_id = ?\r\n            ";
+	if(cancerType != "All") {
+		sql += " AND p.cancer_type = ?";
+		boundParameters.push(cancerType);
+	}
+	if(proteinLevels != null) {
+		var allowedProteinLevels;
+		var _g = new haxe.ds.StringMap();
+		if(__map_reserved.High != null) _g.setReserved("High","High"); else _g.h["High"] = "High";
+		if(__map_reserved.Medium != null) _g.setReserved("Medium","Medium"); else _g.h["Medium"] = "Medium";
+		if(__map_reserved.Low != null) _g.setReserved("Low","Low"); else _g.h["Low"] = "Low";
+		if(__map_reserved["Not detected"] != null) _g.setReserved("Not detected","Not_detected"); else _g.h["Not detected"] = "Not_detected";
+		allowedProteinLevels = _g;
+		var levels = [];
+		var _g1 = 0;
+		while(_g1 < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g1];
+			++_g1;
+			if(proteinLevel != null && (__map_reserved[proteinLevel] != null?allowedProteinLevels.existsReserved(proteinLevel):allowedProteinLevels.h.hasOwnProperty(proteinLevel))) levels.push("`" + (__map_reserved[proteinLevel] != null?allowedProteinLevels.getReserved(proteinLevel):allowedProteinLevels.h[proteinLevel]) + "`");
+		}
+		if(levels.length > 0) sql += " AND (" + levels.join(" IS NOT NULL OR ") + " IS NOT NULL)";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasCancerEssential = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var cancerTypes = params[0].cancer_types;
+	var cancerScore = params[0].cancer_score;
+	var sql = "";
+	var treeType = params[0].treeType;
+	if(treeType == "gene") sql = "\r\n               SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score\r\n               FROM\r\n                    family_target_join ftj, variant v, essentiality_cancer ec\r\n               WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ec.target_id = ftj.target_id\r\n               "; else sql = "\r\n                SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score\r\n                FROM\r\n                    family_target_join ftj, variant v, essentiality_cancer ec\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ec.target_id = ftj.target_id AND\r\n                    v.is_default = 1\r\n            ";
+	if(cancerTypes[0] != "All") {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < cancerTypes.length) {
+			var cancerType = cancerTypes[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(cancerType);
+		}
+		sql += " AND ec.primary_disease IN (" + placeHolders.join(",") + ")";
+	}
+	if(cancerScore != null) {
+		sql += " AND ec.median_score <= ?";
+		boundParameters.push(cancerScore);
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasCancerEssentialRNAi = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var cancerTypes = params[0].cancer_types;
+	var cancerScore = params[0].cancer_score;
+	var sql = "";
+	var treeType = params[0].treeType;
+	if(treeType == "gene") sql = "\r\n               SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score\r\n               FROM\r\n                    family_target_join ftj, variant v, essentiality_cancer_rnai ec\r\n               WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ec.target_id = ftj.target_id\r\n               "; else sql = "\r\n                SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score\r\n                FROM\r\n                    family_target_join ftj, variant v, essentiality_cancer ec\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ec.target_id = ftj.target_id AND\r\n                    v.is_default = 1\r\n            ";
+	if(cancerTypes[0] != "All") {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < cancerTypes.length) {
+			var cancerType = cancerTypes[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(cancerType);
+		}
+		sql += " AND ec.primary_disease IN (" + placeHolders.join(",") + ")";
+	}
+	if(cancerScore != null) {
+		sql += " AND ec.median_score <= ?";
+		boundParameters.push(cancerScore);
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasProteinNormalLevels = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var tissueTypes = params[0].tissue_types;
+	var cellTypes = params[0].cell_types;
+	var proteinLevels = params[0].protein_levels;
+	var reliabilities = params[0].reliabilities;
+	var sql = "";
+	var treeType = params[0].treeType;
+	if(treeType == "domain") sql = "\r\n               SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n               FROM\r\n                    protein_normal_tissue p, family_target_join ftj, variant v\r\n               WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ftj.target_id = p.target_id\r\n               "; else sql = "\r\n                SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n                FROM\r\n                    protein_normal_tissue p, family_target_join ftj, variant v\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    v.is_default = 1 AND\r\n                    ftj.target_id = p.target_id\r\n            ";
+	if(tissueTypes[0] != "All") {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < tissueTypes.length) {
+			var tissueType = tissueTypes[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(tissueType);
+		}
+		sql += " AND p.tissue IN (" + placeHolders.join(",") + ")";
+	}
+	if(cellTypes[0] != "All") {
+		var placeHolders1 = [];
+		var _g1 = 0;
+		while(_g1 < cellTypes.length) {
+			var cellType = cellTypes[_g1];
+			++_g1;
+			placeHolders1.push("?");
+			boundParameters.push(cellType);
+		}
+		sql += " AND p.cell_type IN (" + placeHolders1.join(",") + ")";
+	}
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var placeHolders2 = [];
+		var _g2 = 0;
+		while(_g2 < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g2];
+			++_g2;
+			placeHolders2.push("?");
+			boundParameters.push(proteinLevel);
+		}
+		sql += " AND p.protein_level IN (" + placeHolders2.join(",") + ")";
+	}
+	if(reliabilities != null && reliabilities.length > 0) {
+		var placeHolders3 = [];
+		var _g3 = 0;
+		while(_g3 < reliabilities.length) {
+			var reliability = reliabilities[_g3];
+			++_g3;
+			placeHolders3.push("?");
+			boundParameters.push(reliability);
+		}
+		sql += " AND p.reliability IN (" + placeHolders3.join(",") + ")";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasProteinNormalLevelsDiv = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var tissueTypes = params[0].tissue_types;
+	var cellTypes = params[0].cell_types;
+	var proteinLevels = params[0].protein_levels;
+	var reliabilities = params[0].reliabilities;
+	var treeType = params[0].treeType;
+	var sql = "";
+	if(treeType) sql = "\r\n                SELECT\r\n                    p.tissue, cell_type, p.protein_level, p.reliability\r\n                FROM\r\n                    protein_normal_tissue p\r\n                WHERE\r\n                    p.target_id = ?\r\n            ";
+	if(tissueTypes[0] != "All") {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < tissueTypes.length) {
+			var tissueType = tissueTypes[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(tissueType);
+		}
+		sql += " AND p.tissue IN (" + placeHolders.join(",") + ")";
+	}
+	if(cellTypes[0] != "All") {
+		var placeHolders1 = [];
+		var _g1 = 0;
+		while(_g1 < cellTypes.length) {
+			var cellType = cellTypes[_g1];
+			++_g1;
+			placeHolders1.push("?");
+			boundParameters.push(cellType);
+		}
+		sql += " AND p.cell_type IN (" + placeHolders1.join(",") + ")";
+	}
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var placeHolders2 = [];
+		var _g2 = 0;
+		while(_g2 < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g2];
+			++_g2;
+			placeHolders2.push("?");
+			boundParameters.push(proteinLevel);
+		}
+		sql += " AND p.protein_level IN (" + placeHolders2.join(",") + ")";
+	}
+	if(reliabilities != null && reliabilities.length > 0) {
+		var placeHolders3 = [];
+		var _g3 = 0;
+		while(_g3 < reliabilities.length) {
+			var reliability = reliabilities[_g3];
+			++_g3;
+			placeHolders3.push("?");
+			boundParameters.push(reliability);
+		}
+		sql += " AND p.reliability IN (" + placeHolders3.join(",") + ")";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasProteinNormalLevelsPercentage = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var inPercentage = params[0].in_percentage;
+	var proteinLevels = params[0].protein_levels;
+	var reliabilities = params[0].reliabilities;
+	var sql = "";
+	var treeType = params[0].treeType;
+	if(treeType == "domain") sql = "\r\n               SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n               FROM\r\n                    protein_normal_tissue p, protein_normal_tissue_stat s, family_target_join ftj, variant v\r\n               WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ftj.target_id = p.target_id AND\r\n                    s.target_id = p.target_id\r\n               "; else sql = "\r\n                SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n                FROM\r\n                    protein_normal_tissue p, protein_normal_tissue_stat s, family_target_join ftj, variant v\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    v.is_default = 1 AND\r\n                    ftj.target_id = p.target_id AND\r\n                    s.target_id = p.target_id\r\n            ";
+	if(proteinLevels != null && proteinLevels.length == 0) proteinLevels = ["High","Medium","Low","Not detected"];
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var placeHolders = [];
+		var _g = 0;
+		while(_g < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g];
+			++_g;
+			placeHolders.push("?");
+			boundParameters.push(proteinLevel);
+		}
+		sql += " AND p.protein_level IN (" + placeHolders.join(",") + ")";
+	}
+	if(reliabilities != null && reliabilities.length > 0) {
+		var placeHolders1 = [];
+		var _g1 = 0;
+		while(_g1 < reliabilities.length) {
+			var reliability = reliabilities[_g1];
+			++_g1;
+			placeHolders1.push("?");
+			boundParameters.push(reliability);
+		}
+		sql += " AND p.reliability IN (" + placeHolders1.join(",") + ")";
+	}
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var columns = [];
+		var _g2 = 0;
+		while(_g2 < proteinLevels.length) {
+			var proteinLevel1 = proteinLevels[_g2];
+			++_g2;
+			if(proteinLevel1 == "High") columns.push("s.level_high_num");
+			if(proteinLevel1 == "Medium") columns.push("s.level_medium_num");
+			if(proteinLevel1 == "Low") columns.push("s.level_low_num");
+			if(proteinLevel1 == "Not detected") columns.push("s.not_detected_num");
+		}
+		sql += " AND ((" + columns.join("+") + ") / s.total_num > ?)";
+		if(inPercentage == "at least 1") boundParameters.push(0); else if(inPercentage == "more than 25%") boundParameters.push(0.25); else if(inPercentage == "more than 50%") boundParameters.push(0.50); else if(inPercentage == "more than 75%") boundParameters.push(0.75);
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasProteinNormalLevelsPercentageDiv = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var proteinLevels = params[0].protein_levels;
+	var reliabilities = params[0].reliabilities;
+	var inPercentage = params[0].in_percentage;
+	var treeType = params[0].treeType;
+	var sql = "";
+	if(treeType) sql = "\r\n                SELECT\r\n                    p.tissue, cell_type, p.protein_level, p.reliability\r\n                FROM\r\n                    protein_normal_tissue p, protein_normal_tissue_stat s\r\n                WHERE\r\n                    p.target_id = ? AND\r\n                    p.target_id = s.target_id\r\n            ";
+	if(proteinLevels != null && proteinLevels.length == 0) proteinLevels = ["High","Medium","Low"];
+	var placeHolders = [];
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var columns = [];
+		var _g = 0;
+		while(_g < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g];
+			++_g;
+			if(proteinLevel == "High") columns.push("s.level_high_num");
+			if(proteinLevel == "Medium") columns.push("s.level_medium_num");
+			if(proteinLevel == "Low") columns.push("s.level_low_num");
+			if(proteinLevel == "Not detected") columns.push("s.not_detected_num");
+			placeHolders.push("?");
+			boundParameters.push(proteinLevel);
+		}
+		sql += " AND p.protein_level IN (" + placeHolders.join(",") + ")";
+		sql += " AND ((" + columns.join("+") + ") / s.total_num > ?)";
+		if(inPercentage == "at least 1") boundParameters.push(0); else if(inPercentage == "more than 25%") boundParameters.push(0.25); else if(inPercentage == "more than 50%") boundParameters.push(0.50); else if(inPercentage == "more than 75%") boundParameters.push(0.75);
+	}
+	if(reliabilities != null && reliabilities.length > 0) {
+		var placeHolders1 = [];
+		var _g1 = 0;
+		while(_g1 < reliabilities.length) {
+			var reliability = reliabilities[_g1];
+			++_g1;
+			placeHolders1.push("?");
+			boundParameters.push(reliability);
+		}
+		sql += " AND p.reliability IN (" + placeHolders1.join(",") + ")";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasTumorLevelPercentage = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var inPercentage = params[0].in_percentage;
+	var proteinLevels = params[0].protein_levels;
+	var sql = "";
+	var treeType = params[0].treeType;
+	if(treeType == "domain") sql = "\r\n               SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n               FROM\r\n                    protein_tumor_stat s, family_target_join ftj, variant v\r\n               WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    ftj.target_id = s.target_id\r\n               "; else sql = "\r\n                SELECT\r\n                    distinct ftj.target_id, null name_index, v.variant_index\r\n                FROM\r\n                    protein_tumor_stat s, family_target_join ftj, variant v\r\n                WHERE\r\n                    " + sqlFamilyOrListConstraint + " AND\r\n                    ftj.target_id = v.target_id AND\r\n                    v.is_default = 1 AND\r\n                    ftj.target_id = s.target_id\r\n            ";
+	if(proteinLevels != null && proteinLevels.length == 0) proteinLevels = ["High","Medium","Low"];
+	if(proteinLevels != null && proteinLevels.length > 0) {
+		var columns = [];
+		var _g = 0;
+		while(_g < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g];
+			++_g;
+			if(proteinLevel == "High") columns.push("s.level_high_num");
+			if(proteinLevel == "Medium") columns.push("s.level_medium_num");
+			if(proteinLevel == "Low") columns.push("s.level_low_num");
+		}
+		sql += " AND ((" + columns.join("+") + ") / s.total_num > ?)";
+		if(inPercentage == "at least 1") boundParameters.push(0); else if(inPercentage == "more than 25%") boundParameters.push(0.25); else if(inPercentage == "more than 50%") boundParameters.push(0.50); else if(inPercentage == "more than 75%") boundParameters.push(0.75);
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
+saturn.server.plugins.hooks.ChromoHubHooks.hookHasTumorLevelPercentageDiv = function(query,params,clazz,cb) {
+	var familyOrListInfo = null;
+	try {
+		familyOrListInfo = saturn.server.plugins.hooks.ChromoHubHooks.generateFamilyOrListConstraint(params);
+	} catch( ex ) {
+		if (ex instanceof js._Boot.HaxeError) ex = ex.val;
+		if( js.Boot.__instanceof(ex,saturn.util.HaxeException) ) {
+			cb(null,ex.getMessage());
+			return;
+		} else throw(ex);
+	}
+	var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+	var boundParameters = familyOrListInfo.params;
+	var sql = "";
+	var treeType = params[0].treeType;
+	var inPercentage = params[0].in_percentage;
+	var proteinLevels = params[0].protein_levels;
+	if(treeType) sql = "\r\n            SELECT\r\n                p.cancer_type, IFNULL(p.high,'') AS high, IFNULL(p.medium,'') AS medium, IFNULL(p.low,'') AS low, IFNULL(p.not_detected,'') AS not_detected\r\n\t\t\tFROM\r\n\t\t\t    protein_tumor p\r\n\t\t\tWHERE\r\n\t\t\t    p.target_id = ?\r\n        ";
+	if(proteinLevels != null) {
+		var allowedProteinLevels;
+		var _g = new haxe.ds.StringMap();
+		if(__map_reserved.High != null) _g.setReserved("High","High"); else _g.h["High"] = "High";
+		if(__map_reserved.Medium != null) _g.setReserved("Medium","Medium"); else _g.h["Medium"] = "Medium";
+		if(__map_reserved.Low != null) _g.setReserved("Low","Low"); else _g.h["Low"] = "Low";
+		if(__map_reserved["Not detected"] != null) _g.setReserved("Not detected","Not detected"); else _g.h["Not detected"] = "Not detected";
+		allowedProteinLevels = _g;
+		var levels = [];
+		var _g1 = 0;
+		while(_g1 < proteinLevels.length) {
+			var proteinLevel = proteinLevels[_g1];
+			++_g1;
+			if(proteinLevel != null && (__map_reserved[proteinLevel] != null?allowedProteinLevels.existsReserved(proteinLevel):allowedProteinLevels.h.hasOwnProperty(proteinLevel))) levels.push("`" + (__map_reserved[proteinLevel] != null?allowedProteinLevels.getReserved(proteinLevel):allowedProteinLevels.h[proteinLevel]) + "`");
+		}
+		if(levels.length > 0) sql += " AND (" + levels.join(" IS NOT NULL OR ") + " IS NOT NULL)";
+	}
+	saturn.server.plugins.hooks.ChromoHubHooks.runBasicQuery(sql,boundParameters,cb);
+};
 if(!saturn.server.plugins.socket) saturn.server.plugins.socket = {};
 if(!saturn.server.plugins.socket.core) saturn.server.plugins.socket.core = {};
 saturn.server.plugins.socket.core.BaseServerSocketPlugin = $hxClasses["saturn.server.plugins.socket.core.BaseServerSocketPlugin"] = function(server,config) {
@@ -15454,14 +18156,14 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 			})(function(err,binary_info) {
 				err;
 				binary_info;
-				var __wrapper_27 = function() {
+				var __endIf_27 = function() {
 					(function(__afterVar_155) {
 						js.Node.require("fs").writeFile(binary_info.path,binaryData,function(__parameter_156) {
 							__afterVar_155(__parameter_156);
 						});
 					})(function(err1) {
 						err1;
-						var __wrapper_28 = function() {
+						var __endIf_28 = function() {
 							return (function(__afterVar_157) {
 								bindings.NodeTemp.open("abi_conversion_json_",function(__parameter_158,__parameter_159) {
 									__afterVar_157(__parameter_158,__parameter_159);
@@ -15469,14 +18171,14 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 							})(function(err2,json_info) {
 								err2;
 								json_info;
-								var __wrapper_29 = function() {
+								var __endIf_29 = function() {
 									return (function(nodePath) {
 										nodePath;
 										(function(progName) {
 											progName;
 											(function(args) {
 												args;
-												var __wrapper_30 = function() {
+												var __endIf_30 = function() {
 													return (function(proc) {
 														proc;
 														proc.stderr.on("data",function(error) {
@@ -15517,8 +18219,8 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 												if(js.Node.require("os").platform() == "win32") {
 													progName = "bin/deployed_bin/ABIConverter.exe";
 													args = [binary_info.path,json_info.path];
-													__wrapper_30();
-												} else __wrapper_30();
+													__endIf_30();
+												} else __endIf_30();
 											})([binary_info.path,json_info.path]);
 										})("bin/deployed_bin/ABIConverter");
 									})(js.Node.require("path").dirname(__filename));
@@ -15526,20 +18228,20 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 								if(err2 != null) {
 									_g.handleError(job,err2,done);
 									__return();
-								} else __wrapper_29();
+								} else __endIf_29();
 							});
 						};
 						if(err1 != null) {
 							_g.handleError(job,err1,done);
 							__return();
-						} else __wrapper_28();
+						} else __endIf_28();
 					});
 					return;
 				};
 				if(err != null) {
 					_g.handleError(job,err,done);
 					__return();
-				} else __wrapper_27();
+				} else __endIf_27();
 			});
 		})(new Buffer(job.data.abiFile,"base64"));
 	}
@@ -15726,7 +18428,7 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 		var _g = this;
 		(function(socket) {
 			socket;
-			var __wrapper_22 = function() {
+			var __endIf_22 = function() {
 				(function(jobId) {
 					jobId;
 					(function(__afterVar_129) {
@@ -15736,7 +18438,7 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 					})(function(err,info) {
 						err;
 						info;
-						var __wrapper_23 = function() {
+						var __endIf_23 = function() {
 							return (function(buffer) {
 								buffer;
 								(function(__afterVar_133) {
@@ -15745,7 +18447,7 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 									});
 								})(function(err1) {
 									err1;
-									var __wrapper_24 = function() {
+									var __endIf_24 = function() {
 										return (function(inputFileName) {
 											inputFileName;
 											(function(outputFileName) {
@@ -15760,7 +18462,7 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 																args;
 																(function(entities) {
 																	entities;
-																	var __wrapper_25 = function() {
+																	var __endIf_25 = function() {
 																		return (function(proc) {
 																			proc;
 																			proc.stderr.on("data",function(error) {
@@ -15811,21 +18513,21 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 																			args.push("100000");
 																			args.push("-word_size");
 																			args.push("7");
-																			var __wrapper_26 = function() {
+																			var __endIf_26 = function() {
 																				return (function($this) {
 																					var $r;
 																					js.Node.console.log("Applying short sequence mode");
-																					$r = __wrapper_25();
+																					$r = __endIf_25();
 																					return $r;
 																				}(this));
 																			};
 																			if(blastSettings.prog == "blastn") {
 																				args.push("-dust");
 																				args.push("no");
-																				__wrapper_26();
-																			} else __wrapper_26();
-																		} else __wrapper_25();
-																	} else __wrapper_25();
+																				__endIf_26();
+																			} else __endIf_26();
+																		} else __endIf_25();
+																	} else __endIf_25();
 																})(saturn.core.FastaEntity.parseFasta(fasta));
 															})(["-db",blastSettings.dbpath,"-query",inputFileName,"-out",outputFileName,"-html"]);
 														})(Reflect.field(_g.saturn.localServerConfig.commands.sendBlastReport.arguments.BLAST_DB.allowedValues,blastDatabase));
@@ -15837,14 +18539,14 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 									if(err1 != null) {
 										_g.handleError(job,err1,done);
 										__return();
-									} else __wrapper_24();
+									} else __endIf_24();
 								});
 							})(new Buffer(job.data.fasta));
 						};
 						if(err != null) {
 							_g.handleError(job,err,done);
 							__return();
-						} else __wrapper_23();
+						} else __endIf_23();
 					});
 				})(job.data.bioinfJobId);
 				return;
@@ -15852,8 +18554,8 @@ saturn.server.plugins.socket.BLASTPlugin.prototype = $extend(saturn.server.plugi
 			if(socket != null) (function(ip) {
 				ip;
 				_g.broadcast("global.event",{ 'trigger' : ip, 'event' : "BLAST"});
-				__wrapper_22();
-			})(socket.handshake.address.address); else __wrapper_22();
+				__endIf_22();
+			})(socket.handshake.address.address); else __endIf_22();
 		})(_g.getSocket(job));
 	}
 	,__class__: saturn.server.plugins.socket.BLASTPlugin
@@ -15879,7 +18581,7 @@ saturn.server.plugins.socket.ClustalPlugin.prototype = $extend(saturn.server.plu
 			})(function(err,info) {
 				err;
 				info;
-				var __wrapper_20 = function() {
+				var __endIf_20 = function() {
 					(function(buffer) {
 						buffer;
 						(function(__afterVar_115) {
@@ -15888,7 +18590,7 @@ saturn.server.plugins.socket.ClustalPlugin.prototype = $extend(saturn.server.plu
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_21 = function() {
+							var __endIf_21 = function() {
 								return (function(inputFileName) {
 									inputFileName;
 									(function(outputFileName) {
@@ -15946,7 +18648,7 @@ saturn.server.plugins.socket.ClustalPlugin.prototype = $extend(saturn.server.plu
 							if(err1 != null) {
 								_g.handleError(job,err1,done);
 								__return();
-							} else __wrapper_21();
+							} else __endIf_21();
 						});
 					})(new Buffer(job.data.fasta));
 					return;
@@ -15954,7 +18656,7 @@ saturn.server.plugins.socket.ClustalPlugin.prototype = $extend(saturn.server.plu
 				if(err != null) {
 					_g.handleError(job,err,done);
 					__return();
-				} else __wrapper_20();
+				} else __endIf_20();
 			});
 		})(_g.getJobId(job));
 	}
@@ -15981,7 +18683,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 			})(function(err,info) {
 				err;
 				info;
-				var __wrapper_14 = function() {
+				var __endIf_14 = function() {
 					(function(buffer) {
 						buffer;
 						(function(__afterVar_83) {
@@ -15990,7 +18692,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_15 = function() {
+							var __endIf_15 = function() {
 								return (function(inputFileName) {
 									inputFileName;
 									(function(outputFileName) {
@@ -16024,7 +18726,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 																	});
 																})(function(err2) {
 																	err2;
-																	var __wrapper_16 = function() {
+																	var __endIf_16 = function() {
 																		return (function(__afterVar_96) {
 																			js.Node.require("fs").readFile(serveFileName,null,function(__parameter_97,__parameter_98) {
 																				__afterVar_96(__parameter_97,__parameter_98);
@@ -16032,7 +18734,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 																		})(function(err_read,data) {
 																			err_read;
 																			data;
-																			var __wrapper_17 = function() {
+																			var __endIf_17 = function() {
 																				return (function(__afterVar_99) {
 																					bindings.NodeTemp.open("psiPredQuery",function(__parameter_100,__parameter_101) {
 																						__afterVar_99(__parameter_100,__parameter_101);
@@ -16040,7 +18742,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 																				})(function(err_temp,info1) {
 																					err_temp;
 																					info1;
-																					var __wrapper_18 = function() {
+																					var __endIf_18 = function() {
 																						return (function(buffer1) {
 																							buffer1;
 																							(function(__afterVar_103) {
@@ -16049,7 +18751,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 																								});
 																							})(function(err_write) {
 																								err_write;
-																								var __wrapper_19 = function() {
+																								var __endIf_19 = function() {
 																									return (function(htmlResultsFile) {
 																										htmlResultsFile;
 																										(function(reportHtmlResultsFile) {
@@ -16077,26 +18779,26 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 																								if(err_write != null) {
 																									_g.handleError(job,"An error has occurred writing the results file");
 																									__return();
-																								} else __wrapper_19();
+																								} else __endIf_19();
 																							});
 																						})(new Buffer("<html><body><pre>" + data + "</pre></body></html>"));
 																					};
 																					if(err_temp != null) {
 																						_g.handleError(job,"An error has occurred generating a temporary file for results");
 																						__return();
-																					} else __wrapper_18();
+																					} else __endIf_18();
 																				});
 																			};
 																			if(err_read != null) {
 																				_g.handleError(job,"An error has occurred opening the results file");
 																				__return();
-																			} else __wrapper_17();
+																			} else __endIf_17();
 																		});
 																	};
 																	if(err2 != null) {
 																		_g.handleError(job,"An error has occurred making the results file available");
 																		__return();
-																	} else __wrapper_16();
+																	} else __endIf_16();
 																});
 															})(_g.saturn.getRelativePublicOuputURL() + "/" + Std.string(_g.saturn.pathLib.basename(outputFileName)));
 														})(_g.saturn.getRelativePublicOuputFolder() + "/" + Std.string(_g.saturn.pathLib.basename(outputFileName))); else {
@@ -16113,7 +18815,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 							if(err1 != null) {
 								_g.handleError(job,err1);
 								__return();
-							} else __wrapper_15();
+							} else __endIf_15();
 						});
 					})(new Buffer(job.data.fasta));
 					return;
@@ -16121,7 +18823,7 @@ saturn.server.plugins.socket.DisoPredPlugin.prototype = $extend(saturn.server.pl
 				if(err != null) {
 					_g.handleError(job,err);
 					__return();
-				} else __wrapper_14();
+				} else __endIf_14();
 			});
 		})(_g.getJobId(job));
 	}
@@ -16182,14 +18884,14 @@ saturn.server.plugins.socket.FileUploader.prototype = $extend(saturn.server.plug
 				})(function(err,binary_info) {
 					err;
 					binary_info;
-					var __wrapper_12 = function() {
+					var __endIf_12 = function() {
 						(function(__afterVar_71) {
 							js.Node.require("fs").writeFile(binary_info.path,binaryData,function(__parameter_72) {
 								__afterVar_71(__parameter_72);
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_13 = function() {
+							var __endIf_13 = function() {
 								return (function(outputFileName) {
 									outputFileName;
 									(function(serveFileName) {
@@ -16212,14 +18914,14 @@ saturn.server.plugins.socket.FileUploader.prototype = $extend(saturn.server.plug
 							if(err1 != null) {
 								_g.handleError(data,err1);
 								__return();
-							} else __wrapper_13();
+							} else __endIf_13();
 						});
 						return;
 					};
 					if(err != null) {
 						_g.handleError(data,err);
 						__return();
-					} else __wrapper_12();
+					} else __endIf_12();
 				});
 			})(data.extension);
 		})(new Buffer(data.fileContents,"base64"));
@@ -16274,7 +18976,7 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 			})(function(err,info) {
 				err;
 				info;
-				var __wrapper_6 = function() {
+				var __endIf_6 = function() {
 					_g.debug_psipred("Writing FASTA");
 					(function(buffer) {
 						buffer;
@@ -16284,7 +18986,7 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_7 = function() {
+							var __endIf_7 = function() {
 								return (function(inputFileName) {
 									inputFileName;
 									(function(outputFileName) {
@@ -16295,7 +18997,7 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 												dir;
 												(function(full_command) {
 													full_command;
-													var __wrapper_8 = function() {
+													var __endIf_8 = function() {
 														return (function(fs_lib) {
 															fs_lib;
 															fs_lib.access(full_command,fs_lib.constants.F_OK,function(err2) {
@@ -16360,8 +19062,8 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 														cmd = "runpsipred_single.bat";
 														dir = "bin\\deployed_bin\\psipred\\win\\";
 														full_command = dir + cmd;
-														__wrapper_8();
-													} else __wrapper_8();
+														__endIf_8();
+													} else __endIf_8();
 												})(dir + "/runpsipred_single");
 											})("bin/deployed_bin/psipred/unix");
 										})("./runpsipred_single");
@@ -16371,7 +19073,7 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 							if(err1 != null) {
 								_g.handleError(job,err1,done);
 								__return();
-							} else __wrapper_7();
+							} else __endIf_7();
 						});
 					})(new Buffer(job.data.fasta));
 					return;
@@ -16379,7 +19081,7 @@ saturn.server.plugins.socket.PSIPREDPlugin.prototype = $extend(saturn.server.plu
 				if(err != null) {
 					_g.handleError(job,err,done);
 					__return();
-				} else __wrapper_6();
+				} else __endIf_6();
 			});
 		})(_g.getJobId(job));
 	}
@@ -16406,7 +19108,7 @@ saturn.server.plugins.socket.PhyloPlugin.prototype = $extend(saturn.server.plugi
 			})(function(err,info) {
 				err;
 				info;
-				var __wrapper_9 = function() {
+				var __endIf_9 = function() {
 					(function(buffer) {
 						buffer;
 						(function(__afterVar_50) {
@@ -16415,12 +19117,12 @@ saturn.server.plugins.socket.PhyloPlugin.prototype = $extend(saturn.server.plugi
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_10 = function() {
+							var __endIf_10 = function() {
 								return (function(inputFileName) {
 									inputFileName;
 									(function(cmd) {
 										cmd;
-										var __wrapper_11 = function() {
+										var __endIf_11 = function() {
 											return (function(proc) {
 												proc;
 												proc.on("error",function(err2) {
@@ -16491,10 +19193,10 @@ saturn.server.plugins.socket.PhyloPlugin.prototype = $extend(saturn.server.plugi
 										};
 										if(js.Node.require("os").platform() == "win32") {
 											cmd = "bin/deployed_bin/clustalw2.exe";
-											__wrapper_11();
+											__endIf_11();
 										} else {
 											cmd = "bin/deployed_bin/clustalw2";
-											__wrapper_11();
+											__endIf_11();
 										}
 									})(null);
 								})(info.path);
@@ -16503,7 +19205,7 @@ saturn.server.plugins.socket.PhyloPlugin.prototype = $extend(saturn.server.plugi
 								_g.handleError(job,err1);
 								done();
 								__return();
-							} else __wrapper_10();
+							} else __endIf_10();
 						});
 					})(new Buffer(job.data.fasta));
 					return;
@@ -16512,7 +19214,7 @@ saturn.server.plugins.socket.PhyloPlugin.prototype = $extend(saturn.server.plugi
 					_g.handleError(job,err);
 					done();
 					__return();
-				} else __wrapper_9();
+				} else __endIf_9();
 			});
 		})(_g.getJobId(job));
 	}
@@ -16539,7 +19241,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 			})(function(err,info) {
 				err;
 				info;
-				var __wrapper_0 = function() {
+				var __endIf_0 = function() {
 					(function(buffer) {
 						buffer;
 						(function(__afterVar_5) {
@@ -16548,7 +19250,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 							});
 						})(function(err1) {
 							err1;
-							var __wrapper_1 = function() {
+							var __endIf_1 = function() {
 								return (function(inputFileName) {
 									inputFileName;
 									(function(outputFileName) {
@@ -16557,7 +19259,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 											cmd;
 											(function(dir) {
 												dir;
-												var __wrapper_2 = function() {
+												var __endIf_2 = function() {
 													return (function($this) {
 														var $r;
 														js.Node.console.log("H3: " + cmd);
@@ -16588,7 +19290,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 																				});
 																			})(function(err2) {
 																				err2;
-																				var __wrapper_3 = function() {
+																				var __endIf_3 = function() {
 																					return (function(__afterVar_18) {
 																						js.Node.require("fs").readFile(serveFileName,null,function(__parameter_19,__parameter_20) {
 																							__afterVar_18(__parameter_19,__parameter_20);
@@ -16596,7 +19298,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 																					})(function(err_read,data) {
 																						err_read;
 																						data;
-																						var __wrapper_4 = function() {
+																						var __endIf_4 = function() {
 																							return (function(__afterVar_21) {
 																								bindings.NodeTemp.open("tmhmmQuery",function(__parameter_22,__parameter_23) {
 																									__afterVar_21(__parameter_22,__parameter_23);
@@ -16604,7 +19306,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 																							})(function(err_temp,info1) {
 																								err_temp;
 																								info1;
-																								var __wrapper_5 = function() {
+																								var __endIf_5 = function() {
 																									return (function(buffer1) {
 																										buffer1;
 																										(function(__afterVar_25) {
@@ -16645,19 +19347,19 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 																								if(err_temp != null) {
 																									_g.handleError(job,"An error has occurred generating a temporary file for results",done);
 																									__return();
-																								} else __wrapper_5();
+																								} else __endIf_5();
 																							});
 																						};
 																						if(err_read != null) {
 																							_g.handleError(job,"An error has occurred opening the results file",done);
 																							__return();
-																						} else __wrapper_4();
+																						} else __endIf_4();
 																					});
 																				};
 																				if(err2 != null) {
 																					_g.handleError(job,"An error has occurred making the results file available",done);
 																					__return();
-																				} else __wrapper_3();
+																				} else __endIf_3();
 																			});
 																		})(_g.saturn.getRelativePublicOuputURL() + "/" + Std.string(_g.saturn.pathLib.basename(outputFileName)));
 																	})(_g.saturn.getRelativePublicOuputFolder() + "/" + Std.string(_g.saturn.pathLib.basename(outputFileName)));
@@ -16673,7 +19375,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 												if(js.Node.require("os").platform() == "win32") {
 													_g.handleError(job,"TMHMM is not supported on Windows platform",done);
 													__return();
-												} else __wrapper_2();
+												} else __endIf_2();
 											})("bin/tmhmm/unix");
 										})("./runsingle_tmhmm.sh");
 									})(inputFileName + ".formatted");
@@ -16682,7 +19384,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 							if(err1 != null) {
 								_g.handleError(job,err1);
 								__return();
-							} else __wrapper_1();
+							} else __endIf_1();
 						});
 					})(new Buffer(job.data.fasta));
 					return;
@@ -16690,7 +19392,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 				if(err != null) {
 					_g.handleError(job,err);
 					__return();
-				} else __wrapper_0();
+				} else __endIf_0();
 			});
 		})(_g.getJobId(job));
 	}
@@ -16753,26 +19455,41 @@ saturn.server.plugins.socket.core.RemoteProviderPlugin.prototype = $extend(satur
 					var connectAsUser = "";
 					var config = provider.getConfig();
 					if(config != null) connectAsUser = config.connect_as_user;
+					_g.debug("Connect as user is: " + connectAsUser);
 					if(command != "_request_models" && (connectAsUser == "preferred" || connectAsUser == "force")) {
-						_g.debug("Connect as user is: " + connectAsUser);
 						if(user == null) {
 							if(connectAsUser == "force") {
 								_g.debug("Connect as user is forced but user is not logged in to " + providerName + " " + command);
 								_g.handleError(data,"You must be logged in to use this provider");
 								return;
+							} else {
+								_g.debug("Calling method on Provider");
+								cb(data,provider,user,function() {
+									if(disconnectOnEnd) provider._closeConnection();
+								});
 							}
 						} else {
 							_g.debug("Connecting as user");
-							provider = provider.generatedLinkedClone();
-							provider.setConnectAsUser(true);
-							provider.setUser(user);
+							var original_provider = provider;
+							var userProvider = provider.generatedLinkedClone();
+							userProvider.setConnectAsUser(true);
 							disconnectOnEnd = true;
+							_g.getSaturnServer().getAuthenticationPlugin().decryptUserPassword(user,function(err1,user1) {
+								userProvider.setUser(user1);
+								if(err1 != null) _g.handleError(data,err1); else {
+									_g.debug("Calling method on Provider");
+									cb(data,userProvider,user1,function() {
+										if(disconnectOnEnd) userProvider._closeConnection();
+									});
+								}
+							});
 						}
+					} else {
+						_g.debug("Calling method on Provider");
+						cb(data,provider,user,function() {
+							if(disconnectOnEnd) provider._closeConnection();
+						});
 					}
-					_g.debug("Calling method on Provider");
-					cb(data,provider,user,function() {
-						if(disconnectOnEnd) provider._closeConnection();
-					});
 				}
 			},providerName);
 		});
@@ -16905,7 +19622,7 @@ saturn.server.plugins.socket.core.RemoteProviderPlugin.prototype = $extend(satur
 			params = this.autoCompleteFields(params,user);
 			var clazz = null;
 			if(data.class_name != null) clazz = Type.resolveClass(data.class_name);
-			provider.getByNamedQuery(data.queryId,params,clazz,false,function(objs,err) {
+			provider.getByNamedQuery(data.queryId,params,clazz,provider.getConfig().enable_cache,function(objs,err) {
 				var json = { };
 				saturn.client.core.CommonCore.releaseResource(provider);
 				json.error = err;
@@ -16922,23 +19639,25 @@ saturn.server.plugins.socket.core.RemoteProviderPlugin.prototype = $extend(satur
 	}
 	,autoCompleteFields: function(params,user) {
 		var retParams = [];
-		var _g = 0;
-		while(_g < params.length) {
-			var paramSet = params[_g];
-			++_g;
-			var _g1 = 0;
-			var _g2 = Reflect.fields(paramSet);
-			while(_g1 < _g2.length) {
-				var field = _g2[_g1];
-				++_g1;
-				if(field == "_username") {
-					saturn.core.Util.debug("Setting username to " + user.username);
-					paramSet._username = user.username;
+		if((params instanceof Array) && params.__enum__ == null) {
+			var _g = 0;
+			while(_g < params.length) {
+				var paramSet = params[_g];
+				++_g;
+				var _g1 = 0;
+				var _g2 = Reflect.fields(paramSet);
+				while(_g1 < _g2.length) {
+					var field = _g2[_g1];
+					++_g1;
+					if(field == "_username") {
+						saturn.core.Util.debug("Setting username to " + user.username);
+						paramSet._username = user.username;
+					}
 				}
+				retParams.push(paramSet);
 			}
-			retParams.push(paramSet);
-		}
-		return retParams;
+			return retParams;
+		} else return params;
 	}
 	,'delete': function(data,provider,user,cb) {
 		var _g = this;
@@ -17709,163 +20428,6 @@ saturn.core.molecule.MoleculeConstants.OH = 17.01;
 saturn.core.molecule.MoleculeConstants.PO3 = 78.97;
 saturn.core.molecule.MoleculeSetRegistry.defaultRegistry = new saturn.core.molecule.MoleculeSetRegistry();
 saturn.db.DefaultProvider.r_date = new EReg("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.000Z","");
-saturn.db.mapping.FamaPublic.models = (function($this) {
-	var $r;
-	var _g = new haxe.ds.StringMap();
-	{
-		var value;
-		var _g1 = new haxe.ds.StringMap();
-		var value1;
-		var _g2 = new haxe.ds.StringMap();
-		if(__map_reserved.path != null) _g2.setReserved("path","PATH"); else _g2.h["path"] = "PATH";
-		if(__map_reserved.content != null) _g2.setReserved("content","CONTENT"); else _g2.h["content"] = "CONTENT";
-		value1 = _g2;
-		if(__map_reserved.fields != null) _g1.setReserved("fields",value1); else _g1.h["fields"] = value1;
-		var value2;
-		var _g3 = new haxe.ds.StringMap();
-		if(__map_reserved.path != null) _g3.setReserved("path",true); else _g3.h["path"] = true;
-		value2 = _g3;
-		if(__map_reserved.indexes != null) _g1.setReserved("indexes",value2); else _g1.h["indexes"] = value2;
-		var value3;
-		var _g4 = new haxe.ds.StringMap();
-		var value4;
-		var _g5 = new haxe.ds.StringMap();
-		if(__map_reserved["/work"] != null) _g5.setReserved("/work","W:"); else _g5.h["/work"] = "W:";
-		if(__map_reserved["/home/share"] != null) _g5.setReserved("/home/share","S:"); else _g5.h["/home/share"] = "S:";
-		value4 = _g5;
-		_g4.set("windows_conversions",value4);
-		var value5;
-		var _g6 = new haxe.ds.StringMap();
-		if(__map_reserved.WORK != null) _g6.setReserved("WORK","^W"); else _g6.h["WORK"] = "^W";
-		value5 = _g6;
-		_g4.set("windows_allowed_paths_regex",value5);
-		var value6;
-		var _g7 = new haxe.ds.StringMap();
-		if(__map_reserved["W:"] != null) _g7.setReserved("W:","/work"); else _g7.h["W:"] = "/work";
-		value6 = _g7;
-		_g4.set("linux_conversions",value6);
-		var value7;
-		var _g8 = new haxe.ds.StringMap();
-		if(__map_reserved.WORK != null) _g8.setReserved("WORK","^/work"); else _g8.h["WORK"] = "^/work";
-		value7 = _g8;
-		_g4.set("linux_allowed_paths_regex",value7);
-		value3 = _g4;
-		if(__map_reserved.options != null) _g1.setReserved("options",value3); else _g1.h["options"] = value3;
-		value = _g1;
-		if(__map_reserved["saturn.core.domain.FileProxy"] != null) _g.setReserved("saturn.core.domain.FileProxy",value); else _g.h["saturn.core.domain.FileProxy"] = value;
-	}
-	{
-		var value8;
-		var _g9 = new haxe.ds.StringMap();
-		var value9;
-		var _g10 = new haxe.ds.StringMap();
-		if(__map_reserved.moleculeName != null) _g10.setReserved("moleculeName","NAME"); else _g10.h["moleculeName"] = "NAME";
-		value9 = _g10;
-		if(__map_reserved.fields != null) _g9.setReserved("fields",value9); else _g9.h["fields"] = value9;
-		var value10;
-		var _g11 = new haxe.ds.StringMap();
-		if(__map_reserved.moleculeName != null) _g11.setReserved("moleculeName",true); else _g11.h["moleculeName"] = true;
-		value10 = _g11;
-		if(__map_reserved.indexes != null) _g9.setReserved("indexes",value10); else _g9.h["indexes"] = value10;
-		var value11;
-		var _g12 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.DNASequenceEditor"] != null) _g12.setReserved("saturn.client.programs.DNASequenceEditor",true); else _g12.h["saturn.client.programs.DNASequenceEditor"] = true;
-		value11 = _g12;
-		if(__map_reserved.programs != null) _g9.setReserved("programs",value11); else _g9.h["programs"] = value11;
-		var value12;
-		var _g13 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g13.setReserved("alias","DNA"); else _g13.h["alias"] = "DNA";
-		value12 = _g13;
-		if(__map_reserved.options != null) _g9.setReserved("options",value12); else _g9.h["options"] = value12;
-		value8 = _g9;
-		if(__map_reserved["saturn.core.DNA"] != null) _g.setReserved("saturn.core.DNA",value8); else _g.h["saturn.core.DNA"] = value8;
-	}
-	{
-		var value13;
-		var _g14 = new haxe.ds.StringMap();
-		var value14;
-		var _g15 = new haxe.ds.StringMap();
-		if(__map_reserved.moleculeName != null) _g15.setReserved("moleculeName","NAME"); else _g15.h["moleculeName"] = "NAME";
-		value14 = _g15;
-		if(__map_reserved.fields != null) _g14.setReserved("fields",value14); else _g14.h["fields"] = value14;
-		var value15;
-		var _g16 = new haxe.ds.StringMap();
-		if(__map_reserved.moleculeName != null) _g16.setReserved("moleculeName",true); else _g16.h["moleculeName"] = true;
-		value15 = _g16;
-		if(__map_reserved.indexes != null) _g14.setReserved("indexes",value15); else _g14.h["indexes"] = value15;
-		var value16;
-		var _g17 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.ProteinSequenceEditor"] != null) _g17.setReserved("saturn.client.programs.ProteinSequenceEditor",true); else _g17.h["saturn.client.programs.ProteinSequenceEditor"] = true;
-		value16 = _g17;
-		if(__map_reserved.programs != null) _g14.setReserved("programs",value16); else _g14.h["programs"] = value16;
-		var value17;
-		var _g18 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g18.setReserved("alias","Proteins"); else _g18.h["alias"] = "Proteins";
-		value17 = _g18;
-		if(__map_reserved.options != null) _g14.setReserved("options",value17); else _g14.h["options"] = value17;
-		value13 = _g14;
-		if(__map_reserved["saturn.core.Protein"] != null) _g.setReserved("saturn.core.Protein",value13); else _g.h["saturn.core.Protein"] = value13;
-	}
-	{
-		var value18;
-		var _g19 = new haxe.ds.StringMap();
-		var value19;
-		var _g20 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g20.setReserved("name","NAME"); else _g20.h["name"] = "NAME";
-		value19 = _g20;
-		if(__map_reserved.fields != null) _g19.setReserved("fields",value19); else _g19.h["fields"] = value19;
-		var value20;
-		var _g21 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g21.setReserved("name",true); else _g21.h["name"] = true;
-		value20 = _g21;
-		if(__map_reserved.indexes != null) _g19.setReserved("indexes",value20); else _g19.h["indexes"] = value20;
-		var value21;
-		var _g22 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.TextEditor"] != null) _g22.setReserved("saturn.client.programs.TextEditor",true); else _g22.h["saturn.client.programs.TextEditor"] = true;
-		value21 = _g22;
-		if(__map_reserved.programs != null) _g19.setReserved("programs",value21); else _g19.h["programs"] = value21;
-		var value22;
-		var _g23 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g23.setReserved("alias","File"); else _g23.h["alias"] = "File";
-		value22 = _g23;
-		if(__map_reserved.options != null) _g19.setReserved("options",value22); else _g19.h["options"] = value22;
-		value18 = _g19;
-		if(__map_reserved["saturn.core.domain.TextFile"] != null) _g.setReserved("saturn.core.domain.TextFile",value18); else _g.h["saturn.core.domain.TextFile"] = value18;
-	}
-	{
-		var value23;
-		var _g24 = new haxe.ds.StringMap();
-		var value24;
-		var _g25 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g25.setReserved("saturn.client.programs.BasicTableViewer",true); else _g25.h["saturn.client.programs.BasicTableViewer"] = true;
-		value24 = _g25;
-		if(__map_reserved.programs != null) _g24.setReserved("programs",value24); else _g24.h["programs"] = value24;
-		var value25;
-		var _g26 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g26.setReserved("alias","Results"); else _g26.h["alias"] = "Results";
-		value25 = _g26;
-		if(__map_reserved.options != null) _g24.setReserved("options",value25); else _g24.h["options"] = value25;
-		value23 = _g24;
-		if(__map_reserved["saturn.core.BasicTable"] != null) _g.setReserved("saturn.core.BasicTable",value23); else _g.h["saturn.core.BasicTable"] = value23;
-	}
-	{
-		var value26;
-		var _g27 = new haxe.ds.StringMap();
-		var value27;
-		var _g28 = new haxe.ds.StringMap();
-		var value28;
-		var _g29 = new haxe.ds.StringMap();
-		if(__map_reserved.SGC != null) _g29.setReserved("SGC",true); else _g29.h["SGC"] = true;
-		value28 = _g29;
-		_g28.set("flags",value28);
-		value27 = _g28;
-		if(__map_reserved.options != null) _g27.setReserved("options",value27); else _g27.h["options"] = value27;
-		value26 = _g27;
-		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value26); else _g.h["saturn.app.SaturnClient"] = value26;
-	}
-	$r = _g;
-	return $r;
-}(this));
 saturn.db.mapping.SQLiteMapping.models = (function($this) {
 	var $r;
 	var _g = new haxe.ds.StringMap();
