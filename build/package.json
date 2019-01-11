@@ -13,11 +13,11 @@
     "oracledb": "^2.3.0",
     "pg": "^7.4.1",
     "redis": "^2.8.0",
-    "restify": "^5.0.0",
+    "restify": "^7.0.0",
     "socket.io": "^2.0.4",
     "socketio-jwt": "^4.5.0",
     "split": "^1.0.1",
-	"sqlite3": "^4.0.4",
+	"sqlite3",: "^4.0.4",
     "temp": "^0.8.3"
   }
 }
