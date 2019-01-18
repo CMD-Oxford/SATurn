@@ -244,6 +244,7 @@ class ChromoHubHooks {
 
         var st_cutoff = "";
         var st_percent_cond = " and s.percent_id IS NOT NULL ";
+        /**
         switch(params[0].cutoff){
             case "best":
                 st_cutoff = "_best";
@@ -253,6 +254,16 @@ class ChromoHubHooks {
                 st_cutoff = "";
                 st_percent_cond += " and s.percent_id >= 94.5 ";
         }
+        */
+        switch(params[0].cutoff){
+            case "95%":
+                st_cutoff = "94.5";
+            case "95% or best":
+                st_cutoff = "40"; //???
+            case "40%":
+                st_cutoff = "40";
+        }
+        st_percent_cond += " and s.percent_id >" + st_cutoff + " ";
 
         var xray_cond='';
         if(params[0].xray=='true'){
@@ -277,24 +288,26 @@ class ChromoHubHooks {
             st_family_or_genes = " ftj.target_id IN ("+placeholders.join(',')+") ";
             boundParameters = params[0].searchGenes;
         }
-
+        var a ='';
         if(params[0].st_select == '1'){ //=dom
             //st_family_or_genes = ' ftj.family_id = ? ';
             if(params[0].treeType=='gene') {
+                a='1';
                 sql = "SELECT distinct d.target_id, null target_name_index, v.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray	FROM structure_highlighted sh, structure s, domain_highlighted d, pdb, variant v, family_target_join ftj WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND dh.variant_index = v.variant_index and d.target_id=v.target_id and v.is_default=1 AND "+st_family_or_genes+" "+st_type_cond+st_percent_cond+xray_cond+" GROUP BY d.target_id, target_name_index, v.variant_index ORDER BY d.target_id, target_name_index, v.variant_index";
             } else {
+                a='2';
                 sql = "SELECT distinct d.target_id, d.name_index target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure_highlighted sh, structure s, family_target_join ftj, domain_highlighted d, pdb WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND on_tree=1 AND "+st_family_or_genes+" and d.target_id = ftj.target_id "+st_type_cond+st_percent_cond+xray_cond+" GROUP BY d.target_id, d.name_index, d.variant_index ORDER BY d.target_id, d.name_index, d.variant_index";
             }
         }else{
             if(params[0].treeType=='gene') {
+                a='3';
                 sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, pdb, variant v WHERE "+st_family_or_genes+" and ftj.target_id = v.target_id and pdb.id=s.pdb_id and v.is_default=1 and v.pkey=s.variant_pkey "+st_type_cond+st_percent_cond+xray_cond+" GROUP BY ftj.target_id, target_name_index, variant_index ORDER BY ftj.target_id, target_name_index, variant_index";
 
             } else {
+                a='4';
                 sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE "+st_family_or_genes+" and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 and d.target_id = ftj.target_id"+st_type_cond+st_percent_cond+xray_cond+" GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
             }
         }
-
-        Util.debug(sql);
 
         provider.getConnection(null, function(err, connection){
             if(err != null){

@@ -31226,4 +31226,306 @@ a.x-color-picker-item:hover {
 	width: 255px;
 }
 
+/** Responsive layout */
 
+@media screen and (max-width: 767px) {
+	
+	.x-viewport, .x-body, .x-viewport > .x-body > .x-panel > .x-panel-body {
+		overflow: scroll !important;
+	}
+	
+	#modeToolBarId {
+		position: static !important;
+		height: 40px !important;
+		float: left;
+		width: 100%;
+	}
+	
+	#modeToolBarId .x-btn-wrap-default-toolbar-small {
+		//height: 30px;
+	}
+	
+	#modeToolBarId .x-btn-wrap-default-toolbar-small .x-btn-button {
+		padding: 0 !important;
+	}
+	
+	#modeToolBarId .x-box-inner {
+		width: 100% !important;
+	}
+	
+	#modeToolBarId .x-box-inner .x-box-target {
+		width: 100% !important;
+	}
+
+	#modeToolBarId .x-box-inner a.x-toolbar-item {
+		position: static !important;
+		float: left;
+		padding: 0 !important;
+		border: none !important;
+	}
+
+	#modeToolBarId .x-box-inner a.x-toolbar-item .x-btn-inner {
+		line-height: 34px;
+		padding: 0 10px !important;
+	}
+	
+	
+	.x-centralPanel-single {
+		position: static !important;
+		float: left !important;
+		width: 100% !important;
+		padding: 10px !important;
+	}
+	
+	.x-centralPanel-single .x-autocontainer-outerCt, .x-centralPanel-single .x-autocontainer-outerCt .x-autocontainer-innerCt {
+		display: block;
+	}
+	
+	.x-centralPanel-single .x-panel, .x-centralPanel-single .x-panel-body, .x-centralPanel-single .x-component {
+		width: 100% !important;
+		padding: 0 !important;
+	}
+
+  .x-centralPanel-single .searchgene-title {
+		margin: 0  0 10px 0 !important;
+	}
+	
+
+	.x-centralPanel-single .targetclass-title {
+		margin: 0 !important;
+	}
+	
+	.x-centralPanel-single .x-form-item-default {
+		width: 100% !important;
+	}
+	
+	.x-centralPanel-single > .x-panel-body {
+		padding: 0 !important;
+		overflow: hidden !important;
+		//min-height: 600px;
+	}
+	
+	#panel-1140-innerCt {
+		overflow: scroll !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner {
+		width: 100% !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner fieldset {
+		position: relative;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner fieldset > div {
+		padding: 5px !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner fieldset > div label {
+		font-size: 12px !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner fieldset .tooltip {
+		position: static;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner fieldset .tooltiptext {
+		left: 0;
+		right: 0;
+		top: -2px;
+	}
+	
+		
+	.x-centralPanel-single .x-table-targeticons .x-box-inner a {
+		position: static !important;
+		margin-right: 10% !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner .x-box-target {
+		width: 100% !important;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner .x-box-target label {
+		font-size: 14px;
+	}
+	
+	.x-centralPanel-single .x-table-targeticons .x-box-inner .x-box-target .x-panel-body-default-framed {
+		margin: 0 !important;
+	}
+	
+
+	/** Annotations */
+	
+	#optionToolBarId {
+		position: static !important;
+		max-width: 100% !important;
+		width: 100% !important;
+		height: 430px !important;
+		padding: 15px 10px 0 10px !important;
+		overflow: hidden !important;
+	}
+	
+	#optionToolBarId #optionToolBarId-innerCt {
+		height: 430px !important;
+		max-width: 100% !important;
+	}
+	
+	#optionToolBarId #optionToolBarId-innerCt label {
+		position: relative !important;
+		top: 0 !important;
+		float: left;
+		width: 100% !important;
+		margin: 0 0 5px 0 !important;
+		padding: 6px 0 !important;
+	}
+	
+	#optionToolBarId #optionToolBarId-innerCt .x-group2btns {
+		position: relative !important;
+		top: 0 !important;
+		float: left;
+		width: 100% !important;
+	}
+	
+	#optionToolBarId #optionToolBarId-innerCt .x-group2btns .x-button-helpicon {
+		padding: 0 !important;
+	}
+
+	#optionToolBarId #optionToolBarId-innerCt .x-group2btns .x-button-helpicon .x-btn-icon-el-default-small {
+		background-position-x: 0;
+	}
+	
+	#optionToolBarId #optionToolBarId-innerCt .x-group2btns .x-btn-viewoptions, #optionToolBarId #optionToolBarId-innerCt .x-group2btns .x-btn-viewoptions-popup, #optionToolBarId #optionToolBarId-innerCt .x-group2btns .x-btn-viewoptions-suboptions {
+		left: 28px !important;
+	}
+	
+	.x-toolbar-2nd {
+		display: none;
+	}
+	
+	/** Annotations popup window */
+	
+	.x-popup-window {
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+	}
+	
+	.x-annot-window, .x-css-shadow {
+		left: 0 !important;
+		width: 99% !important;
+	}
+	
+	.x-annot-window .x-window-body {
+		width: 100% !important;
+	}
+	
+	
+	
+	
+	/** Tree */
+	#id-centralPanel-body {
+		overflow: auto !important;
+	}
+	
+	.x-centralPanel-single .x-panel-body > .x-tree-background {
+		position: static !important;
+		height: auto !important;
+	}
+	
+	.x-centralPanel-single .x-panel-body > .x-tree-background > .x-layout-fit {
+		//height: auto !important;
+	}
+	
+	.x-centralPanel-single .x-panel-body .x-fit-item {
+		//height: 600px !important;
+		overflow: hidden !important;
+	}
+	
+	#panel-1105-body {
+		height: 100% !important;
+	}
+	
+	#box-1106 {
+		height: 100% !important;
+	}
+	
+	
+	.x-centralPanel-single canvas {
+
+	}
+	
+	
+	/** Hightlight genes */
+	.x-centralPanel-single .x-panel-body .x-fit-item > div:nth-child(5) > div:nth-child(1) {
+		width: 100% !important;
+	}
+	.x-centralPanel-single .x-panel-body .x-fit-item > div:nth-child(5) > div:nth-child(2) {
+		width: 98% !important;
+	}
+	
+	.x-centralPanel-single .x-panel-body .x-fit-item > div > div {
+		position: static !important;
+	}
+	
+	.x-centralPanel-single .x-panel-body .x-fit-item > div > div > div button {
+		margin-bottom: 5px;
+	}	
+	
+	#chromo-legend {
+		position: static !important;
+		height: auto !important;
+		//display: none !important;
+		
+	}
+	
+	#chromo-legend #chromo-legend-innerCt {
+		height: auto !important;
+	}
+	
+	#chromo-legend #chromo-legend-innerCt img:last-child {
+		margin-bottom: 15px;
+	}
+	
+	#chromo-legend-splitter {
+		position: static !important;
+	}
+	#chromo-legend-placeholder {
+		position: static !important;
+	}
+	
+	
+	#chromo-legend #chromo-legend-body {
+		height: auto !important;
+	}
+	
+	/** Help tip */
+	
+	.x-body .x-tip-window {
+		left: 10px !important;
+		width: 95% !important;
+	}
+	
+	.x-body .x-tip-window #tipForm {
+		width: 100% !important;
+	}
+	
+	.x-body .x-tip-window .x-window-header {
+		width: 100% !important;
+		border: none !important;
+	}
+	
+	.x-body .x-tip-window #tipForm > .x-toolbar-footer {
+		padding: 0 !important;
+		margin-top: 10px;
+	}
+	
+	.x-body .x-tip-window #tipForm > .x-toolbar-footer a {
+		margin-left: 5px !important;
+	}
+	
+	.x-body .x-tip-window #click_tip_finish {
+		width: 100% !important;
+	}
+}
