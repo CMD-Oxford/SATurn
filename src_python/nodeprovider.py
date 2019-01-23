@@ -5,9 +5,9 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 # Haxe portion is MIT and SATurn portion is CC0
-from nodeproviderblocking import haxe_Serializer
-from nodeproviderblocking import haxe_ds_StringMap
-from nodeproviderblocking import _hx_AnonObject
+from SATurn import haxe_Serializer
+from SATurn import haxe_ds_StringMap
+from SATurn import _hx_AnonObject
 
 # Core Python
 import urllib.request
