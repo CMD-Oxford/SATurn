@@ -10923,7 +10923,7 @@ saturn.db.mapping.PSF.prototype = {
 		var _g33 = new haxe.ds.StringMap();
 		if(__map_reserved.field != null) _g33.setReserved("field","allelePlateId"); else _g33.h["field"] = "allelePlateId";
 		if(__map_reserved["class"] != null) _g33.setReserved("class","saturn.core.domain.SgcAllelePlate"); else _g33.h["class"] = "saturn.core.domain.SgcAllelePlate";
-		if(__map_reserved.fk_field != null) _g33.setReserved("fk_field","id"); else _g33.h["fk_field"] = "id";
+		if(__map_reserved.fk_field != null) _g33.setReserved("fk_field","plateName"); else _g33.h["fk_field"] = "plateName";
 		value32 = _g33;
 		_g29.set("plate",value32);
 		var value33;
