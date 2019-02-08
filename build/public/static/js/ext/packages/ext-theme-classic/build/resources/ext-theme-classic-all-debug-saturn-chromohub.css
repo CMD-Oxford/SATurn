@@ -30238,7 +30238,8 @@ a.x-color-picker-item:hover {
 /********************** TIP WINDOW *******************/
 .x-tip-window{
     border:3px solid #4d749f!important;
-	
+		min-width: 600px;
+		height: auto !important;
 }
 
 .x-tip-window .x-title-text{
@@ -30263,10 +30264,20 @@ a.x-color-picker-item:hover {
 #tipForm_header{
 	display:none!important;
 }
-#tipForm-body{
+#tipForm-body {
 	height: 80%!important;
-    border: 1px solid #c9cbcf!important; 
-    width: 95%!important;
+	border: 1px solid #c9cbcf!important; 
+	width: 95%!important;
+}
+#window-1169-body {
+	height: 100% !important;
+}
+#demoForm {
+	margin-bottom: 4%;
+}
+#demoForm-body {
+	height: 100%!important;
+	width: 95% !important;
 }
 #tipForm .x-toolbar{
 	top: 84%!important;
@@ -30293,19 +30304,19 @@ a.x-color-picker-item:hover {
 }
 #previous-tip-btn,
 #next-tip-btn,
-#close-tip-btn{
+#close-tip-btn, #close-demo-btn{
 	border-color:#4d749f!important;
 	color:#4d749f!important;
 	width:84px!important;
 }
-#id-tip-html{
+#id-tip-html, #id-demo-html{
 	padding:10px!important;
 	color:#7c7d80!important;
 	font-size:13px!important;
 	width: 99%!important;
 	height:80%!important;
 }
-#id-tip-html h2{
+#id-tip-html h2, #id-demo-html h2{
 	margin-bottom:6px!important;
 }
 .x-tip-window .x-window-header-default-top{
@@ -30509,9 +30520,23 @@ a.x-color-picker-item:hover {
 /***********  TARGET CLASS SELECTION PAGE *************/
 .x-page-targetclass{
     background-color:white!important;
-    padding: 30px 5px 5px 20px;
+    padding: 20px 5px 5px 20px;
     margin:0 auto!important;
 }
+
+.home-intro-text {
+	margin-bottom: 30px;
+	padding-left: 10px;
+}
+
+.home-intro-text h2 {
+	color: #4d749f;
+}
+
+.home-intro-text h2, .home-intro-text p {
+	margin: 0 0 10px 0;
+}
+
 .x-table-targetgroup .x-panel-header {
     padding-left: 8px!important;
 }
@@ -31240,13 +31265,13 @@ a.x-color-picker-item:hover {
 		float: left;
 		width: 100%;
 	}
-	
-	#modeToolBarId .x-btn-wrap-default-toolbar-small {
-		//height: 30px;
+	#modeToolBarId .x-btn-default-toolbar-small {
+		width: 25% !important;
+		min-width: 70px;
 	}
-	
 	#modeToolBarId .x-btn-wrap-default-toolbar-small .x-btn-button {
 		padding: 0 !important;
+		width: 100% !important;
 	}
 	
 	#modeToolBarId .x-box-inner {
@@ -31275,6 +31300,10 @@ a.x-color-picker-item:hover {
 		float: left !important;
 		width: 100% !important;
 		padding: 10px !important;
+	}
+	
+	.x-centralPanel-single .home-intro-text > .x-panel-body .x-autocontainer-innerCt {
+		height: auto;
 	}
 	
 	.x-centralPanel-single .x-autocontainer-outerCt, .x-centralPanel-single .x-autocontainer-outerCt .x-autocontainer-innerCt {
@@ -31500,15 +31529,17 @@ a.x-color-picker-item:hover {
 		height: auto !important;
 	}
 	
-	/** Help tip */
+	/** Help tip and Demo video */
 	
 	.x-body .x-tip-window {
 		left: 10px !important;
 		width: 95% !important;
+		min-width: auto !important;
 	}
 	
-	.x-body .x-tip-window #tipForm {
+	.x-body .x-tip-window #tipForm, .x-body .x-tip-window #demoForm {
 		width: 100% !important;
+		margin-bottom: 10%;
 	}
 	
 	.x-body .x-tip-window .x-window-header {
@@ -31527,5 +31558,10 @@ a.x-color-picker-item:hover {
 	
 	.x-body .x-tip-window #click_tip_finish {
 		width: 100% !important;
+	}
+	
+	.x-body .x-tip-window #demoForm video {
+		height: 200px;
+		width: 100%;
 	}
 }

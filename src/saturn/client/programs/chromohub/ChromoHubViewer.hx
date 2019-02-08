@@ -1205,8 +1205,28 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
         }else{
             container.showTipWindow();
         }
+    }
 
+    private function showDemoVideo(){
+        var container=getApplication().getSingleAppContainer();
 
+        var mydom :Dynamic;
+        mydom=js.Browser.document.childNodes[0];
+        var top, left, width, height:Int;
+        var w=mydom.clientWidth;
+        width=Std.int(w*0.7);
+        left=Std.int(w*0.15);
+        var h= mydom.clientHeight;
+        height=Std.int(h*1);
+        top=Std.int(h*0.15);
+
+        if(container.getDemoWindow()==null){
+            var html = '<video controls="" height="580" width="900"><source src="/static/tips/UbiHub_demo.mov" type="video/mp4" />Your browser does not support the video tag.</video>';
+            var text= html;
+            container.createDemoWindow(this, top, left, width, height, text);
+        }else{
+            container.showDemoWindow();
+        }
     }
 
     private function addBtnsToMainToolBar(searchField:Bool){
@@ -1247,6 +1267,61 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
             },
             tooltip: {dismissDelay: 10000, text: 'Protein Family Selection'}
         });
+
+        #if UBIHUB
+        container.addElemToModeToolBar({
+            cls     :   if(currentView==3)'btn-selected' else '',
+            xtype   :   'button',
+            text    :   'Demo',
+            handler :   function(){
+                var keepgoing=false;
+                var container = getApplication().getSingleAppContainer();
+                container.hideHelpingDiv();
+                if(config.editmode==true){
+                    if(undolist.length>0){
+                        WorkspaceApplication.getApplication().userPrompt('Question', 'You are going to lose your changes. Do you want to continue?', function(){
+                            keepgoing=false;
+                            //while(undolist.length>0){
+                            //   moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                            //}
+                            config.editmode=false;
+                            container.viewClose(true);
+                            container.hideEditToolBar();
+                            undolist=new Array();
+
+                            if(viewOptionsActive==false){
+                                viewOptionsActive=true;
+
+                                container.showOptionsToolBar();
+                            }
+
+                            newposition(0,0);
+                        });
+                    }else keepgoing=true;
+                }else keepgoing=true;
+
+                if(keepgoing==true){
+
+                    // while(undolist.length>0){
+                    //    moveNode(null,true, true);//if we are undoing actions, the undolist is doing pop so increasing its length
+                    //}
+                    config.editmode=false;
+                    //container.viewClose(true);
+                    container.hideEditToolBar();
+                    undolist=new Array();
+
+                    if(viewOptionsActive==false){
+                        viewOptionsActive=true;
+
+                        container.showOptionsToolBar();
+                    }
+                    //newposition(0,0);
+                    showDemoVideo();
+                }
+            },
+            tooltip :   {dismissDelay: 10000, text: 'Demo'}
+        });
+        #end
 
         container.addElemToModeToolBar({
             cls     :   if(currentView==1)'btn-selected' else '',
@@ -1466,6 +1541,16 @@ class ChromoHubViewer  extends SimpleExtJSProgram  {
 
         #if UBIHUB
         title = 'Search in trees';
+        #end
+
+        #if UBIHUB
+        centralTargetPanel.add({
+            xtype: 'panel',
+            cls:'home-intro-text',
+            html: '<h2>UbiHub: a data hub for the explorers of ubiquitination pathways.</h2><p>First time users: click "Demo"
+            from the left menu. If you find this resource helpful in your research, thank you for citing Liu et al. (2019) DOI:
+            <a href="https://doi.org/10.1093/bioinformatics/bty1067" target="_blank">10.1093/bioinformatics/bty1067</a>.</p>'
+        });
         #end
 
         centralTargetPanel.add({
