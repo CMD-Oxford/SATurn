@@ -9,6 +9,7 @@
 
 package saturn.app;
 
+import saturn.client.programs.ComplexHelper;
 import saturn.client.core.ClientCore;
 import saturn.client.programs.PurificationHelper;
 import saturn.client.programs.SHRNADesigner;
@@ -345,6 +346,9 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
 
 
 		this.getProgramRegistry().registerProgram(HelloWorldViewer, true);
+
+        this.getProgramRegistry().registerProgram(ComplexHelper, true);
+
 		//<LOAD_PROGRAMS>
 
         /**

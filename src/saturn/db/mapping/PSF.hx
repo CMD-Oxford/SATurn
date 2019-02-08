@@ -9,7 +9,7 @@
 
 package saturn.db.mapping;
 
-class SGC {
+class PSF {
     /**
      * fields: instance attribute name to RDBMS column name
      * indexes: instance attributes that should be used to index retrieved objects in the local cache
@@ -34,18 +34,18 @@ class SGC {
         models = [
             'saturn.core.domain.SgcConstruct'=>[
                 'fields'=>[
-                    'constructId' => 'CONSTRUCT_ID',
+                    'constructId' => 'CONSTRUCTID',
                     'id' => 'PKEY',
                     'proteinSeq' => 'CONSTRUCTPROTSEQ',
                     'proteinSeqNoTag' => 'CONSTRUCTPROTSEQNOTAG',
                     'dnaSeq' => 'CONSTRUCTDNASEQ',
                     'docId' => 'ELNEXP',
-                    'vectorId' => 'SGCVECTOR_PKEY',
-                    'alleleId' => 'SGCALLELE_PKEY',
-                    'res1Id' => 'SGCRESTRICTENZ1_PKEY',
-                    'res2Id' => 'SGCRESTRICTENZ2_PKEY',
-                    'constructPlateId' => 'SGCCONSTRUCTPLATE_PKEY',
-                    'wellId' => 'WELLID',
+                    'vectorId' => 'SGCVECTOR',
+                    'alleleId' => 'SGCDNAINSERT',
+                    'res1Id' => 'SGCRESTRICTIONENZYME1',
+                    'res2Id' => 'SGCRESTRICTIONENZYME2',
+                    'constructPlateId' => 'SGCPLATE',
+                    'wellId' => 'PLATEWELL',
                     'expectedMass' => 'EXPECTEDMASS',
                     'expectedMassNoTag' => 'EXPETCEDMASSNOTAG',
                     'status' => 'STATUS',
@@ -54,8 +54,7 @@ class SGC {
                     'constructComments' => 'CONSTRUCTCOMMENTS',
                     'person' => 'PERSON',
                     'constructStart' => 'CONSTRUCTSTART',
-                    'constructStop'=> 'CONSTRUCTSTOP',
-                    'complex' => 'COMPLEX'
+                    'constructStop'=> 'CONSTRUCTSTOP'
                 ],
                 'defaults'=> [
                     'status' => 'In progress'
@@ -96,16 +95,16 @@ class SGC {
                     '__HIDDEN__PKEY__' => 'id'
                 ],
                 'fields.synthetic' =>[
-                    'allele' => [ 'field' => 'alleleId', 'class' => 'saturn.core.domain.SgcAllele', 'fk_field' => 'id' ],
-                    'vector' => [ 'field' => 'vectorId', 'class' => 'saturn.core.domain.SgcVector', 'fk_field' => 'id' ],
-                    'res1' => [ 'field' => 'res1Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'id'],
-                    'res2' => [ 'field' => 'res2Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'id'],
-                    'constructPlate' => [ 'field' => 'constructPlateId', 'class' => 'saturn.core.domain.SgcConstructPlate', 'fk_field' => 'id' ],
+                    'allele' => [ 'field' => 'alleleId', 'class' => 'saturn.core.domain.SgcAllele', 'fk_field' => 'alleleId' ],
+                    'vector' => [ 'field' => 'vectorId', 'class' => 'saturn.core.domain.SgcVector', 'fk_field' => 'vectorId' ],
+                    'res1' => [ 'field' => 'res1Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'enzymeName'],
+                    'res2' => [ 'field' => 'res2Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'enzymeName'],
+                    'constructPlate' => [ 'field' => 'constructPlateId', 'class' => 'saturn.core.domain.SgcConstructPlate', 'fk_field' => 'plateName' ],
                     'proteinSequenceObj' => ['field' => 'proteinSeq', 'class'=>'saturn.core.Protein', 'fk_field'=> null],
                     'proteinSequenceNoTagObj' => ['field' => 'proteinSeqNoTag', 'class'=>'saturn.core.Protein', 'fk_field'=> null]
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'CONSTRUCT'
                 ],
                 'programs'=>[
@@ -136,37 +135,37 @@ class SGC {
                     ]
                 ]
             ],
-            'saturn.core.domain.SgcConstructStatus' => [
+            /*'saturn.core.domain.SgcConstructStatus' => [
                 'fields' => [
                     'constructPkey' => 'SGCCONSTRUCT_PKEY',
                     'status' => 'STATUS'
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'CONSTR_STATUS_SNAPSHOT'
                 ],
                 'indexes'=>[
                     'constructPkey'=>true
                 ]
-            ],
+            ],*/
             'saturn.core.domain.SgcAllele'=>[
                 'fields'=>[
-                    'alleleId'=>'ALLELE_ID',
-                    'allelePlateId' => 'SGCPLATE_PKEY',
+                    'alleleId'=>'DNAINSERTID',
+                    'allelePlateId' => 'SGCPLATE',
                     'id' => 'PKEY',
-                    'entryCloneId' => 'SGCENTRYCLONE_PKEY',
-                    'forwardPrimerId' => 'SGCPRIMER5_PKEY',
-                    'reversePrimerId' => 'SGCPRIMER3_PKEY',
-                    'dnaSeq' => 'ALLELESEQUENCERAW',
-                    'proteinSeq' => 'ALLELEPROTSEQ',
-                    'status' => 'ALLELE_STATUS',
+                    'entryCloneId' => 'SGCENTRYCLONE',
+                    'forwardPrimerId' => 'SGCPRIMER',
+                    'reversePrimerId' => 'SGCPRIMERREV',
+                    'dnaSeq' => 'DNAINSERTSEQUENCERAW',
+                    'proteinSeq' => 'DNAINSERTPROTSEQ',
+                    'status' => 'DNAINSERTSTATUS',
                     'location' => 'SGCLOCATION',
-                    'comments' => 'ALLELECOMMENTS',
+                    'comments' => 'COMMENTS',
                     'elnId' => 'ELNEXP',
                     'dateStamp' => 'DATESTAMP',
                     'person' => 'PERSON',
                     'plateWell' => 'PLATEWELL',
-                    'dnaSeqLen' => 'ALLELESEQLENGTH',
+                    'dnaSeqLen' => 'DNAINSERTSEQLENGTH',
                     'complex' => 'COMPLEX',
                     'domainSummary' => 'DOMAINSUMMARY',
                     'domainStartDelta' => 'DOMAINSTARTDELTA',
@@ -180,7 +179,7 @@ class SGC {
                     'status' => 'In process'
                 ],
                 'model' =>[
-                    'Allele ID' => 'alleleId',
+                    'DNA Insert ID' => 'alleleId',
                     'Plate' => 'plate.plateName',
                     'Entry Clone ID' => 'entryClone.entryCloneId',
                     'Forward Primer ID' => 'forwardPrimer.primerId',
@@ -209,15 +208,15 @@ class SGC {
                     'id'=>true
                 ],
                 'fields.synthetic' =>[
-                    'entryClone' => [ 'field' => 'entryCloneId', 'class' => 'saturn.core.domain.SgcEntryClone', 'fk_field' => 'id' ],
-                    'forwardPrimer' => [ 'field' => 'forwardPrimerId', 'class' => 'saturn.core.domain.SgcForwardPrimer', 'fk_field' => 'id' ],
-                    'reversePrimer' => [ 'field' => 'reversePrimerId', 'class' => 'saturn.core.domain.SgcReversePrimer', 'fk_field' => 'id' ],
-                    'plate' => [ 'field' => 'allelePlateId', 'class' => 'saturn.core.domain.SgcAllelePlate', 'fk_field' => 'id' ],
+                    'entryClone' => [ 'field' => 'entryCloneId', 'class' => 'saturn.core.domain.SgcEntryClone', 'fk_field' => 'entryCloneId' ],
+                    'forwardPrimer' => [ 'field' => 'forwardPrimerId', 'class' => 'saturn.core.domain.SgcForwardPrimer', 'fk_field' => 'primerId' ],
+                    'reversePrimer' => [ 'field' => 'reversePrimerId', 'class' => 'saturn.core.domain.SgcReversePrimer', 'fk_field' => 'primerId' ],
+                    'plate' => [ 'field' => 'allelePlateId', 'class' => 'saturn.core.domain.SgcAllelePlate', 'fk_field' => 'plateName' ],
                     'proteinSequenceObj' => ['field' => 'proteinSeq', 'class'=>'saturn.core.Protein', 'fk_field'=> null]
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'ALLELE'
+                    'schema' => 'PSF',
+                    'name' => 'DNAINSERT'
                 ],
                 'programs'=>[
                     'saturn.client.programs.DNASequenceEditor' => true
@@ -244,15 +243,14 @@ class SGC {
             ],
             'saturn.core.domain.SgcEntryClone'=>[
                 'fields'=>[
-                    'entryCloneId'=>'ENTRY_CLONE_ID',
+                    'entryCloneId'=>'ENTRYCLONEID',
                     'id' => 'PKEY',
                     'dnaSeq' => 'DNARAWSEQUENCE',
                     'targetId' => 'SGCTARGET_PKEY',
                     'seqSource' => 'SEQSOURCE',
                     'sourceId' => 'SOURCEID',
                     'sequenceConfirmed'=> 'SEQUENCECONFIRMED',
-                    'elnId' => 'ELNEXPERIMENTID',
-                    'complex' => 'COMPLEX'
+                    'elnId' => 'ELNEXPERIMENTID'
                 ],
                 'indexes'=>[
                     'entryCloneId'=>false,
@@ -285,8 +283,8 @@ class SGC {
                     ]
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'ENTRY_CLONE'
+                    'schema' => 'PSF',
+                    'name' => 'ENTRYCLONE'
                 ],
                 'model'=>[
                     'Entry Clone ID' => 'entryCloneId',
@@ -298,8 +296,8 @@ class SGC {
             ],
             'saturn.core.domain.SgcRestrictionSite'=>[
                 'fields'=>[
-                    'enzymeName' => 'RESTRICTION_ENZYME_NAME',
-                    'cutSequence' => 'RESTRICTION_ENZYME_SEQUENCERAW',
+                    'enzymeName' => 'RESTRICTIONENZYMENAME',
+                    'cutSequence' => 'RESTRICTIONENZYMESEQUENCERAW',
                     'id' => 'PKEY'
                 ],
                 'indexes'=>[
@@ -307,8 +305,8 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'RESTRICTION_ENZYME'
+                    'schema' => 'PSF',
+                    'name' => 'RESTRICTIONENZYME'
                 ],
                 'programs'=>[
                     'saturn.client.programs.DNASequenceEditor' => true
@@ -326,17 +324,17 @@ class SGC {
             ],
             'saturn.core.domain.SgcVector'=>[
                 'fields'=>[
-                    'vectorId'=>'VECTOR_NAME',
+                    'vectorId'=>'VECTORNAME',
                     'id'=>'PKEY',
                     'sequence'=>'VECTORSEQUENCERAW',
                     'vectorComments'=>'VECTORCOMMENTS',
-                    'proteaseName'=>'PROTEASE_NAME',
-                    'proteaseCutSequence'=>'PROTEASE_CUTSEQUENCE',
-                    'proteaseProduct'=>'PROTEASE_PRODUCT',
+                    'proteaseName'=>'PROTEASENAME',
+                    'proteaseCutSequence'=>'PROTEASECUTSEQUENCE',
+                    'proteaseProduct'=>'PROTEASEPRODUCT',
                     'antibiotic'=>'ANTIBIOTIC',
                     'organism'=>'ORGANISM',
-                    'res1Id'=>'SGCRESTRICTENZ1_PKEY',
-                    'res2Id'=>'SGCRESTRICTENZ2_PKEY',
+                    'res1Id'=>'SGCRESTRICTENZ1',
+                    'res2Id'=>'SGCRESTRICTENZ2',
                     'addStopCodon'=>'REQUIRES_STOP_CODON',
                     'requiredForwardExtension'=>'REQUIRED_EXTENSION_FORWARD',
                     'requiredReverseExtension'=>'REQUIRED_EXTENSION_REVERSE'
@@ -352,11 +350,11 @@ class SGC {
                     'id'=>true
                 ],
                 'fields.synthetic' =>[
-                    'res1' => [ 'field' => 'res1Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'id' ],
-                    'res2' => [ 'field' => 'res2Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'id' ]
+                    'res1' => [ 'field' => 'res1Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'enzymeName' ],
+                    'res2' => [ 'field' => 'res2Id', 'class' => 'saturn.core.domain.SgcRestrictionSite', 'fk_field' => 'enzymeName' ]
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'VECTOR'
                 ],
                 'options'=>[
@@ -378,7 +376,7 @@ class SGC {
             ],
             'saturn.core.domain.SgcForwardPrimer'=>[
                 'fields'=>[
-                    'primerId' => 'PRIMERNAME',
+                    'primerId' => 'PRIMERID',
                     'id' => 'PKEY',
                     'dnaSequence' => 'PRIMERRAWSEQUENCE'
                 ],
@@ -387,7 +385,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'PRIMER'
                 ],
                 'programs'=>[
@@ -407,7 +405,7 @@ class SGC {
             ],
             'saturn.core.domain.SgcReversePrimer'=>[
                 'fields'=>[
-                    'primerId' => 'PRIMERNAME',
+                    'primerId' => 'PRIMERREVID',
                     'id' => 'PKEY',
                     'dnaSequence' => 'PRIMERRAWSEQUENCE'
                 ],
@@ -416,7 +414,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'PRIMERREV'
                 ],
                 'programs'=>[
@@ -448,7 +446,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'PURIFICATION'
                 ],
                 'programs'=>[
@@ -489,7 +487,7 @@ class SGC {
                     'auto_activate'=> '3'
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'CLONE'
                 ],
                 'programs'=>[
@@ -518,8 +516,8 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'EXPRESSION'
+                    'schema' => 'PSF',
+                    'name' => 'EXPRESSIONSCREENING'
                 ],
                 'programs'=>[
                     'saturn.client.programs.EmptyViewer' => true
@@ -542,7 +540,7 @@ class SGC {
             ],
             'saturn.core.domain.SgcTarget'=>[
                 'fields'=>[
-                    'targetId' => 'TARGET_ID',
+                    'targetId' => 'TARGETNAME',
                     'id' => 'PKEY',
                     'gi' => 'GENBANK_ID',
                     'geneId' => 'NCBIGENEID',
@@ -550,16 +548,14 @@ class SGC {
                     'dnaSeq' => 'NUCLEOTIDESEQUENCE',
                     'activeStatus' => 'ACTIVESTATUS',
                     'pi' => 'PI',
-                    'comments' => 'COMMENTS',
-                    'complexComments' => 'COMPLEXCOMPONENTS',
-                    'complex' => 'COMPLEX'
+                    'comments' => 'COMMENTS'
                 ],
                 'indexes'=>[
                     'targetId'=>false,
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'TARGET',
                     'human_name' => 'Target',
                     'human_name_plural' => 'Targets'
@@ -589,7 +585,7 @@ class SGC {
                     'auto_activate' => '3'
                 ]
             ],
-            'saturn.core.domain.SgcTargetDNA'=>[
+            /*'saturn.core.domain.SgcTargetDNA'=>[
                 'fields'=>[
                     'sequence' => 'SEQ',
                     'id' => 'PKEY',
@@ -628,7 +624,7 @@ class SGC {
                     'schema' => '',
                     'name' => 'SEQDATA'
                 ]
-            ],
+            ],*/
             'saturn.core.domain.SgcDomain'=>[
                 'fields'=>[
                     'id' => 'PKEY',
@@ -653,8 +649,8 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'CONSTRUCTPLATE'
+                    'schema' => 'PSF',
+                    'name' => 'PLATE'
                 ],
                 'options' => [
                     'icon' => 'dna_conical_16.png',
@@ -692,7 +688,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'PLATE'
                 ],
                 'options' => [
@@ -722,7 +718,7 @@ class SGC {
                     'saturn.client.programs.EmptyViewer' => true
                 ],
             ],
-            'saturn.core.domain.SgcDNA'=>[
+            /*'saturn.core.domain.SgcDNA'=>[
                 'fields'=>[
                     'dnaId' => 'DNA_ID',
                     'id' => 'PKEY',
@@ -733,11 +729,11 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'DNA'
                 ]
-            ],
-            'saturn.core.domain.TiddlyWiki'=>[
+            ],*/
+            /*'saturn.core.domain.TiddlyWiki'=>[
                 'fields'=>[
                     'pageId' => 'PAGEID',
                     'id' => 'PKEY',
@@ -748,7 +744,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'TIDDLY_WIKI'
                 ],
                 'options' => [
@@ -764,8 +760,8 @@ class SGC {
                 'programs'=>[
                     'saturn.client.programs.TiddlyWikiViewer' => true
                 ]
-            ],
-            'saturn.core.domain.Entity'=>[
+            ],*/
+            /*'saturn.core.domain.Entity'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'entityId' => 'ID',
@@ -780,7 +776,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_ENTITY'
                 ],
                 'fields.synthetic' =>[
@@ -788,8 +784,8 @@ class SGC {
                     'reaction' => [ 'field' => 'reactionId', 'class' => 'saturn.core.Reaction', 'fk_field' => 'id' ],
                     'entityType' => [ 'field' => 'entityTypeId', 'class' => 'saturn.core.EntityType', 'fk_field' => 'id' ]
                 ]
-            ],
-            'saturn.core.domain.Molecule'=>[
+            ],*/
+            /*'saturn.core.domain.Molecule'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'name' => 'ID',
@@ -801,7 +797,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_MOLECULE'
                 ],
                 'fields.synthetic' =>[
@@ -818,11 +814,11 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_REACTION_TYPE'
                 ]
-            ],
-            'saturn.core.EntityType'=>[
+            ],*/
+            /*'saturn.core.EntityType'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'name' => 'NAME'
@@ -832,7 +828,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_ENTITY_TYPE'
                 ]
             ],
@@ -846,7 +842,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_REACTION_ROLE'
                 ]
             ],'saturn.core.Reaction'=>[
@@ -860,7 +856,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_REACTION'
                 ],
                 'fields.synthetic' =>[
@@ -878,7 +874,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_REACTION_COMPONENT'
                 ],
                 'fields.synthetic' =>[
@@ -897,11 +893,11 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_ENTITY_SOURCE'
                 ]
-            ],
-            'saturn.core.domain.MoleculeAnnotation'=>[
+            ],*/
+            /*'saturn.core.domain.MoleculeAnnotation'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'entityId' => 'SGCENTITY_PKEY',
@@ -914,14 +910,14 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'Z_ANNOTATION'
                 ],
                 'fields.synthetic' =>[
                     'entity' => [ 'field' => 'entityId', 'class' => 'saturn.core.domain.Entity', 'fk_field' => 'id' ],
                     'referent' => [ 'field' => 'labelId', 'class' => 'saturn.core.domain.Entity', 'fk_field' => 'id' ],
                 ]
-            ],
+            ],*/
             'saturn.core.domain.XtalPlate'=>[
                 'fields'=>[
                     'id' => 'PKEY',
@@ -933,7 +929,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'XTAL_PLATES'
                 ],
                 'fields.synthetic' => [
@@ -954,7 +950,7 @@ class SGC {
                     'id'=>true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'MODEL'
                 ],
                 'fields.synthetic' => [
@@ -1047,13 +1043,13 @@ class SGC {
                     'file.new.label'=> 'Script',
                     'icon' => 'dna_conical_16.png'
                 ],
-                'table_info' => [
-                    'schema' => 'SGC',
+                /*'table_info' => [
+                    'schema' => 'PSF',
                     'name' => 'SCRIPTS'
                 ],
                 'search'=>[
                     'name' => true
-                ]
+                ]*/
             ],
             'saturn.core.BasicTable' =>[
                 'programs'=>[
@@ -1070,15 +1066,6 @@ class SGC {
                 'options' => [
                     'alias' => 'Construct Plan',
                     'icon'=>'dna_conical_16.png'
-                ]
-            ],
-            'saturn.core.ComplexPlan' =>[
-                'programs'=>[
-                    'saturn.client.programs.ComplexHelper' => false
-                ],
-                'options' => [
-                    'alias' => 'Complex Helper',
-                    'icon'=>'protein_conical_16.png'
                 ]
             ],
 
@@ -1110,7 +1097,7 @@ class SGC {
             'saturn.core.domain.Compound'=>[
                 'fields'=>[
                     'id' => 'PKEY',
-                    'compoundId' => 'SGCGLOBALID',
+                    'compoundId' => 'COMPOUNDID',
                     'shortCompoundId' => 'COMPOUND_ID',
                     'supplierId' => 'SUPPLIER_ID',
                     'sdf' => 'SDF',
@@ -1134,14 +1121,14 @@ class SGC {
                 ],
                 'search' => [
                     'compoundId'  => null,
-                    'shortCompoundId' => null,
+                    /*'shortCompoundId' => null,
                     'supplierId' => null,
                     'supplier' => null,
-                    'oldSGCGlobalId'=>null
+                    'oldSGCGlobalId'=>null*/
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'SGCCOMPOUND'
+                    'schema' => 'PSF',
+                    'name' => 'COMPOUND'
                 ],
                 'options' => [
                     'workspace_wrapper' => 'saturn.client.workspace.CompoundWO',
@@ -1177,7 +1164,7 @@ class SGC {
                     'saturn.client.programs.CompoundViewer' => true
                 ]
             ],
-            'saturn.core.domain.Glycan'=>[
+            /*'saturn.core.domain.Glycan'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'glycanId' => 'GLYCANID',
@@ -1193,7 +1180,7 @@ class SGC {
                     'glycanId'  => null
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'GLYCAN'
                 ],
                 'options' => [
@@ -1211,7 +1198,7 @@ class SGC {
                 'programs'=>[
                     'saturn.client.programs.GlycanBuilder' => true
                 ]
-            ],
+            ],*/
             'saturn.app.SaturnClient'=>[
                 'options'=>[
                     'flags' =>[
@@ -1219,7 +1206,7 @@ class SGC {
                     ]
                 ]
             ],
-            'saturn.core.User' =>[
+            /*'saturn.core.User' =>[
                 'fields' =>[
                     'id' => 'PKEY',
                     'username' => 'USERID',
@@ -1233,8 +1220,8 @@ class SGC {
                     'schema' => 'HIVE',
                     'name' => 'USER_DETAILS'
                 ]
-            ],
-            'saturn.core.Permission' =>[
+            ],*/
+            /*'saturn.core.Permission' =>[
                 'fields' =>[
                     'id' => 'PKEY',
                     'name' => 'NAME'
@@ -1244,11 +1231,11 @@ class SGC {
                     'name' => false
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'SATURNPERMISSION'
                 ]
-            ],
-            'saturn.core.UserToPermission' =>[
+            ],*/
+            /*'saturn.core.UserToPermission' =>[
                 'fields' => [
                     'id' => 'PKEY',
                     'permissionId' => 'PERMISSIONID',
@@ -1258,11 +1245,11 @@ class SGC {
                     'id' => true
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'SATURNUSER_TO_PERMISSION'
                 ]
-            ],
-            'saturn.core.domain.SaturnSession' =>[
+            ],*/
+            /*'saturn.core.domain.SaturnSession' =>[
                 'fields' => [
                     'id' => 'PKEY',
                     'userName' => 'USERNAME',
@@ -1278,7 +1265,7 @@ class SGC {
                     'user.fullname' => null
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'SATURNSESSION'
                 ],
                 'options' => [
@@ -1302,8 +1289,8 @@ class SGC {
                 ],'fields.synthetic' =>[
                     'user' => [ 'field' => 'userName', 'class' => 'saturn.core.User', 'fk_field' => 'username' ]
                 ]
-            ],
-            'saturn.core.domain.ABITrace' =>[
+            ],*/
+            /*'saturn.core.domain.ABITrace' =>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'name' => 'NAME',
@@ -1322,14 +1309,14 @@ class SGC {
                     'workspace_wrapper' => 'saturn.client.workspace.ABITraceWO'
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'TRACES'
                 ],
                 'search'=>[
                     'name' => true
                 ]
-            ],
-            'saturn.core.domain.Alignment' =>[
+            ],*/
+           /* 'saturn.core.domain.Alignment' =>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'name' => 'NAME',
@@ -1349,13 +1336,13 @@ class SGC {
                     'workspace_wrapper' => 'saturn.client.workspace.AlignmentWorkspaceObject'
                 ],
                 'table_info' => [
-                    'schema' => 'SGC',
+                    'schema' => 'PSF',
                     'name' => 'ALIGNMENTS'
                 ],
                 'search'=>[
                     'name' => true
                 ]
-            ]
+            ]*/
         ];
     }
 

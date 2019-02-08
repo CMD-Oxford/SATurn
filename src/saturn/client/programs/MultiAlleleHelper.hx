@@ -44,6 +44,8 @@ import saturn.client.workspace.ProteinWorkspaceObject;
 
 import saturn.client.WorkspaceApplication;
 
+import saturn.core.domain.SgcUtil;
+
 class MultiAlleleHelper extends TableHelper{
     static var CLASS_SUPPORT : Array<Class<Dynamic>> = [ MultiAlleleHelperWO ];
 
@@ -359,14 +361,68 @@ class MultiAlleleHelper extends TableHelper{
                     }
                 }
             }
-            WorkspaceApplication.resumeUpdates(true);
 
-            theTable.getView().refresh();
+            calculateAlleleIds(false, function(err){
+                if(err == null){
+                    getApplication().showMessage('Finished','Calculation finished');
+                }
 
-            getApplication().showMessage('Finished','Calculation finished');
+                theTable.getView().refresh();
+                //theTable.store.update();
+
+                WorkspaceApplication.resumeUpdates(false);
+            });
         }
 
         bFetch.execute();
+    }
+
+    public function calculateAlleleIds(overwriteIds,cb){
+        var targetSet = new Map<String, Int>();
+
+        var alleleStore = getStore();
+        var alleleCount :Int = alleleStore.count() -1;
+
+        for(i in 0...alleleCount){
+            var alleleModel : Dynamic = alleleStore.getAt(i);
+            var alleleId = alleleModel.get('entryClone.entryCloneId');
+
+            if(alleleId != null && alleleId.indexOf('-') > -1){
+                var targetId = alleleId.split('-')[0];
+
+                targetSet.set(targetId, 1);
+            }
+        }
+
+        var targets = new Array<String>();
+        for(target in targetSet.keys()){
+            targets.push(target);
+        }
+
+        SgcUtil.generateNextID(getProvider(), targets, SgcAllele, function(alleles : Map<String,Int>, err : String){
+            if(err != null){
+                cb(err);
+            }else{
+                for(i in 0...alleleCount){
+                    var alleleModel : Dynamic = alleleStore.getAt(i);
+                    var entryCloneId = alleleModel.get('entryClone.entryCloneId');
+
+                    if(entryCloneId != null && entryCloneId.indexOf('-') > -1){
+                        var targetId = entryCloneId.split('-')[0];
+
+                        var alleleId = alleleModel.get('alleleId');
+
+                        if(alleleId == null || alleleId == '' || overwriteIds){
+                            alleleModel.set('alleleId', targetId + '-a' + StringTools.lpad(Std.string(alleles.get(targetId)),'0',3));
+
+                            alleles.set(targetId, alleles.get(targetId)+1);
+                        }
+                    }
+                }
+
+                cb(null);
+            }
+        });
     }
 
     override public function insertOrDeletePerformed(){
@@ -492,6 +548,19 @@ class MultiAlleleHelper extends TableHelper{
                 calculate();
             },
             tooltip: {dismissDelay: 10000, text: 'Calculate DNA/Protein sequences and MW'}
+        });
+
+        getApplication().getToolBar().add({
+            iconCls :'x-btn-calculate',
+            text: 'Update IDs',
+            handler: function(){
+                calculateAlleleIds(true, function(err){
+                    if(err != null){
+                        getApplication().showMessage('Error updating IDs', err);
+                    }
+                });
+            },
+            tooltip: {dismissDelay: 10000, text: 'Calculate start/end positions of construct on target'}
         });
 
         getApplication().getToolBar().add({

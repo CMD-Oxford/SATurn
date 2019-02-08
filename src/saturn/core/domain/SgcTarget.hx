@@ -26,6 +26,9 @@ class SgcTarget extends DNA{
     public var pi : String;
     public var comments : String;
     public var proteinSequenceObj : Protein;
+    public var complexComments : String;
+    public var eln : String;
+    public var complex : String;
 
     public function new(){
         super(null);

@@ -43,7 +43,11 @@ class Token {
         this.tokens = tokens;
     }
 
-    public function addToken(token : Token) : Token {
+    public function addToken(token : Dynamic) : Token {
+        if(!Std.is(token, Token)){
+            token = new Value(Token);
+        }
+
         if(tokens == null){
             tokens = new Array<Token>();
         }
@@ -60,11 +64,11 @@ class Token {
         return f;
     }
 
-    public function add(token : Token) : Token{
+    public function add(token : Dynamic) : Token{
         if(Std.is(token, Operator)){
             var n = new Token();
             n.add(this);
-            n.tokens.push(token);
+            n.addToken(token);
 
             return n;
         }else{
@@ -76,7 +80,7 @@ class Token {
         tokens.remove(token);
     }
 
-    public function like(?token : Token=null) : Token{
+    public function like(?token : Dynamic=null) : Token{
         var l = new Like();
 
         if(token != null){
@@ -87,13 +91,13 @@ class Token {
     }
 
     public function concat(?token : Dynamic=null) : Token {
-        var c = new Concat(token);
+        var c = new Concat([this,token]);
 
         //if(token != null){
         //    c.add(token);
        // }
 
-        return add(c);
+        return c;
     }
 
     public function substr(position : Dynamic, length: Dynamic) : Token {

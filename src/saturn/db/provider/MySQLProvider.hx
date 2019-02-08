@@ -103,16 +103,18 @@ class MySQLProvider extends GenericRDBMSProvider{
                 }*/
                 debug('Waiting to attempt reconnect');
 
-                haxe.Timer.delay(function() {
-                    debug('Reconnecting');
-                    _getConnection(function(err : String, conn : Connection){
-                        if(err != null){
-                            throw 'Unable to reconnect MySQL session';
-                        }else{
-                            this.theConnection = conn;
-                        }
-                    });
-                }, 500);
+                if(config.auto_reconnect){
+                    haxe.Timer.delay(function() {
+                        debug('Reconnecting');
+                        _getConnection(function(err : String, conn : Connection){
+                            if(err != null){
+                                throw 'Unable to reconnect MySQL session';
+                            }else{
+                                this.theConnection = conn;
+                            }
+                        });
+                    }, 500);
+                }
             });
         }catch(e : Dynamic){
             debug('Error' + e);

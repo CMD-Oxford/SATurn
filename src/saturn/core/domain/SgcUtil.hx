@@ -56,7 +56,9 @@ class SgcUtil {
         var idField = new Field(clazz,model.getFirstKey());
 
         //Extract target name from ID
-        q.getSelect().add(idField.substr(0,idField.instr('-',1)).as('target'));
+        q.getSelect().add(idField.substr(1,idField.instr('-',1).minus(1)).as('target'));
+        // was
+        //q.getSelect().add(idField.substr(0,idField.instr('-',1)).as('target'));
 
         //Extract INT component from ID
         q.getSelect().add(idField.substr(idField.instr('-',1).plus(2),idField.length()).as('ID'));

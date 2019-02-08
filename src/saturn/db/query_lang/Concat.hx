@@ -8,12 +8,9 @@
 */
 
 package saturn.db.query_lang;
-class Concat extends Operator{
-    public function new(?value : Dynamic = null) {
-        if(value == null){
-            super(null);
-        }else{
-            super(value);
-        }
+
+class Concat extends Function{
+    public function new(tokens : Array<Token>) {
+        super(tokens);
     }
 }

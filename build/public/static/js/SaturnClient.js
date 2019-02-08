@@ -1833,9 +1833,6 @@ js.Browser.alert = function(v) {
 };
 js.Lib = $hxClasses["js.Lib"] = function() { };
 js.Lib.__name__ = ["js","Lib"];
-js.Lib.alert = function(v) {
-	alert(js.Boot.__string_rec(v,""));
-};
 js.Lib.eval = function(code) {
 	return eval(code);
 };
@@ -2028,6 +2025,3981 @@ js.html.compat.Uint8Array._subarray = function(start,end) {
 	a.byteOffset = start;
 	return a;
 };
+var phylo = phylo || {};
+phylo.PhyloAnnotation = $hxClasses["phylo.PhyloAnnotation"] = function() {
+	this.hasAnnot = false;
+	this.color = [];
+	this.text = "";
+	this.splitresults = false;
+	this.optionSelected = [];
+	this.alfaAnnot = [];
+	this.hasAnnot = false;
+	this.fromresults = [];
+	this.auxMap = new haxe.ds.StringMap();
+};
+phylo.PhyloAnnotation.__name__ = ["phylo","PhyloAnnotation"];
+phylo.PhyloAnnotation.prototype = {
+	type: null
+	,summary: null
+	,summary_img: null
+	,imgtest: null
+	,annotImg: null
+	,defaultImg: null
+	,shape: null
+	,color: null
+	,hookName: null
+	,text: null
+	,options: null
+	,optionSelected: null
+	,dbData: null
+	,legend: null
+	,legendClazz: null
+	,legendMethod: null
+	,hidden: null
+	,hasClass: null
+	,hasMethod: null
+	,divMethod: null
+	,familyMethod: null
+	,hasAnnot: null
+	,alfaAnnot: null
+	,splitresults: null
+	,popup: null
+	,popMethod: null
+	,multiChoice: null
+	,option: null
+	,fromresults: null
+	,label: null
+	,myleaf: null
+	,auxMap: null
+	,uploadImg: function(imgList) {
+		var i;
+		this.annotImg = [];
+		var _g1 = 0;
+		var _g = imgList.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			this.annotImg[i1] = window.document.createElement("img");
+			this.annotImg[i1].src = imgList[i1];
+			this.annotImg[i1].onload = function() {
+			};
+		}
+	}
+	,uploadSpecificImg: function(imgList,pos) {
+		if(this.annotImg == null) this.annotImg = [];
+		this.annotImg[pos] = window.document.createElement("img");
+		this.annotImg[pos].width = 15;
+		this.annotImg[pos].src = imgList;
+		this.annotImg[pos].onload = function() {
+		};
+	}
+	,saveAnnotationData: function(annotation,data,option,r) {
+		this.type = annotation;
+		this.dbData = [];
+		this.dbData = data;
+		this.option = option;
+		if(r[annotation] != null) {
+			if(this.color != null) this.color = r[annotation].color; else {
+				this.color = [];
+				this.color = r[annotation].color;
+			}
+			this.text = r[annotation].text;
+		} else {
+			this.defaultImg = r.defImage;
+			if(this.color != null) this.color[0] = saturn.core.Util.clone(r.color); else {
+				this.color = [];
+				this.color[0] = saturn.core.Util.clone(r.color);
+			}
+			this.text = "" + Std.string(r.text) + "";
+		}
+		this.hasAnnot = true;
+	}
+	,delAnnotation: function(annotation) {
+	}
+	,__class__: phylo.PhyloAnnotation
+};
+phylo.PhyloAnnotationConfiguration = $hxClasses["phylo.PhyloAnnotationConfiguration"] = function() {
+};
+phylo.PhyloAnnotationConfiguration.__name__ = ["phylo","PhyloAnnotationConfiguration"];
+phylo.PhyloAnnotationConfiguration.prototype = {
+	name: null
+	,annotationFunction: null
+	,styleFunction: null
+	,legendFunction: null
+	,infoFunction: null
+	,shape: null
+	,colour: null
+	,_skipped: null
+	,getColourOldFormat: function() {
+		return { color : this.colour, 'used' : "false"};
+	}
+	,isSkip: function() {
+		return this._skipped;
+	}
+	,__class__: phylo.PhyloAnnotationConfiguration
+};
+phylo.PhyloAnnotationManager = $hxClasses["phylo.PhyloAnnotationManager"] = function() {
+	this.menuScroll = 0;
+	this.onSubmenu = false;
+	this.selectedAnnotationOptions = [];
+	this.annotations = [];
+	this.activeAnnotation = [];
+	this.alreadyGotAnnotation = new haxe.ds.StringMap();
+	this.selectedAnnotationOptions = [];
+	this.searchedGenes = [];
+	this.annotationListeners = [];
+	this.skipAnnotation = [];
+	this.skipCurrentLegend = [];
+};
+phylo.PhyloAnnotationManager.__name__ = ["phylo","PhyloAnnotationManager"];
+phylo.PhyloAnnotationManager.prototype = {
+	annotations: null
+	,rootNode: null
+	,canvas: null
+	,treeType: null
+	,numTotalAnnot: null
+	,searchedGenes: null
+	,annotationListeners: null
+	,annotationData: null
+	,annotationString: null
+	,annotationConfigs: null
+	,nameAnnot: null
+	,jsonFile: null
+	,viewOptions: null
+	,activeAnnotation: null
+	,alreadyGotAnnotation: null
+	,selectedAnnotationOptions: null
+	,onSubmenu: null
+	,menuScroll: null
+	,annotationNameToConfig: null
+	,skipAnnotation: null
+	,skipCurrentLegend: null
+	,showAssociatedData: function(active,data,mx,my) {
+		var annotation = this.annotations[data.annotation.type];
+		if(!active && annotation.divMethod != null) annotation.divMethod(data,mx,my);
+	}
+	,showScreenData: function(active,data,mx,my) {
+		if(this.canvas == null) return;
+		this.showAssociatedData(active,data,mx,my);
+	}
+	,fillAnnotationwithJSonData: function() {
+		var i = 0;
+		var j = 0;
+		var z = 0;
+		this.nameAnnot = [];
+		var b = 0;
+		while(i < this.jsonFile.btnGroup.length) {
+			j = 0;
+			while(j < this.jsonFile.btnGroup[i].buttons.length) {
+				if(this.jsonFile.btnGroup[i].buttons[j].isTitle == false) {
+					var a;
+					a = this.jsonFile.btnGroup[i].buttons[j].annotCode;
+					this.annotations[a] = new phylo.PhyloAnnotation();
+					this.selectedAnnotationOptions[a] = null;
+					if(this.jsonFile.btnGroup[i].buttons[j].shape == "image") this.annotations[a].uploadImg(this.jsonFile.btnGroup[i].buttons[j].annotImg);
+					{
+						this.alreadyGotAnnotation.set(this.jsonFile.btnGroup[i].buttons[j].annotCode,false);
+						false;
+					}
+					this.annotations[a].shape = this.jsonFile.btnGroup[i].buttons[j].shape;
+					this.annotations[a].label = this.jsonFile.btnGroup[i].buttons[j].label;
+					this.annotations[a].color = this.jsonFile.btnGroup[i].buttons[j].color;
+					this.annotations[a].hookName = this.jsonFile.btnGroup[i].buttons[j].hookName;
+					this.annotations[a].splitresults = this.jsonFile.btnGroup[i].buttons[j].splitresults;
+					this.annotations[a].popup = this.jsonFile.btnGroup[i].buttons[j].popUpWindows;
+					if(this.jsonFile.btnGroup[i].buttons[j].hasClass != null) this.annotations[a].hasClass = this.jsonFile.btnGroup[i].buttons[j].hasClass;
+					if(this.jsonFile.btnGroup[i].buttons[j].hasMethod != null) this.annotations[a].hasMethod = this.jsonFile.btnGroup[i].buttons[j].hasMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].divMethod != null) this.annotations[a].divMethod = this.jsonFile.btnGroup[i].buttons[j].divMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].familyMethod != null) this.annotations[a].familyMethod = this.jsonFile.btnGroup[i].buttons[j].familyMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].popUpWindows != null && this.jsonFile.btnGroup[i].buttons[j].popUpWindows == true) this.annotations[a].popMethod = this.jsonFile.btnGroup[i].buttons[j].windowsData[0].popMethod;
+					this.annotations[a].options = [];
+					if(this.jsonFile.btnGroup[i].buttons[j].legend != null) {
+						this.annotations[a].legend = this.jsonFile.btnGroup[i].buttons[j].legend.image;
+						if(this.jsonFile.btnGroup[i].buttons[j].legend.clazz != null) {
+							this.annotations[a].legendClazz = this.jsonFile.btnGroup[i].buttons[j].legend.clazz;
+							this.annotations[a].legendMethod = this.jsonFile.btnGroup[i].buttons[j].legend.method;
+						} else if(this.jsonFile.btnGroup[i].buttons[j].legend.method != null) this.annotations[a].legendMethod = this.jsonFile.btnGroup[i].buttons[j].legend.method;
+					}
+					if(this.jsonFile.btnGroup[i].buttons[j].hidden != null) this.annotations[a].hidden = this.jsonFile.btnGroup[i].buttons[j].hidden;
+					if(this.jsonFile.btnGroup[i].buttons[j].submenu == true) {
+						var zz;
+						var _g1 = 0;
+						var _g = this.jsonFile.btnGroup[i].buttons[j].options.length;
+						while(_g1 < _g) {
+							var zz1 = _g1++;
+							this.annotations[a].options[zz1] = this.jsonFile.btnGroup[i].buttons[j].options[zz1].hookName;
+							if(this.jsonFile.btnGroup[i].buttons[j].options[zz1].defaultImg != null) this.annotations[a].defaultImg = this.jsonFile.btnGroup[i].buttons[j].options[zz1].defaultImg;
+						}
+						this.annotations[a].optionSelected[0] = this.jsonFile.btnGroup[i].buttons[j].optionSelected[0];
+					}
+					this.nameAnnot[b] = this.jsonFile.btnGroup[i].buttons[j].label;
+					b++;
+				}
+				j++;
+			}
+			this.numTotalAnnot = this.numTotalAnnot + j;
+			i++;
+		}
+	}
+	,setSelectedAnnotationOptions: function(annotation,selectedOptions) {
+		this.selectedAnnotationOptions[annotation] = selectedOptions;
+	}
+	,getSelectedAnnotationOptions: function(annotation) {
+		return this.selectedAnnotationOptions[annotation];
+	}
+	,closeAnnotWindows: function() {
+	}
+	,generateIcon: function(j,tarname,results) {
+		var name = tarname;
+		if(name.indexOf("(") != -1 || name.indexOf("/") != -1) {
+			var auxArray = name.split("");
+			var j1;
+			var nn = "";
+			var _g1 = 0;
+			var _g = auxArray.length;
+			while(_g1 < _g) {
+				var j2 = _g1++;
+				if(auxArray[j2] != "(" && auxArray[j2] != ")" && auxArray[j2] != "/") nn = nn + auxArray[j2];
+			}
+			name = nn;
+		}
+		var r1 = 23 - results[1];
+		var r2 = 23 - results[2];
+		var r3 = 23 - results[3];
+		var r4 = 23 - results[4];
+		var r5 = 23 - results[5];
+		var r6 = 23 - results[6];
+		var r7 = 23 - results[7];
+		return "<script type=\"text/javascript\">\r\n        $('.horizontal .progress-fill span').each(function(){\r\n  var percent = $(this).html();\r\n  $(this).parent().css('width', percent);\r\n});\r\n\r\n\r\n$('.vertical .progress-fill span').each(function(){\r\n  var percent = $(this).html();\r\n  var pTop = 100 - ( percent.slice(0, percent.length - 1) ) + \"%\";\r\n  $(this).parent().css({\r\n    'height' : percent,\r\n    'top' : pTop\r\n  });\r\n});\r\n                </script>" + "\r\n                <style type=\"text/css\" media=\"all\">\r\n                *, *:before, *:after {\r\n  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;\r\n }\r\n.container {\r\n  width: 23px;\r\n  height: 23px;\r\n  background: #fff;\r\n  overflow: hidden;\r\n  border-bottom:1px solid #000;\r\n}\r\n\r\n.vertical .progress-bar {\r\n  float: left;\r\n  height: 100%;\r\n  width: 3px;\r\n}\r\n\r\n.vertical .progress-track {\r\n  position: relative;\r\n  width: 3px;\r\n  height: 100%;\r\n  background: #ffffff;\r\n}\r\n\r\n.vertical .progress-track-1 {\r\n   position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #2980d6;\r\n}\r\n.vertical .progress-fill-1" + name + " {\r\n  position: relative;\r\n  height: " + r1 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n\r\n.vertical .progress-track-2 {\r\n   position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #bf0000;\r\n}\r\n.vertical .progress-fill-2" + name + " {\r\n  position: relative;\r\n  height: " + r2 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n.vertical .progress-track-3 {\r\n  position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #63cf1b;\r\n}\r\n.vertical .progress-fill-3" + name + " {\r\n  position: relative;\r\n  height: " + r3 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n.vertical .progress-track-4 {\r\n  position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #ff8000;\r\n}\r\n.vertical .progress-fill-4" + name + " {\r\n  position: relative;\r\n  height: " + r4 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n.vertical .progress-track-5 {\r\n  position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #c05691;\r\n}\r\n.vertical .progress-fill-5" + name + " {\r\n  position: relative;\r\n  height: " + r5 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n.vertical .progress-fill-6" + name + " {\r\n  position: relative;\r\n  height: " + r6 + "px;\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n.vertical .progress-track-6 {\r\n  position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #ffcc00;\r\n}\r\n.vertical .progress-track-7 {\r\n  position: relative;\r\n   width: 3px;\r\n   height: 100%;\r\n   background: #793ff3;\r\n}\r\n.vertical .progress-fill-7" + name + " {\r\n  position: relative;\r\n  height: " + r7 + ";\r\n  width: 3px;\r\n  background-color:#ffffff;\r\n}\r\n                </style>\r\n                " + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j + ",'" + tarname + "')\";return false;\">\r\n                <div class=\"container vertical flat\">\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-1\">\r\n                              <div class=\"progress-fill-1" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-2\">\r\n                              <div class=\"progress-fill-2" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-3\">\r\n                              <div class=\"progress-fill-3" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-4\">\r\n                              <div class=\"progress-fill-4" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-5\">\r\n                              <div class=\"progress-fill-5" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-6\">\r\n                              <div class=\"progress-fill-6" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n\r\n                          <div class=\"progress-bar\">\r\n                            <div class=\"progress-track-7\">\r\n                              <div class=\"progress-fill-7" + name + "\">\r\n                                <span> </span>\r\n                              </div>\r\n                            </div>\r\n                          </div>\r\n                        </div></a>";
+	}
+	,addAnnotData: function(annotData,annotation,option,callback) {
+		var i;
+		var mapResults;
+		mapResults = new haxe.ds.StringMap();
+		var j = 0;
+		var target;
+		var _g1 = 0;
+		var _g = annotData.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			target = Std.string(annotData[i1].target_id) + "_" + j;
+			while(__map_reserved[target] != null?mapResults.existsReserved(target):mapResults.h.hasOwnProperty(target)) {
+				j++;
+				target = Std.string(annotData[i1].target_id) + "_" + j;
+			}
+			j = 0;
+			var value = annotData[i1];
+			mapResults.set(target,value);
+		}
+		var items = [];
+		var _g11 = 0;
+		var _g2 = this.rootNode.targets.length;
+		while(_g11 < _g2) {
+			var i2 = _g11++;
+			items[i2] = this.rootNode.targets[i2];
+		}
+		this.processAnnotationsSimple(items,mapResults,annotation,option,callback);
+	}
+	,processAnnotationsSimple: function(items,mapResults,annotation,option,cb) {
+		var _g1 = this;
+		var toComplete = items.length;
+		var onDone = function() {
+			if(toComplete == 0) cb();
+		};
+		if(toComplete == 0) {
+			cb();
+			return;
+		}
+		var _g = 0;
+		while(_g < items.length) {
+			var item = [items[_g]];
+			++_g;
+			var name = item[0] + "_0";
+			var res = [__map_reserved[name] != null?mapResults.getReserved(name):mapResults.h[name]];
+			if(this.annotations[annotation].hasClass != null && this.annotations[annotation].hasMethod != null) {
+				var clazz = this.annotations[annotation].hasClass;
+				var method = this.annotations[annotation].hasMethod;
+				var _processAnnotation = (function(res,item) {
+					return function(r) {
+						if(r.hasAnnot) {
+							var leafaux;
+							leafaux = _g1.rootNode.leafNameToNode.get(item[0]);
+							leafaux.activeAnnotation[annotation] = true;
+							if(leafaux.annotations[annotation] == null) {
+								leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].myleaf = leafaux;
+								leafaux.annotations[annotation].text = r.text;
+								leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].saveAnnotationData(annotation,res[0],option,r);
+							} else if(_g1.annotations[annotation].splitresults == true) {
+								leafaux.annotations[annotation].splitresults = true;
+								var z = 0;
+								while(leafaux.annotations[annotation].alfaAnnot[z] != null) z++;
+								leafaux.annotations[annotation].alfaAnnot[z] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+								leafaux.annotations[annotation].alfaAnnot[z].text = "";
+								leafaux.annotations[annotation].alfaAnnot[z].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res[0],option,r);
+								if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text) leafaux.annotations[annotation].alfaAnnot[z] = null;
+							} else if(leafaux.annotations[annotation].option != _g1.annotations[annotation].optionSelected[0]) {
+								leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].myleaf = leafaux;
+								leafaux.annotations[annotation].text = "";
+								leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].saveAnnotationData(annotation,res[0],option,r);
+							}
+						}
+						toComplete--;
+						onDone();
+					};
+				})(res,item);
+				if(Reflect.isFunction(method)) method(name,res[0],option,this.annotations,item[0],_processAnnotation); else {
+					var hook = Reflect.field(Type.resolveClass(clazz),method);
+					hook(name,res[0],option,this.annotations,item[0],_processAnnotation);
+				}
+			} else {
+				var col = "";
+				if(this.annotations[annotation].color[0] != null) col = this.annotations[annotation].color[0].color;
+				var r1 = { hasAnnot : true, text : "", color : { color : col, used : true}, defImage : this.annotations[annotation].defaultImg};
+				var leafaux1 = this.rootNode.leafNameToNode.get(item[0]);
+				leafaux1.activeAnnotation[annotation] = true;
+				if(leafaux1.annotations[annotation] == null) {
+					leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].myleaf = leafaux1;
+					leafaux1.annotations[annotation].text = "";
+					leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].saveAnnotationData(annotation,res[0],option,r1);
+				} else if(leafaux1.annotations[annotation].splitresults == true) {
+					var z1 = 0;
+					while(leafaux1.annotations[annotation].alfaAnnot[z1] != null) z1++;
+					leafaux1.annotations[annotation].alfaAnnot[z1] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].alfaAnnot[z1].myleaf = leafaux1;
+					leafaux1.annotations[annotation].alfaAnnot[z1].text = "";
+					leafaux1.annotations[annotation].alfaAnnot[z1].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].alfaAnnot[z1].saveAnnotationData(annotation,res[0],option,r1);
+				} else if(leafaux1.annotations[annotation].option != this.annotations[annotation].optionSelected[0]) {
+					leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].myleaf = leafaux1;
+					leafaux1.annotations[annotation].text = "";
+					leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].saveAnnotationData(annotation,res[0],option,r1);
+				}
+				toComplete--;
+				onDone();
+			}
+		}
+	}
+	,processFamilyAnnotations: function(items,mapResults,annotation,option,cb) {
+		var _g1 = this;
+		var toComplete = 0;
+		var _g = 0;
+		while(_g < items.length) {
+			var item = items[_g];
+			++_g;
+			var name = "";
+			var hookCount = 0;
+			var index = null;
+			var variant = "1";
+			var hasName = false;
+			if(item.indexOf("(") != -1 || item.indexOf("-") != -1) {
+				hasName = true;
+				var auxArray = item.split("");
+				var _g2 = 0;
+				var _g11 = auxArray.length;
+				while(_g2 < _g11) {
+					var j1 = _g2++;
+					if(auxArray[j1] == "(" || auxArray[j1] == "-") {
+						if(auxArray[j1] == "(") {
+							index = auxArray[j1 + 1];
+							variant = "1";
+						} else if(auxArray[j1] == "-") {
+							index = null;
+							variant = auxArray[j1 + 1];
+						}
+						break;
+					}
+					name += auxArray[j1];
+				}
+			} else name = item;
+			var j = 0;
+			var finished = false;
+			var showAsSgc = false;
+			while(mapResults.exists(name + "_" + j) == true && finished == false) {
+				var keepgoing = true;
+				var res = mapResults.get(name + "_" + j);
+				if(mapResults.get(name + "_" + j).sgc == 1 || showAsSgc == true) {
+					res.sgc = 1;
+					showAsSgc = true;
+				}
+				if(hasName == true) {
+					if(res.target_name_index != index || res.variant_index != variant) keepgoing = false;
+				}
+				if(keepgoing == false) j++; else {
+					toComplete += 1;
+					if(this.annotations[annotation].hasClass != null && this.annotations[annotation].hasMethod != null) j++; else finished = true;
+				}
+			}
+		}
+		var onDone = function() {
+			if(toComplete == 0) cb();
+		};
+		if(toComplete == 0) {
+			cb();
+			return;
+		}
+		var _g3 = 0;
+		while(_g3 < items.length) {
+			var item1 = [items[_g3]];
+			++_g3;
+			var hookCount1 = 0;
+			var index1 = null;
+			var variant1 = "1";
+			var hasName1 = false;
+			var name1 = "";
+			if(item1[0].indexOf("(") != -1 || item1[0].indexOf("-") != -1) {
+				hasName1 = true;
+				var auxArray1 = item1[0].split("");
+				var _g21 = 0;
+				var _g12 = auxArray1.length;
+				while(_g21 < _g12) {
+					var j3 = _g21++;
+					if(auxArray1[j3] == "(" || auxArray1[j3] == "-") {
+						if(auxArray1[j3] == "(") {
+							index1 = auxArray1[j3 + 1];
+							variant1 = "1";
+						} else if(auxArray1[j3] == "-") {
+							index1 = null;
+							variant1 = auxArray1[j3 + 1];
+						}
+						break;
+					}
+					name1 += auxArray1[j3];
+				}
+			} else name1 = item1[0];
+			var j2 = 0;
+			var finished1 = false;
+			var showAsSgc1 = false;
+			while(mapResults.exists(name1 + "_" + j2) == true && finished1 == false) {
+				var keepGoing = true;
+				var res1 = [mapResults.get(name1 + "_" + j2)];
+				if(mapResults.get(name1 + "_" + j2).sgc == 1 || showAsSgc1 == true) {
+					res1[0].sgc = 1;
+					showAsSgc1 = true;
+				}
+				if(hasName1 == true) {
+					if(res1[0].target_name_index != index1 || res1[0].variant_index != variant1) keepGoing = false;
+				}
+				if(keepGoing == false) j2++; else if(this.annotations[annotation].hasClass != null && this.annotations[annotation].hasMethod != null) {
+					var clazz = this.annotations[annotation].hasClass;
+					var method = this.annotations[annotation].hasMethod;
+					var _processAnnotation = (function(res1,item1) {
+						return function(r) {
+							if(r.hasAnnot) {
+								var leafaux;
+								leafaux = _g1.rootNode.leafNameToNode.get(item1[0]);
+								leafaux.activeAnnotation[annotation] = true;
+								if(leafaux.annotations[annotation] == null) {
+									leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+									leafaux.annotations[annotation].myleaf = leafaux;
+									leafaux.annotations[annotation].text = r.text;
+									leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+									leafaux.annotations[annotation].saveAnnotationData(annotation,res1[0],option,r);
+								} else if(_g1.annotations[annotation].splitresults == true) {
+									leafaux.annotations[annotation].splitresults = true;
+									var z = 0;
+									while(leafaux.annotations[annotation].alfaAnnot[z] != null) z++;
+									leafaux.annotations[annotation].alfaAnnot[z] = new phylo.PhyloAnnotation();
+									leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+									leafaux.annotations[annotation].alfaAnnot[z].text = "";
+									leafaux.annotations[annotation].alfaAnnot[z].defaultImg = _g1.annotations[annotation].defaultImg;
+									leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res1[0],option,r);
+									if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text) leafaux.annotations[annotation].alfaAnnot[z] = null;
+								} else if(leafaux.annotations[annotation].option != _g1.annotations[annotation].optionSelected[0]) {
+									leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+									leafaux.annotations[annotation].myleaf = leafaux;
+									leafaux.annotations[annotation].text = "";
+									leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+									leafaux.annotations[annotation].saveAnnotationData(annotation,res1[0],option,r);
+								}
+							}
+							toComplete--;
+							onDone();
+						};
+					})(res1,item1);
+					if(Reflect.isFunction(method)) method(name1,res1[0],option,this.annotations,item1[0],_processAnnotation); else {
+						var hook = Reflect.field(Type.resolveClass(clazz),method);
+						hook(name1,res1[0],option,this.annotations,item1[0],_processAnnotation);
+					}
+					j2++;
+				} else {
+					finished1 = true;
+					var col = "";
+					if(this.annotations[annotation].color[0] != null) col = this.annotations[annotation].color[0].color;
+					var r1 = { hasAnnot : true, text : "", color : { color : col, used : true}, defImage : this.annotations[annotation].defaultImg};
+					var leafaux1 = this.rootNode.leafNameToNode.get(item1[0]);
+					leafaux1.activeAnnotation[annotation] = true;
+					if(leafaux1.annotations[annotation] == null) {
+						leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+						leafaux1.annotations[annotation].myleaf = leafaux1;
+						leafaux1.annotations[annotation].text = "";
+						leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+						leafaux1.annotations[annotation].saveAnnotationData(annotation,res1[0],option,r1);
+					} else if(leafaux1.annotations[annotation].splitresults == true) {
+						var z1 = 0;
+						while(leafaux1.annotations[annotation].alfaAnnot[z1] != null) z1++;
+						leafaux1.annotations[annotation].alfaAnnot[z1] = new phylo.PhyloAnnotation();
+						leafaux1.annotations[annotation].alfaAnnot[z1].myleaf = leafaux1;
+						leafaux1.annotations[annotation].alfaAnnot[z1].text = "";
+						leafaux1.annotations[annotation].alfaAnnot[z1].defaultImg = this.annotations[annotation].defaultImg;
+						leafaux1.annotations[annotation].alfaAnnot[z1].saveAnnotationData(annotation,res1[0],option,r1);
+					} else if(leafaux1.annotations[annotation].option != this.annotations[annotation].optionSelected[0]) {
+						leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+						leafaux1.annotations[annotation].myleaf = leafaux1;
+						leafaux1.annotations[annotation].text = "";
+						leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+						leafaux1.annotations[annotation].saveAnnotationData(annotation,res1[0],option,r1);
+					}
+					toComplete--;
+					onDone();
+				}
+			}
+		}
+	}
+	,cleanAnnotResults: function(annot) {
+		var items = [];
+		var _g1 = 0;
+		var _g = this.rootNode.targets.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var item = this.rootNode.targets[i];
+			var leafaux = this.rootNode.leafNameToNode.get(item);
+			if(leafaux.annotations[annot] != null) leafaux.annotations[annot].hasAnnot = false;
+		}
+	}
+	,reloadAnnotationConfigurations: function() {
+		this.setAnnotationConfigs(this.getAnnotationConfigs(),true,function() {
+		});
+	}
+	,setAnnotationConfigs: function(configs,restoreData,cb) {
+		var _g = this;
+		this.annotationConfigs = configs;
+		this.annotationNameToConfig = new haxe.ds.StringMap();
+		var _g1 = 0;
+		var _g11 = this.annotationConfigs;
+		while(_g1 < _g11.length) {
+			var config = _g11[_g1];
+			++_g1;
+			this.annotationNameToConfig.set(config.name,config);
+		}
+		var oldData = this.annotationData;
+		this.annotationData = [];
+		var activeAnnotationNames = new haxe.ds.StringMap();
+		saturn.client.core.CommonCore.getDefaultProvider(function(err,provider) {
+			if(err == null && provider != null) {
+				provider.resetCache();
+				var _g2 = 0;
+				var _g12 = _g.activeAnnotation.length;
+				while(_g2 < _g12) {
+					var i = _g2++;
+					if(_g.activeAnnotation[i]) {
+						activeAnnotationNames.set(_g.annotations[i].label,"");
+						_g.activeAnnotation[i] = false;
+					}
+				}
+				if(_g.rootNode != null) _g.rootNode.clearAnnotations();
+				_g.annotations = [];
+				_g.jsonFile = { btnGroup : [{ title : "Annotations", buttons : []}]};
+				var _g21 = 0;
+				var _g13 = configs.length;
+				while(_g21 < _g13) {
+					var i1 = _g21++;
+					var config1 = [configs[i1]];
+					_g.annotationData[i1] = [];
+					var hookName = ["STANDALONE_ANNOTATION_" + i1];
+					var def = { label : config1[0].name, hookName : hookName[0], annotCode : i1 + 1, isTitle : false, enabled : true, familyMethod : "", hasMethod : config1[0].styleFunction, hasClass : "", legend : { method : config1[0].legendFunction}, divMethod : config1[0].infoFunction, color : [{ color : config1[0].colour, used : "false"}], shape : config1[0].shape};
+					_g.jsonFile.btnGroup[0].buttons.push(def);
+					saturn.client.core.CommonCore.getDefaultProvider((function(hookName,config1) {
+						return function(error,provider1) {
+							provider1.resetCache();
+							provider1.addHook(config1[0].annotationFunction,hookName[0]);
+						};
+					})(hookName,config1));
+				}
+				_g.fillAnnotationwithJSonData();
+				if(restoreData) _g.annotationData = oldData;
+				_g.annotationsChanged(activeAnnotationNames);
+				cb();
+			}
+		});
+	}
+	,getAnnotationConfigs: function() {
+		return this.annotationConfigs;
+	}
+	,getAnnotationConfigByName: function(name) {
+		return this.annotationNameToConfig.get(name);
+	}
+	,getAnnotationConfigById: function(id) {
+		return this.getAnnotationConfigByName(this.annotations[id].label);
+	}
+	,loadAnnotationsFromString: function(annotationString,configs) {
+		var _g2 = this;
+		this.annotationString = annotationString;
+		var lines = annotationString.split("\n");
+		var header = lines[0];
+		var cols = header.split(",");
+		var configMap = new haxe.ds.StringMap();
+		if(configs != null) {
+			var _g = 0;
+			while(_g < configs.length) {
+				var config = configs[_g];
+				++_g;
+				configMap.set(config.name,config);
+			}
+		}
+		var finalConfigs = [];
+		var _g1 = 1;
+		var _g3 = cols.length;
+		while(_g1 < _g3) {
+			var i = _g1++;
+			var styleAnnotation = function(target,data,selected,annotList,item,callBack) {
+				var config1 = _g2.getAnnotationConfigById(selected);
+				var r = { hasAnnot : true, text : "", color : config1.getColourOldFormat(), defImage : 100};
+				if(data == null || data.annotation == "No") r.hasAnnot = false;
+				callBack(r);
+			};
+			var legendMethod = function(legendWidget,config2) {
+				var row = new phylo.PhyloLegendRowWidget(legendWidget,config2);
+			};
+			var divMethod = function(data1,mx,my) {
+				var $window = new phylo.PhyloWindowWidget(window.document.body,data1.target,false);
+				var container = $window.getContainer();
+				container.style.left = mx;
+				container.style.top = my;
+				container.style.width = "400px";
+				container.style.height = "200px";
+			};
+			var name = cols[i];
+			var hookFunction = $bind(this,this.handleAnnotation);
+			var config3 = new phylo.PhyloAnnotationConfiguration();
+			config3.shape = "cercle";
+			config3.colour = "green";
+			config3.name = name;
+			config3.styleFunction = styleAnnotation;
+			config3.annotationFunction = hookFunction;
+			config3.infoFunction = divMethod;
+			config3.legendFunction = legendMethod;
+			if(__map_reserved[name] != null?configMap.existsReserved(name):configMap.h.hasOwnProperty(name)) {
+				var configUser;
+				configUser = __map_reserved[name] != null?configMap.getReserved(name):configMap.h[name];
+				if(configUser.colour != null) config3.colour = configUser.colour;
+				if(configUser.annotationFunction != null) config3.annotationFunction = configUser.annotationFunction;
+				if(configUser.styleFunction != null) config3.styleFunction = configUser.styleFunction;
+				if(configUser.legendFunction != null) config3.legendFunction = configUser.legendFunction;
+				if(configUser.shape != null) config3.shape = configUser.shape;
+			}
+			finalConfigs.push(config3);
+		}
+		this.annotationData = [];
+		var headerCols = header.split(",");
+		var _g11 = 1;
+		var _g4 = headerCols.length;
+		while(_g11 < _g4) {
+			var j = _g11++;
+			this.annotationData[j - 1] = [];
+		}
+		var _g12 = 1;
+		var _g5 = lines.length;
+		while(_g12 < _g5) {
+			var i1 = _g12++;
+			var cols1 = lines[i1].split(",");
+			var _g31 = 1;
+			var _g21 = cols1.length;
+			while(_g31 < _g21) {
+				var j1 = _g31++;
+				this.annotationData[j1 - 1].push({ 'target_id' : cols1[0], 'annotation' : cols1[j1]});
+			}
+		}
+		this.setAnnotationConfigs(finalConfigs,true,function() {
+		});
+	}
+	,handleAnnotation: function(alias,params,clazz,cb) {
+		var annotationIndex = Std.parseInt(alias.charAt(alias.length - 1));
+		cb(this.annotationData[annotationIndex],null);
+	}
+	,addAnnotationListener: function(listener) {
+		this.annotationListeners.push(listener);
+	}
+	,annotationsChanged: function(activeAnnotationNames) {
+		if(activeAnnotationNames != null) {
+			if(this.canvas != null && this.canvas.getConfig().enableAnnotationMenu) {
+				this.canvas.getAnnotationMenu().update(activeAnnotationNames);
+				return;
+			}
+		}
+		var _g = 0;
+		var _g1 = this.annotationListeners;
+		while(_g < _g1.length) {
+			var listener = _g1[_g];
+			++_g;
+			listener();
+		}
+	}
+	,toggleAnnotation: function(annotCode) {
+		if(this.isAnnotationActive(annotCode)) this.setActiveAnnotation(annotCode,false); else this.setActiveAnnotation(annotCode,true);
+	}
+	,isAnnotationActive: function(annotCode) {
+		return this.activeAnnotation[annotCode];
+	}
+	,setActiveAnnotation: function(annotCode,active) {
+		var _g = this;
+		this.activeAnnotation[annotCode] = active;
+		if(active) {
+			var annot = this.annotations[annotCode];
+			saturn.client.core.CommonCore.getDefaultProvider(function(err,provider) {
+				var parameters = _g.canvas.getRootNode().targets;
+				provider.getByNamedQuery(annot.hookName,{ param : parameters},null,true,function(db_results,error) {
+					if(error == null) _g.canvas.getAnnotationManager().addAnnotData(db_results,annotCode,annotCode,function() {
+						_g.annotationsChanged();
+					});
+				});
+			});
+		} else this.annotationsChanged();
+	}
+	,getActiveAnnotations: function() {
+		var annotations = [];
+		var _g1 = 0;
+		var _g = this.activeAnnotation.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(this.activeAnnotation[i]) annotations.push(this.annotations[i]);
+		}
+		return annotations;
+	}
+	,getAnnotationString: function() {
+		return this.annotationString;
+	}
+	,setRootNode: function(rootNode) {
+		this.rootNode = rootNode;
+	}
+	,getTreeName: function() {
+		return "tree";
+	}
+	,hideAnnotationWindows: function() {
+	}
+	,__class__: phylo.PhyloAnnotationManager
+};
+phylo.PhyloAnnotationMenuWidget = $hxClasses["phylo.PhyloAnnotationMenuWidget"] = function(canvas,activeAnnotations) {
+	this.canvas = canvas;
+	this.activeAnnotations = activeAnnotations;
+	this.build();
+};
+phylo.PhyloAnnotationMenuWidget.__name__ = ["phylo","PhyloAnnotationMenuWidget"];
+phylo.PhyloAnnotationMenuWidget.prototype = {
+	canvas: null
+	,container: null
+	,activeAnnotations: null
+	,items: null
+	,build: function() {
+		this.addContainer();
+		this.addAnnotationButtons();
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,update: function(activeAnnotations) {
+		this.activeAnnotations = activeAnnotations;
+		this.addAnnotationButtons();
+	}
+	,clearAnnotationItems: function() {
+		if(this.items != null) {
+			var _g = 0;
+			var _g1 = this.items;
+			while(_g < _g1.length) {
+				var item = _g1[_g];
+				++_g;
+				this.container.removeChild(item);
+			}
+		}
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.height = "100%";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Annotations</h1>";
+	}
+	,addAnnotationButtons: function() {
+		var _g3 = this;
+		var btnGroups = this.canvas.getAnnotationManager().jsonFile.btnGroup;
+		this.clearAnnotationItems();
+		this.items = [];
+		var _g1 = 0;
+		var _g = btnGroups.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var btnGroupDef = btnGroups[i];
+			var btnDefs = btnGroupDef.buttons;
+			var _g2 = 0;
+			while(_g2 < btnDefs.length) {
+				var btnDef = [btnDefs[_g2]];
+				++_g2;
+				var row = window.document.createElement("div");
+				row.style.display = "flex";
+				var tooltipBtn = window.document.createElement("button");
+				tooltipBtn.innerText = "?";
+				tooltipBtn.style.backgroundColor = "rgb(247, 248, 251)";
+				tooltipBtn.style.border = "none";
+				tooltipBtn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+				tooltipBtn.style.cursor = "pointer";
+				var enabledBtn = [window.document.createElement("button")];
+				enabledBtn[0].innerHTML = " &#9744;";
+				enabledBtn[0].style.backgroundColor = "rgb(247, 248, 251)";
+				enabledBtn[0].style.border = "none";
+				enabledBtn[0].style.font = "normal 16px/20px tahoma, arial, verdana, sans-serif";
+				enabledBtn[0].style.cursor = "pointer";
+				var btn = [window.document.createElement("button")];
+				btn[0].innerText = btnDef[0].label;
+				btn[0].style.backgroundColor = "rgb(247, 248, 251)";
+				btn[0].style.border = "none";
+				btn[0].style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+				btn[0].style.cursor = "pointer";
+				btn[0].style.textAlign = "left";
+				btn[0].style.flexGrow = "1";
+				btn[0].setAttribute("title",btnDef[0].helpText);
+				btn[0].addEventListener("mouseover",(function(btn) {
+					return function() {
+						btn[0].style.backgroundColor = "#dddee1";
+					};
+				})(btn));
+				btn[0].addEventListener("mouseout",(function(btn) {
+					return function() {
+						btn[0].style.backgroundColor = "rgb(247, 248, 251)";
+					};
+				})(btn));
+				btn[0].addEventListener("click",(function(enabledBtn,btnDef) {
+					return function() {
+						if(_g3.canvas.getAnnotationManager().isAnnotationActive(btnDef[0].annotCode)) enabledBtn[0].innerHTML = "&#9744;"; else enabledBtn[0].innerHTML = "&#9745;";
+						_g3.canvas.getAnnotationManager().toggleAnnotation(btnDef[0].annotCode);
+					};
+				})(enabledBtn,btnDef));
+				row.appendChild(tooltipBtn);
+				row.appendChild(enabledBtn[0]);
+				row.appendChild(btn[0]);
+				this.items.push(row);
+				this.container.appendChild(row);
+				if(this.activeAnnotations != null && (function($this) {
+					var $r;
+					var key = btnDef[0].label;
+					$r = $this.activeAnnotations.exists(key);
+					return $r;
+				}(this))) {
+					this.canvas.getAnnotationManager().toggleAnnotation(btnDef[0].annotCode);
+					enabledBtn[0].innerHTML = "&#9745;";
+				}
+			}
+		}
+	}
+	,__class__: phylo.PhyloAnnotationMenuWidget
+};
+phylo.PhyloRendererI = $hxClasses["phylo.PhyloRendererI"] = function() { };
+phylo.PhyloRendererI.__name__ = ["phylo","PhyloRendererI"];
+phylo.PhyloRendererI.prototype = {
+	drawLine: null
+	,drawText: null
+	,startGroup: null
+	,endGroup: null
+	,mesureText: null
+	,__class__: phylo.PhyloRendererI
+};
+phylo.PhyloCanvasRenderer = $hxClasses["phylo.PhyloCanvasRenderer"] = function(width,height,parentElement,rootNode,config,annotationManager) {
+	this.autoFitting = false;
+	this.nodeClickListeners = [];
+	this.contextDiv = null;
+	this.translateY = 0.;
+	this.translateX = 0.;
+	this.scale = 1.0;
+	this.parent = parentElement;
+	this.width = width;
+	this.height = height;
+	this.annotationManager = annotationManager;
+	if(this.annotationManager == null) this.annotationManager = new phylo.PhyloAnnotationManager();
+	this.annotationManager.addAnnotationListener($bind(this,this.onAnnotationChange));
+	this.annotationManager.rootNode = rootNode;
+	this.annotationManager.canvas = this;
+	this.rootNode = rootNode;
+	var doc;
+	if(config == null) config = new phylo.PhyloCanvasConfiguration();
+	this.config = config;
+	config.dataChanged = true;
+	if(config.enableTools) this.addNodeClickListener($bind(this,this.defaultNodeClickListener));
+	this.createContainer();
+	if(config.enableToolbar) this.toolBar = new phylo.PhyloToolBar(this);
+	if(this.getConfig().autoFit) this.autoFitRedraw(); else this.redraw(true);
+};
+phylo.PhyloCanvasRenderer.__name__ = ["phylo","PhyloCanvasRenderer"];
+phylo.PhyloCanvasRenderer.__interfaces__ = [phylo.PhyloRendererI];
+phylo.PhyloCanvasRenderer.main = function() {
+};
+phylo.PhyloCanvasRenderer.prototype = {
+	canvas: null
+	,ctx: null
+	,scale: null
+	,parent: null
+	,rootNode: null
+	,cx: null
+	,cy: null
+	,config: null
+	,width: null
+	,height: null
+	,translateX: null
+	,translateY: null
+	,selectedNode: null
+	,contextDiv: null
+	,annotationManager: null
+	,nodeClickListeners: null
+	,contextMenu: null
+	,toolBar: null
+	,container: null
+	,outerContainer: null
+	,autoFitting: null
+	,legendWidget: null
+	,annotationMenu: null
+	,onAnnotationChange: function() {
+		this.redraw();
+		if(this.config.enableLegend) this.legendWidget.redraw();
+	}
+	,getRootNode: function() {
+		return this.rootNode;
+	}
+	,getAnnotationManager: function() {
+		return this.annotationManager;
+	}
+	,createContainer: function() {
+		this.container = window.document.createElement("div");
+		if(this.config.enableAnnotationMenu || this.config.enableLegend || this.config.enableImport) {
+			this.outerContainer = window.document.createElement("div");
+			this.outerContainer.style.display = "flex";
+			this.outerContainer.style.height = "100%";
+			var leftContainer = window.document.createElement("div");
+			leftContainer.style.height = "100%";
+			leftContainer.style.display = "flex";
+			leftContainer.style.flexDirection = "column";
+			if(this.config.enableAnnotationMenu) {
+				this.annotationMenu = new phylo.PhyloAnnotationMenuWidget(this);
+				this.annotationMenu.getContainer().style.flexGrow = "1";
+				leftContainer.appendChild(this.annotationMenu.getContainer());
+			}
+			if(this.config.enableImport) {
+				var importWidget = new phylo.PhyloImportWidget(this);
+				leftContainer.appendChild(importWidget.getContainer());
+			}
+			this.outerContainer.appendChild(leftContainer);
+			this.outerContainer.appendChild(this.container);
+			this.container.style.display = "inline-block";
+			this.container.style.position = "relative";
+			this.container.style.flexGrow = "1";
+			if(this.config.enableLegend) {
+				this.legendWidget = new phylo.PhyloLegendWidget(this);
+				this.outerContainer.appendChild(this.legendWidget.getContainer());
+			}
+			this.parent.appendChild(this.outerContainer);
+		} else {
+			this.container.style.height = "100%";
+			this.parent.appendChild(this.container);
+		}
+	}
+	,getCanvas: function() {
+		return this.canvas;
+	}
+	,getParent: function() {
+		return this.parent;
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,destroy: function() {
+		if(this.config.enableAnnotationMenu || this.config.enableLegend || this.config.enableImport) this.parent.removeChild(this.outerContainer); else this.parent.removeChild(this.container);
+	}
+	,notifyNodeClickListeners: function(node,data,e) {
+		var _g = 0;
+		var _g1 = this.nodeClickListeners;
+		while(_g < _g1.length) {
+			var listener = _g1[_g];
+			++_g;
+			listener(node,data,e);
+		}
+	}
+	,defaultNodeClickListener: function(node,data,e) {
+		if(node == null) {
+			if(this.contextMenu != null) {
+				this.closeContextMenu();
+				return;
+			}
+		} else {
+			if(this.contextMenu != null) this.closeContextMenu();
+			this.contextMenu = new phylo.PhyloContextMenu(this.parent,this,node,data,e);
+		}
+	}
+	,addNodeClickListener: function(listener) {
+		this.nodeClickListeners.push(listener);
+	}
+	,createCanvas: function() {
+		var _g = this;
+		if(this.config.enableLegend || this.config.enableAnnotationMenu || this.config.enableAnnotationMenu) {
+			this.width = this.container.clientWidth;
+			this.height = this.container.clientHeight;
+		}
+		if(this.canvas != null) {
+			this.ctx.save();
+			this.ctx.setTransform(1,0,0,1,0,0);
+			this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+			this.ctx.restore();
+		} else {
+			this.canvas = window.document.createElement("canvas");
+			this.container.appendChild(this.canvas);
+			this.canvas.width = this.width;
+			this.canvas.height = this.height;
+			this.ctx = this.canvas.getContext("2d");
+			this.cx = Math.round(this.width / 2);
+			this.cy = Math.round(this.height / 2);
+			this.ctx.translate(this.cx,this.cy);
+			if(this.config.enableZoom) {
+				this.canvas.addEventListener("mousewheel",function(e) {
+					if(e.wheelDelta < 0) _g.zoomIn(); else _g.zoomOut();
+				});
+				var mouseDownX = 0.;
+				var mouseDownY = 0.;
+				var mouseDown = false;
+				this.canvas.addEventListener("mousedown",function(e1) {
+					_g.annotationManager.hideAnnotationWindows();
+					_g.annotationManager.closeAnnotWindows();
+					mouseDownX = e1.pageX - _g.translateX;
+					mouseDownY = e1.pageY - _g.translateY;
+					mouseDown = true;
+					if(_g.contextDiv != null) {
+						_g.container.removeChild(_g.contextDiv);
+						_g.contextDiv = null;
+					}
+					_g.notifyNodeClickListeners(null,null,null);
+				});
+				this.canvas.addEventListener("mousemove",function(e2) {
+					if(mouseDown && mouseDownX != 0 && mouseDownY != 0) {
+						_g.newPosition(e2.pageX - mouseDownX,e2.pageY - mouseDownY);
+						_g.notifyNodeClickListeners(null,null,null);
+					}
+				});
+				this.canvas.addEventListener("mouseup",function(e3) {
+					mouseDown = false;
+					mouseDownX = 0;
+					mouseDownY = 0;
+					var d = _g.checkPosition(e3);
+					if(d != null) {
+						if(d.isAnnot == true) _g.annotationManager.showScreenData(false,d,e3.pageX,e3.pageY); else {
+							_g.selectedNode = _g.rootNode.nodeIdToNode.get(d.nodeId);
+							_g.notifyNodeClickListeners(_g.selectedNode,d,e3);
+						}
+					} else _g.notifyNodeClickListeners(null,null,e3);
+				});
+			}
+		}
+	}
+	,exportPNG: function(cb) {
+		this.canvas.toBlob(function(blob) {
+			cb(blob);
+		});
+	}
+	,exportPNGToFile: function() {
+		var _g = this;
+		this.exportPNG(function(blob) {
+			var uWin = window;
+			uWin.saveAs(blob,_g.getAnnotationManager().getTreeName() + "_tree.png");
+		});
+	}
+	,exportSVG: function() {
+		var width = this.width;
+		var height = this.height;
+		var svgCtx = new C2S(width,height);
+		var ctx = this.ctx;
+		this.ctx = svgCtx;
+		var rTranslateX = this.translateX;
+		var rTranslateY = this.translateY;
+		this.translateX = width / 2;
+		this.translateY = height / 2;
+		this.redraw(false);
+		this.translateX = rTranslateX;
+		this.translateY = rTranslateY;
+		this.ctx = ctx;
+		return svgCtx.getSerializedSvg(true);
+	}
+	,exportSVGToFile: function() {
+		var svgStr = this.exportSVG();
+		var blob = new Blob([svgStr],{ type : "text/plain;charset=utf-8"});
+		var uWin = window;
+		uWin.saveAs(blob,this.getAnnotationManager().getTreeName() + "_tree.svg");
+	}
+	,showHighlightDialog: function() {
+		var dialog = new phylo.PhyloHighlightWidget(this.parent,this);
+	}
+	,center: function() {
+		this.newPosition(0,0);
+	}
+	,newPosition: function(x,y) {
+		this.createCanvas();
+		this.translateX = x;
+		this.translateY = y;
+		this.redraw(false);
+	}
+	,drawLine: function(x0,y0,x1,y1,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(x0),Math.round(y0));
+		this.ctx.lineTo(Math.round(x1),Math.round(y1));
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawArc: function(x,y,radius,sAngle,eAngle,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.arc(x,y,Math.abs(radius),sAngle,eAngle);
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawWedge: function(x,y,radius,sAngle,eAngle,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.ctx.fillStyle = strokeStyle;
+		this.ctx.globalAlpha = 0.5;
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(0,0);
+		this.ctx.arc(x,y,Math.abs(radius),sAngle,eAngle);
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.closePath();
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,bezierCurve: function(x0,y0,x1,y1,firstX,firstY,secondX,secondY,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(x0),Math.round(y0));
+		this.ctx.bezierCurveTo(Math.round(firstX),Math.round(firstY),Math.round(secondX),Math.round(secondY),Math.round(x1),Math.round(y1));
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawText: function(text,tx,ty,x,y,rotation,textAlign,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.translate(tx,ty);
+		this.ctx.rotate(rotation);
+		this.ctx.textAlign = textAlign;
+		this.ctx.fillStyle = color;
+		this.ctx.fillText(text,x,y);
+		this.ctx.restore();
+	}
+	,drawTextNoTranslate: function(text,tx,ty,x,y,rotation,textAlign,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.translate(tx,ty);
+		this.ctx.rotate(rotation);
+		this.ctx.textAlign = textAlign;
+		this.ctx.fillStyle = color;
+		this.ctx.fillText(text,x,y);
+		this.ctx.restore();
+	}
+	,drawSquare: function(tx,ty,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.rect(tx,ty,10,10);
+		this.ctx.fillStyle = color;
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,drawCircle: function(tx,ty,color) {
+		var radius = 5;
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.strokeStyle = color;
+		this.ctx.arc(tx,ty,radius,0,2 * Math.PI);
+		this.ctx.fillStyle = color;
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,drawGraphic: function(tx,ty,columns) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(tx),Math.round(ty - 10));
+		this.ctx.moveTo(Math.round(tx),Math.round(ty + 6));
+		this.ctx.lineTo(Math.round(tx + 14),Math.round(ty + 6));
+		this.ctx.strokeStyle = "rgb(6,6,6)";
+		this.ctx.stroke();
+		var len = columns[1];
+		var pos = ty + 6 - columns[1];
+		this.ctx.fillStyle = "rgb(41,128,214)";
+		this.ctx.rect(tx + 1,pos,2,len);
+		var len2 = columns[2];
+		var pos2 = ty + 6 - columns[2];
+		this.ctx.fillStyle = "rgb(191,0,0)";
+		this.ctx.fillRect(tx + 3,pos2,2,len2);
+		var len3 = columns[3];
+		var pos3 = ty + 6 - columns[3];
+		this.ctx.fillStyle = "rgb(99,207,27)";
+		this.ctx.fillRect(tx + 5,pos3,2,len3);
+		var len4 = columns[4];
+		var pos4 = ty + 6 - columns[4];
+		this.ctx.fillStyle = "rgb(255,128,0)";
+		this.ctx.fillRect(tx + 7,pos4,2,len4);
+		var len5 = columns[5];
+		var pos5 = ty + 6 - columns[5];
+		this.ctx.fillStyle = "rgb(192,86,145)";
+		this.ctx.fillRect(tx + 9,pos5,2,len5);
+		var len6 = columns[6];
+		var pos6 = ty + 6 - columns[6];
+		this.ctx.fillStyle = "rgb(255,204,0)";
+		this.ctx.fillRect(tx + 11,pos6,2,len6);
+		var len7 = columns[7];
+		var pos7 = ty + 6 - columns[7];
+		this.ctx.fillStyle = "rgb(121,63,243)";
+		this.ctx.fillRect(tx + 13,pos7,2,len7);
+		this.ctx.restore();
+	}
+	,drawImg: function(tx,ty,img,mode) {
+		this.applyDefaultConfiguration();
+		if(mode == 0) this.ctx.drawImage(img,tx,ty); else this.ctx.drawImage(img,28,0,125,125,tx,ty,20,20);
+	}
+	,mesureText: function(text) {
+		return this.ctx.measureText(text).width;
+	}
+	,startGroup: function(groupName) {
+	}
+	,endGroup: function() {
+	}
+	,zoomIn: function(scale) {
+		if(scale == null) {
+			if(this.config.scale <= 4.0) this.config.scale = this.config.scale + 0.2;
+			scale = this.config.scale;
+		}
+		this.scale = scale;
+		this.redraw();
+	}
+	,zoomOut: function(scale) {
+		if(scale == null) {
+			this.config.scale = this.config.scale - 0.2;
+			scale = this.config.scale;
+		}
+		this.scale = scale;
+		this.redraw();
+	}
+	,updateActions: function() {
+		if(this.toolBar != null) {
+			this.toolBar.setLineTypeButtonVisible(this.config.drawingMode == phylo.PhyloDrawingMode.STRAIGHT);
+			this.toolBar.setTitle(this.config.title);
+		}
+	}
+	,autoFitRedraw: function() {
+		var _g = this;
+		this.autoFitting = true;
+		this.config.dataChanged = true;
+		this.redraw(true);
+		haxe.Timer.delay(function() {
+			_g.autoFit();
+			_g.autoFitting = false;
+			_g.canvas.style.display = "block";
+		},1);
+	}
+	,redraw: function(create) {
+		if(create == null) create = true;
+		if(!this.autoFitting && this.config.autoFit && this.config.dataChanged) {
+			this.autoFitRedraw();
+			return;
+		}
+		this.updateActions();
+		if(create) this.createCanvas();
+		if(this.autoFitting) this.canvas.style.display = "none";
+		var newWidth = this.canvas.width * this.scale;
+		var newHeight = this.canvas.height * this.scale;
+		this.ctx.save();
+		this.ctx.translate(0,0);
+		this.ctx.scale(1,1);
+		this.ctx.clearRect(0,0,this.width,this.height);
+		this.ctx.translate(this.translateX,this.translateY);
+		this.ctx.scale(this.scale,this.scale);
+		var radialRendererObj = new phylo.PhyloRadialTreeLayout(this.canvas.width,this.canvas.height);
+		this.rootNode.screen = [];
+		this.rootNode.rectangleLeft = this.rootNode.children[0].x | 0;
+		this.rootNode.rectangleRight = this.rootNode.children[0].x | 0;
+		this.rootNode.rectangleBottom = this.rootNode.children[0].y | 0;
+		this.rootNode.rectangleTop = this.rootNode.children[0].y | 0;
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) radialRendererObj.renderCircle(this.rootNode,this,this.annotationManager.activeAnnotation,this.annotationManager.annotations); else radialRendererObj.render(this.rootNode,this,this.annotationManager.activeAnnotation,this.annotationManager.annotations);
+		this.ctx.restore();
+		this.config.dataChanged = false;
+	}
+	,setConfig: function(config) {
+		this.config = config;
+	}
+	,getConfig: function() {
+		return this.config;
+	}
+	,applyDefaultConfiguration: function() {
+		if(this.config.enableShadow) {
+			this.ctx.shadowOffsetX = 4;
+			this.ctx.shadowOffsetY = 4;
+			this.ctx.shadowBlur = 7;
+			this.ctx.shadowColor = this.config.shadowColour;
+		}
+	}
+	,checkPosition: function(e) {
+		var i;
+		var j;
+		var sx;
+		var sy;
+		var res;
+		res = false;
+		var auxx;
+		var auxy;
+		var elementOffsetX = this.canvas.getBoundingClientRect().left - window.document.getElementsByTagName("html")[0].getBoundingClientRect().left;
+		var auxx1 = e.clientX + window.pageXOffset - elementOffsetX - this.translateX;
+		var elementOffsetY = this.canvas.getBoundingClientRect().top - window.document.getElementsByTagName("html")[0].getBoundingClientRect().top;
+		var auxy1 = e.clientY + window.pageYOffset - elementOffsetY - this.translateY;
+		var x;
+		var y;
+		x = auxx1 - Math.round(this.cx);
+		y = auxy1 - Math.round(this.cy);
+		var active;
+		active = false;
+		i = 0;
+		while(i < this.rootNode.screen.length && res == false) {
+			if(this.rootNode.screen[i].checkMouse(x,y) == true) {
+				res = true;
+				this.rootNode.screen[i].root = this.rootNode;
+				this.rootNode.divactive = i;
+			} else this.rootNode.screen[i].created = false;
+			i = i + 1;
+		}
+		if(res == true) return this.rootNode.screen[i - 1]; else return null;
+	}
+	,setLineWidth: function(width) {
+		this.rootNode.setLineWidth(width);
+		this.redraw();
+	}
+	,toggleType: function() {
+		this.dataChanged(true);
+		this.translateX = 0;
+		this.translateY = 0;
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) {
+			this.config.drawingMode = phylo.PhyloDrawingMode.STRAIGHT;
+			this.rootNode.preOrderTraversal2();
+		} else {
+			this.config.drawingMode = phylo.PhyloDrawingMode.CIRCULAR;
+			this.rootNode.preOrderTraversal();
+		}
+		this.closeContextMenu();
+		this.redraw();
+	}
+	,closeContextMenu: function() {
+		if(this.contextMenu != null) {
+			this.contextMenu.close();
+			this.contextMenu = null;
+		}
+	}
+	,toggleLineMode: function() {
+		if(this.config.bezierLines) {
+			this.rootNode.setLineMode(phylo.LineMode.STRAIGHT);
+			this.config.bezierLines = false;
+		} else {
+			this.rootNode.setLineMode(phylo.LineMode.BEZIER);
+			this.config.bezierLines = true;
+		}
+		this.redraw();
+	}
+	,rotateNode: function(node,clockwise) {
+		node.rotateNode(clockwise,this.getConfig().drawingMode);
+		this.redraw();
+	}
+	,setShadowColour: function(colour) {
+		if(colour == null) {
+			this.getConfig().shadowColour = null;
+			this.getConfig().enableShadow = false;
+		} else {
+			this.getConfig().shadowColour = colour;
+			this.getConfig().enableShadow = true;
+		}
+		this.redraw();
+	}
+	,toggleShadow: function() {
+		this.getConfig().enableShadow = !this.getConfig().enableShadow;
+		this.redraw();
+	}
+	,autoFit: function() {
+		var minX = null;
+		var maxX = null;
+		var minY = null;
+		var maxY = null;
+		var screenDataList = this.rootNode.screen;
+		var _g = 0;
+		while(_g < screenDataList.length) {
+			var screenData = screenDataList[_g];
+			++_g;
+			var x = screenData.x;
+			var y = screenData.y;
+			if(minX == null || x < minX) minX = x;
+			if(maxX == null || x > maxX) maxX = x;
+			if(minY == null || y < minY) minY = y;
+			if(maxY == null || y > maxY) maxY = y;
+		}
+		var requiredWidth = maxX - minX + 300;
+		var requiredHeight = maxY - minY + 300;
+		var widthScale = 1.;
+		var heightScale = 1.;
+		widthScale = this.width / requiredWidth;
+		heightScale = this.height / requiredHeight;
+		var fitScale = 1.;
+		if(widthScale < 1 || heightScale < 1) fitScale = Math.min(widthScale,heightScale);
+		if(this.config.drawingMode != phylo.PhyloDrawingMode.CIRCULAR) {
+		}
+		if(fitScale == this.scale) {
+		} else {
+			this.config.autoFit = true;
+			this.config.dataChanged = true;
+			this.setScale(fitScale,false);
+		}
+	}
+	,setScale: function(scale,disableAutoFit) {
+		if(disableAutoFit == null) disableAutoFit = true;
+		this.scale = scale;
+		this.config.scale = scale;
+		if(disableAutoFit) this.config.autoFit = false;
+		this.redraw(true);
+	}
+	,dataChanged: function(changed) {
+		this.getConfig().scale = 1;
+		this.scale = 1;
+		this.getConfig().dataChanged = changed;
+	}
+	,setNewickString: function(newickString) {
+		var parser = new phylo.PhyloNewickParser();
+		var rootNode = parser.parse(newickString);
+		rootNode.calculateScale();
+		rootNode.postOrderTraversal();
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) rootNode.preOrderTraversal(1); else rootNode.preOrderTraversal2(1);
+		this.rootNode = rootNode;
+		this.getAnnotationManager().setRootNode(rootNode);
+		if(this.getAnnotationManager().getAnnotationString() != null) {
+			this.getAnnotationManager().loadAnnotationsFromString(this.getAnnotationManager().getAnnotationString(),this.getAnnotationManager().getAnnotationConfigs());
+			this.redraw(true);
+		} else this.redraw(true);
+	}
+	,getAnnotationMenu: function() {
+		return this.annotationMenu;
+	}
+	,setFromFasta: function(fasta) {
+		var _g = this;
+		saturn.client.BioinformaticsServicesClient.getClient().sendPhyloReportRequest(fasta,function(response,error) {
+			var phyloReport = response.json.phyloReport;
+			var location = window.location;
+			var dstURL = location.protocol + "//" + location.hostname + ":" + location.port + "/" + phyloReport;
+			var fetchFunc = fetch;
+			fetchFunc(dstURL).then(function(response1) {
+				response1.text().then(function(text) {
+					_g.setNewickString(text);
+					_g.rootNode.setFasta(fasta);
+				});
+			});
+		});
+	}
+	,__class__: phylo.PhyloCanvasRenderer
+};
+phylo.PhyloCanvasConfiguration = $hxClasses["phylo.PhyloCanvasConfiguration"] = function() {
+	this.enableFastaImport = false;
+	this.enableImport = false;
+	this.enableLegend = false;
+	this.enableAnnotationMenu = false;
+	this.dataChanged = false;
+	this.autoFit = true;
+	this.verticalToolBar = false;
+	this.enableToolbar = false;
+	this.enableTools = false;
+	this.scale = 1;
+	this.enableZoom = false;
+	this.highlightedGenes = new haxe.ds.StringMap();
+	this.editmode = false;
+	this.drawingMode = phylo.PhyloDrawingMode.CIRCULAR;
+	this.bezierLines = false;
+	this.shadowColour = "gray";
+	this.enableShadow = false;
+};
+phylo.PhyloCanvasConfiguration.__name__ = ["phylo","PhyloCanvasConfiguration"];
+phylo.PhyloCanvasConfiguration.prototype = {
+	enableShadow: null
+	,shadowColour: null
+	,bezierLines: null
+	,drawingMode: null
+	,editmode: null
+	,highlightedGenes: null
+	,enableZoom: null
+	,scale: null
+	,enableTools: null
+	,enableToolbar: null
+	,verticalToolBar: null
+	,autoFit: null
+	,dataChanged: null
+	,title: null
+	,enableAnnotationMenu: null
+	,enableLegend: null
+	,enableImport: null
+	,enableFastaImport: null
+	,__class__: phylo.PhyloCanvasConfiguration
+};
+phylo.PhyloDrawingMode = $hxClasses["phylo.PhyloDrawingMode"] = { __ename__ : ["phylo","PhyloDrawingMode"], __constructs__ : ["STRAIGHT","CIRCULAR"] };
+phylo.PhyloDrawingMode.STRAIGHT = ["STRAIGHT",0];
+phylo.PhyloDrawingMode.STRAIGHT.toString = $estr;
+phylo.PhyloDrawingMode.STRAIGHT.__enum__ = phylo.PhyloDrawingMode;
+phylo.PhyloDrawingMode.CIRCULAR = ["CIRCULAR",1];
+phylo.PhyloDrawingMode.CIRCULAR.toString = $estr;
+phylo.PhyloDrawingMode.CIRCULAR.__enum__ = phylo.PhyloDrawingMode;
+phylo.PhyloContextMenu = $hxClasses["phylo.PhyloContextMenu"] = function(parent,canvas,node,data,e) {
+	this.parent = parent;
+	this.node = node;
+	this.data = data;
+	this.e = e;
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloContextMenu.__name__ = ["phylo","PhyloContextMenu"];
+phylo.PhyloContextMenu.prototype = {
+	contextContainer: null
+	,parent: null
+	,node: null
+	,data: null
+	,e: null
+	,canvas: null
+	,build: function() {
+		this.addContainer();
+		if(this.canvas.getConfig().drawingMode == phylo.PhyloDrawingMode.CIRCULAR) this.addWedgeOptions();
+		this.addColourOption();
+		if(this.canvas.getConfig().drawingMode == phylo.PhyloDrawingMode.STRAIGHT) this.addRotateNode();
+		this.parent.appendChild(this.contextContainer);
+	}
+	,addContainer: function() {
+		this.contextContainer = window.document.createElement("div");
+		this.contextContainer.style.position = "absolute";
+		this.contextContainer.style.left = this.e.offsetX;
+		this.contextContainer.style.top = this.e.offsetY;
+		this.contextContainer.style.background = "#f7f8fb";
+		this.contextContainer.style.color = "black";
+		this.contextContainer.style.padding = "4px";
+	}
+	,destroyContainer: function() {
+		this.parent.removeChild(this.contextContainer);
+		this.parent = null;
+		this.node = null;
+		this.data = null;
+		this.e = null;
+		this.canvas = null;
+	}
+	,close: function() {
+		this.destroyContainer();
+	}
+	,addColourOption: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var lineColourInputLabel = window.document.createElement("label");
+		var lineColourRemoveButton = window.document.createElement("button");
+		lineColourInputLabel.setAttribute("for","line_colour_input");
+		lineColourInputLabel.innerText = "Pick line colour";
+		lineColourInputLabel.style.width = "100px";
+		lineColourInputLabel.style.display = "inline-block";
+		var lineInputColour = window.document.createElement("input");
+		lineInputColour.setAttribute("type","color");
+		lineInputColour.setAttribute("name","line_colour_input");
+		lineInputColour.style.width = "100px";
+		lineInputColour.addEventListener("change",function() {
+			_g.node.colour = lineInputColour.value;
+			lineColourRemoveButton.style.display = "inline-block";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(lineColourInputLabel);
+		rowContainer.appendChild(lineInputColour);
+		lineColourRemoveButton.setAttribute("for","wedge_colour_input");
+		lineColourRemoveButton.innerText = "Remove";
+		lineColourRemoveButton.style.marginLeft = "5px";
+		lineColourRemoveButton.style.display = "none";
+		lineColourRemoveButton.style.width = "100px";
+		lineColourRemoveButton.addEventListener("click",function() {
+			_g.node.colour = null;
+			lineColourRemoveButton.style.display = "none";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(lineColourRemoveButton);
+		if(this.node.colour != null) lineColourRemoveButton.style.display = "inline-block";
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,addWedgeOptions: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var wedgeInputLabel = window.document.createElement("label");
+		var wedgeButtonLabel = window.document.createElement("button");
+		wedgeInputLabel.setAttribute("for","wedge_colour_input");
+		wedgeInputLabel.setAttribute("for","wedge_colour_input");
+		wedgeInputLabel.innerText = "Pick wedge colour";
+		wedgeInputLabel.style.width = "100px";
+		wedgeInputLabel.style.display = "inline-block";
+		var wedgeInputColour = window.document.createElement("input");
+		wedgeInputColour.setAttribute("type","color");
+		wedgeInputColour.setAttribute("name","wedge_colour_input");
+		wedgeInputColour.style.width = "100px";
+		wedgeInputColour.addEventListener("change",function() {
+			_g.node.wedgeColour = wedgeInputColour.value;
+			wedgeButtonLabel.style.display = "inline-block";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(wedgeInputLabel);
+		rowContainer.appendChild(wedgeInputColour);
+		wedgeButtonLabel.setAttribute("for","wedge_colour_input");
+		wedgeButtonLabel.setAttribute("for","wedge_colour_input");
+		wedgeButtonLabel.innerText = "Remove";
+		wedgeButtonLabel.style.marginLeft = "5px";
+		wedgeButtonLabel.style.width = "100px";
+		wedgeButtonLabel.style.display = "none";
+		wedgeButtonLabel.addEventListener("click",function() {
+			_g.node.wedgeColour = null;
+			wedgeButtonLabel.style.display = "none";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(wedgeButtonLabel);
+		if(this.node.wedgeColour != null) wedgeButtonLabel.style.display = "inline-block";
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,addRotateNode: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var label = window.document.createElement("label");
+		label.innerText = "Rotate branch";
+		label.style.display = "inline-block";
+		label.style.width = "100px";
+		rowContainer.appendChild(label);
+		var rotateNodeClockwiseButton = window.document.createElement("button");
+		rotateNodeClockwiseButton.innerText = "Clockwise";
+		rotateNodeClockwiseButton.style.marginRight = "5px";
+		rotateNodeClockwiseButton.style.width = "100px";
+		rotateNodeClockwiseButton.style.display = "inline-block";
+		rotateNodeClockwiseButton.addEventListener("click",function(e) {
+			_g.canvas.rotateNode(_g.node,true);
+		});
+		rowContainer.appendChild(rotateNodeClockwiseButton);
+		var rotateNodeAnticlockwiseButton = window.document.createElement("button");
+		rotateNodeAnticlockwiseButton.innerText = "Anticlockwise";
+		rotateNodeAnticlockwiseButton.style.marginRight = "5px";
+		rotateNodeAnticlockwiseButton.style.width = "100px";
+		rotateNodeAnticlockwiseButton.style.display = "inline-block";
+		rotateNodeAnticlockwiseButton.addEventListener("click",function(e1) {
+			_g.canvas.rotateNode(_g.node,false);
+		});
+		rowContainer.appendChild(rotateNodeAnticlockwiseButton);
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,__class__: phylo.PhyloContextMenu
+};
+phylo.PhyloWindowWidget = $hxClasses["phylo.PhyloWindowWidget"] = function(parent,title,modal) {
+	if(modal == null) modal = false;
+	this.parent = parent;
+	this.title = title;
+	this.modal = modal;
+	this.build();
+};
+phylo.PhyloWindowWidget.__name__ = ["phylo","PhyloWindowWidget"];
+phylo.PhyloWindowWidget.prototype = {
+	container: null
+	,content: null
+	,parent: null
+	,header: null
+	,title: null
+	,modal: null
+	,onCloseFunc: null
+	,setOnCloseEvent: function(func) {
+		this.onCloseFunc = func;
+	}
+	,build: function() {
+		this.addContainer();
+		this.addWindowHeader();
+		this.addContent();
+		this.container.appendChild(this.content);
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,getContent: function() {
+		return this.content;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.position = "fixed";
+		this.container.style.zIndex = 1;
+		this.container.style.paddingTop = "20px";
+		this.container.style.left = 0;
+		this.container.style.top = 0;
+		this.container.style.minWidth = "200px";
+		this.container.style.minHeight = "100px";
+		this.container.style.backgroundColor = "rgb(247, 248, 251)";
+		if(!this.isModal()) this.installMoveListeners();
+		this.parent.appendChild(this.container);
+	}
+	,isModal: function() {
+		return this.modal;
+	}
+	,addWindowHeader: function() {
+		this.header = window.document.createElement("div");
+		this.header.style.position = "absolute";
+		this.header.style.top = "0px";
+		this.header.style.backgroundColor = "rgb(125, 117, 117)";
+		this.header.style.height = "20px";
+		this.header.style.width = "100%";
+		this.addTitle();
+		this.addCloseButton();
+		this.container.appendChild(this.header);
+	}
+	,addTitle: function() {
+		var titleSpan = window.document.createElement("span");
+		titleSpan.innerText = this.title;
+		titleSpan.style.color = "white";
+		titleSpan.style.fontSize = "16px";
+		titleSpan.style.fontWeight = "bold";
+		this.header.appendChild(titleSpan);
+	}
+	,addCloseButton: function() {
+		var _g = this;
+		var closeButton = window.document.createElement("span");
+		closeButton.style.color = "white";
+		closeButton.style["float"] = "right";
+		closeButton.style.fontSize = "16px";
+		closeButton.style.fontWeight = "bold";
+		closeButton.innerHTML = "&times;";
+		closeButton.style.cursor = "pointer";
+		closeButton.addEventListener("click",function(e) {
+			_g.close();
+		});
+		this.header.appendChild(closeButton);
+	}
+	,addContent: function() {
+		this.content = window.document.createElement("div");
+		this.content.style.backgroundColor = "#fefefe";
+		this.content.style.width = "100%";
+	}
+	,close: function() {
+		this.onClose();
+		this.parent.removeChild(this.container);
+	}
+	,onClose: function() {
+		if(this.onCloseFunc != null) this.onCloseFunc(this);
+	}
+	,installMoveListeners: function() {
+		var _g = this;
+		var isDown = false;
+		var offsetX = 0.;
+		var offsetY = 0.;
+		var moveListener = function(event) {
+			event.preventDefault();
+			if(isDown) {
+				_g.container.style.left = event.clientX + offsetX + "px";
+				_g.container.style.top = event.clientY + offsetY + "px";
+			}
+		};
+		this.container.addEventListener("mousedown",function(e) {
+			isDown = true;
+			offsetX = _g.container.offsetLeft - e.clientX;
+			offsetY = _g.container.offsetTop - e.clientY;
+			window.document.body.addEventListener("mousemove",moveListener);
+		});
+		this.container.addEventListener("mouseup",function() {
+			isDown = false;
+			window.document.body.removeEventListener("mousemove",moveListener);
+		});
+	}
+	,__class__: phylo.PhyloWindowWidget
+};
+phylo.PhyloGlassPaneWidget = $hxClasses["phylo.PhyloGlassPaneWidget"] = function(parent,title,modal) {
+	if(modal == null) modal = true;
+	phylo.PhyloWindowWidget.call(this,parent,title,modal);
+	this.container.style.width = "100%";
+	this.container.style.height = "100%";
+	this.container.style.backgroundColor = "rgba(0,0,0,0.4)";
+	this.header.style.width = "50%";
+	this.header.style.margin = "auto";
+	this.header.style.position = "initial";
+	this.header.style.padding = "20px";
+	this.content.style.backgroundColor = "#fefefe";
+	this.content.style.margin = "auto";
+	this.content.style.padding = "20px";
+	this.content.style.width = "50%";
+};
+phylo.PhyloGlassPaneWidget.__name__ = ["phylo","PhyloGlassPaneWidget"];
+phylo.PhyloGlassPaneWidget.__super__ = phylo.PhyloWindowWidget;
+phylo.PhyloGlassPaneWidget.prototype = $extend(phylo.PhyloWindowWidget.prototype,{
+	addContainer: function() {
+		phylo.PhyloWindowWidget.prototype.addContainer.call(this);
+	}
+	,__class__: phylo.PhyloGlassPaneWidget
+});
+phylo.PhyloHighlightWidget = $hxClasses["phylo.PhyloHighlightWidget"] = function(parent,canvas) {
+	this.canvas = canvas;
+	phylo.PhyloGlassPaneWidget.call(this,parent,"Select genes to highlight in tree",true);
+};
+phylo.PhyloHighlightWidget.__name__ = ["phylo","PhyloHighlightWidget"];
+phylo.PhyloHighlightWidget.__super__ = phylo.PhyloGlassPaneWidget;
+phylo.PhyloHighlightWidget.prototype = $extend(phylo.PhyloGlassPaneWidget.prototype,{
+	highlightInputs: null
+	,canvas: null
+	,onClose: function() {
+		this.canvas.getConfig().highlightedGenes = new haxe.ds.StringMap();
+		var _g = 0;
+		var _g1 = this.highlightInputs;
+		while(_g < _g1.length) {
+			var inputElement = _g1[_g];
+			++_g;
+			if(inputElement.checked) {
+				var this1 = this.canvas.getConfig().highlightedGenes;
+				var key = inputElement.getAttribute("value");
+				this1.set(key,true);
+			}
+		}
+		this.canvas.redraw();
+	}
+	,addContent: function() {
+		phylo.PhyloGlassPaneWidget.prototype.addContent.call(this);
+		this.addHighlightList();
+	}
+	,addHighlightList: function() {
+		var formContainer = window.document.createElement("div");
+		formContainer.setAttribute("id","highlight-box");
+		formContainer.style.margin = "auto";
+		formContainer.style.overflowY = "scroll";
+		formContainer.style.height = "75%";
+		this.highlightInputs = [];
+		var targets = this.canvas.getRootNode().targets;
+		targets.sort(function(a,b) {
+			var targetA = a.toUpperCase();
+			var targetB = b.toUpperCase();
+			if(targetA < targetB) return -1; else if(targetA > targetB) return 1; else return 0;
+		});
+		var i = 0;
+		var _g = 0;
+		while(_g < targets.length) {
+			var target = targets[_g];
+			++_g;
+			if(target == null || target == "") continue;
+			i += 1;
+			var elementWrapper = window.document.createElement("div");
+			elementWrapper.setAttribute("class","element-wrapper");
+			elementWrapper.style["float"] = "left";
+			elementWrapper.style.marginRight = "28px";
+			elementWrapper.style.marginBottom = "10px";
+			var name = "target_highlight_" + i;
+			var inputLabel = window.document.createElement("label");
+			inputLabel.setAttribute("for",name);
+			inputLabel.innerText = target;
+			inputLabel.style["float"] = "left";
+			inputLabel.style.width = "55px";
+			inputLabel.style.margin = "0";
+			var inputElement = window.document.createElement("input");
+			inputElement.setAttribute("type","checkbox");
+			inputElement.setAttribute("value",target);
+			inputElement.setAttribute("name",name);
+			inputElement.style.width = "15px";
+			inputElement.style.height = "15px";
+			inputElement.style.margin = "1px";
+			this.highlightInputs.push(inputElement);
+			formContainer.appendChild(elementWrapper);
+			elementWrapper.appendChild(inputLabel);
+			elementWrapper.appendChild(inputElement);
+		}
+		this.content.appendChild(formContainer);
+	}
+	,__class__: phylo.PhyloHighlightWidget
+});
+phylo.PhyloHubMath = $hxClasses["phylo.PhyloHubMath"] = function() { };
+phylo.PhyloHubMath.__name__ = ["phylo","PhyloHubMath"];
+phylo.PhyloHubMath.degreesToRadians = function(a) {
+	return a * (Math.PI / 180);
+};
+phylo.PhyloHubMath.radiansToDegrees = function(b) {
+	return b * (180 / Math.PI);
+};
+phylo.PhyloHubMath.getMaxOfArray = function(a) {
+	var i;
+	var n;
+	n = a[0];
+	var _g1 = 1;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i1 = _g1++;
+		if(n < a[i1]) n = a[i1];
+	}
+	return n;
+};
+phylo.PhyloImportWidget = $hxClasses["phylo.PhyloImportWidget"] = function(canvas) {
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloImportWidget.__name__ = ["phylo","PhyloImportWidget"];
+phylo.PhyloImportWidget.prototype = {
+	canvas: null
+	,container: null
+	,build: function() {
+		this.addContainer();
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Import</h1>";
+		this.addButtons();
+	}
+	,addButtons: function() {
+		this.addImportNewickButton();
+		this.addImportAnnotationsButton();
+		if(this.canvas.getConfig().enableFastaImport) this.addGenerateFromFASTAButton();
+	}
+	,addImportNewickButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import Newick";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","ImportNewick");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"Newick String","Enter newick string",_g.canvas.getRootNode().getNewickString());
+			dialog.setOnCloseEvent($bind(_g,_g.updateTree));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateTree: function(dialog) {
+		this.canvas.setNewickString(dialog.getText());
+	}
+	,addImportAnnotationsButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import Annotations";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","ImportNewick");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"Annotations in CSV format (first column is gene name)","Enter Annotations",_g.canvas.getAnnotationManager().getAnnotationString());
+			dialog.setOnCloseEvent($bind(_g,_g.updateAnnotations));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateAnnotations: function(dialog) {
+		this.canvas.getAnnotationManager().loadAnnotationsFromString(dialog.getText(),this.canvas.getAnnotationManager().getAnnotationConfigs());
+	}
+	,addGenerateFromFASTAButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import FASTA";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","Import Fasta");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"FASTA format","Enter sequences",_g.canvas.getRootNode().getFasta());
+			dialog.setOnCloseEvent($bind(_g,_g.updateFASTA));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateFASTA: function(dialog) {
+		this.canvas.setFromFasta(dialog.getText());
+	}
+	,__class__: phylo.PhyloImportWidget
+};
+phylo.PhyloInfoWidget = $hxClasses["phylo.PhyloInfoWidget"] = function(parent,message,title) {
+	this.message = message;
+	phylo.PhyloGlassPaneWidget.call(this,parent,title);
+};
+phylo.PhyloInfoWidget.__name__ = ["phylo","PhyloInfoWidget"];
+phylo.PhyloInfoWidget.__super__ = phylo.PhyloGlassPaneWidget;
+phylo.PhyloInfoWidget.prototype = $extend(phylo.PhyloGlassPaneWidget.prototype,{
+	message: null
+	,addContent: function() {
+		phylo.PhyloGlassPaneWidget.prototype.addContent.call(this);
+		var p = window.document.createElement("p");
+		p.innerText = this.message;
+		this.content.appendChild(p);
+	}
+	,__class__: phylo.PhyloInfoWidget
+});
+phylo.PhyloInputModalWidget = $hxClasses["phylo.PhyloInputModalWidget"] = function(parent,message,title,initialValue) {
+	this.message = message;
+	this.initialValue = initialValue;
+	phylo.PhyloGlassPaneWidget.call(this,parent,title);
+};
+phylo.PhyloInputModalWidget.__name__ = ["phylo","PhyloInputModalWidget"];
+phylo.PhyloInputModalWidget.__super__ = phylo.PhyloGlassPaneWidget;
+phylo.PhyloInputModalWidget.prototype = $extend(phylo.PhyloGlassPaneWidget.prototype,{
+	message: null
+	,initialValue: null
+	,textArea: null
+	,addContent: function() {
+		phylo.PhyloGlassPaneWidget.prototype.addContent.call(this);
+		this.addMessage();
+		this.addInputField();
+	}
+	,addMessage: function() {
+		var p = window.document.createElement("p");
+		p.innerText = this.message;
+		this.content.appendChild(p);
+	}
+	,addInputField: function() {
+		this.textArea = window.document.createElement("textarea");
+		this.textArea.value = this.initialValue;
+		this.textArea.style.width = "100%";
+		this.textArea.setAttribute("rows","10");
+		this.content.appendChild(this.textArea);
+	}
+	,getText: function() {
+		return this.textArea.value;
+	}
+	,__class__: phylo.PhyloInputModalWidget
+});
+phylo.PhyloLegendRowWidget = $hxClasses["phylo.PhyloLegendRowWidget"] = function(legend,config) {
+	this.legend = legend;
+	this.config = config;
+	this.build();
+};
+phylo.PhyloLegendRowWidget.__name__ = ["phylo","PhyloLegendRowWidget"];
+phylo.PhyloLegendRowWidget.prototype = {
+	legend: null
+	,config: null
+	,container: null
+	,build: function() {
+		this.addContainer();
+		this.addLabel();
+		this.addColourChooser();
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.legend.getLegendContainer().appendChild(this.container);
+	}
+	,addLabel: function() {
+		var label = window.document.createElement("span");
+		label.innerText = this.config.name;
+		label.style.marginLeft = "5px";
+		label.style.width = "100px";
+		label.style.display = "inline-block";
+		this.container.appendChild(label);
+	}
+	,addColourChooser: function() {
+		var _g = this;
+		var picker = window.document.createElement("input");
+		picker.setAttribute("type","color");
+		picker.setAttribute("name","line_colour_input");
+		picker.setAttribute("value",this.standardizeColour(this.config.colour));
+		picker.style.width = "40px";
+		picker.addEventListener("change",function() {
+			_g.config.colour = picker.value;
+			_g.legend.getCanvas().getAnnotationManager().reloadAnnotationConfigurations();
+		});
+		this.container.appendChild(picker);
+	}
+	,standardizeColour: function(colourStr) {
+		var canvas = window.document.createElement("canvas");
+		var ctx = canvas.getContext("2d");
+		ctx.fillStyle = colourStr;
+		return ctx.fillStyle;
+	}
+	,__class__: phylo.PhyloLegendRowWidget
+};
+phylo.PhyloLegendWidget = $hxClasses["phylo.PhyloLegendWidget"] = function(canvas) {
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloLegendWidget.__name__ = ["phylo","PhyloLegendWidget"];
+phylo.PhyloLegendWidget.prototype = {
+	canvas: null
+	,container: null
+	,legendContainer: null
+	,build: function() {
+		this.addContainer();
+	}
+	,getCanvas: function() {
+		return this.canvas;
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.height = "100%";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Legend</h1>";
+		this.legendContainer = window.document.createElement("div");
+		this.container.appendChild(this.legendContainer);
+		this.redraw();
+	}
+	,clearLegendContainer: function() {
+		while(this.legendContainer.firstChild) this.legendContainer.removeChild(this.legendContainer.firstChild);
+	}
+	,getLegendContainer: function() {
+		return this.legendContainer;
+	}
+	,redraw: function() {
+		this.clearLegendContainer();
+		var annotationManager = this.canvas.getAnnotationManager();
+		var activeAnnotations = annotationManager.getActiveAnnotations();
+		var _g = 0;
+		while(_g < activeAnnotations.length) {
+			var annotationDef = activeAnnotations[_g];
+			++_g;
+			var config = this.canvas.getAnnotationManager().getAnnotationConfigByName(annotationDef.label);
+			if(config.legendFunction != null) {
+				var func = config.legendFunction;
+				func(this,config);
+			}
+		}
+	}
+	,__class__: phylo.PhyloLegendWidget
+};
+phylo.PhyloNewickParser = $hxClasses["phylo.PhyloNewickParser"] = function() {
+};
+phylo.PhyloNewickParser.__name__ = ["phylo","PhyloNewickParser"];
+phylo.PhyloNewickParser.prototype = {
+	parse: function(newickString) {
+		newickString = phylo.PhyloNewickParser.whiteSpaceReg.replace(newickString,"");
+		newickString = phylo.PhyloNewickParser.newLineReg.replace(newickString,"");
+		newickString = phylo.PhyloNewickParser.carLineReg.replace(newickString,"");
+		var rootNode;
+		rootNode = new phylo.PhyloTreeNode();
+		rootNode.newickString = newickString;
+		var currentNode = rootNode;
+		var a;
+		var branch;
+		var charArray = newickString.split("");
+		var j = 0;
+		var _g1 = 0;
+		var _g = charArray.length;
+		while(_g1 < _g) {
+			var j1 = _g1++;
+			var i = j1;
+			if(charArray[i] == "(" && charArray[i + 1] == "(") {
+				var childNode = new phylo.PhyloTreeNode(currentNode,"",false,0);
+				currentNode = childNode;
+			} else if(charArray[i] == "(" && charArray[i + 1] != "(" && charArray[i - 1] != "/" || charArray[i] == "," && charArray[i + 1] != "(") {
+				i++;
+				var name = "";
+				while(charArray[i] != ":" && charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] == "/")) {
+					var p = charArray[i];
+					if(charArray[i] == "/" && (charArray[i + 1] == "[" || charArray[i + 1] == "(")) i++;
+					if(charArray[i] == "[") name += "("; else if(charArray[i] == "]") name += ")"; else name += charArray[i];
+					i++;
+				}
+				if(charArray[i] == ":") {
+					i++;
+					branch = "";
+					while(charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] == "/") && charArray[i] != ";") {
+						branch += charArray[i];
+						i++;
+					}
+					i--;
+					branch = Std.parseFloat(branch);
+				} else branch = 1;
+				var child = new phylo.PhyloTreeNode(currentNode,name,true,branch);
+			} else if(charArray[i] == "," && charArray[i + 1] == "(") {
+				var child1 = new phylo.PhyloTreeNode(currentNode,"",false,0);
+				currentNode = child1;
+			} else if(charArray[i] == ")" && charArray[i - 1] != "/") {
+				if(charArray[i + 1] == ":") {
+					i += 2;
+					branch = "";
+					while(charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] != "/") && charArray[i] != ";") {
+						branch += charArray[i];
+						i++;
+					}
+					i--;
+					currentNode.branch = Std.parseFloat(branch);
+				}
+				currentNode = currentNode.parent;
+			}
+		}
+		if(currentNode == null) return rootNode; else return currentNode;
+	}
+	,__class__: phylo.PhyloNewickParser
+};
+phylo.PhyloRadialTreeLayout = $hxClasses["phylo.PhyloRadialTreeLayout"] = function(width,height) {
+	this.cx = width / 2;
+	this.cy = height / 2;
+};
+phylo.PhyloRadialTreeLayout.__name__ = ["phylo","PhyloRadialTreeLayout"];
+phylo.PhyloRadialTreeLayout.prototype = {
+	cx: null
+	,cy: null
+	,annotations: null
+	,renderCircle: function(treeNode,renderer,annotations,annotList,lineColour) {
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		if(treeNode.colour != null) lineColour = treeNode.colour;
+		this._renderCircle(treeNode,renderer,annotations,annotList,lineColour,lineColour);
+	}
+	,_renderCircle: function(treeNode,renderer,annotations,annotList,lineColour,parentColour) {
+		if(parentColour == null) parentColour = "rgb(28,102,224)";
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		var blue = "rgb(41,128,214)";
+		var red = "rgb(255,0,0)";
+		var black = "rgb(68,68,68)";
+		if(treeNode.parent == null) {
+		}
+		treeNode.space = 0;
+		var cx = renderer.cx;
+		var cy = renderer.cy;
+		var textSize = null;
+		var branch = cx * 2 / treeNode.root.getHeight() / (4 - treeNode.root.getHeight() * 0.011);
+		var k = 2 * Math.PI / treeNode.root.getLeafCount();
+		var fontW = 12;
+		var fontH = 12;
+		var firstChild = treeNode.children[0];
+		var lastChild = treeNode.children[treeNode.children.length - 1];
+		var i = treeNode.angle;
+		var _g = 0;
+		var _g1 = treeNode.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			var childLineColour = lineColour;
+			if(child.colour != null) childLineColour = child.colour;
+			i = this._renderCircle(child,renderer,annotations,annotList,childLineColour,lineColour);
+		}
+		var h = null;
+		var ph = null;
+		var angle = null;
+		var y1;
+		var y2 = null;
+		var x1;
+		var x2 = null;
+		if(treeNode.parent != null) {
+			h = branch * (treeNode.root.getHeight() - treeNode.getHeight());
+			ph = branch * (treeNode.root.getHeight() - treeNode.parent.getHeight());
+			if(treeNode.wedgeColour != null) {
+				var startNode = null;
+				var endNode = null;
+				if(!treeNode.isLeaf()) {
+					startNode = treeNode.findLastLeaf();
+					endNode = treeNode.findFirstLeaf();
+				} else {
+					startNode = treeNode.parent.findLastLeaf();
+					endNode = treeNode.parent.findFirstLeaf();
+				}
+				var wedgeH = treeNode.root.getHeight() * (cx * 2 / treeNode.root.getHeight() / (4 - treeNode.root.getHeight() * 0.011));
+				renderer.drawWedge(0,0,wedgeH,endNode.angle,startNode.angle,treeNode.wedgeColour,1);
+			}
+			if(treeNode.isLeaf()) angle = i; else {
+				angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
+				if(Math.abs(phylo.PhyloHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) renderer.drawLine(firstChild.x,firstChild.y,lastChild.x,lastChild.y,lineColour,firstChild.lineWidth); else renderer.drawArc(0,0,h,firstChild.angle,lastChild.angle,lineColour,treeNode.lineWidth);
+			}
+			treeNode.angle = angle;
+			if(angle == 0) {
+				y1 = 0;
+				y2 = 0;
+			} else {
+				y1 = h * Math.sin(angle);
+				y2 = ph * Math.sin(angle);
+			}
+			x1 = h * Math.cos(angle);
+			x2 = ph * Math.cos(angle);
+			treeNode.x = x2;
+			treeNode.y = y2;
+			renderer.drawLine(x1,y1,x2,y2,lineColour,treeNode.lineWidth);
+			if(treeNode.isLeaf()) {
+				var dy = y1 - y2;
+				var dx = x1 - x2;
+				var x = 0;
+				var y = 0;
+				var gap = 2;
+				var ta;
+				if(dx < 0) {
+					ta = Math.atan2(dy,dx) - Math.PI;
+					x = -renderer.mesureText(treeNode.name) - gap;
+				} else {
+					ta = Math.atan2(dy,dx);
+					x = gap;
+				}
+				y = 3;
+				var labelColour = black;
+				if((function($this) {
+					var $r;
+					var this1 = renderer.getConfig().highlightedGenes;
+					$r = this1.exists(treeNode.name);
+					return $r;
+				}(this)) == true) labelColour = "red";
+				renderer.drawTextNoTranslate(treeNode.name,x2 + dx,y2 + dy,x,y,ta,"top",labelColour);
+				i += k;
+				var t = treeNode.root.getMaximumLeafNameLength(renderer) + 10;
+				treeNode.rad = ta;
+				treeNode.x = x1;
+				treeNode.y = y1;
+				renderer.ctx.save();
+				if(treeNode.y > y2 && treeNode.x > x2) treeNode.quad = 1;
+				if(treeNode.y < y2 && treeNode.x > x2) treeNode.quad = 2;
+				if(treeNode.y < y2 && treeNode.x < x2) treeNode.quad = 3;
+				if(treeNode.y > y2 && treeNode.x < x2) treeNode.quad = 4;
+				if(treeNode.y == y2 && treeNode.x > x2) treeNode.quad = 5;
+				if(treeNode.y == y2 && treeNode.x < x2) treeNode.quad = 6;
+				if(treeNode.y > y2 && treeNode.x == x2) treeNode.quad = 7;
+				if(treeNode.y < y2 && treeNode.x == x2) treeNode.quad = 8;
+				var j;
+				var _g11 = 1;
+				var _g2 = annotations.length;
+				while(_g11 < _g2) {
+					var j1 = _g11++;
+					if(annotations[j1] == true) {
+						var added;
+						added = this.addAnnotation(treeNode,j1,t,renderer,annotList);
+						if(treeNode.annotations[j1] != null && treeNode.annotations[j1].alfaAnnot[0] != null && treeNode.annotations[j1].alfaAnnot.length > 0) {
+							var u = 0;
+							if(added == true) treeNode.space = treeNode.space - 1;
+							treeNode.space = treeNode.space + 1;
+							var _g3 = 0;
+							var _g21 = treeNode.annotations[j1].alfaAnnot.length;
+							while(_g3 < _g21) {
+								var u1 = _g3++;
+								if(annotList[j1].shape == "text" && treeNode.quad == 2) treeNode.space = treeNode.space + 2; else if(annotList[j1].shape == "text" && treeNode.quad == 1) treeNode.space = treeNode.space + 2; else treeNode.space = treeNode.space + 1;
+								added = this.addAlfaAnnotation(treeNode,treeNode.annotations[j1].alfaAnnot[u1],j1,t,renderer,annotList);
+							}
+							if(added == true) treeNode.space = treeNode.space + 1;
+						} else if(added == true) treeNode.space = treeNode.space + 1;
+					}
+				}
+				renderer.ctx.restore();
+				treeNode.x = x2;
+				treeNode.y = y2;
+			}
+		}
+		var _g4 = 0;
+		var _g12 = treeNode.children;
+		while(_g4 < _g12.length) {
+			var child1 = _g12[_g4];
+			++_g4;
+			var data;
+			data = new phylo.PhyloScreenData();
+			data.renderer = renderer;
+			data.isAnnot = false;
+			data.nodeId = child1.nodeId;
+			data.point = 5;
+			data.width = 10;
+			data.height = 10;
+			data.parentx = Math.round(treeNode.x);
+			data.parenty = Math.round(treeNode.y);
+			data.x = Math.round(child1.x);
+			data.y = Math.round(child1.y);
+			treeNode.root.screen[treeNode.root.screen.length] = data;
+		}
+		if(treeNode.parent == null) {
+			var rootScreen = new phylo.PhyloScreenData();
+			rootScreen.x = treeNode.x;
+			rootScreen.y = treeNode.y;
+			rootScreen.nodeId = treeNode.nodeId;
+			rootScreen.renderer = renderer;
+			rootScreen.point = 5;
+			rootScreen.width = 10;
+			rootScreen.height = 10;
+			treeNode.screen.push(rootScreen);
+		}
+		return i;
+	}
+	,render: function(treeNode,renderer,annotations,annotList,lineColour) {
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		var i = 0;
+		var x = treeNode.x;
+		var y = treeNode.y;
+		if(renderer.getConfig().editmode == true) lineColour = "rgb(234,147,28)";
+		while(i < treeNode.children.length) {
+			treeNode.children[i].space = 0;
+			if(treeNode.children[i].isLeaf()) {
+				if(treeNode.children[i].lineMode == phylo.LineMode.BEZIER) {
+					var deltaX1 = Math.abs(x - treeNode.children[i].x);
+					var deltaY1 = Math.abs(y - treeNode.children[i].y);
+					var firstY;
+					var secondY;
+					var firstX;
+					var secondX;
+					if(treeNode.children[i].xRandom == null) treeNode.children[i].xRandom = Math.random() * 0.3 + 0.3;
+					if(treeNode.children[i].yRandom == null) treeNode.children[i].yRandom = Math.random() * 0.4 + 0.4;
+					if(treeNode.children[i].y < y) {
+						firstY = y - deltaY1 * treeNode.children[i].yRandom;
+						secondY = treeNode.children[i].y + deltaY1 * treeNode.children[i].yRandom;
+					} else {
+						firstY = y + deltaY1 * treeNode.children[i].yRandom;
+						secondY = treeNode.children[i].y - deltaY1 * treeNode.children[i].yRandom;
+					}
+					if(treeNode.children[i].x > x) {
+						firstX = x + deltaX1 * 0.6;
+						secondX = treeNode.children[i].x - deltaX1 * treeNode.children[i].xRandom;
+					} else {
+						firstX = x - deltaX1 * 0.6;
+						secondX = treeNode.children[i].x + deltaX1 * treeNode.children[i].xRandom;
+					}
+					renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX,firstY,secondX,secondY,lineColour,treeNode.children[i].lineWidth);
+				} else renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour,treeNode.children[i].lineWidth);
+				var t;
+				var aux;
+				var aux1;
+				var yequalsign = false;
+				if(treeNode.children[i].y > 0 && y > 0) yequalsign = true; else if(treeNode.children[i].y < 0 && y < 0) yequalsign = true;
+				var xequalsign = false;
+				if(treeNode.children[i].x > 0 && x > 0) xequalsign = true; else if(treeNode.children[i].x < 0 && x < 0) xequalsign = true;
+				var deltaY;
+				var deltaX;
+				if(xequalsign == true) deltaX = Math.abs(treeNode.children[i].x - x); else deltaX = Math.abs(treeNode.children[i].x) + Math.abs(x);
+				if(yequalsign == true) deltaY = Math.abs(treeNode.children[i].y - y); else deltaY = Math.abs(treeNode.children[i].y) + Math.abs(y);
+				var tang = deltaY / deltaX;
+				treeNode.children[i].rad = Math.atan(tang);
+				var rot;
+				rot = 0;
+				var orign = "start";
+				if(treeNode.children[i].y > y && treeNode.children[i].x > x) {
+					rot = treeNode.children[i].rad;
+					orign = "start";
+					treeNode.children[i].quad = 1;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x > x) {
+					rot = 2 * Math.PI - treeNode.children[i].rad;
+					orign = "start";
+					treeNode.children[i].quad = 2;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x < x) {
+					rot = treeNode.children[i].rad;
+					orign = "end";
+					treeNode.children[i].quad = 3;
+				}
+				if(treeNode.children[i].y > y && treeNode.children[i].x < x) {
+					rot = 2 * Math.PI - treeNode.children[i].rad;
+					orign = "end";
+					treeNode.children[i].quad = 4;
+				}
+				if(treeNode.children[i].y == y && treeNode.children[i].x > x) {
+					treeNode.children[i].quad = 5;
+					rot = 0;
+				}
+				if(treeNode.children[i].y == y && treeNode.children[i].x < x) {
+					treeNode.children[i].quad = 6;
+					rot = Math.PI;
+				}
+				if(treeNode.children[i].y > y && treeNode.children[i].x == x) {
+					rot = 3 * Math.PI - Math.PI / 2;
+					treeNode.children[i].quad = 7;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x == x) {
+					treeNode.children[i].quad = 8;
+					rot = 3 * Math.PI / 4;
+				}
+				var namecolor = "#585b5f";
+				var ttar = treeNode.children[i].name;
+				if((function($this) {
+					var $r;
+					var this1 = renderer.getConfig().highlightedGenes;
+					$r = this1.exists(ttar);
+					return $r;
+				}(this)) == true) namecolor = "#ff0000";
+				renderer.drawText(" " + treeNode.children[i].name,treeNode.children[i].x,treeNode.children[i].y,-2,3,rot,orign,namecolor);
+				this.updateTreeRectangle(treeNode.children[i].x,treeNode.children[i].y,treeNode.root);
+				t = renderer.mesureText(treeNode.children[i].name) + 10;
+				treeNode.children[i].rad = rot;
+				var j;
+				var _g1 = 1;
+				var _g = annotations.length;
+				while(_g1 < _g) {
+					var j1 = _g1++;
+					if(annotations[j1] == true) {
+						var added;
+						added = this.addAnnotation(treeNode.children[i],j1,t,renderer,annotList);
+						if(treeNode.children[i].annotations[j1] != null && treeNode.children[i].annotations[j1].alfaAnnot[0] != null && treeNode.children[i].annotations[j1].alfaAnnot.length > 0) {
+							var u = 0;
+							if(added == true) treeNode.children[i].space = treeNode.children[i].space - 1;
+							treeNode.children[i].space = treeNode.children[i].space + 1;
+							var _g3 = 0;
+							var _g2 = treeNode.children[i].annotations[j1].alfaAnnot.length;
+							while(_g3 < _g2) {
+								var u1 = _g3++;
+								if(annotList[j1].shape == "text" && treeNode.children[i].quad == 2) treeNode.children[i].space = treeNode.children[i].space + 2; else if(annotList[j1].shape == "text" && treeNode.children[i].quad == 1) treeNode.children[i].space = treeNode.children[i].space + 2; else treeNode.children[i].space = treeNode.children[i].space + 1;
+								added = this.addAlfaAnnotation(treeNode.children[i],treeNode.children[i].annotations[j1].alfaAnnot[u1],j1,t,renderer,annotList);
+							}
+							if(added == true) treeNode.children[i].space = treeNode.children[i].space + 1;
+						} else if(added == true) treeNode.children[i].space = treeNode.children[i].space + 1;
+					}
+				}
+			} else {
+				var childLineColour = lineColour;
+				if(treeNode.children[i].colour != null) childLineColour = treeNode.children[i].colour;
+				this.render(treeNode.children[i],renderer,annotations,annotList,childLineColour);
+				if(treeNode.children[i].lineMode == phylo.LineMode.BEZIER) {
+					var deltaX2 = Math.abs(x - treeNode.children[i].x);
+					var deltaY2 = Math.abs(y - treeNode.children[i].y);
+					var firstY1;
+					var secondY1;
+					var firstX1;
+					var secondX1;
+					if(treeNode.children[i].xRandom == null) treeNode.children[i].xRandom = Math.random() * 0.3 + 0.3;
+					if(treeNode.children[i].yRandom == null) treeNode.children[i].yRandom = Math.random() * 0.4 + 0.4;
+					if(treeNode.children[i].y < y) {
+						firstY1 = y - deltaY2 * treeNode.children[i].yRandom;
+						secondY1 = treeNode.children[i].y + deltaY2 * treeNode.children[i].yRandom;
+					} else {
+						firstY1 = y + deltaY2 * treeNode.children[i].yRandom;
+						secondY1 = treeNode.children[i].y - deltaY2 * treeNode.children[i].yRandom;
+					}
+					if(treeNode.children[i].x > x) {
+						firstX1 = x + deltaX2 * 0.6;
+						secondX1 = treeNode.children[i].x - deltaX2 * treeNode.children[i].xRandom;
+					} else {
+						firstX1 = x - deltaX2 * 0.6;
+						secondX1 = treeNode.children[i].x + deltaX2 * treeNode.children[i].xRandom;
+					}
+					renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX1,firstY1,secondX1,secondY1,lineColour,treeNode.children[i].lineWidth);
+				} else renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour,treeNode.children[i].lineWidth);
+				var data;
+				data = new phylo.PhyloScreenData();
+				data.renderer = renderer;
+				data.isAnnot = false;
+				data.nodeId = treeNode.children[i].nodeId;
+				data.point = 5;
+				data.width = 10;
+				data.height = 10;
+				data.parentx = Math.round(x);
+				data.parenty = Math.round(y);
+				data.x = Math.round(treeNode.children[i].x);
+				data.y = Math.round(treeNode.children[i].y);
+				treeNode.root.screen[treeNode.root.screen.length] = data;
+			}
+			i++;
+		}
+		if(treeNode.parent == null) {
+			var rootScreen = new phylo.PhyloScreenData();
+			rootScreen.x = treeNode.x;
+			rootScreen.y = treeNode.y;
+			rootScreen.nodeId = treeNode.nodeId;
+			rootScreen.renderer = renderer;
+			rootScreen.point = 5;
+			rootScreen.width = 10;
+			rootScreen.height = 10;
+			treeNode.screen.push(rootScreen);
+		}
+	}
+	,addAnnotation: function(leave,annotation,$long,renderer,annotList) {
+		if(annotList[annotation].optionSelected.length != 0) {
+			if(leave.annotations[annotation] != null) {
+				if(annotList[annotation].optionSelected[0] != leave.annotations[annotation].option) return false;
+			}
+		}
+		var res = false;
+		var data;
+		data = new phylo.PhyloScreenData();
+		data.renderer = renderer;
+		data.target = leave.name;
+		data.isAnnot = true;
+		var name;
+		name = "";
+		if(leave.name.indexOf("(") != -1 || leave.name.indexOf("-") != -1) {
+			var auxArray = leave.name.split("");
+			var j;
+			var _g1 = 0;
+			var _g = auxArray.length;
+			while(_g1 < _g) {
+				var j1 = _g1++;
+				if(auxArray[j1] == "(" || auxArray[j1] == "-") break;
+				name += auxArray[j1];
+			}
+			data.targetClean = name;
+		} else data.targetClean = leave.name;
+		data.annot = annotation;
+		data.annotation = leave.annotations[annotation];
+		var nx;
+		var ny;
+		nx = 0.0;
+		ny = 0.0;
+		if(leave.space == 0) $long = $long + 1;
+		var rootN = leave.root;
+		var _g2 = annotList[annotation].shape;
+		switch(_g2) {
+		case "cercle":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g11 = leave.quad;
+					switch(_g11) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						ny = leave.y;
+						$long = $long + 20 * leave.space;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawCircle(nx,ny,leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 14;
+					data.point = 3;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "image":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					if(annotList[annotation].annotImg[leave.annotations[annotation].defaultImg] != null) {
+						var _g12 = leave.quad;
+						switch(_g12) {
+						case 1:
+							$long = $long + 20 * leave.space;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 2:
+							$long = $long + 20 * leave.space;
+							nx = leave.x - 5 + Math.cos(leave.rad) * $long;
+							ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+							break;
+						case 3:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 4:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 5:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							break;
+						case 6:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x - Math.cos(leave.rad) * $long;
+							break;
+						case 7:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 8:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							break;
+						}
+						if(leave.space == 0) $long = $long + 1;
+						var imge = annotList[annotation].annotImg[leave.annotations[annotation].defaultImg];
+						if(imge != null) {
+							if(annotation == 1) renderer.drawImg(nx,ny,imge,1); else renderer.drawImg(nx,ny,imge,0);
+							data.x = Math.round(nx);
+							data.y = Math.round(ny);
+							data.width = 14;
+							data.height = 14;
+							data.point = 1;
+						}
+					}
+					res = true;
+				} else return false;
+			}
+			break;
+		case "square":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g13 = leave.quad;
+					switch(_g13) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawSquare(nx,ny,leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 10;
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "html":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g14 = leave.quad;
+					switch(_g14) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawGraphic(nx,ny,leave.results);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 10;
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "text":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g15 = leave.quad;
+					switch(_g15) {
+					case 1:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 4:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 7:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 8:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 5);
+						break;
+					}
+					renderer.drawText(leave.annotations[annotation].text,nx,ny,-2,3,0,"start",leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 7 * leave.annotations[annotation].text.length;
+					data.height = 7;
+					data.point = 2;
+					res = true;
+				} else return false;
+			}
+			break;
+		}
+		leave.root.screen[leave.root.screen.length] = data;
+		return res;
+	}
+	,addAlfaAnnotation: function(leave,alfaAnnot,annotation,$long,renderer,annotList) {
+		var res = false;
+		var data;
+		var nx;
+		var ny;
+		nx = 0.0;
+		ny = 0.0;
+		data = new phylo.PhyloScreenData();
+		data.renderer = renderer;
+		data.target = leave.name;
+		data.isAnnot = true;
+		var name;
+		name = "";
+		if(leave.name.indexOf("(") != -1 || leave.name.indexOf("-") != -1) {
+			var auxArray = leave.name.split("");
+			var j;
+			var _g1 = 0;
+			var _g = auxArray.length;
+			while(_g1 < _g) {
+				var j1 = _g1++;
+				if(auxArray[j1] == "(" || auxArray[j1] == "-") break;
+				name += auxArray[j1];
+			}
+			data.targetClean = name;
+		} else data.targetClean = leave.name;
+		data.annot = annotation;
+		data.annotation = alfaAnnot;
+		data.suboption = alfaAnnot.option;
+		var _g2 = annotList[annotation].shape;
+		switch(_g2) {
+		case "cercle":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					var _g11 = leave.quad;
+					switch(_g11) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						ny = leave.y;
+						$long = $long + 20 * leave.space;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					case 9:
+						$long = $long = $long + 20 * leave.space;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					if(leave.quad == 9) renderer.drawCircle(leave.x + $long,leave.y,alfaAnnot.color[0].color); else renderer.drawCircle(nx,ny,alfaAnnot.color[0].color);
+					var aux = nx * renderer.scale;
+					data.x = Math.round(aux) - 29;
+					aux = ny * renderer.scale;
+					data.y = Math.round(aux) - 3;
+					aux = 10 * renderer.scale;
+					data.width = Math.round(aux);
+					data.height = Math.round(aux);
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "image":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					if(annotList[annotation].annotImg[alfaAnnot.defaultImg] != null) {
+						var _g12 = leave.quad;
+						switch(_g12) {
+						case 1:
+							$long = $long + 20 * leave.space;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 2:
+							$long = $long + 20 * leave.space;
+							nx = leave.x - 5 + Math.cos(leave.rad) * $long;
+							ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+							break;
+						case 3:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 4:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 5:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							break;
+						case 6:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x - Math.cos(leave.rad) * $long;
+							break;
+						case 7:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 8:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							break;
+						}
+						var imge = annotList[annotation].annotImg[alfaAnnot.defaultImg];
+						if(imge != null) {
+							if(annotation == 1) renderer.drawImg(nx,ny,imge,1); else renderer.drawImg(nx,ny,imge,0);
+							var aux1 = nx * renderer.scale;
+							data.x = Math.round(aux1);
+							aux1 = ny * renderer.scale;
+							data.y = Math.round(aux1);
+							aux1 = 14 * renderer.scale;
+							data.width = Math.round(aux1);
+							aux1 = 14 * renderer.scale;
+							data.height = Math.round(aux1);
+							data.point = 1;
+						}
+					}
+					res = true;
+				} else return false;
+			}
+			break;
+		case "square":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					var _g13 = leave.quad;
+					switch(_g13) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawSquare(nx,ny,alfaAnnot.color[0].color);
+					data.point = 1;
+					var aux2 = nx * renderer.scale;
+					data.x = Math.round(aux2);
+					aux2 = ny * renderer.scale;
+					data.y = Math.round(aux2);
+					aux2 = 20 * renderer.scale;
+					data.width = Math.round(aux2);
+					aux2 = 20 * renderer.scale;
+					data.height = Math.round(aux2);
+					res = true;
+				} else return false;
+			}
+			break;
+		case "text":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					if(alfaAnnot.text == "H4K5/12") {
+						var i = 0;
+						var u = 0;
+						var ii = 0;
+					}
+					var _g14 = leave.quad;
+					switch(_g14) {
+					case 1:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 4:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 7:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 8:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 5);
+						break;
+					}
+					renderer.drawText(alfaAnnot.text,nx,ny,-2,3,0,"start",alfaAnnot.color[0].color);
+					var aux3 = nx * renderer.scale;
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 7 * alfaAnnot.text.length;
+					data.y = Math.round(ny);
+					data.height = 7;
+					data.point = 2;
+					res = true;
+				} else return false;
+			}
+			break;
+		}
+		leave.root.screen[leave.root.screen.length] = data;
+		return res;
+	}
+	,updateTreeRectangle: function(x,y,treeNode) {
+		var top;
+		top = treeNode.rectangleTop | 0;
+		var right;
+		right = treeNode.rectangleRight | 0;
+		var bottom;
+		bottom = treeNode.rectangleBottom | 0;
+		var left;
+		left = treeNode.rectangleLeft | 0;
+		x = x | 0;
+		y = y | 0;
+		if(x < left) treeNode.rectangleLeft = x;
+		if(x > right) treeNode.rectangleRight = x;
+		if(y < bottom) treeNode.rectangleBottom = y;
+		if(y > top) treeNode.rectangleTop = y;
+	}
+	,__class__: phylo.PhyloRadialTreeLayout
+};
+phylo.PhyloScreenData = $hxClasses["phylo.PhyloScreenData"] = function() {
+	this.suboption = 0;
+	this.annotation = new phylo.PhyloAnnotation();
+	this.created = false;
+	this.divAccessed = false;
+};
+phylo.PhyloScreenData.__name__ = ["phylo","PhyloScreenData"];
+phylo.PhyloScreenData.prototype = {
+	point: null
+	,x: null
+	,y: null
+	,parentx: null
+	,parenty: null
+	,width: null
+	,height: null
+	,annotation: null
+	,created: null
+	,target: null
+	,targetClean: null
+	,annot: null
+	,root: null
+	,div: null
+	,divAccessed: null
+	,suboption: null
+	,family: null
+	,renderer: null
+	,isAnnot: null
+	,nodeId: null
+	,title: null
+	,checkMouse: function(mx,my) {
+		var scaleX = this.x * this.renderer.scale;
+		var scaleY = this.y * this.renderer.scale;
+		var scaleWidth = this.width * this.renderer.scale;
+		var scaleHeight = this.height * this.renderer.scale;
+		var _g = this.point;
+		switch(_g) {
+		case 1:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my < scaleY + scaleHeight && my >= scaleY) return true; else return false;
+			break;
+		case 2:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my > scaleY - scaleHeight && my <= scaleY) return true; else return false;
+			break;
+		case 3:
+			scaleWidth = this.width * this.renderer.scale / 2;
+			scaleHeight = this.height * this.renderer.scale / 2;
+			var inXBoundary = mx >= scaleX && mx < scaleX + scaleWidth || mx <= scaleX && mx > scaleX - scaleWidth;
+			var inYBoundary = my > scaleY - scaleHeight && my <= scaleY || my < scaleY + scaleHeight && my > scaleY;
+			if(inXBoundary && inYBoundary) return true; else return false;
+			break;
+		case 4:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my < scaleY + scaleHeight && my >= scaleY) return true; else return false;
+			break;
+		case 5:
+			if(mx + 5 >= scaleX && mx < scaleX + scaleWidth - 5 && my < scaleY + scaleHeight + 5 && my >= scaleY - 5) return true; else return false;
+			break;
+		default:
+			return false;
+		}
+	}
+	,__class__: phylo.PhyloScreenData
+};
+phylo.PhyloToolBar = $hxClasses["phylo.PhyloToolBar"] = function(canvas,parent) {
+	this.positionTop = false;
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloToolBar.__name__ = ["phylo","PhyloToolBar"];
+phylo.PhyloToolBar.prototype = {
+	canvas: null
+	,parent: null
+	,container: null
+	,positionTop: null
+	,titleElement: null
+	,toolbarContainer: null
+	,lineTypeButton: null
+	,build: function() {
+		if(this.parent == null) {
+			this.parent = this.canvas.getContainer();
+			this.positionTop = true;
+		}
+		this.createContainer();
+		this.parent.appendChild(this.container);
+	}
+	,createContainer: function() {
+		this.container = window.document.createElement("div");
+		if(this.positionTop) {
+			this.container.style.position = "absolute";
+			this.container.style.top = "15px";
+			this.container.style.left = "35px";
+		}
+		this.createTitleElement();
+		this.createToolBar();
+	}
+	,createTitleElement: function() {
+		this.titleElement = window.document.createElement("label");
+		this.titleElement.style.color = "#1c66e0";
+		this.titleElement.style.fontSize = "19px";
+		this.titleElement.style.margin = "10px 0px 0px 0px";
+		this.titleElement.style.left = "35px";
+		this.setTitle(this.canvas.getConfig().title);
+		this.container.appendChild(this.titleElement);
+	}
+	,createToolBar: function() {
+		this.toolbarContainer = window.document.createElement("div");
+		this.toolbarContainer.style.marginTop = "10px";
+		this.addCenterButton();
+		this.addZoomInButton();
+		this.addZoomOutButton();
+		this.addExportPNGButton();
+		this.addExportSVGButton();
+		this.addHighlightButton();
+		this.addSetLineWidthButton();
+		this.addTreeTypeButton();
+		this.addTreeLineTypeButton();
+		this.addShadowTypeButton();
+		this.addAutoFitButton();
+		this.container.appendChild(this.toolbarContainer);
+	}
+	,position: function(element) {
+		if(this.canvas.getConfig().verticalToolBar) {
+			element.style.display = "block";
+			element.style.marginLeft = "0px";
+			element.style.marginBottom = "20px";
+		} else element.style.display = "inline-block";
+	}
+	,addCenterButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/center-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.backgroundSize = "30px";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.center();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addZoomInButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/mag_plus-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.zoomIn();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addZoomOutButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/mag_minus-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.zoomOut();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addExportPNGButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/png-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.exportPNGToFile();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addExportSVGButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/svg-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.exportSVGToFile();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addHighlightButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/hightlight-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.backgroundSize = "30px";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.showHighlightDialog();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,setTitle: function(title) {
+		this.titleElement.innerText = title;
+	}
+	,addSetLineWidthButton: function() {
+		var _g = this;
+		var inputLabel = window.document.createElement("label");
+		inputLabel.setAttribute("for","tree_line_width");
+		inputLabel.innerText = "Pen width";
+		inputLabel.style.padding = "2px";
+		inputLabel.style.display = "inline-block";
+		var inputElement = window.document.createElement("input");
+		inputElement.setAttribute("type","text");
+		inputElement.style.width = "30px";
+		inputElement.setAttribute("value","1");
+		inputElement.style.padding = "2px";
+		inputElement.style.marginLeft = "5px";
+		this.position(inputElement);
+		inputElement.addEventListener("input",function(e) {
+			_g.canvas.setLineWidth(Std.parseFloat(inputElement.value));
+		});
+		this.toolbarContainer.appendChild(inputLabel);
+		this.toolbarContainer.appendChild(inputElement);
+	}
+	,addTreeTypeButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.innerText = "Toggle Type";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginLeft = "25px";
+		button.style.marginRight = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.toggleType();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addTreeLineTypeButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		button.innerText = "Toggle Line Type";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginRight = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.toggleLineMode();
+		});
+		this.toolbarContainer.appendChild(button);
+		this.lineTypeButton = button;
+	}
+	,setLineTypeButtonVisible: function(visible) {
+		if(visible) this.position(this.lineTypeButton); else this.lineTypeButton.style.display = "none";
+	}
+	,addShadowTypeButton: function() {
+		var _g = this;
+		var shadowInputColourLabel = window.document.createElement("label");
+		shadowInputColourLabel.innerText = "Shadow colour";
+		this.toolbarContainer.appendChild(shadowInputColourLabel);
+		var shadowInputColour = window.document.createElement("input");
+		var removeShadowButton = window.document.createElement("button");
+		shadowInputColour.style.marginLeft = "5px";
+		shadowInputColour.setAttribute("type","color");
+		shadowInputColour.setAttribute("name","shadow_colour_input");
+		shadowInputColour.style.width = "50px";
+		shadowInputColour.addEventListener("change",function() {
+			_g.canvas.setShadowColour(shadowInputColour.value);
+		});
+		removeShadowButton.innerText = "Toggle Shadow";
+		removeShadowButton.style.border = "1px solid #c1c1c1";
+		removeShadowButton.style.cursor = "pointer";
+		removeShadowButton.style.padding = "3px 6px";
+		removeShadowButton.style.marginLeft = "25px";
+		this.position(shadowInputColour);
+		this.position(removeShadowButton);
+		removeShadowButton.addEventListener("click",function() {
+			_g.canvas.toggleShadow();
+		});
+		this.toolbarContainer.appendChild(shadowInputColour);
+		this.toolbarContainer.appendChild(removeShadowButton);
+	}
+	,addAutoFitButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		button.innerText = "Fit";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginLeft = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.autoFit();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,__class__: phylo.PhyloToolBar
+};
+phylo.PhyloTooltipWidget = $hxClasses["phylo.PhyloTooltipWidget"] = function(parent,message,title) {
+	phylo.PhyloInfoWidget.call(this,parent,message,title);
+	this.container.className = "icons-tooltip";
+};
+phylo.PhyloTooltipWidget.__name__ = ["phylo","PhyloTooltipWidget"];
+phylo.PhyloTooltipWidget.__super__ = phylo.PhyloInfoWidget;
+phylo.PhyloTooltipWidget.prototype = $extend(phylo.PhyloInfoWidget.prototype,{
+	addContent: function() {
+		phylo.PhyloInfoWidget.prototype.addContent.call(this);
+		this.addConfirmationCheckbox();
+	}
+	,addConfirmationCheckbox: function() {
+		var checkbox = window.document.createElement("div");
+		checkbox.setAttribute("class","icons-tooltip-checkbox");
+		var label = window.document.createElement("label");
+		label.innerHTML = "Do not show this message again";
+		var input = window.document.createElement("input");
+		input.setAttribute("type","checkbox");
+		this.content.appendChild(checkbox);
+		checkbox.appendChild(label);
+		checkbox.appendChild(input);
+		input.addEventListener("change",function(event) {
+			if(input.checked) {
+				var cookies = Cookies;
+				cookies.set("annot-icons-tip",true);
+			} else {
+			}
+		});
+	}
+	,__class__: phylo.PhyloTooltipWidget
+});
+phylo.PhyloTreeNode = $hxClasses["phylo.PhyloTreeNode"] = function(parent,name,leaf,branch) {
+	this.wedgeColour = null;
+	this.maxNameLength = -1;
+	this.angle_new = 0;
+	this.lineMode = phylo.LineMode.STRAIGHT;
+	this.lineWidth = 1;
+	this.yRandom = null;
+	this.xRandom = null;
+	this.maxBranch = null;
+	this.minBranch = null;
+	this.numchild = 0;
+	this.leaves = 0;
+	this.ratio = 0.00006;
+	this.dist = 50;
+	this.space = 0;
+	this.parent = parent;
+	this.children = [];
+	this.name = name;
+	this.leaf = leaf;
+	this.branch = branch;
+	if(this.parent != null) {
+		this.parent.addChild(this);
+		this.root = this.parent.root;
+	} else {
+		this.targets = [];
+		this.root = this;
+		this.screen = [];
+		this.divactive = 99999;
+		this.leafNameToNode = new haxe.ds.StringMap();
+		this.nodeIdToNode = new haxe.ds.IntMap();
+	}
+	this.angle = 0;
+	this.x = 0;
+	this.y = 0;
+	this.wedge = 0;
+	this.length = 0;
+	this.targetFamilyGene = [];
+	this.l = 0;
+};
+phylo.PhyloTreeNode.__name__ = ["phylo","PhyloTreeNode"];
+phylo.PhyloTreeNode.prototype = {
+	parent: null
+	,nodeId: null
+	,name: null
+	,targetFamily: null
+	,targetFamilyGene: null
+	,leaf: null
+	,branch: null
+	,angle: null
+	,x: null
+	,y: null
+	,wedge: null
+	,length: null
+	,l: null
+	,root: null
+	,rad: null
+	,quad: null
+	,annotations: null
+	,activeAnnotation: null
+	,targets: null
+	,screen: null
+	,divactive: null
+	,space: null
+	,colour: null
+	,children: null
+	,dist: null
+	,ratio: null
+	,leaves: null
+	,numchild: null
+	,leafNameToNode: null
+	,nodeIdToNode: null
+	,rectangleTop: null
+	,rectangleRight: null
+	,rectangleBottom: null
+	,rectangleLeft: null
+	,results: null
+	,minBranch: null
+	,maxBranch: null
+	,xRandom: null
+	,yRandom: null
+	,lineWidth: null
+	,lineMode: null
+	,angle_new: null
+	,maxNameLength: null
+	,wedgeColour: null
+	,newickString: null
+	,fasta: null
+	,postOrderTraversal: function() {
+		if(this.isLeaf() == true) {
+			this.l = 1;
+			this.root.targets[this.root.leaves] = this.name;
+			this.root.leaves = this.root.leaves + 1;
+			this.annotations = [];
+			this.activeAnnotation = [];
+			this.root.leafNameToNode.set(this.name,this);
+		} else {
+			var i = 0;
+			while(i < this.children.length) {
+				this.children[i].postOrderTraversal();
+				this.l = this.l + this.children[i].l;
+				i++;
+			}
+		}
+	}
+	,preOrderTraversal2: function(mode) {
+		if(this.parent != null) {
+			var parent = this.parent;
+			this.x = parent.x + Math.cos(this.angle + this.wedge / 2) * this.root.dist;
+			this.y = parent.y + Math.sin(this.angle + this.wedge / 2) * this.root.dist;
+			if(mode == 1) {
+				this.nodeId = this.root.numchild;
+				this.root.nodeIdToNode.h[this.nodeId] = this;
+			}
+		} else if(mode == 1) this.nodeId = 0;
+		var n = this.angle;
+		var i = 0;
+		while(i < this.children.length) {
+			if(mode == 1) this.root.numchild = this.root.numchild + 1;
+			this.children[i].wedge = this.children[i].l / this.children[i].root.l * 2 * Math.PI + Math.PI / 50;
+			this.children[i].angle = n;
+			n = n + this.children[i].wedge;
+			this.children[i].preOrderTraversal2(mode);
+			i++;
+		}
+	}
+	,areAllChildrenLeaf: function() {
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(!child.isLeaf()) return false;
+		}
+		return true;
+	}
+	,preOrderTraversal: function(mode) {
+		if(this.parent != null) {
+			if(mode == 1) {
+				this.nodeId = this.root.numchild;
+				this.root.nodeIdToNode.h[this.nodeId] = this;
+			}
+			var a = this.getDepth() * this.root.ratio;
+			if(this.angle > this.parent.angle) this.angle += phylo.PhyloHubMath.degreesToRadians(a); else this.angle -= phylo.PhyloHubMath.degreesToRadians(a);
+			this.angle_new = this.angle + this.wedge / 2;
+			this.x = this.parent.x + Math.cos(this.angle_new) * this.root.dist;
+			this.y = this.parent.y + Math.sin(this.angle_new) * this.root.dist;
+		} else if(mode == 1) this.nodeId = 0;
+		var n = this.angle;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(mode == 1) this.root.numchild = this.root.numchild + 1;
+			child.wedge = 2 * Math.PI * child.getLeafCount() / child.root.getLeafCount();
+			child.angle = n;
+			child.angle_new = child.angle + child.wedge / 2;
+			n += child.wedge;
+			child.preOrderTraversal(mode);
+		}
+	}
+	,calculateScale: function() {
+		if(this.branch != null) {
+			if(this.root.maxBranch == null || this.branch > this.root.maxBranch) this.root.maxBranch = this.branch;
+			if(this.root.minBranch == null || this.branch < this.root.minBranch) this.root.minBranch = this.branch;
+		}
+		var _g1 = 0;
+		var _g = this.children.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.children[i].calculateScale();
+		}
+	}
+	,getChildren: function() {
+		return this.children;
+	}
+	,getChildN: function(i) {
+		return this.children[i];
+	}
+	,addChild: function(child) {
+		this.children[this.children.length] = child;
+	}
+	,isLeaf: function() {
+		return this.leaf;
+	}
+	,getLeafCount: function() {
+		if(this.isLeaf() == true) return 1; else {
+			var total = 0;
+			var i;
+			i = 0;
+			var _g1 = 0;
+			var _g = this.children.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				total += this.children[i1].getLeafCount();
+			}
+			return total;
+		}
+	}
+	,getDepth: function() {
+		if(this.parent == null) return 0; else return 1 + this.parent.getDepth();
+	}
+	,getHeight: function() {
+		if(this.isLeaf()) return 0; else {
+			var heightList = [];
+			var i;
+			i = 0;
+			var _g1 = 0;
+			var _g = this.children.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				heightList[i1] = this.children[i1].getHeight() + 1;
+			}
+			return phylo.PhyloHubMath.getMaxOfArray(heightList);
+		}
+	}
+	,getMaximumLeafNameLength: function(renderer) {
+		if(this.maxNameLength != -1) return this.maxNameLength;
+		var nodes = [];
+		nodes.push(this);
+		this.maxNameLength = 0;
+		var maxName = "";
+		var _g = 0;
+		while(_g < nodes.length) {
+			var node = nodes[_g];
+			++_g;
+			if(node.isLeaf()) {
+				var nodeNameLength = node.name.length;
+				if(nodeNameLength > this.maxNameLength) {
+					this.maxNameLength = nodeNameLength;
+					maxName = node.name;
+				}
+			} else {
+				var _g1 = 0;
+				var _g2 = node.children;
+				while(_g1 < _g2.length) {
+					var child = _g2[_g1];
+					++_g1;
+					nodes.push(child);
+				}
+			}
+		}
+		if(renderer != null) this.maxNameLength = renderer.mesureText(maxName);
+		return this.maxNameLength;
+	}
+	,findFirstLeaf: function() {
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(child.isLeaf()) return child; else return child.findFirstLeaf();
+		}
+		return null;
+	}
+	,findLastLeaf: function() {
+		var lastChild = null;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(child.isLeaf()) lastChild = child; else lastChild = child.findLastLeaf();
+		}
+		return lastChild;
+	}
+	,setLineWidth: function(width) {
+		this.lineWidth = width;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.setLineWidth(width);
+		}
+	}
+	,setLineMode: function(mode) {
+		this.lineMode = mode;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.setLineMode(mode);
+		}
+	}
+	,rotateNode: function(clockwise,drawingMode) {
+		var delta = -0.3;
+		if(clockwise) delta = 0.3;
+		this.x = (this.x - this.parent.x) * Math.cos(delta) - (this.y - this.parent.y) * Math.sin(delta) + this.parent.x;
+		this.y = (this.x - this.parent.x) * Math.sin(delta) + (this.y - this.parent.y) * Math.cos(delta) + this.parent.y;
+		this.angle = this.angle + delta;
+		var n = this.angle;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.wedge = child.l / this.root.l * 2 * Math.PI + Math.PI / 20;
+			child.angle = n;
+			n = n + child.wedge;
+			if(drawingMode == phylo.PhyloDrawingMode.STRAIGHT) child.preOrderTraversal2(0); else if(drawingMode == phylo.PhyloDrawingMode.CIRCULAR) child.preOrderTraversal(0);
+		}
+	}
+	,clearAnnotations: function() {
+		this.annotations = [];
+		if(this.activeAnnotation != null) {
+			var _g1 = 0;
+			var _g = this.activeAnnotation.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.activeAnnotation[i] = false;
+			}
+		}
+		var _g2 = 0;
+		var _g11 = this.children;
+		while(_g2 < _g11.length) {
+			var child = _g11[_g2];
+			++_g2;
+			child.clearAnnotations();
+		}
+	}
+	,getNewickString: function() {
+		return this.newickString;
+	}
+	,setFasta: function(fasta) {
+		this.fasta = fasta;
+	}
+	,getFasta: function() {
+		return this.fasta;
+	}
+	,__class__: phylo.PhyloTreeNode
+};
+phylo.LineMode = $hxClasses["phylo.LineMode"] = { __ename__ : ["phylo","LineMode"], __constructs__ : ["STRAIGHT","BEZIER"] };
+phylo.LineMode.STRAIGHT = ["STRAIGHT",0];
+phylo.LineMode.STRAIGHT.toString = $estr;
+phylo.LineMode.STRAIGHT.__enum__ = phylo.LineMode;
+phylo.LineMode.BEZIER = ["BEZIER",1];
+phylo.LineMode.BEZIER.toString = $estr;
+phylo.LineMode.BEZIER.__enum__ = phylo.LineMode;
+phylo.PhyloUtil = $hxClasses["phylo.PhyloUtil"] = function() {
+};
+phylo.PhyloUtil.__name__ = ["phylo","PhyloUtil"];
+phylo.PhyloUtil.drawRadialFromNewick = function(newickStr,parent,config,annotationManager) {
+	var parser = new phylo.PhyloNewickParser();
+	var rootNode = parser.parse(newickStr);
+	return phylo.PhyloUtil.drawRadialFromTree(rootNode,parent,config,annotationManager);
+};
+phylo.PhyloUtil.drawRadialFromTree = function(rootNode,parent,config,annotationManager) {
+	rootNode.calculateScale();
+	rootNode.postOrderTraversal();
+	rootNode.preOrderTraversal(1);
+	var parentWidth = parent.clientWidth;
+	var parentHeight = parent.clientHeight;
+	if(config == null) config = new phylo.PhyloCanvasConfiguration();
+	var canvas = new phylo.PhyloCanvasRenderer(parentWidth,parentHeight,parent,rootNode,config,annotationManager);
+	return canvas;
+};
+phylo.PhyloUtil.showMessage = function(message,title) {
+	var dialog = new phylo.PhyloInfoWidget(window.document.body,message,title);
+};
+phylo.PhyloUtil.prototype = {
+	__class__: phylo.PhyloUtil
+};
 var saturn = saturn || {};
 if(!saturn.client) saturn.client = {};
 saturn.client.WorkspaceApplication = $hxClasses["saturn.client.WorkspaceApplication"] = function(applicationTitle,navigationTitle,southTitle,detailsTitle,tabContainerTitle,searchBarTitle,nakedMode) {
@@ -2036,7 +6008,6 @@ saturn.client.WorkspaceApplication = $hxClasses["saturn.client.WorkspaceApplicat
 	this.screenMode = saturn.client.ScreenMode.DEFAULT;
 	this.qtSaveFileContents = null;
 	this.isInQtWebEngine = false;
-	var _g = this;
 	saturn.client.WorkspaceApplication.setApplication(this);
 	this.nakedMode = nakedMode;
 	this.theClipBoard = new saturn.client.ClipBoard();
@@ -2053,15 +6024,6 @@ saturn.client.WorkspaceApplication = $hxClasses["saturn.client.WorkspaceApplicat
 	this.programIdToTab = new haxe.ds.StringMap();
 	debug.enable("haxe:app");
 	this.debugLogger = debug("haxe:app");
-	var onError = function(message,url,linenumber) {
-		try {
-			_g.showMessage("Unexpected exception",message);
-		} catch( err ) {
-			if (err instanceof js._Boot.HaxeError) err = err.val;
-			js.Browser.alert("Unexpected exception:" + Std.string(message));
-		}
-	};
-	window.onerror = onError;
 	this.clientCore = saturn.client.core.ClientCore.startClientCore();
 	this.clientCore.onProviderUp($bind(this,this.onProviderUp));
 	this.clientCore.setShowMessage($bind(this,this.showMessage));
@@ -2786,6 +6748,11 @@ saturn.client.WorkspaceApplication.prototype = {
 	}
 	,exitSingleMode: function() {
 	}
+	,getGlobalSearchFieldObj: function() {
+		return null;
+	}
+	,afterLoad: function() {
+	}
 	,__class__: saturn.client.WorkspaceApplication
 };
 saturn.client.EXTApplication = $hxClasses["saturn.client.EXTApplication"] = function(applicationTitle,navigationTitle,southTitle,detailsTitle,tabContainerTitle,searchBarTitle,nakedMode) {
@@ -2872,6 +6839,7 @@ saturn.client.EXTApplication.prototype = $extend(saturn.client.WorkspaceApplicat
 					return "Are you sure you want to close this window";
 				};
 				_g.initApplication();
+				_g.afterLoad();
 			}});
 		});
 		this.initialiseWindowListeners();
@@ -2881,6 +6849,9 @@ saturn.client.EXTApplication.prototype = $extend(saturn.client.WorkspaceApplicat
 	}
 	,initApplication: function() {
 		saturn.client.WorkspaceApplication.prototype.initApplication.call(this);
+	}
+	,getGlobalSearchFieldObj: function() {
+		return this.searchBar;
 	}
 	,getResourcesMenu: function() {
 		return this.databaseMenu;
@@ -3339,7 +7310,7 @@ saturn.client.EXTApplication.prototype = $extend(saturn.client.WorkspaceApplicat
 		}}];
 		this.searchBarStore = Ext.create("Ext.data.Store",{ fields : fieldArray, storeId : "SEARCH_BAR"});
 		var self = this;
-		this.searchBar = Ext.create("Ext.form.field.ComboBox",{ displayField : "title", focusOnToFront : false, valueField : "id", region : "west", emptyText : "Type to search (targets/constructs/alleles/entry clones/primers/compounds)", store : Ext.data.StoreManager.lookup("SEARCH_BAR"), enableKeyEvents : true, doQuery : function(queryStr) {
+		this.searchBar = Ext.create("Ext.form.field.ComboBox",{ displayField : "title", focusOnToFront : false, valueField : "id", region : "west", emptyText : searchBarTitle, store : Ext.data.StoreManager.lookup("SEARCH_BAR"), enableKeyEvents : true, doQuery : function(queryStr) {
 			if(queryStr == "") {
 				if(_g.searchBar.rawValue == "") {
 					self.autocomplete_update([]);
@@ -3545,7 +7516,7 @@ saturn.app.SaturnClient.__name__ = ["saturn","app","SaturnClient"];
 saturn.app.SaturnClient.__interfaces__ = [saturn.client.SearchBarListener];
 saturn.app.SaturnClient.main = function() {
 	var inScarab = false;
-	var client = new saturn.app.SaturnClient("SATurn Framework","Workspace","Notifications","Outline","Editor","Search",false);
+	var client = new saturn.app.SaturnClient("SATurn Framework","Workspace","Notifications","Outline","Editor","Type to search (targets/constructs/alleles/entry clones/primers/compounds)",false);
 	saturn.client.WorkspaceApplication.setApplication(client);
 };
 saturn.app.SaturnClient.getSaturn = function() {
@@ -3739,6 +7710,8 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		this.getProgramRegistry().registerProgram(saturn.client.programs.CompoundViewer,true);
 		this.getProgramRegistry().registerProgram(saturn.client.programs.GlycanBuilder,true);
 		this.getProgramRegistry().registerProgram(saturn.client.programs.HomePage,true);
+		this.getProgramRegistry().registerProgram(saturn.client.programs.HelloWorldViewer,true);
+		this.getProgramRegistry().registerProgram(saturn.client.programs.ComplexHelper,true);
 		this.addSearchBarListener(this);
 	}
 	,objectSelected: function(app,records,it) {
@@ -3751,70 +7724,106 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 	}
 	,textChanged: function(app,queryStr,it) {
 		var _g = this;
+		var sequenceEntered = false;
 		if(queryStr.length > 30) {
-			if(queryStr.indexOf(">") == -1) queryStr = ">Sequence\n" + queryStr + "\n";
-			saturn.client.programs.DNASequenceEditor.parseFastaString(queryStr,true);
-		} else {
-			var modifier = null;
-			if(queryStr.indexOf("edit ") > -1) {
-				modifier = "edit";
-				queryStr = saturn.app.SaturnClient.reg_edit.replace(queryStr,"");
-				if(queryStr.length == 0) {
-					this.autocomplete_update([]);
-					return;
+			if(queryStr.indexOf(">") == -1) {
+				var regex = new EReg("\\s","g");
+				var regex2 = new EReg("\n","g");
+				var convertedString = regex.replace(queryStr,"");
+				var convertedString1 = regex2.replace(convertedString,"");
+				if(saturn.core.DNA.isDNA(convertedString1) || saturn.core.Protein.isProtein(convertedString1)) {
+					queryStr = ">Sequence\n" + convertedString1 + "\n";
+					sequenceEntered = true;
 				}
+			} else sequenceEntered = true;
+			if(sequenceEntered) {
+				saturn.client.programs.DNASequenceEditor.parseFastaString(queryStr,true);
+				return;
 			}
-			if(queryStr == "me") {
-				if(saturn.client.core.ClientCore.getClientCore().getUser() != null) queryStr = saturn.client.core.ClientCore.getClientCore().getUser().fullname;
-			}
-			var units = [];
-			units.push({ indexof : null, func : $bind(this,this.autocomplete_fts_models), minlen : null, name : "FTS", limit : 40});
-			var provider = this.getProvider();
-			if(provider != null) {
-				var model = provider.getModel(saturn.app.SaturnClient);
-				if(model != null) {
-					if(model.hasFlag("SGC")) {
-						units.push({ indexof : null, func : $bind(this,this.autocomplete_targets), minlen : null, name : "Targets", limit : 20});
-						units.push({ indexof : "pdb-", func : $bind(this,this.retrieve_pdb), minlen : null, name : "PDB", limit : 20});
-						units.push({ indexof : "PAGE", func : $bind(this,this.autocomplete_eln), minlen : null, name : "ELN", limit : 20});
-					}
-				}
-			}
-			var foundItems = [];
-			var i = 0;
-			var next = null;
-			next = function(items) {
-				if(items != null) {
-					var _g1 = 0;
-					while(_g1 < items.length) {
-						var item = items[_g1];
-						++_g1;
-						item.id = i++;
-						foundItems.push(item);
-					}
-				}
-				if(units.length == 0) {
-					window.console.log("Returning");
-					var d = window;
-					d.items = foundItems;
-					_g.autocomplete_update(foundItems);
-					return;
-				} else {
-					var unit = units.pop();
-					var indexof = unit.indexof;
-					var minlen = unit.minlen;
-					var func = unit.func;
-					var name = unit.name;
-					var limit = unit.limit;
-					if(indexof != null && queryStr.indexOf(indexof) == -1) next(null); else if(minlen != null && queryStr.length < minlen) next(null); else {
-						window.console.log("Running " + name);
-						func(queryStr,next,limit);
-					}
-				}
-			};
-			next(null);
 		}
-		it.next();
+		var modifier = null;
+		if(queryStr.indexOf("edit ") > -1) {
+			modifier = "edit";
+			queryStr = saturn.app.SaturnClient.reg_edit.replace(queryStr,"");
+			if(queryStr.length == 0) {
+				this.autocomplete_update([]);
+				return;
+			}
+		}
+		if(queryStr == "me") {
+			if(saturn.client.core.ClientCore.getClientCore().getUser() != null) queryStr = saturn.client.core.ClientCore.getClientCore().getUser().fullname;
+		}
+		var units = [];
+		var provider = this.getProvider();
+		if(provider != null) {
+			var model = provider.getModel(saturn.app.SaturnClient);
+			if(model != null) {
+				if(model.hasFlag("SGC")) {
+					units.push({ indexof : null, func : $bind(this,this.autocomplete_targets), minlen : null, name : "Targets", limit : 10});
+					units.push({ indexof : "pdb-", func : $bind(this,this.retrieve_pdb), minlen : null, name : "PDB", limit : 10});
+					units.push({ indexof : "PAGE", func : $bind(this,this.autocomplete_eln), minlen : null, name : "ELN", limit : 10});
+				}
+			}
+		}
+		units.push({ indexof : null, func : $bind(this,this.autocomplete_fts_models), minlen : null, name : "FTS", limit : 10});
+		var foundItems = [];
+		var i = 0;
+		var completed = 0;
+		var toComplete = 0;
+		var onComplete = function(items) {
+			completed += 1;
+			if(items != null) {
+				var _g1 = 0;
+				while(_g1 < items.length) {
+					var item = items[_g1];
+					++_g1;
+					item.id = i++;
+					foundItems.push(item);
+				}
+			}
+			if(completed == toComplete) {
+				foundItems.sort(function(a,b) {
+					var aUnitSortPosition = Reflect.field(a,"unitSortPosition");
+					var bUnitSortPosition = Reflect.field(b,"unitSortPosition");
+					var aInternalSortPosition = Reflect.field(a,"internalSortPosition");
+					var bInternalSortPosition = Reflect.field(b,"internalSortPosition");
+					if(aUnitSortPosition < bUnitSortPosition) return -1;
+					if(aUnitSortPosition > bUnitSortPosition) return 1;
+					if(aInternalSortPosition > bInternalSortPosition) return 1;
+					if(aInternalSortPosition < bInternalSortPosition) return -1;
+					return 0;
+				});
+				_g.autocomplete_update(foundItems);
+				it.next();
+			}
+		};
+		var _g2 = 0;
+		while(_g2 < units.length) {
+			var unit = units[_g2];
+			++_g2;
+			var indexof = unit.indexof;
+			var minlen = unit.minlen;
+			if(!(indexof != null && queryStr.indexOf(indexof) == -1)) {
+				if(!(minlen != null && queryStr.length < minlen)) toComplete += 1;
+			}
+		}
+		var unitSortPosition = 0;
+		var _g3 = 0;
+		while(_g3 < units.length) {
+			var unit1 = units[_g3];
+			++_g3;
+			var indexof1 = unit1.indexof;
+			var minlen1 = unit1.minlen;
+			var func = unit1.func;
+			var name = unit1.name;
+			var limit = unit1.limit;
+			if(!(indexof1 != null && queryStr.indexOf(indexof1) == -1)) {
+				if(!(minlen1 != null && queryStr.length < minlen1)) {
+					unitSortPosition += 1;
+					func(queryStr,onComplete,limit,unitSortPosition);
+				}
+			}
+		}
 	}
 	,autocomplete_models: function(queryStr,nextSearch,limit) {
 		var _g2 = this;
@@ -3872,8 +7881,8 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		}
 		if(!match) nextSearch(null);
 	}
-	,autocomplete_fts_models: function(queryStr,nextSearch,limit) {
-		var _g = this;
+	,autocomplete_fts_models: function(queryStr,nextSearch,limit,unitSortPosition) {
+		var _g3 = this;
 		var match = false;
 		var model = null;
 		var models = [];
@@ -3883,116 +7892,141 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		var foundItems = [];
 		var queryItems = null;
 		if(queryStr.indexOf(" ") > -1) {
-			var reg = new EReg("\\s+","");
+			var reg = new EReg("\\s+","g");
 			queryItems = reg.split(queryStr);
-		}
-		next = function(items) {
-			if(items != null) {
-				var _g2 = 0;
-				while(_g2 < items.length) {
-					var item = items[_g2];
-					++_g2;
-					foundItems.push(item);
-				}
-			}
-			var ftsColumn = null;
-			if(ftsColumns != null && ftsColumns.length > 0) ftsColumn = ftsColumns.pop(); else if(models.length > 0) {
-				model = models.pop();
-				ftsMap = model.getFTSColumns();
-				ftsColumns = [];
-				if(ftsMap != null) {
-					var $it0 = ftsMap.keys();
-					while( $it0.hasNext() ) {
-						var column = $it0.next();
-						ftsColumns.push(column);
+			if(queryItems.length > 1) {
+				var _g = 0;
+				var _g1 = this.getProvider().getModelClasses();
+				while(_g < _g1.length) {
+					var model1 = _g1[_g];
+					++_g;
+					var ftsColumn = model1.getFirstKey();
+					var cleanedItems = queryItems;
+					if(model1.stripPrefixes()) {
+						cleanedItems = [];
+						var _g31 = 0;
+						var _g2 = queryItems.length;
+						while(_g31 < _g2) {
+							var i = _g31++;
+							cleanedItems[i] = model1.getIdRegEx().replace(queryItems[i],"");
+						}
 					}
-				}
-				next(null);
-				return;
-			} else {
-				nextSearch(foundItems);
-				return;
-			}
-			var searchDef;
-			searchDef = __map_reserved[ftsColumn] != null?ftsMap.getReserved(ftsColumn):ftsMap.h[ftsColumn];
-			var regex = searchDef.regex;
-			if(regex != null) {
-				if(!regex.match(queryStr)) {
-					next(null);
-					return;
-				} else if(searchDef.replaceWith != null) queryStr = searchDef.regex.replace(queryStr,searchDef.replaceWith);
-			}
-			var icon = model.getIcon();
-			var actions = model.getActions("search_bar");
-			_g.debug("Searching for  " + model.getName() + "/" + ftsColumn + "/" + queryStr);
-			var handler = function(objs,exception) {
-				if(exception == null) {
-					if(objs == null || objs.length == 0) next(null); else {
-						_g.debug("Found " + objs.length);
-						var storeList = [];
-						objs.sort(function(a,b) {
-							return Reflect.compare(Reflect.field(a,ftsColumn),Reflect.field(b,ftsColumn));
-						});
-						var i = 0;
-						var idField = model.getFirstKey();
-						var _g1 = 0;
-						while(_g1 < objs.length) {
-							var obj = objs[_g1];
-							++_g1;
-							var idValue = Reflect.field(obj,idField);
-							var title = saturn.db.Model.extractField(obj,ftsColumn);
-							if(idField != ftsColumn) title += " - " + idValue;
-							if(Reflect.field(obj,"getShortDescription") != null) title = obj.getShortDescription();
-							_g.debug("Found: " + title);
-							if(__map_reserved.DEFAULT != null?actions.existsReserved("DEFAULT"):actions.h.hasOwnProperty("DEFAULT")) {
-								var action;
-								action = __map_reserved.DEFAULT != null?actions.getReserved("DEFAULT"):actions.h["DEFAULT"];
-								storeList.push({ action : action, icon : icon, title : title, id : i++, targetId : idValue, type : model, field : idField, group : model.getAlias()});
-							} else storeList.push({ icon : icon, title : title, id : i++, targetId : idValue, type : model, field : idField, group : model.getAlias()});
-							var $it1 = actions.keys();
-							while( $it1.hasNext() ) {
-								var actionName = $it1.next();
-								if(actionName == "DEFAULT") continue;
-								var action1;
-								action1 = __map_reserved[actionName] != null?actions.getReserved(actionName):actions.h[actionName];
-								var actionIcon = icon;
-								if(action1.icon != null) actionIcon = action1.icon;
-								storeList.push({ action : action1, icon : actionIcon, title : title + " (" + action1.userSuffix + ")", id : i++, targetId : idValue, type : model, field : idField, group : model.getAlias()});
+					this.getProvider().getByValues(cleanedItems,model1.getClass(),ftsColumn,function(objs,err) {
+						if(err == null) {
+							if(objs != null) {
+								var _g21 = 0;
+								while(_g21 < objs.length) {
+									var obj = objs[_g21];
+									++_g21;
+									_g3.getWorkspace().addObject(obj,true);
+								}
 							}
 						}
-						next(storeList);
-					}
-				} else if(saturn.client.core.CommonCore.getStringError(exception) == "You must be logged in to use this provider") next([]); else next([]);
-			};
-			if(ftsColumn.indexOf(".") > -1) _g.getProvider().queryPath(model.getClass(),ftsColumn,queryStr,"getByValues",function(err,objs1) {
-				handler(objs1,err);
-			}); else if(queryItems == null) {
-				if(model.stripPrefixes()) queryStr = model.getIdRegEx().replace(queryStr,"");
-				_g.getProvider().getByIdStartsWith(queryStr,ftsColumn,model.getClass(),limit,handler);
-			} else {
-				var cleanedItems = queryItems;
-				if(model.stripPrefixes()) {
-					cleanedItems = [];
-					var _g21 = 0;
-					var _g11 = queryItems.length;
-					while(_g21 < _g11) {
-						var i1 = _g21++;
-						cleanedItems[i1] = model.getIdRegEx().replace(queryItems[i1],"");
-					}
+					});
 				}
-				_g.getProvider().getByValues(cleanedItems,model.getClass(),ftsColumn,function(objs2,err1) {
-					handler(objs2,err1);
-				});
+				return;
 			}
-		};
-		var _g3 = 0;
-		var _g12 = this.getProvider().getModelClasses();
-		while(_g3 < _g12.length) {
-			var model1 = _g12[_g3];
-			++_g3;
-			models.push(model1);
 		}
-		next(null);
+		var _g4 = 0;
+		var _g11 = this.getProvider().getModelClasses();
+		while(_g4 < _g11.length) {
+			var model2 = _g11[_g4];
+			++_g4;
+			models.push(model2);
+		}
+		var toComplete = 0;
+		var _g5 = 0;
+		while(_g5 < models.length) {
+			var model3 = models[_g5];
+			++_g5;
+			var ftsMap1 = model3.getFTSColumns();
+			if(ftsMap1 != null) {
+				var $it0 = ftsMap1.keys();
+				while( $it0.hasNext() ) {
+					var column = $it0.next();
+					toComplete += 1;
+				}
+			}
+		}
+		var completed = 0;
+		var storeList = [];
+		var internalSortPosition = 0;
+		var _g6 = 0;
+		while(_g6 < models.length) {
+			var model4 = [models[_g6]];
+			++_g6;
+			ftsMap = model4[0].getFTSColumns();
+			if(ftsMap == null) continue;
+			var $it1 = ftsMap.keys();
+			while( $it1.hasNext() ) {
+				var ftsColumn1 = $it1.next();
+				var ftsColumn2 = [ftsColumn1];
+				var searchDef;
+				searchDef = __map_reserved[ftsColumn2[0]] != null?ftsMap.getReserved(ftsColumn2[0]):ftsMap.h[ftsColumn2[0]];
+				internalSortPosition += 1;
+				var regex = searchDef.regex;
+				if(regex != null) {
+					if(!regex.match(queryStr)) {
+						completed += 1;
+						continue;
+					} else if(searchDef.replaceWith != null) queryStr = searchDef.regex.replace(queryStr,searchDef.replaceWith);
+				}
+				var icon = [model4[0].getIcon()];
+				var actions = [model4[0].getActions("search_bar")];
+				var _internalSortPosition = [internalSortPosition];
+				var handler = [(function(_internalSortPosition,actions,icon,ftsColumn2,model4) {
+					return function(objs1,exception) {
+						completed += 1;
+						if(exception == null) {
+							if(!(objs1 == null || objs1.length == 0)) {
+								objs1.sort((function(ftsColumn2) {
+									return function(a,b) {
+										return Reflect.compare(Reflect.field(a,ftsColumn2[0]),Reflect.field(b,ftsColumn2[0]));
+									};
+								})(ftsColumn2));
+								var i1 = 0;
+								var idField = model4[0].getFirstKey();
+								var _g12 = 0;
+								while(_g12 < objs1.length) {
+									var obj1 = objs1[_g12];
+									++_g12;
+									var idValue = Reflect.field(obj1,idField);
+									var title = saturn.db.Model.extractField(obj1,ftsColumn2[0]);
+									if(idField != ftsColumn2[0]) title += " - " + idValue;
+									if(Reflect.field(obj1,"getShortDescription") != null) title = obj1.getShortDescription();
+									if(__map_reserved.DEFAULT != null?actions[0].existsReserved("DEFAULT"):actions[0].h.hasOwnProperty("DEFAULT")) {
+										var action;
+										action = __map_reserved.DEFAULT != null?actions[0].getReserved("DEFAULT"):actions[0].h["DEFAULT"];
+										storeList.push({ internalSortPosition : _internalSortPosition[0], unitSortPosition : unitSortPosition, action : action, icon : icon[0], title : title, id : i1++, targetId : idValue, type : model4[0], field : idField, group : model4[0].getAlias()});
+									} else storeList.push({ internalSortPosition : _internalSortPosition[0], unitSortPosition : unitSortPosition, icon : icon[0], title : title, id : i1++, targetId : idValue, type : model4[0], field : idField, group : model4[0].getAlias()});
+									var $it2 = actions[0].keys();
+									while( $it2.hasNext() ) {
+										var actionName = $it2.next();
+										if(actionName == "DEFAULT") continue;
+										var action1;
+										action1 = __map_reserved[actionName] != null?actions[0].getReserved(actionName):actions[0].h[actionName];
+										var actionIcon = icon[0];
+										if(action1.icon != null) actionIcon = action1.icon;
+										storeList.push({ internalSortPosition : _internalSortPosition[0], unitSortPosition : unitSortPosition, action : action1, icon : actionIcon, title : title + " (" + action1.userSuffix + ")", id : i1++, targetId : idValue, type : model4[0], field : idField, group : model4[0].getAlias()});
+									}
+								}
+							}
+						} else if(saturn.client.core.CommonCore.getStringError(exception) == "You must be logged in to use this provider") {
+						} else {
+						}
+						if(completed == toComplete) nextSearch(storeList);
+					};
+				})(_internalSortPosition,actions,icon,ftsColumn2,model4)];
+				if(ftsColumn2[0].indexOf(".") > -1) this.getProvider().queryPath(model4[0].getClass(),ftsColumn2[0],queryStr,"getByValues",(function(handler) {
+					return function(err1,objs2) {
+						handler[0](objs2,err1);
+					};
+				})(handler)); else if(queryItems == null) {
+					if(model4[0].stripPrefixes()) queryStr = model4[0].getIdRegEx().replace(queryStr,"");
+					this.getProvider().getByIdStartsWith(queryStr,ftsColumn2[0],model4[0].getClass(),limit,handler[0]);
+				}
+			}
+		}
 	}
 	,autocomplete_retrieveModel: function(item) {
 		var _g = this;
@@ -4021,7 +8055,10 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 		var _g = this;
 		this.getProvider().getByIdStartsWith(query,null,saturn.core.scarab.LabPage,limit,function(pages,exception) {
 			if(exception == null) {
-				if(pages == null || pages.length == 0) nextSearch(null);
+				if(pages == null || pages.length == 0) {
+					nextSearch(null);
+					return;
+				}
 				var storeList = [];
 				var i = 0;
 				var _g1 = 0;
@@ -4031,7 +8068,10 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 					storeList.push({ title : page.experimentNo, id : i++, targetId : page.experimentNo, type : "eln"});
 				}
 				nextSearch(storeList);
-			} else if(exception != null) _g.lookupException(exception.message);
+			} else if(exception != null) {
+				_g.lookupException(exception.message);
+				nextSearch(null);
+			}
 		});
 	}
 	,autocomplete_retrievePage: function(query) {
@@ -4046,12 +8086,13 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 	,lookupException: function(msg) {
 		saturn.client.WorkspaceApplication.getApplication().showMessage("Lookup exception",msg);
 	}
-	,autocomplete_targets: function(query,nextSearch,limit) {
+	,autocomplete_targets: function(query,nextSearch,limit,unitSortPosition) {
 		var _g = this;
 		var modifierStr = "";
 		var modifier = "";
 		this.getProvider().getByIdStartsWith(query,null,saturn.core.domain.SgcTarget,limit,function(targets,exception) {
 			if(exception == null) {
+				var internalSortPosition = 0;
 				if(targets == null || targets.length == 0) {
 					nextSearch(null);
 					return;
@@ -4079,27 +8120,42 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 					++_g2;
 					var baseName = HxOverrides.substr(target1.targetId,0,target1.targetId.length - 1);
 					var group = "Targets";
-					if(target1.targetId == query || baseCount <= 2 && (lastBaseName == null || baseName != lastBaseName)) {
+					if(target1.targetId.toUpperCase() == query.toUpperCase() || baseCount <= 2 && (lastBaseName == null || baseName != lastBaseName)) {
 						lastBaseName = baseName;
 						group = target1.targetId;
-						storeList.push({ icon : "gridvar_16.png", title : target1.targetId + " (Target Summary)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag Summary", group : group});
-						storeList.push({ icon : "structure_16.png", title : modifierStr + baseName + " (All Isoforms - Protein)", id : i++, targetId : target1.targetId, type : "All Isoforms - Protein", modifier : modifier, group : group});
-						storeList.push({ icon : "dna_16.png", title : modifierStr + baseName + " (All Isoforms - Nucleotide)", id : i++, targetId : target1.targetId, type : "All Isoforms - Nucleotide", modifier : modifier, group : group});
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "gridvar_16.png", title : target1.targetId + " (Target Summary)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag Summary", group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + baseName + " (All Isoforms - Protein)", id : i++, targetId : target1.targetId, type : "All Isoforms - Protein", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "dna_16.png", title : modifierStr + baseName + " (All Isoforms - Nucleotide)", id : i++, targetId : target1.targetId, type : "All Isoforms - Nucleotide", modifier : modifier, group : group});
+						internalSortPosition += 1;
 					}
-					storeList.push({ icon : "structure_16.png", title : modifierStr + target1.targetId + " (Protein)", id : i++, targetId : target1.targetId, type : "Protein", modifier : modifier, group : group});
-					storeList.push({ icon : "dna_16.png", title : modifierStr + target1.targetId + " (DNA)", id : i++, targetId : target1.targetId, type : "Nucleotide", modifier : modifier, group : group});
-					if(target1.targetId == query || targets.length <= 3) {
+					storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + target1.targetId + " (Protein)", id : i++, targetId : target1.targetId, type : "Protein", modifier : modifier, group : group});
+					internalSortPosition += 1;
+					storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "dna_16.png", title : modifierStr + target1.targetId + " (DNA)", id : i++, targetId : target1.targetId, type : "Nucleotide", modifier : modifier, group : group});
+					internalSortPosition += 1;
+					if(target1.targetId.toUpperCase() == query.toUpperCase() || targets.length <= 3) {
 						group = target1.targetId;
-						storeList.push({ icon : "dna_16.png", title : modifierStr + target1.targetId + " (Entry Clones DNA)", id : i++, targetId : target1.targetId, type : "Entry Clones DNA", modifier : modifier, group : group});
-						storeList.push({ icon : "structure_16.png", title : modifierStr + target1.targetId + " (Entry Clones - Translation)", id : i++, targetId : target1.targetId, type : "Entry Clones Translation", modifier : modifier, group : group});
-						storeList.push({ icon : "structure_16.png", title : modifierStr + target1.targetId + " (Alleles Protein)", id : i++, targetId : target1.targetId, type : "Alleles Protein", modifier : modifier, group : group});
-						storeList.push({ icon : "dna_16.png", title : modifierStr + target1.targetId + " (Alleles DNA)", id : i++, targetId : target1.targetId, type : "Alleles DNA", modifier : modifier, group : group});
-						storeList.push({ icon : "structure_16.png", title : modifierStr + target1.targetId + " (Constructs Protein)", id : i++, targetId : target1.targetId, type : "Constructs Protein", modifier : modifier, group : group});
-						storeList.push({ icon : "structure_16.png", title : modifierStr + target1.targetId + " (Constructs Protein - No Tag)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag", modifier : modifier, group : group});
-						storeList.push({ icon : "dna_16.png", title : modifierStr + target1.targetId + " (Constructs DNA)", id : i++, targetId : target1.targetId, type : "Constructs DNA", modifier : modifier, group : group});
-						storeList.push({ icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs DNA)", id : i++, targetId : target1.targetId, type : "Constructs DNA Align", group : group});
-						storeList.push({ icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs Protein)", id : i++, targetId : target1.targetId, type : "Constructs Protein Align", group : group});
-						storeList.push({ icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs Protein - No Tag)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag Align", group : group});
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "dna_16.png", title : modifierStr + target1.targetId + " (Entry Clones DNA)", id : i++, targetId : target1.targetId, type : "Entry Clones DNA", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + target1.targetId + " (Entry Clones - Translation)", id : i++, targetId : target1.targetId, type : "Entry Clones Translation", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + target1.targetId + " (Alleles Protein)", id : i++, targetId : target1.targetId, type : "Alleles Protein", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "dna_16.png", title : modifierStr + target1.targetId + " (Alleles DNA)", id : i++, targetId : target1.targetId, type : "Alleles DNA", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + target1.targetId + " (Constructs Protein)", id : i++, targetId : target1.targetId, type : "Constructs Protein", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "structure_16.png", title : modifierStr + target1.targetId + " (Constructs Protein - No Tag)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "dna_16.png", title : modifierStr + target1.targetId + " (Constructs DNA)", id : i++, targetId : target1.targetId, type : "Constructs DNA", modifier : modifier, group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs DNA)", id : i++, targetId : target1.targetId, type : "Constructs DNA Align", group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs Protein)", id : i++, targetId : target1.targetId, type : "Constructs Protein Align", group : group});
+						internalSortPosition += 1;
+						storeList.push({ unitSortPosition : unitSortPosition, internalSortPosition : internalSortPosition, icon : "aln_16.png", title : "Align " + target1.targetId + " (Constructs Protein - No Tag)", id : i++, targetId : target1.targetId, type : "Constructs Protein - No Tag Align", group : group});
+						internalSortPosition += 1;
 					}
 				}
 				nextSearch(storeList);
@@ -4209,6 +8265,7 @@ saturn.app.SaturnClient.prototype = $extend(saturn.client.EXTApplication.prototy
 					var allele = alleles[_g13];
 					++_g13;
 					if(allele.proteinSeq != null) {
+						allele.proteinSequenceObj.setName(allele.getName() + " (Protein)");
 						_g.getWorkspace()._addObject(allele.proteinSequenceObj,autoOpen3,false,folder2);
 						autoOpen3 = false;
 						added2++;
@@ -4449,6 +8506,7 @@ saturn.client.BuildingBlock.prototype = {
 	onFocus: null
 	,onBlur: null
 	,getComponent: null
+	,getRawComponent: null
 	,__class__: saturn.client.BuildingBlock
 };
 saturn.client.Program = $hxClasses["saturn.client.Program"] = function() { };
@@ -4608,6 +8666,9 @@ saturn.client.BaseProgram.prototype = {
 	}
 	,getComponent: function() {
 		return null;
+	}
+	,getRawComponent: function() {
+		return this.getComponent();
 	}
 	,setId: function(id) {
 		this.theId = id;
@@ -5440,16 +9501,37 @@ saturn.client.ProgramNotFoundException.__super__ = saturn.util.HaxeException;
 saturn.client.ProgramNotFoundException.prototype = $extend(saturn.util.HaxeException.prototype,{
 	__class__: saturn.client.ProgramNotFoundException
 });
-saturn.client.SingleAppContainer = $hxClasses["saturn.client.SingleAppContainer"] = function() {
-	this.hbox = Ext.create("Ext.panel.Panel",{ layout : "hbox", width : "100%", height : "100%", region : "north", border : false, flex : 1});
+saturn.client.SingleAppContainer = $hxClasses["saturn.client.SingleAppContainer"] = function(layout) {
+	if(layout == null) layout = "border";
+	this.hbox = Ext.create("Ext.panel.Panel",{ layout : "border", width : "100%", height : "100%", region : "north", border : false, flex : 1});
+	this.deflayout = layout;
 	this.createComponents();
+	this.annotWindow = new haxe.ds.IntMap();
 };
 saturn.client.SingleAppContainer.__name__ = ["saturn","client","SingleAppContainer"];
 saturn.client.SingleAppContainer.prototype = {
 	hbox: null
 	,centralPanel: null
+	,centralTargetPanel: null
 	,controlToolBar: null
 	,modeToolBar: null
+	,legendPanel: null
+	,geneListBar: null
+	,optionsToolBar: null
+	,editToolBar: null
+	,hideHelp: null
+	,subMenuToolBar: null
+	,helpingDiv: null
+	,exportSubMenu: null
+	,popUpWindow: null
+	,ultraDDWindow: null
+	,highlightWindow: null
+	,annotWindow: null
+	,messageWindow: null
+	,messageDomainWindow: null
+	,tipWindow: null
+	,progressBar: null
+	,deflayout: null
 	,program: null
 	,createComponents: function() {
 		this.createModeToolBar();
@@ -5457,44 +9539,634 @@ saturn.client.SingleAppContainer.prototype = {
 		this.createCentralPanel();
 	}
 	,createCentralPanel: function() {
-		this.centralPanel = Ext.create("Ext.panel.Panel",{ layout : "border", width : "100%", height : "100%", region : "north", border : false, flex : 1});
+		var _g = this;
+		this.centralPanel = Ext.create("Ext.panel.Panel",{ layout : "border", width : "100%", height : "100%", region : "center", cls : "x-centralPanel-single", border : false, scrollable : true, flex : 1, id : "id-centralPanel", listener : { focus : function(e) {
+			_g.getApplication().getSingleAppContainer().hideSubMenuToolBar();
+		}}});
 		this.hbox.add(this.centralPanel);
+	}
+	,clearCentralPanel: function() {
+		var _g = this;
+		var itemslist = this.centralPanel.items;
+		itemslist.each(function(item,index,length) {
+			if(item.id == "panel-domain-architecture") {
+				var itemslist2 = item.items;
+				itemslist2.each(function(it,ind,leng) {
+					item.remove(it,true);
+				});
+				_g.centralPanel.remove(item,true);
+			} else if(item.id == "chromo-legend") _g.centralPanel.remove(item,true); else _g.centralPanel.remove(item,false);
+		});
+		this.centralPanel.doLayout();
+	}
+	,setCentralComponent: function(component) {
+		this.clearCentralPanel();
+		this.centralPanel.add(component);
+		this.centralPanel.doLayout();
+	}
+	,addComponentToCentralPanel: function(component) {
+		this.centralPanel.add(component);
+		this.centralPanel.doLayout();
+	}
+	,getCentralPanel: function() {
+		return this.centralPanel;
+	}
+	,createLegendPanel: function() {
+		this.legendPanel = Ext.create("Ext.panel.Panel",{ width : "100%", height : "20px", border : true, cls : "x-tree-legend", region : "south", split : true, id : "chromo-legend", vertical : true, collapsible : true, collapsed : true, title : "Legend"});
+		this.addComponentToCentralPanel(this.legendPanel);
+	}
+	,hideLegendPanel: function() {
+		this.legendPanel.hide();
+	}
+	,showLegendPanel: function() {
+		this.legendPanel.doLayout();
+		this.legendPanel.show();
+		this.legendPanel.doLayout();
+	}
+	,addImageToLegend: function(image,id) {
+		var changingImage = Ext.create("Ext.Img",{ src : image, id : id, padding : "5 0 15 0"});
+		this.legendPanel.insert(2,changingImage);
+		this.legendPanel.doLayout();
+		this.hbox.doLayout();
+	}
+	,removeComponentFromLegend: function(component) {
+		var comp = this.legendPanel.getComponent(component);
+		this.legendPanel.remove(comp);
+	}
+	,expandLegend: function() {
+	}
+	,emptyLegend: function() {
+		var _g = this;
+		var itemslist = this.legendPanel.items;
+		var items = [];
+		itemslist.each(function(item,index,length) {
+			_g.legendPanel.remove(item,true);
+		});
+		this.legendPanel.doLayout();
+	}
+	,getLegendPanel: function() {
+		return this.legendPanel;
+	}
+	,createModeToolBar: function() {
+		this.modeToolBar = Ext.create("Ext.toolbar.Toolbar",{ width : "20px", id : "modeToolBarId", height : "100%", border : false, region : "west", cls : "x-modetoolbar-single", vertical : true});
+		this.hbox.add(this.modeToolBar);
+	}
+	,hideModeToolBar: function() {
+		this.modeToolBar.hide();
+	}
+	,showModeToolBar: function() {
+		this.modeToolBar.doLayout();
+		this.modeToolBar.show();
+		this.modeToolBar.doLayout();
+	}
+	,getModeToolBar: function() {
+		return this.modeToolBar;
+	}
+	,clearModeToolBar: function() {
+		var _g = this;
+		var itemslist = this.modeToolBar.items;
+		itemslist.each(function(item,index,length) {
+			_g.modeToolBar.remove(item,false);
+		});
+		this.modeToolBar.doLayout();
+	}
+	,addElemToModeToolBar: function(elem) {
+		this.modeToolBar.add(elem);
+		this.modeToolBar.doLayout();
 	}
 	,createControlToolBar: function(attachPosition) {
 		if(attachPosition == null) attachPosition = 1;
-		var _g = this;
-		this.controlToolBar = Ext.create("Ext.toolbar.Toolbar",{ width : "20px", height : "100%", border : false, vertical : true});
-		this.controlToolBar.add({ xtype : "button", text : "Back", glyph : "2302", handler : function() {
-			_g.getApplication().setMode(saturn.client.ScreenMode.DEFAULT);
-		}});
+		this.controlToolBar = Ext.create("Ext.toolbar.Toolbar",{ width : "35px", height : "100px", border : false, vertical : true, region : "east", cls : "x-toolbar-2nd"});
 		this.hbox.insert(attachPosition,this.controlToolBar);
+	}
+	,getControlToolBar: function() {
+		return this.controlToolBar;
+	}
+	,hideControlToolBar: function() {
+		this.controlToolBar.hide();
+	}
+	,showControlToolBar: function() {
+		this.controlToolBar.doLayout();
+		this.controlToolBar.show();
+		this.controlToolBar.doLayout();
 	}
 	,clearControlToolBar: function() {
 		var attachPosition = this.hbox.items.findIndex("id",this.controlToolBar.id);
 		this.hbox.remove(this.controlToolBar);
 		this.createControlToolBar(attachPosition);
 	}
-	,hideControlToolBar: function() {
-		this.controlToolBar.hide();
+	,addElemToControlToolBar: function(elem) {
+		this.controlToolBar.add(elem);
+		this.controlToolBar.doLayout();
 	}
-	,showControlToolBar: function() {
-		this.controlToolBar.show();
+	,refreshControlToolBar: function() {
+		this.controlToolBar.doLayout();
 	}
-	,createModeToolBar: function() {
-		this.modeToolBar = Ext.create("Ext.toolbar.Toolbar",{ width : "20px", height : "100%", border : false, vertical : true});
+	,createEditToolBar: function(attachPosition) {
+		if(attachPosition == null) attachPosition = 2;
+		this.editToolBar = Ext.create("Ext.toolbar.Toolbar",{ width : "35px", height : "100px", border : false, vertical : true, region : "east", cls : "x-toolbar-2nd"});
+		this.hbox.insert(attachPosition,this.editToolBar);
 	}
-	,getControlToolBar: function() {
-		return this.controlToolBar;
+	,getEditToolBar: function() {
+		return this.editToolBar;
 	}
-	,getModeToolBar: function() {
-		return this.modeToolBar;
+	,hideEditToolBar: function() {
+		this.editToolBar.hide();
+	}
+	,showEditToolBar: function() {
+		this.editToolBar.doLayout();
+		this.editToolBar.show();
+		this.editToolBar.doLayout();
+	}
+	,clearEditToolBar: function() {
+		var attachPosition = this.hbox.items.findIndex("id",this.editToolBar.id);
+		this.hbox.remove(this.editToolBar);
+		this.createEditToolBar(attachPosition);
+	}
+	,addElemToEditToolBar: function(elem) {
+		this.editToolBar.add(elem);
+		this.editToolBar.doLayout();
+	}
+	,refreshEditToolBar: function() {
+		this.controlToolBar.doLayout();
+	}
+	,removeComponentFromEditToolBar: function(component) {
+		this.editToolBar.remove(component);
+		this.editToolBar.doLayout();
+	}
+	,createGeneListToolBar: function(attachPosition) {
+		if(attachPosition == null) attachPosition = 1;
+		this.geneListBar = Ext.create("Ext.toolbar.Toolbar",{ top : "0px", left : "30px", width : "470px", height : "100%", border : false, vertical : true, cls : "x-viewoptionsbar", alwaysOnTop : true, region : "west", title : "Options Tool Bar", autoScroll : true});
+		this.geneListBar.add({ xtype : "label", text : "Gene List", cls : "targetclass-title"});
+		this.hbox.insert(attachPosition,this.geneListBar);
+	}
+	,getGeneListBar: function() {
+		return this.geneListBar;
+	}
+	,hideGeneListBar: function() {
+		this.geneListBar.hide();
+	}
+	,showGeneListBar: function() {
+		this.geneListBar.show();
+	}
+	,clearGeneListBar: function() {
+		this.geneListBar.removeAll(true);
+	}
+	,addGeneToGeneListBar: function(gene) {
+		var _g = this;
+		this.geneListBar.add({ xtype : "button", iconCls : "x-btn-gene-searched", text : gene, handler : function(e) {
+			_g.getApplication().debug(e.text);
+		}, tooltip : { dismissDelay : 10000, text : gene}});
+	}
+	,removeGeneFromGeneListBar: function(elem) {
+		this.geneListBar.add(elem);
+		this.geneListBar.doLayout();
+	}
+	,createOptionsToolBar: function(attachPosition) {
+		if(attachPosition == null) attachPosition = 1;
+		this.optionsToolBar = Ext.create("Ext.toolbar.Toolbar",{ top : "0px", left : "30px", id : "optionToolBarId", width : "700px", height : "100%", border : false, vertical : true, cls : "x-viewoptionsbar", alwaysOnTop : true, region : "west", title : "Options Tool Bar", autoScroll : true});
+		this.hbox.insert(attachPosition,this.optionsToolBar);
+	}
+	,viewClose: function(active) {
+	}
+	,updateOptionsToolBar: function(active) {
+	}
+	,getOptionsToolBar: function() {
+		if(this.optionsToolBar == null) return null; else return this.optionsToolBar;
+	}
+	,hideOptionsToolBar: function() {
+		this.optionsToolBar.hide();
+	}
+	,showOptionsToolBar: function() {
+		this.optionsToolBar.show();
+	}
+	,clearOptionsToolBar: function() {
+		var _g = this;
+		var itemslist = this.optionsToolBar.items;
+		itemslist.each(function(item,index,length) {
+			_g.optionsToolBar.remove(item,false);
+		});
+		this.optionsToolBar.doLayout();
+	}
+	,addElemToOptionsToolBar: function(elem) {
+		this.optionsToolBar.add(elem);
+		this.optionsToolBar.doLayout();
+	}
+	,createExportSubMenu: function(viewer,attachPosition) {
+		if(attachPosition == null) attachPosition = 10000;
+		this.exportSubMenu = Ext.create("Ext.toolbar.Toolbar",{ top : "0px", width : "120px", height : "50px", border : false, vertical : true, cls : "x-exsubmenu-toolsbar", modal : false, floating : true, alwaysOnTop : true, listeners : { 'mouseleave' : function(menu,e,eOpts) {
+			menu.hide();
+		}}});
+		this.exportSubMenu.add({ iconCls : "x-btn-exportpng-single", handler : function() {
+			viewer.exportPNG();
+		}, tooltip : { dismissDelay : 10000, text : "Export Tree as PNG file"}});
+		this.exportSubMenu.add({ iconCls : "x-btn-exportsvg-single", handler : function() {
+			viewer.exportSVG();
+		}, tooltip : { dismissDelay : 10000, text : "Export Tree as SVG file"}});
+		this.hbox.insert(attachPosition,this.exportSubMenu);
+	}
+	,hideExportSubMenu: function() {
+		this.exportSubMenu.hide();
+	}
+	,showExportSubMenu: function(x) {
+		this.exportSubMenu.setPosition(x);
+		this.exportSubMenu.show();
+	}
+	,getExportSubMenu: function() {
+		return this.exportSubMenu;
+	}
+	,createSubMenuToolBar: function(attachPosition) {
+		if(attachPosition == null) attachPosition = 10000;
+		this.subMenuToolBar = Ext.create("Ext.toolbar.Toolbar",{ top : "0px", left : "150px", width : "1px", height : "100px", border : false, vertical : true, cls : "x-submenu-toolsbar", modal : false, floating : true, alwaysOnTop : true, title : "SubMenu Tool Bar"});
+		this.hbox.insert(attachPosition,this.subMenuToolBar);
+	}
+	,clearSubMenuToolBar: function() {
+		var attachPosition = this.hbox.items.findIndex("id",this.subMenuToolBar.id);
+		this.hbox.remove(this.subMenuToolBar);
+		this.setTopSubMenuToolBar(0);
+		this.createSubMenuToolBar(attachPosition);
+	}
+	,hideSubMenuToolBar: function() {
+		this.subMenuToolBar.hide();
+	}
+	,showSubMenuToolBar: function() {
+		this.subMenuToolBar.show();
+	}
+	,getSubMenuToolBar: function() {
+		return this.subMenuToolBar;
+	}
+	,addElemToSubMenuToolBar: function(elem) {
+		this.subMenuToolBar.add(elem);
+	}
+	,setTopSubMenuToolBar: function(top) {
+		this.subMenuToolBar.setPosition(435,top);
+	}
+	,setHeightSubMenuToolBar: function(height) {
+		this.subMenuToolBar.setHeight(height);
+	}
+	,createHelpingDiv: function(attachPosition) {
+		if(attachPosition == null) attachPosition = 10000;
+		var _g = this;
+		this.helpingDiv = Ext.create("Ext.Container",{ top : "0px", left : "5px", width : "1px", vertical : true, cls : "x-helpingDiv", floating : true, alwaysOnTop : true, id : "helpingDiv", title : "Helping Div", listeners : { mouseout : function(e) {
+			_g.helpingDiv.hide();
+		}, mouseover : function(e1) {
+			_g.hideHelp = false;
+		}}});
+		this.hbox.insert(attachPosition,this.helpingDiv);
+	}
+	,clearHelpingDiv: function() {
+		var attachPosition = this.hbox.items.findIndex("id",this.helpingDiv.id);
+		this.hbox.remove(this.helpingDiv);
+		this.setTopHelpingDiv(0);
+		this.createHelpingDiv(attachPosition);
+	}
+	,hideHelpingDiv: function() {
+		this.helpingDiv.hide();
+	}
+	,showHelpingDiv: function() {
+		this.hideSubMenuToolBar();
+		this.helpingDiv.show();
+	}
+	,getHelpingDiv: function() {
+		return this.helpingDiv;
+	}
+	,addHtmlTextHelpingDiv: function(text) {
+		this.helpingDiv.html = text;
+	}
+	,setTopHelpingDiv: function(top) {
+		this.helpingDiv.setPosition(135,top);
+	}
+	,setHeightHelpingDiv: function(height) {
+		this.helpingDiv.setHeight(height);
+	}
+	,showAnnotWindow: function(text,px,py,title,ident,data) {
+		var _g = this;
+		if(this.alreadyOpen(ident) == false) {
+			var r = Math.random() * 299 + 1;
+			var id = r | 0;
+			var myWindow = Ext.create("Ext.window.Window",{ x : px, y : py, maxHeight : 500, cls : "x-annot-window", id : "annotWin-" + ident, modal : false, autoscroll : true, overflowY : "auto", layout : "fit", shadow : true, resizable : true, title : title, html : text, listeners : { close : function(win) {
+				_g.annotWindow.remove(id);
+				data.created = false;
+			}, hide : function(win1) {
+				_g.annotWindow.remove(id);
+				data.created = false;
+			}}});
+			myWindow.show();
+			this.annotWindow.h[id] = myWindow;
+			this.annotWindowDoLayout();
+		}
+	}
+	,alreadyOpen: function(ident) {
+		var key;
+		var $it0 = this.annotWindow.keys();
+		while( $it0.hasNext() ) {
+			var key1 = $it0.next();
+			var elem = this.annotWindow.h[key1];
+			if(elem.id == "annotWin-" + ident) return true;
+		}
+		return false;
+	}
+	,removeAnnotWindows: function() {
+		var key;
+		var $it0 = this.annotWindow.keys();
+		while( $it0.hasNext() ) {
+			var key1 = $it0.next();
+			var elem = this.annotWindow.h[key1];
+			elem.close();
+			this.annotWindow.remove(key1);
+		}
+	}
+	,annotWindowDoLayout: function() {
+		var key;
+		var $it0 = this.annotWindow.keys();
+		while( $it0.hasNext() ) {
+			var key1 = $it0.next();
+			var elem = this.annotWindow.h[key1];
+			elem.doLayout();
+		}
+	}
+	,showAnnotWindowTable: function(text,px,py) {
+		var annotWindowT = Ext.create("Ext.window.Window",{ x : px, y : py, cls : "x-annot-window", modal : false, autoscroll : true, overflowY : "auto", layout : "fit", shadow : true, resizable : true, html : text});
+		annotWindowT.show();
+	}
+	,showUltraDDWindow: function(item,px,py,title,viewer) {
+		var _g = this;
+		this.cleanALlWindows();
+		this.ultraDDWindow = Ext.create("Ext.window.Window",{ x : px, width : "800px", maxHeight : 600, cls : "x-ultradd-window", modal : true, autoScroll : true, overflowY : "auto", shadow : true, resizable : true, maximizable : true, title : "UltraDD Genes"});
+		this.ultraDDWindow.add({ xtype : "form", iconCls : "x-popup-form", defaultType : "checkboxfield", id : "wform", items : item, title : "Select the genes you want to add into annotations table.Total number of genes: " + title, buttons : [{ iconCls : "x-btn-accept", text : "Accept", handler : function() {
+			var form;
+			form = _g.ultraDDWindow.getComponent("wform");
+			viewer.geneMap = new haxe.ds.StringMap();
+			if(form.isValid()) {
+				var i = 0;
+				var j = 0;
+				var mylist;
+				mylist = [];
+				var _g2 = 0;
+				var _g1 = form.items.items.length;
+				while(_g2 < _g1) {
+					var i1 = _g2++;
+					if(form.items.items[i1].checked == true) {
+						mylist.push(form.items.items[i1].inputValue);
+						viewer.treeName = "";
+						viewer.treeType = "gene";
+						viewer.newickStr = "";
+						viewer.annotationManager.searchedGenes = [];
+						viewer.annotationManager.searchedGenes = mylist;
+						var geneNode = new phylo.PhyloTreeNode(null,form.items.items[i1].inputValue,true,0);
+						geneNode.l = 1;
+						geneNode.annotations = [];
+						geneNode.activeAnnotation = [];
+						viewer.geneMap.set(form.items.items[i1].inputValue,geneNode);
+					}
+				}
+				if(mylist.length > 0) {
+					saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","This process might take some time. Please wait.");
+					viewer.renderTable();
+				}
+				_g.ultraDDWindow.hide();
+			}
+		}},{ iconCls : "x-btn-accept", text : "Cancel", handler : function() {
+			_g.ultraDDWindow.hide();
+		}}]});
+		this.ultraDDWindow.show();
+	}
+	,cleanALlWindows: function() {
+		var _g = this;
+		if(this.highlightWindow != null) {
+			this.highlightWindow.removeAll(true);
+			this.highlightWindow.doLayout();
+		}
+		if(this.ultraDDWindow != null) {
+			var itemslist = this.ultraDDWindow.items;
+			itemslist.each(function(item,index,length) {
+				_g.ultraDDWindow.remove(item,true);
+			});
+			this.ultraDDWindow.removeAll(true);
+			this.ultraDDWindow.doLayout();
+		}
+		if(this.popUpWindow != null) {
+			var itemslist1 = this.popUpWindow.items;
+			itemslist1.each(function(item1,index1,length1) {
+				_g.popUpWindow.remove(item1,true);
+			});
+			this.popUpWindow.removeAll(true);
+			this.popUpWindow.doLayout();
+		}
+		if(this.tipWindow != null) {
+			var itemslist2 = this.tipWindow.items;
+			itemslist2.each(function(item2,index2,length2) {
+				_g.tipWindow.remove(item2,true);
+			});
+			this.tipWindow.removeAll(true);
+			this.tipWindow.doLayout();
+		}
+	}
+	,showHighlightWindow: function(item,px,py,title,viewer) {
+		var _g = this;
+		this.cleanALlWindows();
+		var compare = function(a,b) {
+			var geneNameA = a.boxLabel.toUpperCase();
+			var geneNameB = b.boxLabel.toUpperCase();
+			var comparison = 0;
+			if(geneNameA > geneNameB) comparison = 1; else if(geneNameA < geneNameB) comparison = -1;
+			return comparison;
+		};
+		item.sort(compare);
+		this.highlightWindow = Ext.create("Ext.window.Window",{ x : px, width : "800px", maxHeight : 600, cls : "x-highlight-window", modal : true, autoScroll : true, overflowY : "auto", shadow : true, resizable : true, maximizable : true, title : "Highlight Genes"});
+		this.highlightWindow.add({ xtype : "form", iconCls : "x-popup-form", defaultType : "checkboxfield", id : "wform", items : item, title : "Select the genes you want to highlight in tree.Total number of genes: " + title, buttons : [{ iconCls : "x-btn-accept", text : "Accept", handler : function() {
+			var form;
+			form = _g.highlightWindow.getComponent("wform");
+			viewer.config.highlightedGenes = new haxe.ds.StringMap();
+			if(form.isValid()) {
+				var i = 0;
+				var j = 0;
+				var _g2 = 0;
+				var _g1 = form.items.items.length;
+				while(_g2 < _g1) {
+					var i1 = _g2++;
+					if(form.items.items[i1].checked == true) {
+						if(viewer.config.highlightedGenes.exists(viewer.rootNode.targets[i1]) == false) viewer.config.highlightedGenes.set(form.items.items[i1].inputValue,true);
+					}
+				}
+				viewer.newposition(0,0);
+				_g.highlightWindow.hide();
+			}
+		}},{ iconCls : "x-btn-accept", text : "Remove highlights", handler : function() {
+			viewer.config.highlightedGenes = new haxe.ds.StringMap();
+			viewer.newposition(0,0);
+			_g.highlightWindow.hide();
+		}},{ iconCls : "x-btn-accept", text : "Cancel", handler : function() {
+			_g.highlightWindow.hide();
+		}}]});
+		this.highlightWindow.doLayout();
+		this.highlightWindow.show();
+	}
+	,createMessageDomainWindow: function(viewer) {
+		var _g = this;
+		this.messageDomainWindow = Ext.create("Ext.window.Window",{ width : "500px", cls : "x-popup-window", modal : true, title : "Message"});
+		this.messageDomainWindow.add({ xtype : "form", iconCls : "x-popup-form", height : "200px", id : "w1form", defaultType : "checkboxfield", items : [{ xtype : "label", text : "There is no domain-based alignment for this family. This phylogenetic tree is based on full-length alignment.", cls : "x-label-message", boxLabel : "", id : ""},{ xtype : "checkboxfield", text : "Don't show this message again", boxLabel : "Don't show this message again", cls : "x-checkbox-message", id : "click_message_finish"}], buttons : [{ iconCls : "x-btn-accept", text : "Accept", handler : function() {
+			var form = _g.messageDomainWindow.getComponent("w1form");
+			if(form.isValid()) {
+				if(form.items.items[1].lastValue == true) viewer.adviseDomainUser(false);
+				_g.hideMessageDomainWindow();
+			}
+		}}]});
+	}
+	,showMessageDomainWindow: function() {
+		this.messageDomainWindow.show();
+	}
+	,hideMessageDomainWindow: function() {
+		this.messageDomainWindow.hide();
+	}
+	,showProgressBar: function() {
+		this.cleanALlWindows();
+		this.progressBar = Ext.create("Ext.window.Window",{ width : 230, height : 210, cls : "x-progressbar", modal : true, resizable : false, closable : false, title : "Please wait ...", items : [{ xtype : "container", cls : "x-progress-bar", width : 200, height : 130, html : "<img src=\"/static/js/images/giphy.gif\">", boxLabel : "", id : "id-tip-html"}]});
+		this.progressBar.show();
+	}
+	,hideProgressBar: function() {
+		if(this.progressBar != null) this.progressBar.hide();
+	}
+	,createTipWindow: function(viewer,top,left,width,height,text) {
+		var _g = this;
+		var th = height * 0.85 | 0;
+		var fh = th * 0.85 | 0;
+		var bh = height - fh;
+		this.tipWindow = Ext.create("Ext.window.Window",{ width : width, height : height, maxHeight : 600, y : 5, x : left, cls : "x-tip-window", modal : true, resizable : false, closable : true, title : "Tip of the Day"});
+		this.tipWindow.add({ xtype : "form", iconCls : "x-popup-form", width : width, buttonAlign : "left", id : "tipForm", items : [{ xtype : "container", cls : "x-sefa-form", width : width, height : height - 150, html : text, boxLabel : "", id : "id-tip-html"}], buttons : [{ iconCls : "x-previous-tip-btn", text : "Prev Tip", id : "previous-tip-btn", handler : function() {
+			var t = viewer.tipActive;
+			if(t == 0) t = viewer.tips.length - 1; else t--;
+			viewer.tipActive = t;
+			var title = viewer.tips[viewer.tipActive].title;
+			var html = viewer.tips[viewer.tipActive].html;
+			var text1 = "<h2>" + title + "</h2>" + html;
+			_g.changeContentTipWindow(text1);
+		}},{ iconCls : "x-next-tip-btn", text : "Next Tip", id : "next-tip-btn", handler : function() {
+			var t1 = viewer.tipActive;
+			t1++;
+			if(t1 == viewer.tips.length) t1 = 0;
+			viewer.tipActive = t1;
+			var title1 = viewer.tips[viewer.tipActive].title;
+			var html1 = viewer.tips[viewer.tipActive].html;
+			var text2 = "<h2>" + title1 + "</h2>" + html1;
+			_g.changeContentTipWindow(text2);
+		}},{ iconCls : "x-close-tip-btn", text : "Close", id : "close-tip-btn", handler : function() {
+			var checkoption = _g.tipWindow.getComponent("click_tip_finish");
+			if(checkoption.lastValue == true) viewer.showTips(true); else viewer.showTips(false);
+			_g.hideTipWindow();
+		}}], listeners : { close : function(win) {
+			var checkoption1 = _g.tipWindow.getComponent("click_tip_finish");
+			if(checkoption1.lastValue == true) viewer.showTips(true); else viewer.showTips(false);
+			_g.hideTipWindow();
+		}, hide : function(win1) {
+			var checkoption2 = _g.tipWindow.getComponent("click_tip_finish");
+			if(checkoption2.lastValue == true) viewer.showTips(true); else viewer.showTips(false);
+			_g.hideTipWindow();
+		}}});
+		this.tipWindow.add({ xtype : "checkboxfield", html : "", width : 135, height : 30, checked : true, boxLabel : "Show Tips on Startup", cls : "x-checkbox-message", id : "click_tip_finish"});
+		this.tipWindow.show();
+	}
+	,changeContentTipWindow: function(html) {
+		var item = this.tipWindow.items.items[0].items.items[0];
+		if(item.id == "id-tip-html") item.html = html;
+		item.update(html);
+		this.tipWindow.doLayout();
+	}
+	,hideTipWindow: function() {
+		this.tipWindow.hide();
+	}
+	,showTipWindow: function() {
+		if(this.subMenuToolBar != null) this.hideSubMenuToolBar();
+		if(this.helpingDiv != null) this.hideHelpingDiv();
+		this.tipWindow.show();
+	}
+	,getTipWindow: function() {
+		return this.tipWindow;
+	}
+	,createMessageWindow: function(viewer) {
+		var _g = this;
+		this.messageWindow = Ext.create("Ext.window.Window",{ width : "500px", cls : "x-popup-window", modal : true, title : "Message"});
+		this.messageWindow.add({ xtype : "form", iconCls : "x-popup-form", height : "200px", id : "w2form", defaultType : "checkboxfield", items : [{ xtype : "label", text : "Click on the annotation icon for more details.", cls : "x-label-message", boxLabel : "", id : ""},{ xtype : "checkboxfield", text : "Don't show this message again", boxLabel : "Don't show this message again", cls : "x-checkbox-message", id : "click_moremessage_finish"}], buttons : [{ iconCls : "x-btn-accept", text : "Accept", handler : function() {
+			var form = _g.messageWindow.getComponent("w2form");
+			if(form.isValid()) {
+				if(form.items.items[1].lastValue == true) viewer.adviseUser(false);
+				_g.hideMessageWindow();
+			}
+		}}]});
+	}
+	,showMessageWindow: function() {
+		this.messageWindow.show();
+	}
+	,hideMessageWindow: function() {
+		this.messageWindow.hide();
+	}
+	,createPopUpWindow: function() {
+		this.cleanALlWindows();
+		this.popUpWindow = Ext.create("Ext.window.Window",{ x : "300px", y : "30px", width : "500px", cls : "x-popup-window", modal : true, title : "Windows POP UP"});
+		this.popUpWindow.doLayout();
+	}
+	,clearPopUpWindow: function() {
+		var attachPosition = this.hbox.items.findIndex("id",this.popUpWindow.id);
+		this.hbox.remove(this.popUpWindow);
+		this.popUpWindow.removeAll();
+		this.setPosPopUpWindow(0,0);
+		this.createPopUpWindow();
+	}
+	,hidePopUpWindow: function() {
+		this.popUpWindow.hide();
+	}
+	,showPopUpWindow: function() {
+		this.popUpWindow.show();
+	}
+	,getPopUpWindow: function() {
+		return this.popUpWindow;
+	}
+	,addElemToPopUpWindow: function(elem) {
+		this.popUpWindow.add(elem);
+	}
+	,addFormItemToPopUpWindow: function(item,annot,hasClass,popMethod,tree_type,family,searchGenes,annotationManager) {
+		var _g = this;
+		this.popUpWindow.add({ xtype : "form", iconCls : "x-popup-form", height : "200px", defaultType : "checkboxfield", id : "wform", items : item, buttons : [{ iconCls : "x-btn-accept", text : "Accept", handler : function() {
+			var form = _g.popUpWindow.getComponent("wform");
+			if(form.isValid()) {
+				annotationManager.cleanAnnotResults(annot);
+				var hook = Reflect.field(Type.resolveClass(hasClass),popMethod);
+				hook(annot,form,tree_type,family,searchGenes,annotationManager,function() {
+				});
+				if(annotationManager.skipAnnotation[annot] != true) {
+					if(annotationManager.skipCurrentLegend[annot] != true) _g.addImageToLegend(annotationManager.annotations[annot].legend,annot);
+					_g.legendPanel.expand();
+					_g.hidePopUpWindow();
+					if(annotationManager.skipCurrentLegend[annot] != true) annotationManager.activeAnnotation[annot] = true;
+					annotationManager.activeAnnotation[annot] = true;
+					_g.clearOptionsToolBar();
+					annotationManager.createViewOptions();
+					_g.addElemToOptionsToolBar(annotationManager.viewOptions);
+					var elem = window.document.getElementById("optionToolBarId");
+					elem.scrollTop = annotationManager.menuScroll;
+				} else {
+					_g.hidePopUpWindow();
+					_g.clearOptionsToolBar();
+					annotationManager.createViewOptions();
+					_g.addElemToOptionsToolBar(annotationManager.viewOptions);
+				}
+			}
+		}},{ iconCls : "x-btn-accept", text : "Cancel", handler : function() {
+			_g.hidePopUpWindow();
+		}}]});
+	}
+	,setPosPopUpWindow: function(left,top) {
+		this.popUpWindow.setPosition(left,top);
+	}
+	,setPopUpWindowTitle: function(title) {
+		this.popUpWindow.title = title;
 	}
 	,getComponent: function() {
 		return this.hbox;
 	}
 	,setProgram: function(program) {
 		this.program = program;
-		var progComponent = this.program.getComponent();
+		var progComponent = this.program.getRawComponent();
 		this.centralPanel.add(progComponent);
 		this.centralPanel.doLayout();
 		progComponent.doLayout();
@@ -5528,6 +10200,7 @@ saturn.client.core.ClientCore = $hxClasses["saturn.client.core.ClientCore"] = fu
 	this.listeners = new haxe.ds.StringMap();
 	this.loginListeners = [];
 	this.logoutListeners = [];
+	debug.enable("saturn:plugin");
 	this.debugLogger = debug("saturn:plugin");
 };
 saturn.client.core.ClientCore.__name__ = ["saturn","client","core","ClientCore"];
@@ -5624,28 +10297,19 @@ saturn.client.core.ClientCore.prototype = {
 			user.username = cookie.username;
 			user.projects = cookie.projects;
 			this.authenticateSocket(user,function(err,user1) {
-				if(err == null) {
-					_g.installProviders();
-					var _g1 = 0;
-					var _g2 = _g.loginListeners;
-					while(_g1 < _g2.length) {
-						var listener = _g2[_g1];
-						++_g1;
-						listener(user1);
-					}
-				}
+				if(err == null) _g.installProviders();
 				if(cb != null) cb(err);
 			});
 		} else {
 			saturn.core.Util.debug("Installing unauthenticated node socket");
 			this.installNodeSocket();
 			this.installProviders();
-			var _g3 = 0;
+			var _g1 = 0;
 			var _g11 = this.refreshListeners;
-			while(_g3 < _g11.length) {
-				var listener1 = _g11[_g3];
-				++_g3;
-				listener1();
+			while(_g1 < _g11.length) {
+				var listener = _g11[_g1];
+				++_g1;
+				listener();
 			}
 			if(cb != null) cb(null);
 		}
@@ -5832,6 +10496,16 @@ saturn.client.core.ClientCore.prototype = {
 			listener();
 		}
 		return msgId;
+	}
+	,printQueryTimes: function() {
+		var $it0 = this.msgIdToJobInfo.keys();
+		while( $it0.hasNext() ) {
+			var msgId = $it0.next();
+			if(Reflect.hasField(this.msgIdToJobInfo.get(msgId),"END_TIME")) {
+				saturn.core.Util.debug(">" + msgId + "\t\t" + Std.string(this.msgIdToJobInfo.get(msgId).msg) + "\t\t" + (this.msgIdToJobInfo.get(msgId).END_TIME - this.msgIdToJobInfo.get(msgId).START_TIME) / 1000);
+				saturn.core.Util.debug(this.msgIdToJobInfo.get(msgId).JSON);
+			}
+		}
 	}
 	,getCb: function(data) {
 		var msgId = data.msgId;
@@ -8017,7 +12691,6 @@ saturn.client.programs.sequenceeditor.SequenceEditor = $hxClasses["saturn.client
 };
 saturn.client.programs.sequenceeditor.SequenceEditor.__name__ = ["saturn","client","programs","sequenceeditor","SequenceEditor"];
 saturn.client.programs.sequenceeditor.SequenceEditor.makeSelectable = function(elem,makeSelectable) {
-	var jElem = new $(elem);
 	if(makeSelectable) {
 		elem.classList.remove("molbio-unselectable");
 		elem.classList.add("molbio-selectable");
@@ -10335,6 +15008,41 @@ saturn.client.programs.BasicTableViewer.prototype = $extend(saturn.client.progra
 	}
 	,__class__: saturn.client.programs.BasicTableViewer
 });
+saturn.client.programs.ComplexHelper = $hxClasses["saturn.client.programs.ComplexHelper"] = function() {
+	saturn.client.programs.BasicTableViewer.call(this);
+};
+saturn.client.programs.ComplexHelper.__name__ = ["saturn","client","programs","ComplexHelper"];
+saturn.client.programs.ComplexHelper.getQuickLaunchItems = function() {
+	return [{ iconCls : "x-btn-protein", html : "Complex<br/>Helper", cls : "quickLaunchButton", handler : function() {
+		saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.core.ComplexPlan(true),true);
+	}, tooltip : { dismissDelay : 10000, text : "Design Complexes"}}];
+};
+saturn.client.programs.ComplexHelper.__super__ = saturn.client.programs.BasicTableViewer;
+saturn.client.programs.ComplexHelper.prototype = $extend(saturn.client.programs.BasicTableViewer.prototype,{
+	onFocus: function() {
+		var _g = this;
+		saturn.client.programs.BasicTableViewer.prototype.onFocus.call(this);
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Generate IDs", handler : function() {
+			var table = _g.getComplexTable();
+			table.generateIds(function(error) {
+				if(error != null) saturn.client.WorkspaceApplication.getApplication().showMessage("Upload Error",error); else _g.updateTable(table);
+			});
+		}});
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Save", handler : function() {
+			var table1 = _g.getComplexTable();
+			table1.save(function(error1) {
+				if(error1 != null) saturn.client.WorkspaceApplication.getApplication().showMessage("Upload Error",error1); else {
+					_g.updateTable(table1);
+					saturn.client.WorkspaceApplication.getApplication().showMessage("Complex Targets Generated","Complex Targets Generated");
+				}
+			});
+		}});
+	}
+	,getComplexTable: function() {
+		return js.Boot.__cast(this.getUpdatedTable() , saturn.core.ComplexPlan);
+	}
+	,__class__: saturn.client.programs.ComplexHelper
+});
 saturn.client.workspace.CompoundWO = $hxClasses["saturn.client.workspace.CompoundWO"] = function(object,name) {
 	if(object == null) object = new saturn.core.domain.Compound();
 	if(name == null) name = "Compound";
@@ -10945,7 +15653,7 @@ saturn.client.programs.sequenceeditor.AnnotationEditorBlock.prototype = {
 		this.installListeners();
 		this.elem.blockNumber = blockNumber;
 		this.bNum = blockNumber;
-		new $(this.elem).addClass(" molbio-sequenceeditor-block");
+		this.elem.classList.add(" molbio-sequenceeditor-block");
 		this.elem.style.dysplay = "inline-block";
 		this.getSequenceEditor().autoSetBlockWidth(this.elem);
 		this.makeSelectable(false);
@@ -12111,6 +16819,68 @@ saturn.client.programs.GridVarViewer.prototype = $extend(saturn.client.programs.
 		cb();
 	}
 	,__class__: saturn.client.programs.GridVarViewer
+});
+saturn.client.workspace.HelloTypeWO = $hxClasses["saturn.client.workspace.HelloTypeWO"] = function(object,name) {
+	if(object == null) object = new saturn.core.HelloType();
+	if(name == null) name = "HelloType";
+	saturn.client.workspace.WorkspaceObjectBase.call(this,object,name);
+};
+saturn.client.workspace.HelloTypeWO.__name__ = ["saturn","client","workspace","HelloTypeWO"];
+saturn.client.workspace.HelloTypeWO.getNewMenuText = function() {
+	return "HelloType";
+};
+saturn.client.workspace.HelloTypeWO.getDefaultFolderName = function() {
+	return "HelloType";
+};
+saturn.client.workspace.HelloTypeWO.__super__ = saturn.client.workspace.WorkspaceObjectBase;
+saturn.client.workspace.HelloTypeWO.prototype = $extend(saturn.client.workspace.WorkspaceObjectBase.prototype,{
+	__class__: saturn.client.workspace.HelloTypeWO
+});
+saturn.client.programs.HelloWorldViewer = $hxClasses["saturn.client.programs.HelloWorldViewer"] = function() {
+	saturn.client.programs.SimpleExtJSProgram.call(this);
+};
+saturn.client.programs.HelloWorldViewer.__name__ = ["saturn","client","programs","HelloWorldViewer"];
+saturn.client.programs.HelloWorldViewer.getQuickLaunchItems = function() {
+	return [{ iconCls : "x-btn-dna", text : "HelloWorldViewer", cls : "quickLaunchButton", handler : function() {
+		saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.HelloTypeWO(null,null),true);
+	}}];
+};
+saturn.client.programs.HelloWorldViewer.__super__ = saturn.client.programs.SimpleExtJSProgram;
+saturn.client.programs.HelloWorldViewer.prototype = $extend(saturn.client.programs.SimpleExtJSProgram.prototype,{
+	theComponent: null
+	,emptyInit: function() {
+		var _g = this;
+		saturn.client.programs.SimpleExtJSProgram.prototype.emptyInit.call(this);
+		this.theComponent = Ext.create("Ext.panel.Panel",{ width : "100%", height : "95%", autoScroll : true, layout : "border", items : [{ xtype : "component", region : "north", autoEl : { tag : "div"}}], listeners : { 'render' : function() {
+			_g.initialiseDOMComponent();
+		}}});
+	}
+	,initialiseDOMComponent: function() {
+		saturn.client.programs.SimpleExtJSProgram.prototype.initialiseDOMComponent.call(this);
+	}
+	,onFocus: function() {
+		var _g = this;
+		saturn.client.programs.SimpleExtJSProgram.prototype.onFocus.call(this);
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-copy", text : "Example Button"});
+		this.getApplication().getEditMenu().add({ text : "Click me", handler : function() {
+			_g.getApplication().showMessage("Menu","You clicked me!");
+		}});
+	}
+	,setActiveObject: function(objectId) {
+		saturn.client.programs.SimpleExtJSProgram.prototype.setActiveObject.call(this,objectId);
+		var w0;
+		w0 = js.Boot.__cast(saturn.client.programs.SimpleExtJSProgram.prototype.getActiveObject.call(this,saturn.client.workspace.HelloTypeWO) , saturn.client.workspace.HelloTypeWO);
+		var obj;
+		obj = js.Boot.__cast(w0.getObject() , saturn.core.HelloType);
+		this.setTitle(w0.getName());
+	}
+	,setTitle: function(title) {
+		this.theComponent.setTitle(title);
+	}
+	,getComponent: function() {
+		return this.theComponent;
+	}
+	,__class__: saturn.client.programs.HelloWorldViewer
 });
 saturn.client.workspace.HomeWO = $hxClasses["saturn.client.workspace.HomeWO"] = function(object,name) {
 	if(object == null) object = new saturn.core.Home();
@@ -13337,11 +18107,55 @@ saturn.client.programs.MultiAlleleHelper.prototype = $extend(saturn.client.progr
 					}
 				}
 			}
-			saturn.client.WorkspaceApplication.resumeUpdates(true);
-			_g.theTable.getView().refresh();
-			_g.getApplication().showMessage("Finished","Calculation finished");
+			_g.calculateAlleleIds(false,function(err1) {
+				if(err1 == null) _g.getApplication().showMessage("Finished","Calculation finished");
+				_g.theTable.getView().refresh();
+				saturn.client.WorkspaceApplication.resumeUpdates(false);
+			});
 		};
 		bFetch.execute();
+	}
+	,calculateAlleleIds: function(overwriteIds,cb) {
+		var targetSet = new haxe.ds.StringMap();
+		var alleleStore = this.getStore();
+		var alleleCount = alleleStore.count() - 1;
+		var _g = 0;
+		while(_g < alleleCount) {
+			var i = _g++;
+			var alleleModel = alleleStore.getAt(i);
+			var alleleId = alleleModel.get("entryClone.entryCloneId");
+			if(alleleId != null && alleleId.indexOf("-") > -1) {
+				var targetId = alleleId.split("-")[0];
+				if(__map_reserved[targetId] != null) targetSet.setReserved(targetId,1); else targetSet.h[targetId] = 1;
+			}
+		}
+		var targets = [];
+		var $it0 = targetSet.keys();
+		while( $it0.hasNext() ) {
+			var target = $it0.next();
+			targets.push(target);
+		}
+		saturn.core.domain.SgcUtil.generateNextID(this.getProvider(),targets,saturn.core.domain.SgcAllele,function(alleles,err) {
+			if(err != null) cb(err); else {
+				var _g1 = 0;
+				while(_g1 < alleleCount) {
+					var i1 = _g1++;
+					var alleleModel1 = alleleStore.getAt(i1);
+					var entryCloneId = alleleModel1.get("entryClone.entryCloneId");
+					if(entryCloneId != null && entryCloneId.indexOf("-") > -1) {
+						var targetId1 = entryCloneId.split("-")[0];
+						var alleleId1 = alleleModel1.get("alleleId");
+						if(alleleId1 == null || alleleId1 == "" || overwriteIds) {
+							alleleModel1.set("alleleId",targetId1 + "-a" + StringTools.lpad(Std.string(__map_reserved[targetId1] != null?alleles.getReserved(targetId1):alleles.h[targetId1]),"0",3));
+							var value;
+							value = (__map_reserved[targetId1] != null?alleles.getReserved(targetId1):alleles.h[targetId1]) + 1;
+							if(__map_reserved[targetId1] != null) alleles.setReserved(targetId1,value); else alleles.h[targetId1] = value;
+						}
+					}
+				}
+				cb(null);
+			}
+		});
 	}
 	,insertOrDeletePerformed: function() {
 		var wo = this.getWorkspace().getObjectSafely(this.getActiveObjectId(),saturn.client.workspace.MultiAlleleHelperWO);
@@ -13411,6 +18225,11 @@ saturn.client.programs.MultiAlleleHelper.prototype = $extend(saturn.client.progr
 		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Calculate", handler : function() {
 			_g.calculate();
 		}, tooltip : { dismissDelay : 10000, text : "Calculate DNA/Protein sequences and MW"}});
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Update IDs", handler : function() {
+			_g.calculateAlleleIds(true,function(err) {
+				if(err != null) _g.getApplication().showMessage("Error updating IDs",err);
+			});
+		}, tooltip : { dismissDelay : 10000, text : "Calculate start/end positions of construct on target"}});
 		this.getApplication().getToolBar().add({ iconCls : "x-btn-import", text : "Alleles (DNA)", handler : function() {
 			_g.loadAllAllelesDNA();
 		}, tooltip : { dismissDelay : 10000, text : "Import all allele DNA sequence from table into Workspace"}});
@@ -13674,6 +18493,120 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 		}});
 		return items;
 	}
+	,doAlignments: function() {
+		var _g1 = this;
+		var constructStore = this.getStore();
+		var constructCount = constructStore.count() - 1;
+		var _g = 0;
+		while(_g < constructCount) {
+			var i = _g++;
+			var targetProteinSeq = [""];
+			var vectorRExtensionRC = [""];
+			var vectorFExtension = [""];
+			var alleleDnaSequence = [""];
+			var f_fail = [0];
+			var r_fail = [0];
+			var alleleDnaSequenceAllExtRemoved = "";
+			var alleleDnaSequenceFExtRemoved = "";
+			var startPos = [0];
+			var stopPos = [0];
+			var adjustedStopPos = [0];
+			var startStopPos = [[]];
+			var firstClustalGaps = [0];
+			var secondClustalGaps = [0];
+			var constructModel = [constructStore.getAt(i)];
+			var consreuctIdLength = [constructModel[0].get("constructId").length];
+			var constructSequence = constructModel[0].get("proteinSeqNoTag");
+			var targetId = constructModel[0].get("constructId").split("-")[0];
+			var alleleId = constructModel[0].get("allele.alleleId");
+			var vectorId = constructModel[0].get("vector.vectorId");
+			this.getProvider().getById(alleleId,saturn.core.domain.SgcAllele,(function(alleleDnaSequence) {
+				return function(allele,databaseError) {
+					if(databaseError != null) _g1.getApplication().showMessage("Database Fetch Error",databaseError); else alleleDnaSequence[0] = allele.dnaSeq;
+				};
+			})(alleleDnaSequence));
+			this.getProvider().getById(vectorId,saturn.core.domain.SgcVector,(function(vectorFExtension,vectorRExtensionRC) {
+				return function(vector,databaseError1) {
+					if(databaseError1 != null) _g1.getApplication().showMessage("Database Fetch Error",databaseError1); else {
+						vectorFExtension[0] = vector.requiredForwardExtension;
+						var vectorRExtension = new saturn.core.DNA(vector.requiredReverseExtension);
+						vectorRExtensionRC[0] = vectorRExtension.getInverseComplement();
+					}
+				};
+			})(vectorFExtension,vectorRExtensionRC));
+			this.getProvider().getById(targetId,saturn.core.domain.SgcTarget,(function(targetProteinSeq) {
+				return function(target,databaseError2) {
+					if(databaseError2 != null) _g1.getApplication().showMessage("Database Fetch Error",databaseError2); else targetProteinSeq[0] = target.proteinSeq;
+				};
+			})(targetProteinSeq));
+			if(StringTools.startsWith(alleleDnaSequence[0],vectorFExtension[0]) == false) f_fail[0] = 1;
+			alleleDnaSequenceFExtRemoved = alleleDnaSequence[0].split(vectorFExtension[0])[1];
+			if(StringTools.endsWith(alleleDnaSequence[0],vectorRExtensionRC[0]) == false) r_fail[0] = 1;
+			alleleDnaSequenceAllExtRemoved = alleleDnaSequenceFExtRemoved.split(vectorRExtensionRC[0])[0];
+			var runs = [[]];
+			var fastas = [[]];
+			if(f_fail[0] == 0 || r_fail[0] == 0) {
+				var alleleDnaSequenceAllExtRemovedTranslated = new saturn.core.DNA(alleleDnaSequenceAllExtRemoved).getTranslation(saturn.core.GeneticCodes.STANDARD,0,false);
+				var fasta = ">" + Std.string(constructModel[0].get("constructId")) + "\n" + alleleDnaSequenceAllExtRemovedTranslated + "\n" + ">" + targetId + "\n" + targetProteinSeq[0] + "\n";
+				fastas[0].push(fasta);
+				runs[0].push((function(firstClustalGaps,startStopPos,stopPos,startPos,r_fail,f_fail) {
+					return function() {
+						if(f_fail[0] == 0) startPos[0] = startStopPos[0][0] + 1;
+						if(r_fail[0] == 0) stopPos[0] = startStopPos[0][1] + 1;
+						firstClustalGaps[0] = startStopPos[0][2];
+					};
+				})(firstClustalGaps,startStopPos,stopPos,startPos,r_fail,f_fail));
+			}
+			if(f_fail[0] == 1 || r_fail[0] == 1) {
+				var fasta1 = ">" + Std.string(constructModel[0].get("constructId")) + "\n" + constructSequence + "\n" + ">" + targetId + "\n" + targetProteinSeq[0] + "\n";
+				fastas[0].push(fasta1);
+				runs[0].push((function(secondClustalGaps,startStopPos,stopPos,startPos,r_fail,f_fail) {
+					return function() {
+						if(f_fail[0] == 1) startPos[0] = startStopPos[0][0] + 1;
+						if(r_fail[0] == 1) stopPos[0] = startStopPos[0][1] + 1;
+						secondClustalGaps[0] = startStopPos[0][2];
+					};
+				})(secondClustalGaps,startStopPos,stopPos,startPos,r_fail,f_fail));
+			}
+			if(runs[0].length > 0) {
+				var next = [null];
+				next[0] = (function(next,fastas,runs,consreuctIdLength,constructModel,secondClustalGaps,firstClustalGaps,startStopPos,adjustedStopPos,stopPos,startPos,vectorFExtension,targetProteinSeq) {
+					return function() {
+						if(runs[0].length == 0) {
+							var gapsOffset = Math.round(Math.abs(firstClustalGaps[0] - secondClustalGaps[0]));
+							adjustedStopPos[0] = stopPos[0] - gapsOffset;
+							if(startPos[0] == 2 && (HxOverrides.substr(vectorFExtension[0],vectorFExtension[0].length - 3,3) == "ATG" && targetProteinSeq[0].charAt(0) == "M")) startPos[0] = 1;
+							constructModel[0].set("constructStart",targetProteinSeq[0].charAt(startPos[0] - 1) + startPos[0]);
+							constructModel[0].set("constructStop",targetProteinSeq[0].charAt(adjustedStopPos[0] - 1) + adjustedStopPos[0]);
+							return;
+						}
+						var run = runs[0].pop();
+						var fasta2 = fastas[0].pop();
+						saturn.client.BioinformaticsServicesClient.getClient().sendClustalReportRequest(fasta2,(function(next,consreuctIdLength,startStopPos) {
+							return function(response,clustalError) {
+								if(clustalError == null) {
+									var clustalReport = response.json.clustalReport;
+									var location = window.location;
+									var URL = location.protocol + "//" + location.hostname + ":" + location.port + "/" + clustalReport;
+									saturn.client.core.CommonCore.getContent(URL,(function(next,consreuctIdLength,startStopPos) {
+										return function(content) {
+											var aln = new saturn.core.domain.Alignment();
+											aln.setAlignmentContent(content);
+											aln.setAlignmentURL(URL);
+											startStopPos[0] = saturn.core.ClustalOmegaParser.readStartStop(content,consreuctIdLength[0]);
+											run();
+											next[0]();
+										};
+									})(next,consreuctIdLength,startStopPos));
+								}
+							};
+						})(next,consreuctIdLength,startStopPos));
+					};
+				})(next,fastas,runs,consreuctIdLength,constructModel,secondClustalGaps,firstClustalGaps,startStopPos,adjustedStopPos,stopPos,startPos,vectorFExtension,targetProteinSeq);
+				next[0]();
+			}
+		}
+	}
 	,showConstructAlignment: function(target) {
 		var objectId = this.getActiveObjectId();
 		var parentFolder = this.getWorkspace().getParentFolder(objectId);
@@ -13773,18 +18706,10 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 				vectorResSites.set(vector1.res1Id == null?"null":"" + vector1.res1Id,"");
 				vectorResSites.set(vector1.res2Id == null?"null":"" + vector1.res2Id,"");
 			}
-			var vResSites = [];
-			var $it3 = vectorResSites.keys();
-			while( $it3.hasNext() ) {
-				var vResSite = $it3.next();
-				vResSites.push(vResSite);
-			}
-			batchFetch.getByPkeys(vResSites,saturn.core.domain.SgcRestrictionSite,"VSITES",null);
 			batchFetch.onComplete = function() {
 				var alleleToObj = new haxe.ds.StringMap();
 				var vectorToObj = new haxe.ds.StringMap();
 				var resToObj = new haxe.ds.StringMap();
-				var vresToObj = new haxe.ds.IntMap();
 				var _g3 = 0;
 				while(_g3 < alleles1.length) {
 					var allele1 = alleles1[_g3];
@@ -13805,17 +18730,10 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 						resToObj.set(res1.enzymeName,res1);
 					}
 				}
-				var vSites = batchFetch.getObject("VSITES");
-				var _g6 = 0;
-				while(_g6 < vSites.length) {
-					var vSite = vSites[_g6];
-					++_g6;
-					vresToObj.h[vSite.id] = vSite;
-				}
 				saturn.client.WorkspaceApplication.suspendUpdates();
-				var _g7 = 0;
-				while(_g7 < constructCount) {
-					var i1 = _g7++;
+				var _g6 = 0;
+				while(_g6 < constructCount) {
+					var i1 = _g6++;
 					var constructModel1 = constructStore.getAt(i1);
 					var alleleId1 = constructModel1.get("allele.alleleId");
 					var vectorId1 = constructModel1.get("vector.vectorId");
@@ -13842,12 +18760,12 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 						_g.setRecordValid(constructModel1,"Vector " + vectorId1 + " is missing");
 						continue;
 					}
-					var vRes1 = vresToObj.h[vector3.res1Id];
+					var vRes1 = vector3.res1;
 					if(vRes1 == null) {
 						_g.setRecordValid(constructModel1,"Restriction Site: " + Std.string(vRes1) + " not found");
 						continue;
 					}
-					var vRes2 = vresToObj.h[vector3.res2Id];
+					var vRes2 = vector3.res2;
 					if(vRes2 == null) {
 						_g.setRecordValid(constructModel1,"Restriction Site: " + Std.string(vRes2) + " not found");
 						continue;
@@ -13904,24 +18822,68 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 						constructModel1.set("dnaSeq",ligation.getSequence());
 						constructModel1.set("proteinSeq",uncutSequence.getSequence());
 						constructModel1.set("proteinSeqNoTag",cutSequence);
-					} catch( $e4 ) {
-						if ($e4 instanceof js._Boot.HaxeError) $e4 = $e4.val;
-						if( js.Boot.__instanceof($e4,saturn.util.HaxeException) ) {
-							var ex = $e4;
+					} catch( $e3 ) {
+						if ($e3 instanceof js._Boot.HaxeError) $e3 = $e3.val;
+						if( js.Boot.__instanceof($e3,saturn.util.HaxeException) ) {
+							var ex = $e3;
 							_g.setRecordValid(constructModel1,ex.getMessage());
 						} else {
-						var e = $e4;
+						var e = $e3;
 						_g.setRecordValid(constructModel1,"Unknown exception");
 						}
 					}
 				}
-				_g.theTable.getView().refresh();
-				_g.getApplication().showMessage("Finished","Calculation finished");
-				saturn.client.WorkspaceApplication.resumeUpdates(false);
+				_g.calculateConstructIds(false,function(err1) {
+					if(err1 == null) _g.getApplication().showMessage("Finished","Calculation finished");
+					_g.theTable.getView().refresh();
+					saturn.client.WorkspaceApplication.resumeUpdates(false);
+				});
 			};
 			batchFetch.execute();
 		};
 		batchFetch.execute();
+	}
+	,calculateConstructIds: function(overwriteIds,cb) {
+		var targetSet = new haxe.ds.StringMap();
+		var constructStore = this.getStore();
+		var constructCount = constructStore.count() - 1;
+		var _g = 0;
+		while(_g < constructCount) {
+			var i = _g++;
+			var constructModel = constructStore.getAt(i);
+			var alleleId = constructModel.get("allele.alleleId");
+			if(alleleId != null && alleleId.indexOf("-") > -1) {
+				var targetId = alleleId.split("-")[0];
+				if(__map_reserved[targetId] != null) targetSet.setReserved(targetId,1); else targetSet.h[targetId] = 1;
+			}
+		}
+		var targets = [];
+		var $it0 = targetSet.keys();
+		while( $it0.hasNext() ) {
+			var target = $it0.next();
+			targets.push(target);
+		}
+		saturn.core.domain.SgcUtil.generateNextID(this.getProvider(),targets,saturn.core.domain.SgcConstruct,function(constructs,err) {
+			if(err != null) cb(err); else {
+				var _g1 = 0;
+				while(_g1 < constructCount) {
+					var i1 = _g1++;
+					var constructModel1 = constructStore.getAt(i1);
+					var alleleId1 = constructModel1.get("allele.alleleId");
+					if(alleleId1 != null && alleleId1.indexOf("-") > -1) {
+						var targetId1 = alleleId1.split("-")[0];
+						var constructId = constructModel1.get("constructId");
+						if(constructId == null || constructId == "" || overwriteIds) {
+							constructModel1.set("constructId",targetId1 + "-c" + StringTools.lpad(Std.string(__map_reserved[targetId1] != null?constructs.getReserved(targetId1):constructs.h[targetId1]),"0",3));
+							var value;
+							value = (__map_reserved[targetId1] != null?constructs.getReserved(targetId1):constructs.h[targetId1]) + 1;
+							if(__map_reserved[targetId1] != null) constructs.setReserved(targetId1,value); else constructs.h[targetId1] = value;
+						}
+					}
+				}
+				cb(null);
+			}
+		});
 	}
 	,insertOrDeletePerformed: function() {
 		var wo = this.getWorkspace().getObjectSafely(this.getActiveObjectId(),saturn.client.workspace.MultiConstructHelperWO);
@@ -14026,6 +18988,14 @@ saturn.client.programs.MultiConstructHelper.prototype = $extend(saturn.client.pr
 		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Calculate", handler : function() {
 			_g.calculate();
 		}, tooltip : { dismissDelay : 10000, text : "Calculate DNA/Protein sequences and MW"}});
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Calculate Positions", handler : function() {
+			_g.doAlignments();
+		}, tooltip : { dismissDelay : 10000, text : "Calculate start/end positions of construct on target"}});
+		this.getApplication().getToolBar().add({ iconCls : "x-btn-calculate", text : "Update IDs", handler : function() {
+			_g.calculateConstructIds(true,function(err) {
+				if(err != null) _g.getApplication().showMessage("Error updating IDs",err);
+			});
+		}, tooltip : { dismissDelay : 10000, text : "Calculate start/end positions of construct on target"}});
 		this.getApplication().getToolBar().add({ text : "Save<br/>Primer Report", iconCls : "x-btn-copy", handler : function() {
 			_g.savePrimerReport();
 		}, tooltip : { dismissDelay : 10000, text : "Saves unique list of primers in a format that can be sent to MWG"}});
@@ -14542,15 +19512,30 @@ saturn.client.programs.Phylo5Viewer.prototype = $extend(saturn.client.programs.S
 		saturn.client.programs.SimpleExtJSProgram.prototype.emptyInit.call(this);
 		this.internalFrameId = "INTERNAL_ALN_FRAME";
 		var self = this;
-		this.theComponent = Ext.create("Ext.panel.Panel",{ title : "Phylo5 Viewer", width : "100%", height : "95%", autoScroll : true, layout : "fit", items : [{ xtype : "component", itemId : this.internalFrameId, autoEl : { tag : "div"}, height : "100%", width : "100%"}], listeners : { 'render' : function() {
+		this.getApplication().hideMiddleSouthPanel();
+		this.theComponent = Ext.create("Ext.panel.Panel",{ title : "Phylo5 Viewer", width : "100%", height : "95%", autoScroll : true, layout : "fit", listeners : { 'render' : function() {
 			self.initialiseDOMComponent();
-		}, 'keypress' : { element : "el", fn : function() {
-			js.Browser.alert("Hello");
-		}}}, cls : "x-tree-background"});
+		}}, cls : "x-tree-background"});
 		this.registerDropFolder("Sequences",null,true);
 	}
+	,initialiseDOMComponent: function() {
+		saturn.client.programs.SimpleExtJSProgram.prototype.initialiseDOMComponent.call(this);
+		var parent = this.getComponent().getEl().dom.firstChild;
+		this.newickStr = "((UFSP1:0.00,UFSP2:0.00):0.77,((((SENP1:0.00,SENP2:0.00):0.70,(SENP3:0.00,SENP5:0.00):0.73):0.82,SENP8:0.00):0.99,(SENP6:0.00,SENP7:0.00):0.77):1.00,((((((((((FAM105B:0.00,(OTUD6A:0.00,OTUD6B:0.00):0.46):0.92,(OTUB1:0.00,OTUB2:0.00):0.55):0.99,OTUD1:0.00):0.99,YOD1:0.00):0.99,(OTUD3:0.00,OTUD5:0.00):0.86):0.99,OTUD4:0.00):0.99,ZRANB1:0.00):0.99,TNFAIP3:0.00):0.99,(OTUD7A:0.00,OTUD7B:0.00):0.48):0.99,VCPIP1:0.00):1.00,(((KHNYN:0.00,NYNRIN:0.00):0.65,N4BP1:0.00):0.86,((ZC3H12A:0.00,(ZC3H12B:0.00,ZC3H12C:0.00):0.53):0.64,ZC3H12D:0.00):0.65):0.94,(BAP1:0.00,((UCHL1:0.00,UCHL3:0.00):0.46,UCHL5:0.00):0.82):0.99,(DESI1:0.00,DESI2:0.00):0.82,(((((((BRCC3:0.00,(COPS5:0.00,PSMD14:0.00):0.74):0.93,(COPS6:0.00,(EIF3F:0.00,PSMD7:0.00):0.79):0.81):0.95,EIF3H:0.00):0.99,MPND:0.00):0.99,(STAMBP:0.00,STAMBPL1:0.00):0.43):0.99,MYSM1:0.00):0.99,PRPF8:0.00):0.99,((ATXN3:0.00,ATXN3L:0.00):0.30,(JOSD1:0.00,JOSD2:0.00):0.51):0.99,((ATG4A:0.00,ATG4B:0.00):0.53,(ATG4C:0.00,ATG4D:0.00):0.63):0.80);";
+		var parser = new phylo.PhyloNewickParser();
+		var rootNode = parser.parse(this.newickStr);
+		rootNode.calculateScale();
+		rootNode.postOrderTraversal();
+		rootNode.preOrderTraversal(1);
+		var parentWidth = this.getComponent().getEl().getWidth();
+		var parentHeight = this.getComponent().getEl().getHeight();
+		var config = new phylo.PhyloCanvasConfiguration();
+		config.enableTools = true;
+		config.enableToolbar = true;
+		config.enableZoom = true;
+		this.canvas = new phylo.PhyloCanvasRenderer(parentWidth,parentHeight,parent,rootNode,config,null);
+	}
 	,setTree: function(tree) {
-		var _g = this;
 		this.newickStr = tree;
 		var w0;
 		w0 = js.Boot.__cast(saturn.client.programs.SimpleExtJSProgram.prototype.getActiveObject.call(this,saturn.client.workspace.Phylo5WorkspaceObject) , saturn.client.workspace.Phylo5WorkspaceObject);
@@ -14559,29 +19544,7 @@ saturn.client.programs.Phylo5Viewer.prototype = $extend(saturn.client.programs.S
 			this.theComponent.addCls("x-tree-background");
 			return;
 		} else this.theComponent.removeCls("x-tree-background");
-		this.newickStr = saturn.client.programs.Phylo5Viewer.whiteSpaceReg.replace(this.newickStr,"");
-		this.newickStr = saturn.client.programs.Phylo5Viewer.newLineReg.replace(this.newickStr,"");
-		this.newickStr = saturn.client.programs.Phylo5Viewer.carLineReg.replace(this.newickStr,"");
-		var newickParser = new Phylo5NewickParser();
-		var rootNode = newickParser.parse(this.newickStr);
-		rootNode.x = 0;
-		rootNode.y = 0;
-		rootNode.wedge = 2 * Math.PI;
-		rootNode.angle = 0;
-		var dist = 40;
-		var ratio = 0.6;
-		rootNode.preOrderTraversal(dist,ratio);
-		this.canvas = this.theComponent.down("component").getEl().dom;
-		var parentWidth = this.canvas.clientWidth;
-		var parentHeight = this.canvas.clientHeight;
-		var minSize = Math.min(parentWidth,parentHeight);
-		this.canvas = new Phylo5SVGRenderer(parentWidth,parentHeight,this.canvas);
-		var radialRendererObj = new Phylo5RadialTreeLayout(parentWidth,parentHeight);
-		radialRendererObj.render(rootNode,[],this.canvas);
-		var self = this;
-		var map = new Ext.KeyMap(this.theComponent.getEl(),{ key : "+", shift : true, fn : function() {
-			_g.zoomIn();
-		}});
+		this.canvas.setNewickString(this.newickStr);
 	}
 	,zoomIn: function() {
 		this.canvas.zoomIn();
@@ -14596,18 +19559,11 @@ saturn.client.programs.Phylo5Viewer.prototype = $extend(saturn.client.programs.S
 		return this.theComponent;
 	}
 	,onFocus: function() {
-		var _g = this;
 		saturn.client.programs.SimpleExtJSProgram.prototype.onFocus.call(this);
 		this.getApplication().hideMiddleSouthPanel();
 		var self = this;
 		this.getApplication().getViewMenu().add({ text : "Update tree", handler : function() {
 			self.updateAlignment();
-		}});
-		this.getApplication().getViewMenu().add({ text : "Zoom in", handler : function() {
-			_g.zoomIn();
-		}});
-		this.getApplication().getViewMenu().add({ text : "Zoom out", handler : function() {
-			_g.zoomOut();
 		}});
 		this.getApplication().getFileMenu().add({ text : "Import all Protein Sequences", handler : function() {
 			self.addAllProteinSequencesFromWorkspace();
@@ -14615,18 +19571,9 @@ saturn.client.programs.Phylo5Viewer.prototype = $extend(saturn.client.programs.S
 		this.getApplication().getFileMenu().add({ text : "Import all DNA Sequences", handler : function() {
 			self.addAllDNASequencesFromWorkspace();
 		}});
-		this.getApplication().getToolBar().add({ iconCls : "x-btn-export", text : "Export", handler : function() {
-			_g["export"]();
-		}, tooltip : { dismissDelay : 10000, text : "Export tree as SVG (open in Illustrator or Inkscape)"}});
 		this.getApplication().getToolBar().add({ iconCls : "x-btn-copy", text : "Update", handler : function() {
 			self.updateAlignment();
 		}, tooltip : { dismissDelay : 10000, text : "Update tree with current sequences"}});
-		this.getApplication().getToolBar().add({ iconCls : "x-btn-magplus", text : "Zoom In", handler : function() {
-			self.canvas.zoomIn();
-		}, tooltip : { dismissDelay : 10000, text : "Zoom in on tree (Ctrl + Left click)"}});
-		this.getApplication().getToolBar().add({ iconCls : "x-btn-magminus", text : "Zoom Out", handler : function() {
-			self.canvas.zoomOut();
-		}, tooltip : { dismissDelay : 10000, text : "Zoom out of tree (Shift + Left click)"}});
 		this.getApplication().getToolBar().add({ iconCls : "x-btn-copy", text : "Import Protein", handler : function() {
 			self.addAllProteinSequencesFromWorkspace();
 		}, tooltip : { dismissDelay : 10000, text : "Import all protein sequences from the workspace (click update to update tree)"}});
@@ -16688,13 +21635,15 @@ saturn.client.programs.blocks.BaseScrollableCanvas.prototype = {
 	}
 	,__class__: saturn.client.programs.blocks.BaseScrollableCanvas
 };
-saturn.client.programs.blocks.BaseTable = $hxClasses["saturn.client.programs.blocks.BaseTable"] = function(columns,data,title,fixedRowHeight,hideTitle) {
+saturn.client.programs.blocks.BaseTable = $hxClasses["saturn.client.programs.blocks.BaseTable"] = function(columns,data,title,fixedRowHeight,hideTitle,autoAddNewRow) {
+	if(autoAddNewRow == null) autoAddNewRow = true;
 	if(hideTitle == null) hideTitle = false;
 	this.columns = columns;
 	this.data = data;
 	this.title = title;
 	this.fixedRowHeight = fixedRowHeight;
 	this.hideTitle = hideTitle;
+	this.enableAutoAddNewRow = autoAddNewRow;
 	this.customContextItems = [];
 };
 saturn.client.programs.blocks.BaseTable.__name__ = ["saturn","client","programs","blocks","BaseTable"];
@@ -16715,6 +21664,7 @@ saturn.client.programs.blocks.BaseTable.prototype = {
 	,errorColumns: null
 	,customContextItems: null
 	,hideTitle: null
+	,enableAutoAddNewRow: null
 	,addCustomContextItem: function(item) {
 		this.customContextItems.push(item);
 	}
@@ -16731,6 +21681,9 @@ saturn.client.programs.blocks.BaseTable.prototype = {
 	,getComponent: function() {
 		return this.component;
 	}
+	,getRawComponent: function() {
+		return this.getComponent();
+	}
 	,getModelFields: function() {
 		return this.modelFields;
 	}
@@ -16739,6 +21692,9 @@ saturn.client.programs.blocks.BaseTable.prototype = {
 	}
 	,onEdit: function() {
 		this.editListener();
+	}
+	,addListener: function(callBack) {
+		this.component.on("containerClick",callBack);
 	}
 	,reconfigure: function(tableDef) {
 		if(tableDef != null) {
@@ -16765,7 +21721,7 @@ saturn.client.programs.blocks.BaseTable.prototype = {
 		if(this.store == null) {
 			this.model = Ext.define(this.modelName,{ extend : "Ext.data.Model", fields : this.modelFields});
 			this.store = Ext.create("Ext.data.Store",{ storeId : this.name, model : this.model, data : { 'items' : this.data}, proxy : { type : "memory", reader : { type : "json", rootProperty : "items"}}});
-			this.component = Ext.create("Ext.grid.Panel",{ store : this.store, columns : this.columns, width : "100%", region : "center", scrollable : true, title : this.title, preventHeader : this.hideTitle, plugins : [Ext.create("Ext.grid.plugin.CellEditing",{ clicksToEdit : 2}),"gridfilters"], selType : "cellmodel", viewConfig : { enableTextSelection : true, stripeRows : false, listeners : { viewready : function(view) {
+			this.component = Ext.create("Ext.grid.Panel",{ store : this.store, columns : this.columns, width : "100%", region : "center", scrollable : true, flex : 1, title : this.title, preventHeader : this.hideTitle, plugins : [Ext.create("Ext.grid.plugin.CellEditing",{ clicksToEdit : 2}),"gridfilters"], selType : "cellmodel", viewConfig : { enableTextSelection : true, stripeRows : false, listeners : { viewready : function(view) {
 				view.keyMap = new Ext.KeyMap(view.getEl(),[{ key : "v", ctrl : true, fn : function(keyCode,e) {
 					var pasteZone;
 					var _this = window.document;
@@ -16890,6 +21846,7 @@ saturn.client.programs.blocks.BaseTable.prototype = {
 		return this;
 	}
 	,autoAddNewRow: function() {
+		if(!this.enableAutoAddNewRow) return;
 		var storeLen = this.store.count();
 		var newRow = true;
 		if(storeLen > 0) {
@@ -17639,6 +22596,2694 @@ saturn.client.programs.blocks.TargetSummary.prototype = {
 		saturn.client.WorkspaceApplication.getApplication().showMessage("Lookup exception",msg);
 	}
 	,__class__: saturn.client.programs.blocks.TargetSummary
+};
+if(!saturn.client.programs.chromohub) saturn.client.programs.chromohub = {};
+saturn.client.programs.chromohub.ChromoHubAnnotationManager = $hxClasses["saturn.client.programs.chromohub.ChromoHubAnnotationManager"] = function(legacyViewer) {
+	this.legacyViewer = legacyViewer;
+	phylo.PhyloAnnotationManager.call(this);
+};
+saturn.client.programs.chromohub.ChromoHubAnnotationManager.__name__ = ["saturn","client","programs","chromohub","ChromoHubAnnotationManager"];
+saturn.client.programs.chromohub.ChromoHubAnnotationManager.__super__ = phylo.PhyloAnnotationManager;
+saturn.client.programs.chromohub.ChromoHubAnnotationManager.prototype = $extend(phylo.PhyloAnnotationManager.prototype,{
+	legacyViewer: null
+	,treeName: null
+	,subtreeName: null
+	,createViewOptions: function() {
+		var _g = this;
+		this.viewOptions = [];
+		if(this.jsonFile == null) return;
+		var i = 0;
+		var j = 0;
+		while(i < this.jsonFile.btnGroup.length) {
+			this.viewOptions[j] = { text : this.jsonFile.btnGroup[i].title, margin : "0 10 5 0", xtype : "label", cls : "x-title-viewoptions"};
+			var z = 0;
+			j++;
+			while(z < this.jsonFile.btnGroup[i].buttons.length) {
+				var b = [this.jsonFile.btnGroup[i].buttons[z]];
+				if(!b[0].enabled) {
+					z++;
+					continue;
+				}
+				if(b[0].annotCode == 26 && this.treeName == "E1" || b[0].annotCode == 26 && this.treeName == "E2" || b[0].annotCode == 26 && this.treeName == "USP") {
+					z++;
+					continue;
+				}
+				if(b[0].hidden == true) {
+					z++;
+					continue;
+				}
+				if(b[0].isTitle == true) this.viewOptions[j] = { text : b[0].label, margin : "0 0 5 0", xtype : "label", cls : "x-title-viewsuboptions"}; else {
+					var auxtext;
+					if(b[0].submenu) {
+						var k = b[0].optionSelected[0];
+						auxtext = b[0].label + " (" + b[0].options[k].label + ")";
+					} else auxtext = b[0].label;
+					var tit = [b[0].label + " Options"];
+					var _viewOptions_Items = [{ text : "", margin : "0", xtype : "button", cls : "x-button-helpicon", icon : "/static/js/images/helpicon.png", handler : (function() {
+						return function() {
+						};
+					})(), listeners : { mouseout : (function() {
+						return function(e) {
+							_g.closeHelpingDiv();
+						};
+					})(), mouseover : (function(b) {
+						return function(e1) {
+							_g.prepareHelpingDiv(e1,b[0].helpText);
+						};
+					})(b)}},{ text : "", margin : "0", xtype : this.activeAnnotation[b[0].annotCode] == true?"button":"container", width : 19, cls : this.activeAnnotation[b[0].annotCode] == true?"x-button-uncheck-icon":"x-button-hidden", icon : "/static/js/images/checkicon.png", handler : (function(b) {
+						return function() {
+							var elem = window.document.getElementById("optionToolBarId");
+							_g.menuScroll = elem.scrollTop;
+							var container = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+							_g.closeAnnotWindows();
+							_g.showAnnotation(b[0].annotCode,false);
+							if(b[0].annotCode == 25) _g.showAnnotation(30,false);
+							if(b[0].annotCode == 28) _g.showAnnotation(29,false);
+							if(b[0].annotCode == 27) _g.showAnnotation(31,false);
+							container.clearOptionsToolBar();
+							_g.createViewOptions();
+							container.addElemToOptionsToolBar(_g.viewOptions);
+							var elem1 = window.document.getElementById("optionToolBarId");
+							elem1.scrollTop = _g.menuScroll;
+						};
+					})(b), listeners : { mouseout : (function() {
+						return function(e2) {
+						};
+					})(), mouseover : (function() {
+						return function(e3) {
+							_g.closeHelpingDiv();
+						};
+					})()}},{ html : "<span>" + auxtext + "</span>", margin : "0 10 5 0", xtype : "button", cls : b[0].submenu?this.activeAnnotation != null && this.activeAnnotation.length > 0 && this.activeAnnotation[b[0].annotCode] == true?"x-btn-viewoptions-suboptions-checked":"x-btn-viewoptions-suboptions":b[0].popUpWindows?this.activeAnnotation != null && this.activeAnnotation.length > 0 && this.activeAnnotation[b[0].annotCode] == true?"x-btn-viewoptions-popup-checked":"x-btn-viewoptions-popup":this.activeAnnotation != null && this.activeAnnotation.length > 0 && this.activeAnnotation[b[0].annotCode] == true?"x-btn-viewoptions-checked":"x-btn-viewoptions", icon : "", handler : b[0].popUpWindows == true?(function($this) {
+						var $r;
+						var ia = [i];
+						var za = [z];
+						$r = (function(za,ia,tit,b) {
+							return function() {
+								var elem2 = window.document.getElementById("optionToolBarId");
+								_g.menuScroll = elem2.scrollTop;
+								var container1 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+								_g.closeAnnotWindows();
+								container1.clearPopUpWindow();
+								container1.setPosPopUpWindow(300,150);
+								container1.setPopUpWindowTitle(tit[0]);
+								var optt = _g.jsonFile.btnGroup[ia[0]].buttons[za[0]].windowsData[0];
+								container1.addFormItemToPopUpWindow(optt.form.items,b[0].annotCode,optt.hasClass,optt.popMethod,_g.treeType,_g.treeName,null,_g);
+								container1.showPopUpWindow();
+								var fileref = window.document.createElement("script");
+								fileref.setAttribute("type","text/javascript");
+								fileref.setAttribute("src","/static/js/annotation.js");
+								window.document.head.appendChild(fileref);
+							};
+						})(za,ia,tit,b);
+						return $r;
+					}(this)):(function(b) {
+						return function() {
+							var elem3 = window.document.getElementById("optionToolBarId");
+							_g.menuScroll = elem3.scrollTop;
+							var act = _g.activeAnnotation[b[0].annotCode];
+							if(_g.activeAnnotation[b[0].annotCode] == null || _g.activeAnnotation[b[0].annotCode] == false) {
+								var container2 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+								_g.closeAnnotWindows();
+								container2.hideSubMenuToolBar();
+								_g.showAnnotation(b[0].annotCode,true);
+								var cert = !_g.activeAnnotation[b[0].annotCode];
+								_g.legacyViewer.updateLegend(b[0],cert);
+								container2.clearOptionsToolBar();
+								_g.createViewOptions();
+								container2.addElemToOptionsToolBar(_g.viewOptions);
+								var elem4 = window.document.getElementById("optionToolBarId");
+								elem4.scrollTop = _g.menuScroll;
+								if(_g.legacyViewer.tableActive == true) _g.legacyViewer.baseTable.reconfigure(_g.legacyViewer.tableAnnot.tableDefinition);
+								if(cert == false) container2.legendPanel.expand();
+							} else {
+								var elem5 = window.document.getElementById("optionToolBarId");
+								_g.menuScroll = elem5.scrollTop;
+								var container3 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+								_g.closeAnnotWindows();
+								_g.showAnnotation(b[0].annotCode,false);
+								container3.clearOptionsToolBar();
+								_g.createViewOptions();
+								container3.addElemToOptionsToolBar(_g.viewOptions);
+								var elem6 = window.document.getElementById("optionToolBarId");
+								elem6.scrollTop = _g.menuScroll;
+							}
+						};
+					})(b), listeners : { mouseout : (function() {
+						return function(e4) {
+							var container4 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+							container4.hideHelpingDiv();
+							if(_g.onSubmenu == false) container4.hideSubMenuToolBar();
+						};
+					})(), mouseover : b[0].submenu?(function($this) {
+						var $r;
+						var a = j;
+						var subm = [];
+						var t = [0];
+						var t1;
+						var i11 = [];
+						var z1 = [];
+						subm[0] = [];
+						t1 = 0;
+						var nuopt = b[0].options.length;
+						while(t[0] < b[0].options.length) {
+							i11[0] = i;
+							z1[0] = z;
+							t1 = t[0];
+							subm[0][t[0]] = { text : b[0].options[t[0]].label, xtype : b[0].options[t[0]].isTitle == false && b[0].options[t[0]].isLabelTitle == false?"button":"label", cls : b[0].options[t[0]].isTitle == true || b[0].options[t[0]].isLabelTitle == true?b[0].options[t[0]].isTitle == true?"x-btn-viewoptions-title":"x-btn-viewoptions-label":b[0].optionSelected[0] == t[0]?"x-btn-viewoptions-default":"x-btn-viewoptions", handler : b[0].options[t[0]].isTitle == false && b[0].options[t[0]].isLabelTitle == false?(function($this) {
+								var $r;
+								var t2 = [t[0]];
+								$r = (function(t2,z1,i11,b) {
+									return function() {
+										var container5 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+										_g.closeAnnotWindows();
+										var check;
+										check = _g.changeDefaultOption(t2[0],i11[0],z1[0]);
+										_g.showAnnotation(b[0].annotCode,check);
+										container5.hideExportSubMenu();
+										container5.hideHelpingDiv();
+										container5.hideSubMenuToolBar();
+										_g.onSubmenu = false;
+										container5.clearOptionsToolBar();
+										_g.createViewOptions();
+										container5.addElemToOptionsToolBar(_g.viewOptions);
+									};
+								})(t2,z1,i11,b);
+								return $r;
+							}($this)):(function() {
+								return function() {
+								};
+							})(), tooltip : { text : b[0].options[t[0]].helpText}};
+							t[0]++;
+						}
+						$r = (function(t,subm) {
+							return function(e5) {
+								var h = e5.ownerCt.y - e5.ownerCt.ownerCt.el.dom.scrollTop;
+								var n = t[0];
+								var container6 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+								container6.hideHelpingDiv();
+								container6.clearSubMenuToolBar();
+								container6.addElemToSubMenuToolBar(subm[0]);
+								container6.setTopSubMenuToolBar(h);
+								container6.setHeightSubMenuToolBar(n * 25);
+								container6.showSubMenuToolBar();
+								_g.onSubmenu = true;
+							};
+						})(t,subm);
+						return $r;
+					}(this)):(function() {
+						return function(e6) {
+							var container7 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+							$bind(container7,container7.hideHelpingDiv);
+							container7.hideSubMenuToolBar();
+							_g.onSubmenu = false;
+						};
+					})()}}];
+					var _viewOptions = { xtype : "container", cls : "x-group2btns", layout : "hbox", items : _viewOptions_Items};
+					this.viewOptions[j] = _viewOptions;
+				}
+				j++;
+				z++;
+			}
+			i++;
+		}
+		var l = this.activeAnnotation.length;
+		var i1 = 1;
+		var num = 0;
+		var showhide = false;
+		while(i1 < l && num < 2) {
+			if(this.activeAnnotation[i1] == true) num++;
+			i1++;
+		}
+		if(num == 2) showhide = true;
+		if(showhide == true) this.viewOptions[j] = { text : "Hide all", margin : "20 10 5 0", xtype : "button", cls : "x-btn-viewoptions x-btn-viewoptions-hide", handler : function() {
+			_g.onSubmenu = false;
+			var l1 = _g.activeAnnotation.length;
+			var i2 = 1;
+			while(i2 < l1) {
+				_g.activeAnnotation[i2] = false;
+				i2++;
+			}
+			var container8 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+			container8.hideExportSubMenu();
+			container8.hideHelpingDiv();
+			_g.closeAnnotWindows();
+			container8.hideSubMenuToolBar();
+			container8.clearOptionsToolBar();
+			_g.createViewOptions();
+			container8.emptyLegend();
+			container8.addElemToOptionsToolBar(_g.viewOptions);
+		}, listeners : { mouseover : function(e7) {
+			_g.onSubmenu = false;
+			var container9 = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+			container9.hideExportSubMenu();
+			container9.hideHelpingDiv();
+			container9.hideSubMenuToolBar();
+		}}, tooltip : { dismissDelay : 10000, text : "Remove all Annotations"}};
+	}
+	,showAnnotation: function(annotCode,active) {
+		var _g = this;
+		var currentAnnot = annotCode;
+		this.activeAnnotation[currentAnnot] = active;
+		var app = saturn.client.WorkspaceApplication.getApplication();
+		var container = null;
+		if(app != null) container = app.getSingleAppContainer();
+		if(active == true) {
+			var i;
+			var needToExpandLegend = false;
+			var _g1 = 0;
+			var _g2 = this.activeAnnotation.length;
+			while(_g1 < _g2) {
+				var i1 = _g1++;
+				if(this.activeAnnotation[i1] == true) {
+					if(this.annotations[i1].legend != "" && this.annotations[i1].legendClazz == "") {
+						needToExpandLegend = true;
+						if(container != null) container.addImageToLegend(this.annotations[i1].legend,i1);
+					} else if(this.annotations[i1].legend != null && this.annotations[i1].legendClazz != "" && this.annotations[i1].legendMethod != "") {
+						var clazz = Type.resolveClass(this.annotations[i1].legendClazz);
+						var method = Reflect.field(clazz,this.annotations[i1].legendMethod);
+						var legend = method(this.treeName);
+						if(container != null) container.addImageToLegend(legend,i1);
+					}
+				}
+			}
+			if(needToExpandLegend == true) {
+				if(container != null) container.legendPanel.expand();
+			}
+			var annot = this.annotations[currentAnnot];
+			if(annot.hookName != null && annot.hookName != "") {
+				var myGeneList;
+				myGeneList = this.rootNode.targets;
+				var currentOption = 100;
+				var alias;
+				var dbAccessed = false;
+				var u;
+				if(annot.options.length == 0) {
+					alias = annot.hookName;
+					annot.defaultImg = 0;
+					if((function($this) {
+						var $r;
+						var key = alias;
+						$r = $this.alreadyGotAnnotation.exists(key);
+						return $r;
+					}(this)) == false) {
+						var key1 = alias;
+						this.alreadyGotAnnotation.set(key1,true);
+						dbAccessed = false;
+					} else dbAccessed = true;
+				} else if(annot.optionSelected.length == 1) {
+					currentOption = annot.optionSelected[0];
+					alias = annot.options[currentOption];
+					if(annot.defaultImg == null) annot.defaultImg = 0; else annot.defaultImg = currentOption;
+					dbAccessed = false;
+				} else {
+					dbAccessed = false;
+					alias = "";
+				}
+				var error;
+				dbAccessed = false;
+				if(dbAccessed == false) {
+					var parameter;
+					if(this.treeName != "") {
+						if(this.treeName.indexOf("/") != -1) {
+							var aux = this.treeName.split("/");
+							parameter = aux[1];
+						} else parameter = this.treeName;
+						if(this.treeType == "gene") alias = "gene_" + Std.string(alias);
+					} else parameter = this.rootNode.targets;
+					saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{ param : parameter},null,true,function(db_results,error1) {
+						if(error1 == null) _g.addAnnotData(db_results,currentAnnot,currentOption,function() {
+							_g.legacyViewer.newposition(0,0);
+						}); else saturn.client.WorkspaceApplication.getApplication().debug(error1);
+					});
+				} else this.legacyViewer.newposition(0,0);
+			}
+			if(annot.familyMethod != "") {
+				var hook;
+				var clazz1;
+				var method1;
+				this.activeAnnotation[currentAnnot] = false;
+				clazz1 = this.annotations[currentAnnot].hasClass;
+				method1 = this.annotations[currentAnnot].familyMethod + "table";
+				var data = new phylo.PhyloScreenData();
+				data.renderer = this.legacyViewer.radialR;
+				data.target = "";
+				data.targetClean = "";
+				data.annot = currentAnnot;
+				data.divAccessed = false;
+				data.root = this.rootNode;
+				data.title = this.annotations[currentAnnot].label;
+				hook = Reflect.field(Type.resolveClass(clazz1),method1);
+				this.legacyViewer.dom = this.legacyViewer.theComponent.down("component").getEl().dom;
+				var posXDiv = this.legacyViewer.dom.clientWidth / 2 - 100;
+				var posYDiv = this.legacyViewer.dom.clientHeight / 5;
+				this.closeDivInTable();
+				hook(data,Math.round(posXDiv),Math.round(posYDiv),this.treeName,this.treeType,function(div) {
+					data.created = true;
+					data.div = div;
+					var nn = "";
+					if(data.target != data.targetClean) {
+						if(data.target.indexOf("(") != -1 || data.target.indexOf("-") != -1) {
+							var auxArray = data.target.split("");
+							var j;
+							var _g11 = 0;
+							var _g3 = auxArray.length;
+							while(_g11 < _g3) {
+								var j1 = _g11++;
+								if(auxArray[j1] == "(" || auxArray[j1] == "-") {
+									nn = auxArray[j1 + 1];
+									break;
+								}
+							}
+						}
+					}
+					if(currentAnnot == 4) {
+						if(data.annotation.text.indexOf(".") != -1) {
+							var auxArray1 = data.annotation.text.split("");
+							var j2;
+							var naux = "";
+							var _g12 = 0;
+							var _g4 = auxArray1.length;
+							while(_g12 < _g4) {
+								var j3 = _g12++;
+								if(auxArray1[j3] != ".") naux += auxArray1[j3];
+							}
+							nn = nn + naux;
+						} else if(data.annotation.text.indexOf("/") != -1) {
+							var auxArray2 = data.annotation.text.split("");
+							var j4;
+							var naux1 = "";
+							var _g13 = 0;
+							var _g5 = auxArray2.length;
+							while(_g13 < _g5) {
+								var j5 = _g13++;
+								if(auxArray2[j5] != "/") naux1 += auxArray2[j5];
+							}
+							nn = nn + naux1;
+						} else nn = nn + data.annotation.text;
+					}
+					var nom = "";
+					if(data.targetClean.indexOf("/") != -1) {
+						var auxArray3 = data.targetClean.split("");
+						var j6;
+						var _g14 = 0;
+						var _g6 = auxArray3.length;
+						while(_g14 < _g6) {
+							var j7 = _g14++;
+							if(auxArray3[j7] != "/") nom += auxArray3[j7];
+						}
+					} else nom = data.targetClean;
+					var id = currentAnnot + "-" + nom + nn;
+					saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer().showAnnotWindow(div,Math.round(posXDiv),Math.round(posYDiv),data.title,id,data);
+				});
+			}
+		} else {
+			this.legacyViewer.newposition(0,0);
+			if(container != null) container.emptyLegend();
+			var i2;
+			var needToExpandLegend1 = false;
+			var _g15 = 0;
+			var _g7 = this.activeAnnotation.length;
+			while(_g15 < _g7) {
+				var i3 = _g15++;
+				if(this.activeAnnotation[i3] == true) {
+					if(this.annotations[i3].legend != "") {
+						needToExpandLegend1 = true;
+						if(container != null) container.addImageToLegend(this.annotations[i3].legend,i3);
+					}
+				}
+			}
+			if(needToExpandLegend1 == false) {
+				if(container != null) container.legendPanel.collapse();
+			}
+		}
+	}
+	,dataforTable: function(annotlist,leaves) {
+		var d = [];
+		var total = this.numTotalAnnot;
+		if(this.treeName != "") {
+			var results = [];
+			var _g1 = 0;
+			var _g = leaves.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				if((function($this) {
+					var $r;
+					var key = leaves[i];
+					$r = $this.rootNode.leafNameToNode.exists(key);
+					return $r;
+				}(this))) {
+					var leaf;
+					var key1 = leaves[i];
+					leaf = this.rootNode.leafNameToNode.get(key1);
+					var j;
+					var _g3 = 1;
+					var _g2 = total + 1;
+					while(_g3 < _g2) {
+						var j1 = _g3++;
+						if(annotlist[j1] != null && annotlist[j1].familyMethod != "") {
+							results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().showFamilyMethodDivInTable(" + j1 + ",'" + Std.string(annotlist[j1].familyMethod) + "')\";return false;\"><span style=\"text-align:center;color:\">Visualize</span></a> ";
+							saturn.core.Util.debug("Here!");
+						} else {
+							saturn.core.Util.debug("Here2!");
+							if(leaf.annotations[j1] != null) {
+								if(leaf.annotations[j1] != null) {
+									if(leaf.annotations[j1].hasAnnot == true) {
+										if(leaf.annotations[j1].alfaAnnot.length == 0) {
+											var _g4 = this.annotations[j1].shape;
+											switch(_g4) {
+											case "cercle":
+												results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].color[0].color + "\">O</span></a> ";
+												break;
+											case "html":
+												results[j1] = this.generateIcon(j1,leaf.annotations[j1].myleaf.name,leaf.results);
+												break;
+											case "square":
+												results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf.annotations[j1].color[0].color + "\"/> </div></a> ";
+												break;
+											case "text":
+												results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].color[0].color + "\">" + leaf.annotations[j1].text + "</span></a> ";
+												break;
+											case "image":
+												var t = leaf.annotations[j1].defaultImg;
+												if(t == null) t = 0;
+												if(this.annotations[j1].annotImg[t] != null && this.annotations[j1].annotImg[t].currentSrc != null) {
+													if(t != 100) {
+														if(j1 == 1) results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j1].annotImg[t].currentSrc) + "\" width=\"20px\"/><a> "; else results[j1] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j1].annotImg[t].currentSrc) + "\"/><a> ";
+													} else results[j1] = "";
+												}
+												break;
+											}
+										} else {
+											results[j1] = "";
+											if(leaf.annotations[j1].hasAnnot == true) {
+												var _g41 = this.annotations[j1].shape;
+												switch(_g41) {
+												case "cercle":
+													results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].color[0].color + "\">O</span></a> ";
+													break;
+												case "square":
+													results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf.annotations[j1].color[0].color + "\"/> </div></a> ";
+													break;
+												case "html":
+													results[j1] = results[j1] + this.generateIcon(j1,leaf.annotations[j1].myleaf.name,leaf.results);
+													break;
+												case "text":
+													results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "','" + leaf.annotations[j1].text + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].color[0].color + "\">" + leaf.annotations[j1].text + "</span></a> ";
+													break;
+												case "image":
+													var t1 = leaf.annotations[j1].defaultImg;
+													if(t1 == null) t1 = 0;
+													if(this.annotations[j1].annotImg[t1] != null && this.annotations[j1].annotImg[t1].currentSrc != null) {
+														if(t1 != 100) results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j1].annotImg[t1].currentSrc) + "\"/><a> ";
+													}
+													break;
+												}
+											}
+											var b;
+											var _g5 = 0;
+											var _g42 = leaf.annotations[j1].alfaAnnot.length;
+											while(_g5 < _g42) {
+												var b1 = _g5++;
+												if(leaf.annotations[j1].alfaAnnot[b1] != null) {
+													var _g6 = this.annotations[j1].shape;
+													switch(_g6) {
+													case "cercle":
+														results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].alfaAnnot[b1].color[0].color + "\">O</span></a> ";
+														break;
+													case "square":
+														results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf.annotations[j1].alfaAnnot[b1].color[0].color + "\"/> </div></a> ";
+														break;
+													case "html":
+														results[j1] = results[j1] + this.generateIcon(j1,leaf.annotations[j1].myleaf.name,leaf.results);
+														break;
+													case "text":
+														results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "','" + leaf.annotations[j1].alfaAnnot[b1].text + "')\";return false;\"><span style=\"text-align:center;color:" + leaf.annotations[j1].alfaAnnot[b1].color[0].color + "\">" + leaf.annotations[j1].alfaAnnot[b1].text + "</span></a> ";
+														break;
+													case "image":
+														var t2 = leaf.annotations[j1].alfaAnnot[b1].defaultImg;
+														if(t2 == null) t2 = 0;
+														if(this.annotations[j1].annotImg[t2] != null && this.annotations[j1].annotImg[t2].currentSrc != null) {
+															if(t2 != 100) results[j1] = results[j1] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j1 + ",'" + leaf.annotations[j1].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j1].annotImg[t2].currentSrc) + "\"/><a> ";
+														}
+														break;
+													}
+												}
+											}
+										}
+									} else results[j1] = "";
+								} else results[j1] = "";
+							} else results[j1] = "";
+						}
+					}
+					d[i] = { };
+					var a = 0;
+					d[i].Target = leaf.name;
+					var _g31 = 0;
+					var _g21 = this.annotations.length;
+					while(_g31 < _g21) {
+						var a1 = _g31++;
+						if(a1 == 12) {
+							var iwanttostop = true;
+						}
+						if(results[a1 + 1] != null) {
+							if(a1 != 10) d[i][this.annotations[a1 + 1].label] = results[a1 + 1];
+						}
+					}
+				}
+			}
+		} else {
+			var results1 = [];
+			var leaf1;
+			var _g11 = 0;
+			var _g7 = this.searchedGenes.length;
+			while(_g11 < _g7) {
+				var i1 = _g11++;
+				leaf1 = this.legacyViewer.geneMap.get(this.searchedGenes[i1]);
+				var j2;
+				var _g32 = 1;
+				var _g22 = total + 1;
+				while(_g32 < _g22) {
+					var j3 = _g32++;
+					if(annotlist[j3] != null && annotlist[j3].familyMethod != "") {
+						if(leaf1.targetFamilyGene != null && leaf1.targetFamilyGene.length != 0) {
+							var ii = 0;
+							var r = "";
+							var _g51 = 0;
+							var _g43 = leaf1.targetFamilyGene.length;
+							while(_g51 < _g43) {
+								var ii1 = _g51++;
+								r = r + leaf1.targetFamilyGene[ii1] + " ";
+							}
+							results1[j3] = r;
+						} else results1[j3] = "";
+					} else if(leaf1.annotations[j3] != null) {
+						if(leaf1.annotations[j3].hasAnnot == true) {
+							if(leaf1.annotations[j3].alfaAnnot.length == 0) {
+								var _g44 = this.annotations[j3].shape;
+								switch(_g44) {
+								case "cercle":
+									results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].color[0].color + "\">O</span></a> ";
+									break;
+								case "square":
+									results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf1.annotations[j3].color[0].color + "\"/> </div></a> ";
+									break;
+								case "html":
+									results1[j3] = this.generateIcon(j3,leaf1.annotations[j3].myleaf.name,leaf1.results);
+									break;
+								case "text":
+									results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].color[0].color + "\">" + leaf1.annotations[j3].text + "</span></a> ";
+									break;
+								case "image":
+									var t3 = leaf1.annotations[j3].defaultImg;
+									if(t3 == null) t3 = 0;
+									if(this.annotations[j3].annotImg[t3] != null && this.annotations[j3].annotImg[t3].currentSrc != null) {
+										if(t3 != 100) {
+											if(j3 == 1) results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t3].currentSrc) + "\" width=\"20px\"/><a> "; else results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t3].currentSrc) + "\"/><a> ";
+										} else results1[j3] = "";
+									}
+									break;
+								}
+							} else {
+								results1[j3] = "";
+								if(leaf1.annotations[j3].hasAnnot == true) {
+									var _g45 = this.annotations[j3].shape;
+									switch(_g45) {
+									case "cercle":
+										results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].color[0].color + "\">O</span></a> ";
+										break;
+									case "square":
+										results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf1.annotations[j3].color[0].color + "\"/> </div></a> ";
+										break;
+									case "html":
+										results1[j3] = results1[j3] + this.generateIcon(j3,leaf1.annotations[j3].myleaf.name,leaf1.results);
+										break;
+									case "text":
+										results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "','" + leaf1.annotations[j3].text + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].color[0].color + "\">" + leaf1.annotations[j3].text + "</span></a> ";
+										break;
+									case "image":
+										var t4 = leaf1.annotations[j3].defaultImg;
+										if(t4 == null) t4 = 0;
+										if(this.annotations[j3].annotImg[t4] != null && this.annotations[j3].annotImg[t4].currentSrc != null) {
+											if(t4 != 100) {
+												if(j3 == 1) results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t4].currentSrc) + "\" width=\"20px\"/><a> "; else results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t4].currentSrc) + "\"/><a> ";
+											}
+										}
+										break;
+									}
+								}
+								var b2;
+								var _g52 = 0;
+								var _g46 = leaf1.annotations[j3].alfaAnnot.length;
+								while(_g52 < _g46) {
+									var b3 = _g52++;
+									if(leaf1.annotations[j3].alfaAnnot[b3] != null) {
+										var _g61 = this.annotations[j3].shape;
+										switch(_g61) {
+										case "cercle":
+											results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].alfaAnnot[b3].color[0].color + "\">O</span></a> ";
+											break;
+										case "square":
+											results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf1.annotations[j3].alfaAnnot[b3].color[0].color + "\"/> </div></a> ";
+											break;
+										case "html":
+											results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><div id=\"rectangle\" style=\"text-align:center;width:10px; height:10px; background-color:" + leaf1.annotations[j3].alfaAnnot[b3].color[0].color + "\"/> </div></a> ";
+											break;
+										case "text":
+											results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "','" + leaf1.annotations[j3].alfaAnnot[b3].text + "')\";return false;\"><span style=\"text-align:center;color:" + leaf1.annotations[j3].alfaAnnot[b3].color[0].color + "\">" + leaf1.annotations[j3].alfaAnnot[b3].text + "</span></a> ";
+											break;
+										case "image":
+											var t5 = leaf1.annotations[j3].alfaAnnot[b3].defaultImg;
+											if(t5 == null) t5 = 0;
+											if(this.annotations[j3].annotImg[t5] != null && this.annotations[j3].annotImg[t5].currentSrc != null) {
+												if(t5 != 100) {
+													if(j3 == 1) results1[j3] = "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t5].currentSrc) + "\" width=\"20px\"/><a> "; else results1[j3] = results1[j3] + "<a id=\"myLink\" title=\"Click to visualize annotation details\"  href=\"#\" onclick=\"app.getActiveProgram().annotationManager.showDivInTable(" + j3 + ",'" + leaf1.annotations[j3].myleaf.name + "')\";return false;\"><img src=\"" + Std.string(this.annotations[j3].annotImg[t5].currentSrc) + "\"/><a> ";
+												}
+											}
+											break;
+										}
+									}
+								}
+							}
+						} else results1[j3] = "";
+					} else results1[j3] = "";
+				}
+				d[i1] = { };
+				var a2 = 0;
+				d[i1].Target = leaf1.name;
+				var tt = "";
+				var _g33 = 0;
+				var _g23 = this.annotations.length;
+				while(_g33 < _g23) {
+					var a3 = _g33++;
+					if(results1[a3 + 1] != null) {
+						if(a3 != 10) {
+							if(a3 + 1 == 5) d[i1]["Family Domains"] = results1[a3 + 1]; else d[i1][this.annotations[a3 + 1].label] = results1[a3 + 1];
+						}
+					}
+				}
+			}
+		}
+		return d;
+	}
+	,fillInDataInAnnotTable: function(type,callback) {
+		var _g = this;
+		var annotlist = this.annotations;
+		var leaves;
+		var myGeneList;
+		if(type == "family") {
+			myGeneList = this.rootNode.targets;
+			leaves = this.rootNode.targets;
+		} else {
+			myGeneList = this.searchedGenes;
+			leaves = this.searchedGenes;
+		}
+		var total = this.numTotalAnnot;
+		var completedAnnotations = 0;
+		var onDone = function(error,annotation) {
+			if(completedAnnotations == total) {
+				saturn.core.Util.debug("All results fetch");
+				var d = _g.dataforTable(annotlist,leaves);
+				callback(d,null);
+				return;
+			}
+		};
+		var _g1 = 1;
+		var _g2 = total + 1;
+		while(_g1 < _g2) {
+			var currentAnnot = [_g1++];
+			if(currentAnnot[0] == 11) {
+				completedAnnotations += 1;
+				onDone(null,currentAnnot[0]);
+				continue;
+			}
+			var alias = annotlist[currentAnnot[0]].hookName;
+			if(alias == "") {
+				completedAnnotations += 1;
+				onDone(null,currentAnnot[0]);
+				continue;
+			}
+			var parameter;
+			if(this.treeName != "") {
+				if(this.treeType == "gene") alias = "gene_" + alias;
+				parameter = this.treeName;
+				if(annotlist[currentAnnot[0]].popup == false) {
+					var u = [annotlist[currentAnnot[0]].optionSelected[0]];
+					saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{ param : parameter},null,true,(function(u,currentAnnot) {
+						return function(db_results,error1) {
+							if(error1 == null) _g.addAnnotData(db_results,currentAnnot[0],u[0],(function(currentAnnot) {
+								return function() {
+									completedAnnotations += 1;
+									onDone(null,currentAnnot[0]);
+								};
+							})(currentAnnot)); else {
+								saturn.core.Util.debug(error1);
+								completedAnnotations += 1;
+								onDone(error1,currentAnnot[0]);
+							}
+						};
+					})(u,currentAnnot));
+				} else {
+					var l = currentAnnot[0];
+					var popMethod = annotlist[currentAnnot[0]].popMethod;
+					var hasClass = annotlist[currentAnnot[0]].hasClass;
+					var hook = Reflect.field(Type.resolveClass(hasClass),popMethod);
+					hook(currentAnnot[0],null,this.treeType,this.treeName,null,this,(function(currentAnnot) {
+						return function(results,error2) {
+							completedAnnotations += 1;
+							if(error2 == null) onDone(null,currentAnnot[0]); else {
+								saturn.core.Util.debug(error2);
+								onDone(error2,currentAnnot[0]);
+							}
+						};
+					})(currentAnnot));
+				}
+			} else if(annotlist[currentAnnot[0]].popup == false) {
+				alias = "list_" + alias;
+				var parameter1 = this.searchedGenes;
+				if(this.treeType == "gene") alias = "gene_" + alias;
+				saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery(alias,{ param : parameter1},null,true,(function(currentAnnot) {
+					return function(db_results1,error3) {
+						if(error3 == null) _g.addAnnotDataGenes(db_results1,currentAnnot[0],(function(currentAnnot) {
+							return function() {
+								completedAnnotations += 1;
+								onDone(null,currentAnnot[0]);
+							};
+						})(currentAnnot)); else {
+							saturn.client.WorkspaceApplication.getApplication().showMessage("Unknown",error3);
+							completedAnnotations += 1;
+							onDone(error3,currentAnnot[0]);
+						}
+					};
+				})(currentAnnot));
+			} else {
+				var l1 = currentAnnot[0];
+				var popMethod1 = annotlist[currentAnnot[0]].popMethod;
+				var hasClass1 = annotlist[currentAnnot[0]].hasClass;
+				var hook1 = Reflect.field(Type.resolveClass(hasClass1),popMethod1);
+				hook1(currentAnnot[0],null,this.treeType,this.treeName,this.searchedGenes,this,(function(currentAnnot) {
+					return function(results1,error4) {
+						completedAnnotations += 1;
+						onDone(null,currentAnnot[0]);
+					};
+				})(currentAnnot));
+			}
+		}
+	}
+	,showFamilyMethodDivInTable: function(annotation) {
+		if(this.annotations[annotation].hasClass != null && this.annotations[annotation].familyMethod != null) {
+			var hook;
+			var clazz;
+			var method;
+			clazz = this.annotations[annotation].hasClass;
+			method = this.annotations[annotation].familyMethod + "table";
+			var data = new phylo.PhyloScreenData();
+			data.renderer = this.legacyViewer.radialR;
+			data.target = "";
+			data.targetClean = "";
+			data.annot = annotation;
+			data.divAccessed = false;
+			data.root = this.rootNode;
+			data.title = this.annotations[annotation].label;
+			hook = Reflect.field(Type.resolveClass(clazz),method);
+			this.legacyViewer.dom = this.legacyViewer.theComponent.down("component").getEl().dom;
+			var posXDiv = this.legacyViewer.dom.clientWidth / 2 - 100;
+			var posYDiv = this.legacyViewer.dom.clientHeight / 5;
+			hook(data,Math.round(posXDiv),Math.round(posYDiv),this.treeName,this.treeType,function(div) {
+				data.created = true;
+				data.div = div;
+				var nn = "";
+				if(data.target != data.targetClean) {
+					if(data.target.indexOf("(") != -1 || data.target.indexOf("-") != -1) {
+						var auxArray = data.target.split("");
+						var j;
+						var _g1 = 0;
+						var _g = auxArray.length;
+						while(_g1 < _g) {
+							var j1 = _g1++;
+							if(auxArray[j1] == "(" || auxArray[j1] == "-") {
+								nn = auxArray[j1 + 1];
+								break;
+							}
+						}
+					}
+				}
+				var nom = "";
+				if(data.targetClean.indexOf("/") != -1) {
+					var auxArray1 = data.targetClean.split("");
+					var j2;
+					var _g11 = 0;
+					var _g2 = auxArray1.length;
+					while(_g11 < _g2) {
+						var j3 = _g11++;
+						if(auxArray1[j3] != "/") nom += auxArray1[j3];
+					}
+				} else nom = data.targetClean;
+				var id = annotation + "-" + nom + nn;
+				saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer().showAnnotWindow(div,Math.round(posXDiv),Math.round(posYDiv),data.title,id,data);
+			});
+		}
+	}
+	,showDivInTable: function(annotation,target,text) {
+		var leaf;
+		if(this.treeName == "") leaf = this.legacyViewer.geneMap.get(target); else leaf = this.rootNode.leafNameToNode.get(target);
+		if(this.annotations[annotation].hasClass != null && this.annotations[annotation].divMethod != null) {
+			var hook;
+			var clazz;
+			var method;
+			clazz = this.annotations[annotation].hasClass;
+			method = this.annotations[annotation].divMethod;
+			var data = new phylo.PhyloScreenData();
+			data.renderer = this.legacyViewer.radialR;
+			data.target = target;
+			data.annot = annotation;
+			if(text != null) data.annotation.text = text; else data.annotation.text = leaf.annotations[annotation].text;
+			var name = "";
+			if(target.indexOf("(") != -1 || target.indexOf("-") != -1) {
+				var auxArray = target.split("");
+				var j;
+				var _g1 = 0;
+				var _g = auxArray.length;
+				while(_g1 < _g) {
+					var j1 = _g1++;
+					if(auxArray[j1] == "(" || auxArray[j1] == "-") break;
+					name += auxArray[j1];
+				}
+				data.targetClean = name;
+			} else data.targetClean = target;
+			data.annot = annotation;
+			data.divAccessed = false;
+			data.root = this.rootNode;
+			data.title = this.annotations[annotation].label;
+			hook = Reflect.field(Type.resolveClass(clazz),method);
+			this.legacyViewer.dom = this.legacyViewer.theComponent.down("component").getEl().dom;
+			var posXDiv = this.legacyViewer.dom.clientWidth / 2 - 100;
+			var posYDiv = this.legacyViewer.dom.clientHeight / 5;
+			hook(data,Math.round(posXDiv),Math.round(posYDiv),this.treeType,function(div) {
+				data.created = true;
+				data.div = div;
+				var nn = "";
+				if(data.target != data.targetClean) {
+					if(data.target.indexOf("(") != -1 || data.target.indexOf("-") != -1) {
+						var auxArray1 = data.target.split("");
+						var j2;
+						var _g11 = 0;
+						var _g2 = auxArray1.length;
+						while(_g11 < _g2) {
+							var j3 = _g11++;
+							if(auxArray1[j3] == "(" || auxArray1[j3] == "-") {
+								nn = auxArray1[j3 + 1];
+								break;
+							}
+						}
+					}
+				}
+				if(annotation == 4) {
+					if(data.annotation.text.indexOf(".") != -1) {
+						var auxArray2 = data.annotation.text.split("");
+						var j4;
+						var naux = "";
+						var _g12 = 0;
+						var _g3 = auxArray2.length;
+						while(_g12 < _g3) {
+							var j5 = _g12++;
+							if(auxArray2[j5] != ".") naux += auxArray2[j5];
+						}
+						nn = nn + naux;
+					} else if(data.annotation.text.indexOf("/") != -1) {
+						var auxArray3 = data.annotation.text.split("");
+						var j6;
+						var naux1 = "";
+						var _g13 = 0;
+						var _g4 = auxArray3.length;
+						while(_g13 < _g4) {
+							var j7 = _g13++;
+							if(auxArray3[j7] != "/") naux1 += auxArray3[j7];
+						}
+						nn = nn + naux1;
+					} else nn = nn + data.annotation.text;
+				}
+				var nom = "";
+				if(data.targetClean.indexOf("/") != -1) {
+					var auxArray4 = data.targetClean.split("");
+					var j8;
+					var _g14 = 0;
+					var _g5 = auxArray4.length;
+					while(_g14 < _g5) {
+						var j9 = _g14++;
+						if(auxArray4[j9] != "/") nom += auxArray4[j9];
+					}
+				} else nom = data.targetClean;
+				var id = annotation + "-" + nom + nn;
+				saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer().showAnnotWindow(div,Math.round(posXDiv),Math.round(posYDiv),data.title,id,data);
+			});
+		}
+	}
+	,closeDivInTable: function() {
+		var container = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+	}
+	,addAnnotDataGenes: function(annotData,annotation,callback) {
+		var i;
+		var mapResults;
+		mapResults = new haxe.ds.StringMap();
+		var target;
+		var j = 0;
+		var _g1 = 0;
+		var _g = annotData.length;
+		while(_g1 < _g) {
+			var i2 = _g1++;
+			if(annotation == 1) {
+				var aux = annotData[i2].pmid_list;
+				var aux2 = aux.split(";");
+				var max = aux2.length;
+				var v = this.annotations[1].fromresults[1];
+				if(max > v || this.annotations[1].fromresults[1] == null) this.annotations[1].fromresults[1] = max;
+			}
+			target = Std.string(annotData[i2].target_id) + "_" + j;
+			while(__map_reserved[target] != null?mapResults.existsReserved(target):mapResults.h.hasOwnProperty(target)) {
+				j++;
+				target = Std.string(annotData[i2].target_id) + "_" + j;
+			}
+			j = 0;
+			var value = annotData[i2];
+			mapResults.set(target,value);
+		}
+		var items = [];
+		var i1 = 0;
+		var _g11 = 0;
+		var _g2 = this.searchedGenes.length;
+		while(_g11 < _g2) {
+			var i3 = _g11++;
+			items[i3] = this.searchedGenes[i3];
+		}
+		this.processGeneAnnotations(items,mapResults,annotation,callback);
+	}
+	,processGeneAnnotations: function(items,mapResults,annotation,cb) {
+		var _g1 = this;
+		var toComplete = items.length;
+		var onDone = function() {
+			if(toComplete == 0) cb();
+		};
+		if(toComplete == 0) {
+			cb();
+			return;
+		}
+		var _g = 0;
+		while(_g < items.length) {
+			var name = items[_g];
+			++_g;
+			var target = [name + "_0"];
+			if(__map_reserved[target[0]] != null?mapResults.existsReserved(target[0]):mapResults.h.hasOwnProperty(target[0])) {
+				var res;
+				res = __map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]];
+				var leafaux = [this.legacyViewer.geneMap.get(name)];
+				var index = null;
+				var variant = "1";
+				if(annotation == 13 && Object.prototype.hasOwnProperty.call(res,"family_id")) leafaux[0].targetFamily = (__map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]]).family_id;
+				if(this.annotations[annotation].hasClass != null && this.annotations[annotation].hasMethod != null) {
+					var clazz = this.annotations[annotation].hasClass;
+					var method = this.annotations[annotation].hasMethod;
+					var hook = Reflect.field(Type.resolveClass(clazz),method);
+					hook(name,res,0,this.annotations,name,(function(leafaux,target) {
+						return function(r) {
+							if(r.hasAnnot) {
+								leafaux[0].activeAnnotation[annotation] = true;
+								if(leafaux[0].annotations[annotation] == null) {
+									leafaux[0].annotations[annotation] = new phylo.PhyloAnnotation();
+									leafaux[0].annotations[annotation].myleaf = leafaux[0];
+									leafaux[0].annotations[annotation].text = r.text;
+									leafaux[0].annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+									leafaux[0].annotations[annotation].saveAnnotationData(annotation,__map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]],100,r);
+								} else if(leafaux[0].annotations[annotation].splitresults == true) {
+									var z = 0;
+									while(leafaux[0].annotations[annotation].alfaAnnot[z] != null) z++;
+									leafaux[0].annotations[annotation].alfaAnnot[z] = new phylo.PhyloAnnotation();
+									leafaux[0].annotations[annotation].alfaAnnot[z].myleaf = leafaux[0];
+									leafaux[0].annotations[annotation].alfaAnnot[z].text = "";
+									leafaux[0].annotations[annotation].alfaAnnot[z].defaultImg = _g1.annotations[annotation].defaultImg;
+									leafaux[0].annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,__map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]],100,r);
+								}
+							}
+							toComplete--;
+							onDone();
+						};
+					})(leafaux,target));
+				} else {
+					var col = "";
+					if(this.annotations[annotation].color[0] != null) col = this.annotations[annotation].color[0].color;
+					var r1 = { hasAnnot : true, text : "", color : { color : col, used : true}, defImage : this.annotations[annotation].defaultImg};
+					var leafaux1 = this.legacyViewer.geneMap.get(name);
+					leafaux1.activeAnnotation[annotation] = true;
+					if(leafaux1.annotations[annotation] == null) {
+						leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+						leafaux1.annotations[annotation].myleaf = leafaux1;
+						leafaux1.annotations[annotation].text = "";
+						leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+						leafaux1.annotations[annotation].saveAnnotationData(annotation,__map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]],100,r1);
+					} else if(leafaux1.annotations[annotation].splitresults == true) {
+						var z1 = 0;
+						while(leafaux1.annotations[annotation].alfaAnnot[z1] != null) z1++;
+						leafaux1.annotations[annotation].alfaAnnot[z1] = new phylo.PhyloAnnotation();
+						leafaux1.annotations[annotation].alfaAnnot[z1].myleaf = leafaux1;
+						leafaux1.annotations[annotation].alfaAnnot[z1].text = "";
+						leafaux1.annotations[annotation].alfaAnnot[z1].defaultImg = this.annotations[annotation].defaultImg;
+						leafaux1.annotations[annotation].alfaAnnot[z1].saveAnnotationData(annotation,__map_reserved[target[0]] != null?mapResults.getReserved(target[0]):mapResults.h[target[0]],100,r1);
+					}
+					toComplete--;
+					onDone();
+				}
+			} else {
+				var leafaux2 = this.legacyViewer.geneMap.get(name);
+				leafaux2.activeAnnotation[annotation] = false;
+				leafaux2.annotations[annotation] = null;
+				toComplete--;
+				onDone();
+			}
+		}
+	}
+	,addAnnotData: function(annotData,annotation,option,callback) {
+		var i;
+		var mapResults;
+		mapResults = new haxe.ds.StringMap();
+		var j = 0;
+		var target;
+		var _g1 = 0;
+		var _g = annotData.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			if(annotation == 1) {
+				var aux = annotData[i1].pmid_list;
+				var aux2 = aux.split(";");
+				var max = aux2.length;
+				var v = this.annotations[1].fromresults[1];
+				if(max > v || this.annotations[1].fromresults[1] == null) this.annotations[1].fromresults[1] = max;
+			}
+			target = Std.string(annotData[i1].target_id) + "_" + j;
+			while(__map_reserved[target] != null?mapResults.existsReserved(target):mapResults.h.hasOwnProperty(target)) {
+				j++;
+				target = Std.string(annotData[i1].target_id) + "_" + j;
+			}
+			j = 0;
+			var value = annotData[i1];
+			mapResults.set(target,value);
+		}
+		var items = [];
+		var _g11 = 0;
+		var _g2 = this.rootNode.targets.length;
+		while(_g11 < _g2) {
+			var i2 = _g11++;
+			items[i2] = this.rootNode.targets[i2];
+		}
+		this.processFamilyAnnotations(items,mapResults,annotation,option,callback);
+		var cookies = Cookies;
+		var cookie = cookies.getJSON("annot-icons-tip");
+		if(cookie == null) {
+			var dialog = new phylo.PhyloTooltipWidget(window.document.body,"Click on icons on the tree for more details","Tooltip");
+		}
+	}
+	,showScreenData: function(active,data,mx,my) {
+		if(this.canvas == null) return;
+		if(active == false) {
+			var mxx;
+			mxx = mx + "px";
+			var myy;
+			myy = my + "px";
+			if(data.created == false) {
+				var container = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+				container.hideExportSubMenu();
+				container.hideHelpingDiv();
+				container.hideSubMenuToolBar();
+				data.divAccessed = false;
+				if(this.annotations[data.annotation.type].hasClass != null && this.annotations[data.annotation.type].divMethod != null) {
+					var hook;
+					var clazz;
+					var method;
+					data.suboption = this.annotations[data.annotation.type].optionSelected[0];
+					data.title = this.annotations[data.annotation.type].label;
+					data.family = this.treeName;
+					clazz = this.annotations[data.annotation.type].hasClass;
+					method = this.annotations[data.annotation.type].divMethod;
+					hook = Reflect.field(Type.resolveClass(clazz),method);
+					hook(data,mxx,myy,this.treeType,function(div) {
+						data.created = true;
+						data.div = div;
+						var nn = "";
+						if(data.target != data.targetClean) {
+							if(data.target.indexOf("(") != -1 || data.target.indexOf("-") != -1) {
+								var auxArray = data.target.split("");
+								var j;
+								var _g1 = 0;
+								var _g = auxArray.length;
+								while(_g1 < _g) {
+									var j1 = _g1++;
+									if(auxArray[j1] == "(" || auxArray[j1] == "-") {
+										nn = auxArray[j1 + 1];
+										break;
+									}
+								}
+							}
+						}
+						if(data.annotation.type == 4) {
+							if(data.annotation.text.indexOf(".") != -1) {
+								var auxArray1 = data.annotation.text.split("");
+								var j2;
+								var naux = "";
+								var _g11 = 0;
+								var _g2 = auxArray1.length;
+								while(_g11 < _g2) {
+									var j3 = _g11++;
+									if(auxArray1[j3] != ".") naux += auxArray1[j3];
+								}
+								nn = nn + naux;
+							} else if(data.annotation.text.indexOf("/") != -1) {
+								var auxArray2 = data.annotation.text.split("");
+								var j4;
+								var naux1 = "";
+								var _g12 = 0;
+								var _g3 = auxArray2.length;
+								while(_g12 < _g3) {
+									var j5 = _g12++;
+									if(auxArray2[j5] != "/") naux1 += auxArray2[j5];
+								}
+								nn = nn + naux1;
+							} else nn = nn + data.annotation.text;
+						}
+						var nom = "";
+						if(data.targetClean.indexOf("/") != -1) {
+							var auxArray3 = data.targetClean.split("");
+							var j6;
+							var _g13 = 0;
+							var _g4 = auxArray3.length;
+							while(_g13 < _g4) {
+								var j7 = _g13++;
+								if(auxArray3[j7] != "/") nom += auxArray3[j7];
+							}
+						} else nom = data.targetClean;
+						var id = data.annotation.type + "-" + nom + nn;
+						container.showAnnotWindow(div,mx,my,data.title,id,data);
+					});
+				}
+			} else {
+			}
+		} else if(this.rootNode.divactive != 99999) {
+			if(this.rootNode.screen[this.rootNode.divactive] != null) this.rootNode.screen[this.rootNode.divactive].created = false;
+			this.rootNode.divactive = 99999;
+		}
+	}
+	,closeHelpingDiv: function() {
+		var container = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+		var i = 0;
+		var _g = 0;
+		while(_g < 300000000) {
+			var i1 = _g++;
+		}
+		if(container.hideHelp == true) container.hideHelpingDiv();
+	}
+	,prepareHelpingDiv: function(e,text) {
+		var h = e.ownerCt.y - e.ownerCt.ownerCt.el.dom.scrollTop;
+		var container = saturn.client.WorkspaceApplication.getApplication().getSingleAppContainer();
+		container.hideHelp = true;
+		container.clearHelpingDiv();
+		container.addHtmlTextHelpingDiv(text);
+		container.setTopHelpingDiv(h);
+		container.showHelpingDiv();
+	}
+	,closeAnnotWindows: function() {
+		var app = saturn.client.WorkspaceApplication.getApplication();
+		if(app != null) {
+			var container = app.getSingleAppContainer();
+			var annotWindow = container.annotWindow;
+			var key;
+			var numWindows = 0;
+			var $it0 = annotWindow.keys();
+			while( $it0.hasNext() ) {
+				var key1 = $it0.next();
+				numWindows++;
+			}
+			if(numWindows > 1) saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You have popup windows opened. Do you want to close them?",function() {
+				container.removeAnnotWindows();
+			}); else if(numWindows == 1) container.removeAnnotWindows();
+		}
+	}
+	,changeDefaultOption: function(newDef,groupBtn,btn) {
+		this.jsonFile.btnGroup[groupBtn].buttons[btn].optionSelected[0] = newDef;
+		var currentAnnot = this.jsonFile.btnGroup[groupBtn].buttons[btn].annotCode;
+		var u = this.annotations[currentAnnot].optionSelected[0];
+		if(u != newDef) {
+			var alias = this.annotations[currentAnnot].options[u];
+			if(this.alreadyGotAnnotation.exists(alias) == true) this.alreadyGotAnnotation.remove(alias);
+		}
+		this.annotations[this.jsonFile.btnGroup[groupBtn].buttons[btn].annotCode].optionSelected[0] = newDef;
+		return true;
+	}
+	,getTreeName: function() {
+		return this.treeName + "_" + this.treeType;
+	}
+	,hideAnnotationWindows: function() {
+		var app = saturn.client.WorkspaceApplication.getApplication();
+		if(app != null) {
+			var container = app.getSingleAppContainer();
+			if(container != null) {
+				container.hideExportSubMenu();
+				container.hideHelpingDiv();
+				if(saturn.client.WorkspaceApplication.getApplication().getScreenMode() != saturn.client.ScreenMode.DEFAULT) container.hideSubMenuToolBar();
+			}
+		}
+	}
+	,__class__: saturn.client.programs.chromohub.ChromoHubAnnotationManager
+});
+saturn.client.workspace.ChromoHubWorkspaceObject = $hxClasses["saturn.client.workspace.ChromoHubWorkspaceObject"] = function(object,name) {
+	this.standaloneMode = false;
+	this.newickStr = null;
+	if(object == null) object = new saturn.core.domain.Alignment();
+	if(name == null) name = "Phylogenetic tree";
+	this.iconPath = "/static/js/images/tree_16.png";
+	saturn.client.workspace.WorkspaceObjectBase.call(this,object,name);
+};
+saturn.client.workspace.ChromoHubWorkspaceObject.__name__ = ["saturn","client","workspace","ChromoHubWorkspaceObject"];
+saturn.client.workspace.ChromoHubWorkspaceObject.getNewMenuText = function() {
+	return "Phylogenetic tree";
+};
+saturn.client.workspace.ChromoHubWorkspaceObject.getDefaultFolderName = function() {
+	return "Trees";
+};
+saturn.client.workspace.ChromoHubWorkspaceObject.__super__ = saturn.client.workspace.WorkspaceObjectBase;
+saturn.client.workspace.ChromoHubWorkspaceObject.prototype = $extend(saturn.client.workspace.WorkspaceObjectBase.prototype,{
+	newickStr: null
+	,standaloneMode: null
+	,__class__: saturn.client.workspace.ChromoHubWorkspaceObject
+});
+saturn.client.programs.chromohub.ChromoHubViewer = $hxClasses["saturn.client.programs.chromohub.ChromoHubViewer"] = function() {
+	this.currentWedgeColour = null;
+	this.enableColourAdjustWedge = false;
+	this.config = new phylo.PhyloCanvasConfiguration();
+	this.drawingMode = saturn.client.programs.chromohub.ChromoHubDrawingMode.CIRCULAR;
+	this.subtreeName = null;
+	this.enableColourAdjust = false;
+	this.currentAdjustmentColour = null;
+	this.enableEditMode = true;
+	this.standaloneMode = false;
+	this.tipOfDay = true;
+	this.recovered = false;
+	this.userDomainMessage = true;
+	this.userMessage = true;
+	this.scale = 1.0;
+	this.tipActive = 0;
+	this.newickStr = "";
+	saturn.client.programs.SimpleExtJSProgram.call(this);
+};
+saturn.client.programs.chromohub.ChromoHubViewer.__name__ = ["saturn","client","programs","chromohub","ChromoHubViewer"];
+saturn.client.programs.chromohub.ChromoHubViewer.getQuickLaunchItems = function() {
+	return [{ iconCls : "x-btn-tree", html : "Phylogenetic<br/>ViewerA", cls : "quickLaunchButton", handler : function() {
+		saturn.client.WorkspaceApplication.getApplication().getWorkspace().addObject(new saturn.client.workspace.ChromoHubWorkspaceObject(new saturn.core.domain.Alignment(),"Tree"),true);
+	}, tooltip : { dismissDelay : 10000, text : "Generate a phylogenetic tree from DNA or Protein sequences"}}];
+};
+saturn.client.programs.chromohub.ChromoHubViewer.__super__ = saturn.client.programs.SimpleExtJSProgram;
+saturn.client.programs.chromohub.ChromoHubViewer.prototype = $extend(saturn.client.programs.SimpleExtJSProgram.prototype,{
+	rootNode: null
+	,theComponent: null
+	,radialR: null
+	,internalFrameId: null
+	,currentView: null
+	,canvas: null
+	,dom: null
+	,newickStr: null
+	,geneMap: null
+	,viewOptionsActive: null
+	,controlToolsActive: null
+	,tableActive: null
+	,jsonTipsFile: null
+	,tableAnnot: null
+	,baseTable: null
+	,tips: null
+	,tipActive: null
+	,treeName: null
+	,scale: null
+	,userMessage: null
+	,userDomainMessage: null
+	,treeType: null
+	,centralTargetPanel: null
+	,undolist: null
+	,updatedlist: null
+	,recovered: null
+	,tipOfDay: null
+	,standaloneMode: null
+	,singleAppContainer: null
+	,enableEditMode: null
+	,currentAdjustmentColour: null
+	,enableColourAdjust: null
+	,subtreeName: null
+	,drawingMode: null
+	,config: null
+	,enableColourAdjustWedge: null
+	,currentWedgeColour: null
+	,annotationManager: null
+	,emptyInit: function() {
+		var _g = this;
+		saturn.client.programs.SimpleExtJSProgram.prototype.emptyInit.call(this);
+		this.annotationManager = new saturn.client.programs.chromohub.ChromoHubAnnotationManager(this);
+		this.config.enableTools = true;
+		this.config.enableZoom = true;
+		this.config.enableToolbar = true;
+		this.undolist = [];
+		this.updatedlist = [];
+		this.config.highlightedGenes = new haxe.ds.StringMap();
+		this.geneMap = new haxe.ds.StringMap();
+		this.treeType = "domain";
+		this.annotationManager.treeType = this.treeType;
+		this.treeName = "";
+		this.annotationManager.treeName = this.treeName;
+		this.rootNode = null;
+		this.getJSonViewOptions();
+		this.internalFrameId = "INTERNAL_ALN_FRAME";
+		var self = this;
+		this.theComponent = Ext.create("Ext.panel.Panel",{ flex : 1, title : "ChromoHub Viewer", simpleDrag : true, width : "100%", height : "100%", region : "center", layout : "fit", items : [{ xtype : "component", itemId : this.internalFrameId, autoEl : { tag : "div"}, height : "100%", autoScroll : true, width : "100%"}], listeners : { 'afterrender' : function() {
+			self.initialiseDOMComponent();
+		}, 'render' : $bind(this,this.afterRender), 'resize' : function() {
+			_g.redraw();
+		}}, cls : "x-tree-background"});
+		this.registerDropFolder("Sequences",saturn.client.workspace.WorkspaceObject,true);
+	}
+	,afterRender: function(panel) {
+		var moving = "No";
+		var leaving = false;
+		var current_x;
+		var current_y;
+		var current_mx;
+		var current_my;
+		var new_x;
+		var new_y;
+		var new_mx;
+		var new_my;
+	}
+	,newposition: function(new_x,new_y) {
+		this.canvas.newPosition(new_x,new_y);
+		return;
+	}
+	,redraw: function() {
+		if(this.canvas == null) return; else this.canvas.redraw();
+	}
+	,setTreeFromNewickStr: function(myNewickStr) {
+		if(myNewickStr == "" || myNewickStr == null) return;
+		this.getObject().newickStr = myNewickStr;
+		this.newickStr = myNewickStr;
+		var parent = this.theComponent.down("component").getEl().dom;
+		this.canvas = phylo.PhyloUtil.drawRadialFromNewick(this.newickStr,parent,this.config,this.annotationManager);
+		this.rootNode = this.canvas.rootNode;
+	}
+	,checkAnnotationJSonData: function() {
+		var a = this.getApplication();
+		var atLeastOneBtn = false;
+		var i = 0;
+		var j = 0;
+		var z = 0;
+		var codesUsed;
+		var codesUsed1;
+		var namesUsed;
+		var m = saturn.client.WorkspaceApplication.getApplication();
+		codesUsed1 = new haxe.ds.IntMap();
+		namesUsed = new haxe.ds.StringMap();
+		if(this.annotationManager.jsonFile.btnGroup.length == 0) {
+			a.debug("No buttons groups defined in JSON File");
+			m.showMessage("Alert","Annotations JSon file is not correct.");
+			return false;
+		}
+		while(i < this.annotationManager.jsonFile.btnGroup.length) {
+			j = 0;
+			while(j < this.annotationManager.jsonFile.btnGroup[i].buttons.length) {
+				atLeastOneBtn = true;
+				var btn = this.annotationManager.jsonFile.btnGroup[i].buttons[j];
+				if(btn.isTitle == false) {
+					if(btn.annotCode == null) {
+						a.debug("Annotation without Code assigned");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(codesUsed1.h.hasOwnProperty(btn.annotCode)) {
+						a.debug("Annotation Code already used");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					} else codesUsed1.h[btn.annotCode] = true;
+					if(btn.label == null) {
+						a.debug("Annotation without Name/Label");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(namesUsed.exists(btn.label)) {
+						a.debug("Annotation Name already used");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					} else namesUsed.set(btn.label,true);
+					if(btn.shape == null) {
+						a.debug("Annotation without assigned SHAPE");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(btn.shape != "image" && btn.shape != "text" && btn.shape != "cercle" && btn.shape != "square" && btn.shape != "html") {
+						a.debug("Annotation SHAPE is not supported");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(btn.shape == "image" && btn.annotImg == null) {
+						a.debug("Annotation img path not specified");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(btn.shape != "image" && btn.color == null) {
+						a.debug("Annotation color not specified");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(btn.hookName == null) {
+						a.debug("Annotation mysql alias not specified");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if((btn.hasMethod != null || btn.divMethod != null || btn.familyMethod != "") && btn.hasClass == null) {
+						a.debug("Annotation hasClass needed and not specified");
+						m.showMessage("Alert","Annotations JSon file is not correct.");
+						return false;
+					}
+					if(btn.options != null && btn.options.length > 0) {
+						btn.submenu = true;
+						var optsel = 10000;
+						var z1 = 0;
+					}
+				}
+				j++;
+			}
+			i++;
+		}
+		if(atLeastOneBtn == false) {
+			a.debug("No buttons defined in JSON File");
+			m.showMessage("Alert","Annotations JSon file is not correct.");
+			return false;
+		} else return true;
+	}
+	,fillTipswithJSonData: function() {
+		var i = 0;
+		var j = 0;
+		var z = 0;
+		this.tipActive = this.jsonTipsFile.active;
+		this.tips = [];
+		var b = 0;
+		var _g1 = 0;
+		var _g = this.jsonTipsFile.tips.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			this.tips.push({ position : this.jsonTipsFile.tips[i1].position, title : this.jsonTipsFile.tips[i1].title, html : this.jsonTipsFile.tips[i1].html});
+		}
+	}
+	,updateLegend: function(bntJson,activate) {
+		var currentAnnot = bntJson.annotCode;
+		if(this.annotationManager.annotations[currentAnnot].legend != "") {
+			if(activate == false) this.getApplication().getSingleAppContainer().addImageToLegend(this.annotationManager.annotations[currentAnnot].legend,currentAnnot); else this.getApplication().getSingleAppContainer().removeComponentFromLegend(currentAnnot);
+		}
+	}
+	,zoomIn: function(activeAnnotation) {
+		if(this.standaloneMode) {
+			var container = this.getApplication().getSingleAppContainer();
+			this.annotationManager.closeAnnotWindows();
+			container.hideHelpingDiv();
+		}
+		this.canvas.zoomIn();
+		this.newposition(0,0);
+	}
+	,adviseUser: function(b) {
+		this.userMessage = b;
+	}
+	,adviseDomainUser: function(b) {
+		this.userDomainMessage = b;
+	}
+	,zoomOut: function(activeAnnotation) {
+		if(this.standaloneMode) {
+			var container = this.getApplication().getSingleAppContainer();
+			container.hideHelpingDiv();
+			this.annotationManager.closeAnnotWindows();
+		}
+		this.canvas.zoomOut();
+		this.newposition(0,0);
+	}
+	,setTitle: function(title) {
+		this.theComponent.setTitle(title);
+	}
+	,getComponent: function() {
+		return this.theComponent;
+	}
+	,getRawComponent: function() {
+		return this.theComponent;
+	}
+	,onFocus: function() {
+		saturn.client.programs.SimpleExtJSProgram.prototype.onFocus.call(this);
+		if(this.standaloneMode) this.chromohubOnFocus(); else this.treeViewInterface();
+	}
+	,addCanvasButton: function(button) {
+		if(this.standaloneMode) this.getApplication().getSingleAppContainer().addComponentToCentralPanel(button); else this.getApplication().getToolBar().add(button);
+	}
+	,chromohubOnFocus: function() {
+		var _g = this;
+		if(this.annotationManager.jsonFile != null) {
+			var res = this.checkAnnotationJSonData();
+			if(res == false) {
+				saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","Annotations JSon file is not correct.");
+				return;
+			} else this.annotationManager.fillAnnotationwithJSonData();
+			this.fillTipswithJSonData();
+		}
+		var obj = this.getActiveObject(saturn.client.workspace.ChromoHubWorkspaceObject);
+		var container = this.getApplication().getSingleAppContainer();
+		if(container == null) return;
+		this.getApplication().hideMiddleSouthPanel();
+		if(this.standaloneMode) this.currentView = 0; else this.currentView = 1;
+		container.createControlToolBar();
+		container.addElemToControlToolBar({ iconCls : "x-btn-export-single", handler : function() {
+		}, tooltip : { dismissDelay : 10000, text : "Export table as xls"}});
+		container.createMessageDomainWindow(this);
+		container.hideControlToolBar();
+		container.createEditToolBar();
+		container.addElemToEditToolBar({ iconCls : "x-btn-undo-single", handler : function() {
+		}, tooltip : { dismissDelay : 10000, text : "Undo last action"}});
+		container.addElemToEditToolBar({ iconCls : "x-btn-save-single", handler : function() {
+			if(_g.recovered == true) saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("hookDelTree",[{ 'domain' : _g.subtreeName, 'family' : _g.treeName}],null,false,function(db_results,error) {
+				if(error == null) {
+					if(_g.undolist.length > 0) {
+						var blocks = [];
+						var nodelist;
+						nodelist = new haxe.ds.IntMap();
+						var k = 0;
+						while(_g.undolist.length > 0) {
+							k = _g.undolist.length - 1;
+							var auxpop = _g.undolist.pop();
+							_g.updatedlist[k] = auxpop;
+							k++;
+							var d = auxpop.data;
+							if(nodelist.h.hasOwnProperty(d.nodeId) == false) {
+								var s = { 'nodeId' : d.nodeId, 'family' : _g.subtreeName, 'domain' : _g.treeType, 'nodeX' : auxpop.x, 'nodeY' : auxpop.y, 'angle' : auxpop.angle, 'clock' : auxpop.clock};
+								blocks.push(s);
+								nodelist.h[d.nodeId] = true;
+							}
+						}
+						_g.updatedlist = [];
+						saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("hookUpTree",blocks,null,false,function(db_results1,error1) {
+							if(error1 == null) {
+								_g.getApplication().showMessage("Message","Your changes have been saved.");
+								_g.undolist = [];
+								_g.updatedlist = [];
+								_g.recovered = false;
+								_g.config.editmode = false;
+								container.removeComponentFromEditToolBar("recover");
+								container.hideEditToolBar();
+								_g.undolist = [];
+								if(_g.viewOptionsActive == false) {
+									_g.viewOptionsActive = true;
+									container.showOptionsToolBar();
+								} else {
+									_g.viewOptionsActive = false;
+									container.hideOptionsToolBar();
+									container.hideSubMenuToolBar();
+									if(_g.controlToolsActive == true) container.showControlToolBar();
+								}
+								_g.newposition(0,0);
+							} else saturn.client.WorkspaceApplication.getApplication().debug(error1);
+						});
+					} else {
+						_g.getApplication().showMessage("Message","Your changes have been saved.");
+						_g.undolist = [];
+						_g.recovered = false;
+						_g.config.editmode = false;
+						container.removeComponentFromEditToolBar("recover");
+						container.hideEditToolBar();
+						_g.undolist = [];
+						_g.updatedlist = [];
+						if(_g.viewOptionsActive == false) {
+							_g.viewOptionsActive = true;
+							container.showOptionsToolBar();
+						} else {
+							_g.viewOptionsActive = false;
+							container.hideOptionsToolBar();
+							container.hideSubMenuToolBar();
+							if(_g.controlToolsActive == true) container.showControlToolBar();
+						}
+						_g.newposition(0,0);
+					}
+				} else saturn.client.WorkspaceApplication.getApplication().debug(error);
+			}); else if(_g.undolist.length > 0) {
+				var blocks1 = [];
+				var nodelist1;
+				nodelist1 = new haxe.ds.IntMap();
+				var k1 = 0;
+				while(_g.undolist.length > 0) {
+					k1 = _g.undolist.length - 1;
+					var auxpop1 = _g.undolist.pop();
+					_g.updatedlist[k1] = auxpop1;
+					k1++;
+					var d1 = auxpop1.data;
+					if(nodelist1.h.hasOwnProperty(d1.nodeId) == false) {
+						var s1 = { 'nodeId' : d1.nodeId, 'family' : _g.treeName, 'domain' : _g.treeType, 'nodeX' : auxpop1.x, 'nodeY' : auxpop1.y, 'angle' : auxpop1.angle, 'clock' : auxpop1.clock};
+						blocks1.push(s1);
+						nodelist1.h[d1.nodeId] = true;
+					}
+				}
+				saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("hookUpTree",blocks1,null,false,function(db_results2,error2) {
+					if(error2 == null) {
+						_g.getApplication().showMessage("Message","Your changes have been saved.");
+						_g.undolist = [];
+						_g.recovered = false;
+						_g.config.editmode = false;
+						container.hideEditToolBar();
+						_g.undolist = [];
+						if(_g.viewOptionsActive == false) {
+							_g.viewOptionsActive = true;
+							container.showOptionsToolBar();
+						} else {
+							_g.viewOptionsActive = false;
+							container.hideOptionsToolBar();
+							container.hideSubMenuToolBar();
+							container.hideExportSubMenu();
+							container.hideHelpingDiv();
+							if(_g.controlToolsActive == true) container.showControlToolBar();
+						}
+						_g.newposition(0,0);
+					} else saturn.client.WorkspaceApplication.getApplication().debug(error2);
+				});
+			}
+		}, tooltip : { dismissDelay : 10000, text : "Save Tree"}});
+		this.config.editmode = false;
+		container.hideEditToolBar();
+		this.undolist = [];
+		container.createOptionsToolBar();
+		container.hideOptionsToolBar();
+		container.createSubMenuToolBar();
+		container.createHelpingDiv();
+		container.createExportSubMenu(this);
+		container.hideSubMenuToolBar();
+		container.hideExportSubMenu();
+		container.hideHelpingDiv();
+		container.createPopUpWindow();
+		container.hidePopUpWindow();
+		var mapFam = new haxe.ds.StringMap();
+		this.createBtnsForLandingPage(true,mapFam);
+		this.createTargetCentralPanel();
+		container.addComponentToCentralPanel(this.centralTargetPanel);
+		var modeToolBar = container.getModeToolBar();
+		this.addBtnsToMainToolBar(false);
+		var cookies = Cookies;
+		var cookie = cookies.getJSON("tipday");
+		if(cookie == null) this.showTipOfTheDay();
+	}
+	,refreshOptionsToolBar: function(active) {
+		var container = this.getApplication().getSingleAppContainer();
+		container.updateOptionsToolBar(active);
+	}
+	,addControlBtnsToCentralPanel: function() {
+		var _g = this;
+		if(this.standaloneMode) {
+			var text;
+			if(this.treeType == "domain") text = " tree based on alignment of the " + this.treeName + " domain"; else text = " tree based on alignment of full-length proteins";
+			if(this.treeName != null) text = this.treeName + text;
+			this.config.title = text;
+			var container = this.getApplication().getSingleAppContainer();
+		} else {
+			this.addCanvasButton({ iconCls : "x-btn-export", text : "Export SVG", handler : function() {
+				_g.exportSVG();
+			}, tooltip : { dismissDelay : 10000, text : "Export tree as SVG (open in Illustrator or Inkscape)"}});
+			this.addCanvasButton({ iconCls : "x-btn-export", text : "Export PNG", handler : function() {
+				_g.exportPNG();
+			}, tooltip : { dismissDelay : 10000, text : "Export tree as PNG"}});
+			this.addCanvasButton({ iconCls : "x-btn-copy", text : "Update", handler : function() {
+				_g.updateAlignment();
+			}, tooltip : { dismissDelay : 10000, text : "Update tree with current sequences"}});
+			this.addCanvasButton({ iconCls : "x-btn-copy", text : "Import Protein", handler : function() {
+				_g.addAllProteinSequencesFromWorkspace();
+			}, tooltip : { dismissDelay : 10000, text : "Import all protein sequences from the workspace (click update to update tree)"}});
+			this.addCanvasButton({ iconCls : "x-btn-copy", text : "Import DNA", handler : function() {
+				_g.addAllDNASequencesFromWorkspace();
+			}, tooltip : { dismissDelay : 10000, text : "Import all DNA sequences from the workspace (click update to update tree)"}});
+			this.addCanvasButton({ cls : "x-btn-magplus", xtype : "button", handler : function() {
+				_g.zoomIn(_g.annotationManager.activeAnnotation);
+			}, tooltip : { dismissDelay : 10000, text : "Zoom in on tree"}});
+			this.addCanvasButton({ cls : "x-btn-magminus", xtype : "button", handler : function() {
+				_g.zoomOut(_g.annotationManager.activeAnnotation);
+			}, tooltip : { dismissDelay : 10000, text : "Zoom out of tree"}});
+		}
+	}
+	,redrawTree: function() {
+		this.setTreeFromNewickStr(this.newickStr);
+	}
+	,updateAlignment: function() {
+		var _g = this;
+		var self = this;
+		var objectIds = this.getState().getReferences("Sequences");
+		var strBuf = new StringBuf();
+		var _g1 = 0;
+		while(_g1 < objectIds.length) {
+			var objectId = objectIds[_g1];
+			++_g1;
+			var w0 = this.getWorkspace().getObject(objectId);
+			if(js.Boot.__instanceof(w0,saturn.client.workspace.DNAWorkspaceObject)) {
+				var object = this.getWorkspace().getObjectSafely(objectId,saturn.client.workspace.DNAWorkspaceObject);
+				strBuf.add(">" + w0.getName() + "\n" + object.getObject().getSequence() + "\n");
+			} else if(js.Boot.__instanceof(w0,saturn.client.workspace.ProteinWorkspaceObject)) {
+				var object1;
+				object1 = js.Boot.__cast(w0 , saturn.client.workspace.ProteinWorkspaceObject);
+				strBuf.add(">" + w0.getName() + "\n" + object1.getObject().getSequence() + "\n");
+			} else {
+				var d = w0;
+				strBuf.add(">" + Std.string(d.getName()) + "\n" + Std.string(d.getSequence()) + "\n");
+			}
+		}
+		saturn.client.BioinformaticsServicesClient.getClient().sendPhyloReportRequest(strBuf.b,function(response,error) {
+			if(error == null) {
+				var phyloReport = response.json.phyloReport;
+				var location = window.location;
+				var dstURL = location.protocol + "//" + location.hostname + ":" + location.port + "/" + phyloReport;
+				Ext.Ajax.request({ url : dstURL, success : function(response1,opts) {
+					var obj = response1.responseText;
+					self.setTreeFromNewickStr(obj);
+				}, failure : function(response2,opts1) {
+				}});
+			} else _g.getApplication().showMessage("Tree generation error",error);
+		});
+	}
+	,addAllDNASequencesFromWorkspace: function() {
+		this.registerAllFromWorkspace(saturn.client.workspace.DNAWorkspaceObject,"Sequences");
+	}
+	,addAllProteinSequencesFromWorkspace: function() {
+		this.registerAllFromWorkspace(saturn.client.workspace.ProteinWorkspaceObject,"Sequences");
+	}
+	,treeViewInterface: function() {
+		var container = this.getApplication().getSingleAppContainer();
+		if(!this.standaloneMode || this.currentView != 1) {
+			if(this.standaloneMode && this.treeName == "" && this.newickStr == "") {
+				if(this.currentView == 0) this.getApplication().showMessage("Alert","Please select a family"); else if(this.currentView == 2) saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","This functionality is not available. Please select a family domain from Home page.");
+				return false;
+			} else {
+				this.currentView = 1;
+				if(this.standaloneMode) {
+					if(this.canvas != null) {
+						this.canvas.destroy();
+						this.canvas = null;
+					}
+					container.setCentralComponent(this.theComponent);
+					this.theComponent.doLayout();
+					if($bind(container,container.getControlToolBar) != null) container.hideControlToolBar();
+					this.viewOptionsActive = true;
+					var modeToolBar = container.getModeToolBar();
+					container.clearModeToolBar();
+					this.addBtnsToMainToolBar(false);
+					if($bind(container,container.getOptionsToolBar) != null) {
+						this.annotationManager.createViewOptions();
+						container.clearOptionsToolBar();
+						container.addElemToOptionsToolBar(this.annotationManager.viewOptions);
+						container.optionsToolBar.doLayout();
+						container.showOptionsToolBar();
+					}
+					container.legendPanel = null;
+					container.createLegendPanel();
+					var i;
+					var needToExpandLegend = false;
+					var _g1 = 0;
+					var _g = this.annotationManager.activeAnnotation.length;
+					while(_g1 < _g) {
+						var i1 = _g1++;
+						if(this.annotationManager.activeAnnotation[i1] == true) {
+							needToExpandLegend = true;
+							container.addImageToLegend(this.annotationManager.annotations[i1].legend,i1);
+						}
+					}
+					if(needToExpandLegend == true) container.legendPanel.expand();
+				}
+				this.addControlBtnsToCentralPanel();
+				if(this.standaloneMode) this.theComponent.doLayout();
+				return true;
+			}
+		} else if(this.config.editmode == true) return true; else return false;
+	}
+	,renderTable: function() {
+		if(!this.standaloneMode) return;
+		var container = this.getApplication().getSingleAppContainer();
+		this.config.editmode = false;
+		container.hideEditToolBar();
+		this.undolist = [];
+		this.currentView = 2;
+		if(this.canvas != null) {
+			this.canvas.destroy();
+			this.canvas = null;
+		}
+		container.setCentralComponent(this.theComponent);
+		this.theComponent.doLayout();
+		container.hideSubMenuToolBar();
+		container.hideOptionsToolBar();
+		var modeToolBar = container.getModeToolBar();
+		container.clearModeToolBar();
+		this.addBtnsToMainToolBar(true);
+		this.generateAnnotTable();
+	}
+	,tableViewFunction: function() {
+		var container = this.getApplication().getSingleAppContainer();
+		container.hideExportSubMenu();
+		container.hideHelpingDiv();
+		this.annotationManager.closeAnnotWindows();
+		if(this.currentView != 2) {
+			if(this.annotationManager.annotations[1] != null && this.annotationManager.annotations[1].fromresults != null) this.annotationManager.annotations[1].fromresults[1] = 0;
+			if(this.treeName == "") {
+				if(this.annotationManager.searchedGenes.length == 0) saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","Use the search box on your righ to add genes."); else this.renderTable();
+			} else {
+				var keepgoing = false;
+				if(this.config.editmode == true) {
+					if(this.undolist.length > 0) saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You are going to lose your changes. Do you want to continue?",$bind(this,this.renderTable)); else keepgoing = true;
+				} else keepgoing = true;
+				if(keepgoing == true) {
+					container.showProgressBar();
+					this.renderTable();
+				}
+			}
+		} else this.generateAnnotTable();
+	}
+	,generateAnnotTable: function() {
+		var _g = this;
+		if(!this.standaloneMode) return;
+		this.currentView = 2;
+		var type = "";
+		if(this.treeName == "" || this.newickStr == "") type = "genes"; else type = "family";
+		var d;
+		d = [];
+		var ti = 0;
+		this.annotationManager.fillInDataInAnnotTable(type,function(d1,error) {
+			if(error != null) saturn.core.Util.debug("An error has occurred");
+			if(d1 != null) {
+				_g.tableAnnot = new saturn.core.Table();
+				_g.tableAnnot.setFixedRowHeight(120);
+				_g.tableAnnot.setData(d1);
+				var title = "Annotation Table";
+				if(_g.treeName != "") title = title + " for " + _g.treeName;
+				_g.tableAnnot.setTitle(title);
+				_g.tableAnnot.name = "Annotations Table";
+				_g.baseTable = new saturn.client.programs.blocks.BaseTable(null,null,"Annotations Table",null,false,false);
+				_g.baseTable.reconfigure(_g.tableAnnot.tableDefinition);
+				_g.baseTable.addListener(function(event) {
+					_g.annotationManager.closeAnnotWindows();
+				});
+				var tt = _g.baseTable.getComponent();
+				tt.addCls("x-tableAnnot");
+				var container = _g.getApplication().getSingleAppContainer();
+				container.setCentralComponent(_g.theComponent);
+				container.addComponentToCentralPanel(tt);
+				_g.theComponent.doLayout();
+				container.hideProgressBar();
+			}
+		});
+	}
+	,rebuildBtns: function(results) {
+		var container = this.getApplication().getSingleAppContainer();
+		container.setCentralComponent(this.theComponent);
+		this.theComponent.doLayout();
+		var mapFam;
+		mapFam = new haxe.ds.StringMap();
+		var i;
+		var _g1 = 0;
+		var _g = results.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			if(mapFam.exists(results[i1].family) == false) mapFam.set(results[i1].family,true);
+		}
+		this.createBtnsForLandingPage(false,mapFam);
+		this.createTargetCentralPanel();
+		container.addComponentToCentralPanel(this.centralTargetPanel);
+		var centralPanel = container.getCentralPanel();
+		centralPanel.doLayout();
+	}
+	,renderHome: function() {
+		var _g = this;
+		if(!this.standaloneMode) return;
+		var container = this.getApplication().getSingleAppContainer();
+		container.clearCentralPanel();
+		container.hideHelpingDiv();
+		var centralPanel = container.getCentralPanel();
+		centralPanel.doLayout();
+		this.config.editmode = false;
+		container.hideEditToolBar();
+		this.undolist = [];
+		this.currentView = 0;
+		var mapFam;
+		mapFam = new haxe.ds.StringMap();
+		this.createBtnsForLandingPage(false,mapFam);
+		var itemslist = this.centralTargetPanel.items;
+		itemslist.each(function(item,index,length) {
+			_g.centralTargetPanel.remove(item,false);
+		});
+		this.centralTargetPanel.doLayout();
+		this.treeTypeSelection.doLayout();
+		this.createTargetCentralPanel();
+		centralPanel.doLayout();
+		if(this.canvas != null) {
+			this.canvas.destroy();
+			this.canvas = null;
+		}
+		container.setCentralComponent(this.theComponent);
+		this.theComponent.doLayout();
+		container.hideExportSubMenu();
+		if($bind(container,container.getOptionsToolBar) != null) container.hideOptionsToolBar();
+		if($bind(container,container.getSubMenuToolBar) != null) container.hideSubMenuToolBar();
+		if($bind(container,container.getControlToolBar) != null) container.hideControlToolBar();
+		var modeToolBar = container.getModeToolBar();
+		container.clearModeToolBar();
+		this.addBtnsToMainToolBar(false);
+		container.addComponentToCentralPanel(this.centralTargetPanel);
+		centralPanel.doLayout();
+	}
+	,showTipOfTheDay: function() {
+		if(this.tips == null || this.tips.length == 0) return;
+		var container = this.getApplication().getSingleAppContainer();
+		var mydom;
+		mydom = window.document.childNodes[0];
+		var top;
+		var left;
+		var width;
+		var height;
+		var w = mydom.clientWidth;
+		width = w * 0.6 | 0;
+		left = w * 0.2 | 0;
+		var h = mydom.clientHeight;
+		height = h | 0;
+		top = h * 0.15 | 0;
+		if(container.getTipWindow() == null) {
+			var title = this.tips[this.tipActive].title;
+			var html = this.tips[this.tipActive].html;
+			var text = "<h2>" + title + "</h2>" + html;
+			container.createTipWindow(this,top,left,width,height,text);
+		} else container.showTipWindow();
+	}
+	,addBtnsToMainToolBar: function(searchField) {
+		var _g = this;
+		if(!this.standaloneMode) return;
+		var container = this.getApplication().getSingleAppContainer();
+		container.addElemToModeToolBar({ cls : this.currentView == 0?"btn-selected":"", xtype : "button", text : "Home", handler : function() {
+			if(_g.currentView != 0) {
+				var container1 = _g.getApplication().getSingleAppContainer();
+				container1.hideExportSubMenu();
+				container1.hideHelpingDiv();
+				_g.annotationManager.closeAnnotWindows();
+				if(_g.annotationManager.annotations[1] != null && _g.annotationManager.annotations[1].fromresults != null) _g.annotationManager.annotations[1].fromresults[1] = 0;
+				var keepgoing = false;
+				if(_g.config.editmode == true) {
+					if(_g.undolist.length > 0) saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You are going to lose your changes. Do you want to continue?",$bind(_g,_g.renderHome)); else keepgoing = true;
+				} else keepgoing = true;
+				if(keepgoing == true) _g.renderHome();
+			}
+		}, tooltip : { dismissDelay : 10000, text : "Protein Family Selection"}});
+		container.addElemToModeToolBar({ cls : this.currentView == 1?"btn-selected":"", xtype : "button", text : "Tree View", handler : function() {
+			if(_g.treeName == "") {
+				if(_g.currentView == 0) _g.getApplication().showMessage("Alert","Please select a family"); else if(_g.currentView == 2) saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","This functionality is not available. Please select a family domain from Home page.");
+			} else {
+				_g.annotationManager.menuScroll = 0;
+				if(_g.annotationManager.annotations[1] != null && _g.annotationManager.annotations[1].fromresults != null) _g.annotationManager.annotations[1].fromresults[1] = 0;
+				_g.showTree(_g.newickStr);
+				var elem = window.document.getElementById("optionToolBarId");
+				elem.scrollTop = _g.annotationManager.menuScroll;
+			}
+		}, tooltip : { dismissDelay : 10000, text : "Phylogenetic Viewer"}});
+		container.addElemToModeToolBar({ cls : this.currentView == 2?"btn-selected":"", xtype : "button", text : "Annotation Table", handler : $bind(this,this.tableViewFunction), tooltip : { dismissDelay : 10000, text : "Annotation List"}});
+		if(searchField == true && this.treeName == "") {
+			container.addElemToModeToolBar({ xtype : "label", text : "Add Genes", cls : "addGene-menu-title", handler : function() {
+			}, tooltip : { text : "", dismissDelay : 0}, iconCls : ""});
+			var searchFieldObj = this.getApplication().getGlobalSearchFieldObj();
+			searchFieldObj.setValue("");
+			container.addElemToModeToolBar(searchFieldObj);
+		}
+		container.addElemToModeToolBar({ cls : this.currentView == 3?"btn-selected":"", xtype : "button", text : "Help", handler : function() {
+			var keepgoing1 = false;
+			var container2 = _g.getApplication().getSingleAppContainer();
+			container2.hideHelpingDiv();
+			if(_g.config.editmode == true) {
+				if(_g.undolist.length > 0) saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You are going to lose your changes. Do you want to continue?",function() {
+					keepgoing1 = false;
+					_g.config.editmode = false;
+					container2.viewClose(true);
+					container2.hideEditToolBar();
+					_g.undolist = [];
+					if(_g.viewOptionsActive == false) {
+						_g.viewOptionsActive = true;
+						container2.showOptionsToolBar();
+					}
+					_g.newposition(0,0);
+				}); else keepgoing1 = true;
+			} else keepgoing1 = true;
+			if(keepgoing1 == true) {
+				_g.config.editmode = false;
+				container2.hideEditToolBar();
+				_g.undolist = [];
+				if(_g.viewOptionsActive == false) {
+					_g.viewOptionsActive = true;
+					container2.showOptionsToolBar();
+				}
+				_g.showTipOfTheDay();
+			}
+		}, tooltip : { dismissDelay : 10000, text : "Help"}});
+	}
+	,redrawTable: function() {
+		var _g = this;
+		var type = "";
+		if(this.treeName == "" || this.newickStr == "") type = "genes"; else type = "family";
+		var leaves;
+		if(type == "family") leaves = this.canvas.rootNode.targets; else leaves = this.annotationManager.searchedGenes;
+		var d = this.annotationManager.dataforTable(this.annotationManager.annotations,leaves);
+		this.tableAnnot = new saturn.core.Table();
+		this.tableAnnot.setFixedRowHeight(120);
+		this.tableAnnot.setData(d);
+		var title = "Annotation Table";
+		if(this.treeName != "") title = title + " for " + this.treeName;
+		this.tableAnnot.setTitle(title);
+		this.tableAnnot.name = "Annotations Table";
+		this.baseTable = new saturn.client.programs.blocks.BaseTable(null,null,"Annotations Table",null,false,false);
+		this.baseTable.reconfigure(this.tableAnnot.tableDefinition);
+		this.baseTable.addListener(function(event) {
+			_g.annotationManager.closeAnnotWindows();
+		});
+		var tt = this.baseTable.getComponent();
+		tt.addCls("x-tableAnnot");
+		var container = this.getApplication().getSingleAppContainer();
+		container.setCentralComponent(this.theComponent);
+		container.addComponentToCentralPanel(tt);
+		this.theComponent.doLayout();
+		container.hideProgressBar();
+	}
+	,generateFamilyDomainList: function(families) {
+		var i;
+		var tt;
+		tt = "";
+		var _g1 = 0;
+		var _g = families.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			tt += "<a id=\"myLink\" title=\"Click to visualize family domain tree\"  href=\"#\" onclick=\"app.getActiveProgram().changeToFamilyDomain('" + Std.string(families[i1].family) + "')\";return false;\">" + Std.string(families[i1].family) + "</a> ";
+		}
+		return tt;
+	}
+	,changeToFamilyDomain: function(treeName) {
+		var _g = this;
+		saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You are going to lose your gene list. Do you want to continue?",function() {
+			_g.treeName = treeName;
+			_g.annotationManager.searchedGenes = [];
+			_g.geneMap = new haxe.ds.StringMap();
+			_g.generateTree(treeName,_g.treeType);
+		});
+	}
+	,myDoLayout: function(el) {
+		el.doLayout();
+	}
+	,createTargetCentralPanel: function() {
+		var _g = this;
+		this.centralTargetPanel = Ext.create("Ext.panel.Panel",{ region : "center", cls : "x-page-targetclass", autoScroll : true, listeners : { resize : { fn : function(el) {
+			_g.myDoLayout(el);
+		}}, render : { fn : function(el1) {
+			_g.myDoLayout(el1);
+		}}}});
+		var title = "Search/Add Genes";
+		this.centralTargetPanel.add({ xtype : "label", text : title, cls : "searchgene-title", handler : function() {
+		}, tooltip : { text : "", dismissDelay : 0}, iconCls : ""});
+		var sobj = this.getApplication().getGlobalSearchFieldObj();
+		this.centralTargetPanel.add(sobj);
+		this.centralTargetPanel.add(this.treeTypeSelection);
+		this.centralTargetPanel.add({ xtype : "label", text : "Chemical Modification of Proteins", cls : "targetclass-title"});
+		this.centralTargetPanel.add(Ext.create("Ext.panel.Panel",{ width : "100%", layout : "hbox", bodyPadding : "10px 0px", cls : "x-table-targeticons", defaults : { frame : true, bodyPadding : 10}, items : [{ title : "Writers", flex : 3, xtype : "panel", items : this.chmodproWriters},{ title : "Readers", flex : 6, xtype : "panel", items : this.chmodproReaders},{ title : "Erasers", flex : 3, xtype : "panel", items : this.chmodproErasers}]}));
+		this.centralTargetPanel.doLayout();
+		this.centralTargetPanel.add(Ext.create("Ext.panel.Panel",{ layout : "hbox", cls : "x-table-targetgroup", defaults : { frame : false, bodyPadding : 0}, items : [{ title : "Chemical Modifications of DNA", flex : 4, margin : "0 10 0 0", xtype : "panel", layout : "column", cls : "chmodDRnagroup", items : this.chmodDna},{ title : "Chemical Modifications of RNA", flex : 4, margin : "0 10 0 0", xtype : "panel", layout : "column", cls : "chmodDRnagroup", items : this.chmodRna}]}));
+		this.centralTargetPanel.doLayout();
+		var items = [{ title : "Chromation Remodelling", flex : 2, margin : "0 10 0 0", xtype : "panel", items : this.chromatin},{ title : "Histones", flex : 1, margin : "0 10 0 0", xtype : "panel", items : this.histones},{ title : "WDR", flex : 1, margin : "0 10 0 0", xtype : "panel", items : this.wdr},{ title : "NUDIX", flex : 3, margin : "0 10 0 0", xtype : "panel", items : this.nudix},{ title : " ", flex : 1, margin : "0 10 0 0", xtype : "panel", cls : "x-target-addmore", items : this.addicon}];
+		this.centralTargetPanel.add(Ext.create("Ext.panel.Panel",{ layout : "hbox", bodyPadding : 10, cls : "x-table-targetlasticons", defaults : { frame : false, bodyPadding : "10 10 10 0"}, items : items}));
+		this.centralTargetPanel.doLayout();
+		this.centralTargetPanel.add({ xtype : "panel", html : "If you find this resource helpful in your research, thank you for citing the following article:<br>\r\n                   Liu L, Zhen XT, Denton E, Marsden BD, Schapira M., Bioinformatics (2012): <b>ChromoHub: a data hub for navigators of chromatin-mediated signalling</b> <a href=\"http://www.ncbi.nlm.nih.gov/pubmed/22718786\" target=\"_blank\">[pubmed]</a>", cls : "targetclass-citation"});
+	}
+	,setAlignmentURL: function(alignmentURL) {
+		var frame = this.theComponent.getComponent(this.internalFrameId).getEl().dom;
+		frame.src = alignmentURL;
+		this.getActiveAlignmentObject().setAlignmentURL(alignmentURL);
+	}
+	,getActiveAlignmentObject: function() {
+		var activeObject = saturn.client.programs.SimpleExtJSProgram.prototype.getActiveObject.call(this,saturn.client.workspace.ChromoHubWorkspaceObject);
+		if(activeObject != null) {
+			var w0;
+			w0 = js.Boot.__cast(activeObject , saturn.client.workspace.ChromoHubWorkspaceObject);
+			return w0.getObject();
+		} else return null;
+	}
+	,setActiveObject: function(objectId) {
+		saturn.client.programs.SimpleExtJSProgram.prototype.setActiveObject.call(this,objectId);
+		this.standaloneMode = this.getObject().standloneMode;
+		if(!this.standaloneMode) this.setTreeFromNewickStr(this.getObject().newickStr);
+	}
+	,exportPNG: function() {
+	}
+	,exportSVG: function() {
+	}
+	,getCentralPanelLayout: function() {
+		return "hbox";
+	}
+	,showTree: function(myNewickStr) {
+		var _g = this;
+		var container = null;
+		if(this.standaloneMode) {
+			container = this.getApplication().getSingleAppContainer();
+			container.hideHelpingDiv();
+			if(container.getExportSubMenu() != null) container.hideExportSubMenu();
+			this.annotationManager.closeAnnotWindows();
+		}
+		var keepgoing = false;
+		if(this.recovered == true) keepgoing = true; else if(this.config.editmode == true) {
+			if(this.undolist.length > 0) saturn.client.WorkspaceApplication.getApplication().userPrompt("Question","You are going to lose your changes. Do you want to continue?",function() {
+				keepgoing = false;
+				_g.config.editmode = false;
+				if(_g.standaloneMode) {
+					container.viewClose(true);
+					container.hideEditToolBar();
+				}
+				_g.undolist = [];
+				if(_g.viewOptionsActive == false) {
+					_g.viewOptionsActive = true;
+					if(_g.standaloneMode) container.showOptionsToolBar();
+				}
+				_g.annotationManager.activeAnnotation = [];
+				var go = _g.treeViewInterface();
+				if(go == true) {
+					var a = _g.annotationManager.annotations;
+					_g.setTreeFromNewickStr(myNewickStr);
+					_g.rootNode.targetFamily = _g.treeName;
+				}
+				_g.newposition(0,0);
+				var elem = window.document.getElementById("optionToolBarId");
+				elem.scrollTop = _g.annotationManager.menuScroll;
+			}); else keepgoing = true;
+		} else keepgoing = true;
+		if(keepgoing == true) {
+			if(this.recovered == false) {
+				this.undolist = [];
+				if(this.viewOptionsActive == false) {
+					this.viewOptionsActive = true;
+					if(this.standaloneMode) container.showOptionsToolBar();
+					var elem1 = window.document.getElementById("optionToolBarId");
+					elem1.scrollTop = this.annotationManager.menuScroll;
+				}
+			}
+			this.annotationManager.activeAnnotation = [];
+			var go1 = this.treeViewInterface();
+			if(this.recovered == false) {
+				this.config.editmode = false;
+				if(this.standaloneMode) container.hideEditToolBar();
+			}
+			if(go1 == true) {
+				var a1 = this.annotationManager.annotations;
+				this.setTreeFromNewickStr(myNewickStr);
+				if(this.standaloneMode) container.viewClose(true);
+				this.rootNode.targetFamily = this.treeName;
+			}
+			this.newposition(0,0);
+			var nav = window.navigator.appName;
+			if(this.standaloneMode) {
+				var elem2 = window.document.getElementById("optionToolBarId");
+				elem2.scrollTop = this.annotationManager.menuScroll;
+			}
+		}
+	}
+	,showSearchedGenes: function(targetId) {
+		var _g = this;
+		if(this.currentView == 0) saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getFamilies",{ gene : "%" + targetId + "%"},null,true,function(db_results,error) {
+			if(error == null) _g.rebuildBtns(db_results); else saturn.client.WorkspaceApplication.getApplication().debug(error);
+		});
+	}
+	,showAddedGenes: function(targetId) {
+		this.treeName = "";
+		this.annotationManager.treeName = "";
+		this.treeType = "gene";
+		this.newickStr = "";
+		if(this.geneMap.exists(targetId) == true) saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","This gene already exists in the gene list."); else {
+			this.annotationManager.searchedGenes[this.annotationManager.searchedGenes.length] = targetId;
+			var geneNode = new phylo.PhyloTreeNode(null,targetId,true,0);
+			geneNode.l = 1;
+			geneNode.annotations = [];
+			geneNode.activeAnnotation = [];
+			this.geneMap.set(targetId,geneNode);
+			if(this.currentView == 0) {
+				this.treeName = "";
+				this.annotationManager.treeName = "";
+				this.tableViewFunction();
+			} else if(this.currentView == 2) this.generateAnnotTable();
+		}
+	}
+	,generateTree: function(name,type,subtreeName) {
+		var _g = this;
+		this.annotationManager.treeName = name;
+		this.annotationManager.subtreeName = subtreeName;
+		this.annotationManager.treeType = this.treeType;
+		this.config.drawingMode = phylo.PhyloDrawingMode.CIRCULAR;
+		saturn.client.WorkspaceApplication.getApplication().debug(name);
+		this.annotationManager.searchedGenes = [];
+		this.config.highlightedGenes = new haxe.ds.StringMap();
+		this.geneMap = new haxe.ds.StringMap();
+		if((name == "KAT" || name == "E1" || name == "E2" || name == "NON_USP" || name == "USP" || name == "Histone" || name == "MACRO" || name == "WDR" || name == "NUDIX") && type == "domain") {
+			if(this.userDomainMessage == true) {
+				var container = this.getApplication().getSingleAppContainer();
+				container.showMessageDomainWindow();
+			}
+			this.treeType = "gene";
+			this.annotationManager.treeType = this.treeType;
+			type = this.treeType;
+		}
+		if(subtreeName == null) subtreeName = name;
+		saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getNewickStr",{ family : subtreeName, type : type},null,true,function(db_results,error) {
+			if(error == null) {
+				if(_g.treeName.indexOf("/") != -1) {
+					var aux = _g.treeName.split("/");
+					_g.treeName = aux[1];
+					_g.annotationManager.treeName = _g.treeName;
+				}
+				_g.setNewickStr(db_results[0].newickstr);
+			} else saturn.client.WorkspaceApplication.getApplication().debug(error);
+		});
+	}
+	,setNewickStr: function(newickStr) {
+		var _g = this;
+		var myNewickStr = newickStr;
+		if(myNewickStr == "") saturn.client.WorkspaceApplication.getApplication().debug("newickstr is empty"); else {
+			this.showTree(myNewickStr);
+			if(this.recovered == false && this.treeName != null) saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getTreeUpdates",{ family : this.subtreeName, domain : this.treeType},null,false,function(results,error) {
+				if(error == null && results.length != 0) {
+					var i = 0;
+					var auxlist;
+					auxlist = [];
+					_g.updatedlist = [];
+					var _g2 = 0;
+					var _g1 = results.length;
+					while(_g2 < _g1) {
+						var i1 = _g2++;
+						_g.updatedlist.push(results[i1]);
+						auxlist.push(results[i1]);
+					}
+					var j = 0;
+					while(auxlist.length > 0) {
+						var node;
+						var alpha;
+						var n;
+						var auxpop = auxlist.pop();
+						var z = 0;
+						var d;
+						d = null;
+						var _g21 = 0;
+						var _g11 = _g.rootNode.screen.length;
+						while(_g21 < _g11) {
+							var z1 = _g21++;
+							if(_g.rootNode.screen[z1].nodeId == auxpop.nodeId) d = _g.rootNode.screen[z1];
+						}
+						node = _g.rootNode.nodeIdToNode.h[auxpop.nodeId];
+						node.x = auxpop.nodeX;
+						node.y = auxpop.nodeY;
+						node.angle = auxpop.angle;
+						if(auxpop.clock == true) alpha = 0.3; else alpha = -0.3;
+						node.x = (node.x - d.parentx) * Math.cos(alpha) - (node.y - d.parenty) * Math.sin(alpha) + d.parentx;
+						node.y = (node.x - d.parentx) * Math.sin(alpha) + (node.y - d.parenty) * Math.cos(alpha) + d.parenty;
+						node.angle = node.angle + alpha;
+						n = node.angle;
+						var i2 = 0;
+						while(i2 < node.children.length) {
+							node.children[i2].wedge = node.children[i2].l / node.children[i2].root.l * 2 * Math.PI + Math.PI / 20;
+							node.children[i2].angle = n;
+							n = n + node.children[i2].wedge;
+							if(_g.drawingMode == saturn.client.programs.chromohub.ChromoHubDrawingMode.STRAIGHT) node.children[i2].preOrderTraversal2(0); else if(_g.drawingMode == saturn.client.programs.chromohub.ChromoHubDrawingMode.CIRCULAR) node.children[i2].preOrderTraversal(0);
+							i2++;
+						}
+						_g.newposition(0,0);
+					}
+				} else if(error != null) saturn.client.WorkspaceApplication.getApplication().debug("Error getting the tree updates from the db: " + error); else saturn.client.WorkspaceApplication.getApplication().debug("No tree updates from the db");
+			});
+		}
+	}
+	,treeTypeSelection: null
+	,chmodproWriters: null
+	,chmodproReaders: null
+	,chmodproErasers: null
+	,chmodDnaWriters: null
+	,chmodDnaReaders: null
+	,chmodDnaErasers: null
+	,chmodRnaWriters: null
+	,chmodRnaReaders: null
+	,chmodRnaErasers: null
+	,nudix: null
+	,chromatin: null
+	,histones: null
+	,wdr: null
+	,addicon: null
+	,chmodDna: null
+	,chmodRna: null
+	,ubiButtons: null
+	,createBtnsForLandingPage: function(first,mapFam) {
+		var _g = this;
+		var ge = false;
+		var dom = true;
+		if(this.treeType != "domain") {
+			ge = true;
+			dom = false;
+		}
+		if(first == true) {
+			this.treeTypeSelection = null;
+			this.treeTypeSelection = Ext.create("Ext.form.Panel",{ bodyPadding : 10, id : "treeTypeCmp", width : 300, items : [{ xtype : "radiogroup", fieldLabel : "View trees based on alignment of", cls : "x-treetype-select", defaults : { flex : 1}, id : "treeType", layout : "hbox", items : [{ boxLabel : "the specified domain", name : "type", inputValue : "domain", id : "domain-radio", checked : dom, handler : function(e) {
+				if(e.getValue()) {
+					_g.treeType = "domain";
+					_g.annotationManager.treeType = _g.treeType;
+				}
+			}},{ boxLabel : "full-length proteins", name : "type", inputValue : "gene", checked : ge, id : "gene-radio", handler : function(e1) {
+				if(e1.getValue()) {
+					_g.treeType = "gene";
+					_g.annotationManager.treeType = _g.treeType;
+				}
+			}}], listeners : { change : function(field,newValue,oldValue) {
+				_g.treeType = newValue.type;
+				_g.annotationManager.treeType = _g.treeType;
+				_g.renderHome();
+			}}}]});
+		} else {
+			this.treeTypeSelection.items.items[0].items.items[0].setValue(dom);
+			this.treeTypeSelection.items.items[0].items.items[1].setValue(ge);
+		}
+		this.chmodproWriters = [];
+		this.chmodproWriters = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.HMT != null?mapFam.existsReserved("HMT"):mapFam.h.hasOwnProperty("HMT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-pmt":(__map_reserved.PMT != null?mapFam.existsReserved("PMT"):mapFam.h.hasOwnProperty("PMT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-pmt-gene":(__map_reserved.PMT != null?mapFam.existsReserved("PMT"):mapFam.h.hasOwnProperty("PMT")) == false && this.treeType == "domain"?"x-btn-target-pmt":"x-btn-target-pmt-gene", handler : function() {
+			_g.treeName = "PMT/HMT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PMT: Methylate lysines"}}];
+		if(this.treeType == "domain") this.chmodproWriters.push({ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.HMT != null?mapFam.existsReserved("HMT"):mapFam.h.hasOwnProperty("HMT")) == true?"x-btn-target-found x-btn-target-pmt2":"x-btn-target-pmt2", handler : function() {
+			_g.treeName = "PMT-2/HMT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PMT: Methylate lysines"}});
+		this.chmodproWriters.push({ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.KAT != null?mapFam.existsReserved("KAT"):mapFam.h.hasOwnProperty("KAT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-kat":(__map_reserved.KAT != null?mapFam.existsReserved("KAT"):mapFam.h.hasOwnProperty("KAT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-kat-gene":(__map_reserved.KAT != null?mapFam.existsReserved("KAT"):mapFam.h.hasOwnProperty("KAT")) == false && this.treeType == "domain"?"x-btn-target-kat":"x-btn-target-kat-gene", handler : function(e2) {
+			_g.treeName = "KAT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : this.treeType == "gene"?"KAT: Acetylate lysines":"There is no domain-based alignment for this family. Select \"full length proteins\" above to see access this tree."}});
+		this.chmodproWriters.push({ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.PARP != null?mapFam.existsReserved("PARP"):mapFam.h.hasOwnProperty("PARP")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-parp":(__map_reserved.PARP != null?mapFam.existsReserved("PARP"):mapFam.h.hasOwnProperty("PARP")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-parp-gene":(__map_reserved.PARP != null?mapFam.existsReserved("PARP"):mapFam.h.hasOwnProperty("PARP")) == false && this.treeType == "domain"?"x-btn-target-parp":"x-btn-target-parp-gene", handler : function() {
+			_g.treeName = "PARP";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PARP: ADP - ribosylate proteins"}});
+		this.chmodproReaders = [];
+		this.chmodproReaders = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.ADD != null?mapFam.existsReserved("ADD"):mapFam.h.hasOwnProperty("ADD")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-add":(__map_reserved.ADD != null?mapFam.existsReserved("ADD"):mapFam.h.hasOwnProperty("ADD")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-add-gene":(__map_reserved.ADD != null?mapFam.existsReserved("ADD"):mapFam.h.hasOwnProperty("ADD")) == false && this.treeType == "domain"?"x-btn-target-add":"x-btn-target-add-gene", handler : function() {
+			_g.treeName = "ADD";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "ADD"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.BAH != null?mapFam.existsReserved("BAH"):mapFam.h.hasOwnProperty("BAH")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-bah":(__map_reserved.BAH != null?mapFam.existsReserved("BAH"):mapFam.h.hasOwnProperty("BAH")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-bah-gene":(__map_reserved.BAH != null?mapFam.existsReserved("BAH"):mapFam.h.hasOwnProperty("BAH")) == false && this.treeType == "domain"?"x-btn-target-bah":"x-btn-target-bah-gene", handler : function() {
+			_g.treeName = "BAH";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "BAH: Read methyl-lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.BROMO != null?mapFam.existsReserved("BROMO"):mapFam.h.hasOwnProperty("BROMO")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-bromo":(__map_reserved.BROMO != null?mapFam.existsReserved("BROMO"):mapFam.h.hasOwnProperty("BROMO")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-bromo-gene":(__map_reserved.BROMO != null?mapFam.existsReserved("BROMO"):mapFam.h.hasOwnProperty("BROMO")) == false && this.treeType == "domain"?"x-btn-target-bromo":"x-btn-target-bromo-gene", handler : function() {
+			_g.treeName = "BROMO";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "BROMO: Read Acetyl-lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.CW != null?mapFam.existsReserved("CW"):mapFam.h.hasOwnProperty("CW")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-cw":(__map_reserved.CW != null?mapFam.existsReserved("CW"):mapFam.h.hasOwnProperty("CW")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-cw-gene":(__map_reserved.CW != null?mapFam.existsReserved("CW"):mapFam.h.hasOwnProperty("CW")) == false && this.treeType == "domain"?"x-btn-target-cw":"x-btn-target-cw-gene", handler : function() {
+			_g.treeName = "CW";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "CW: methyl-lysine reader"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.CHROMO != null?mapFam.existsReserved("CHROMO"):mapFam.h.hasOwnProperty("CHROMO")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-chromo":(__map_reserved.CHROMO != null?mapFam.existsReserved("CHROMO"):mapFam.h.hasOwnProperty("CHROMO")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-chromo-gene":(__map_reserved.CHROMO != null?mapFam.existsReserved("CHROMO"):mapFam.h.hasOwnProperty("CHROMO")) == false && this.treeType == "domain"?"x-btn-target-chromo":"x-btn-target-chromo-gene", handler : function() {
+			_g.treeName = "CHROMO";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "CHROMO: Read methyl-lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.MACRO != null?mapFam.existsReserved("MACRO"):mapFam.h.hasOwnProperty("MACRO")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-macro":(__map_reserved.MACRO != null?mapFam.existsReserved("MACRO"):mapFam.h.hasOwnProperty("MACRO")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-macro-gene":(__map_reserved.MACRO != null?mapFam.existsReserved("MACRO"):mapFam.h.hasOwnProperty("MACRO")) == false && this.treeType == "domain"?"x-btn-target-macro":"x-btn-target-macro-gene", handler : function() {
+			_g.treeName = "MACRO";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : this.treeType == "gene"?"MACRO: bind ADP-ribosylated proteins":"There is no domain-based alignment for this family. Select \"full length proteins\" above to see access this tree."}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.MBT != null?mapFam.existsReserved("MBT"):mapFam.h.hasOwnProperty("MBT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-mbt":(__map_reserved.MBT != null?mapFam.existsReserved("MBT"):mapFam.h.hasOwnProperty("MBT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-mbt-gene":(__map_reserved.MBT != null?mapFam.existsReserved("MBT"):mapFam.h.hasOwnProperty("MBT")) == false && this.treeType == "domain"?"x-btn-target-mbt":"x-btn-target-mbt-gene", handler : function() {
+			_g.treeName = "MBT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "MBT: Read methyl-lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.PHD != null?mapFam.existsReserved("PHD"):mapFam.h.hasOwnProperty("PHD")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-phd":(__map_reserved.PHD != null?mapFam.existsReserved("PHD"):mapFam.h.hasOwnProperty("PHD")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-phd-gene":(__map_reserved.PHD != null?mapFam.existsReserved("PHD"):mapFam.h.hasOwnProperty("PHD")) == false && this.treeType == "domain"?"x-btn-target-phd":"x-btn-target-phd-gene", handler : function() {
+			_g.treeName = "PHD";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PHD: Read methyl-lysines, acetylated lysines, methyl-arginines, unmodified lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.PWWP != null?mapFam.existsReserved("PWWP"):mapFam.h.hasOwnProperty("PWWP")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-pwwp":(__map_reserved.PWWP != null?mapFam.existsReserved("PWWP"):mapFam.h.hasOwnProperty("PWWP")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-pwwp-gene":(__map_reserved.PWWP != null?mapFam.existsReserved("PWWP"):mapFam.h.hasOwnProperty("PWWP")) == false && this.treeType == "domain"?"x-btn-target-pwwp":"x-btn-target-pwwp-gene", handler : function() {
+			_g.treeName = "PWWP";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PWWP: Read methyl-lysines, bind DNA"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.SPINDLIN != null?mapFam.existsReserved("SPINDLIN"):mapFam.h.hasOwnProperty("SPINDLIN")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-spindlin":(__map_reserved.SPINDLIN != null?mapFam.existsReserved("SPINDLIN"):mapFam.h.hasOwnProperty("SPINDLIN")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-spindlin-gene":(__map_reserved.SPINDLIN != null?mapFam.existsReserved("SPINDLIN"):mapFam.h.hasOwnProperty("SPINDLIN")) == false && this.treeType == "domain"?"x-btn-target-spindlin":"x-btn-target-spindlin-gene", handler : function() {
+			_g.treeName = "SPINDLIN";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "SPINDLIN: methyl-lysine/arginine reader"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.TUDOR != null?mapFam.existsReserved("TUDOR"):mapFam.h.hasOwnProperty("TUDOR")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-tudor":(__map_reserved.TUDOR != null?mapFam.existsReserved("TUDOR"):mapFam.h.hasOwnProperty("TUDOR")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-tudor-gene":(__map_reserved.TUDOR != null?mapFam.existsReserved("TUDOR"):mapFam.h.hasOwnProperty("TUDOR")) == false && this.treeType == "domain"?"x-btn-target-tudor":"x-btn-target-tudor-gene", handler : function() {
+			_g.treeName = "TUDOR";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "TUDOR: Read methyl-lysines, methyl-arginines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.YEATS != null?mapFam.existsReserved("YEATS"):mapFam.h.hasOwnProperty("YEATS")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-yeats":(__map_reserved.YEATS != null?mapFam.existsReserved("YEATS"):mapFam.h.hasOwnProperty("YEATS")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-yeats-gene":(__map_reserved.YEATS != null?mapFam.existsReserved("YEATS"):mapFam.h.hasOwnProperty("YEATS")) == false && this.treeType == "domain"?"x-btn-target-yeats":"x-btn-target-yeats-gene", handler : function() {
+			_g.treeName = "YEATS";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "YEATS: read acetyl-lysines and crotonyl-lysines"}}];
+		this.chmodproErasers = [];
+		this.chmodproErasers = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.HDAC != null?mapFam.existsReserved("HDAC"):mapFam.h.hasOwnProperty("HDAC")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-hdac":(__map_reserved.HDAC != null?mapFam.existsReserved("HDAC"):mapFam.h.hasOwnProperty("HDAC")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-hdac-gene":(__map_reserved.HDAC != null?mapFam.existsReserved("HDAC"):mapFam.h.hasOwnProperty("HDAC")) == false && this.treeType == "domain"?"x-btn-target-hdac":"x-btn-target-hdac-gene", handler : function() {
+			_g.treeName = "HDAC_SIRT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "HDAC: Deacetylate lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.KDM != null?mapFam.existsReserved("KDM"):mapFam.h.hasOwnProperty("KDM")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-kdm":(__map_reserved.KDM != null?mapFam.existsReserved("KDM"):mapFam.h.hasOwnProperty("KDM")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-kdm-gene":(__map_reserved.KDM != null?mapFam.existsReserved("KDM"):mapFam.h.hasOwnProperty("KDM")) == false && this.treeType == "domain"?"x-btn-target-kdm":"x-btn-target-kdm-gene", handler : function() {
+			_g.treeName = "KDM";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "KDM: De-methylate lysines"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.PADI != null?mapFam.existsReserved("PADI"):mapFam.h.hasOwnProperty("PADI")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-padi":(__map_reserved.PADI != null?mapFam.existsReserved("PADI"):mapFam.h.hasOwnProperty("PADI")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-padi-gene":(__map_reserved.PADI != null?mapFam.existsReserved("PADI"):mapFam.h.hasOwnProperty("PADI")) == false && this.treeType == "domain"?"x-btn-target-padi":"x-btn-target-padi-gene", handler : function() {
+			_g.treeName = "PADI";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "PADI: Deiminate arginines"}}];
+		this.chmodDnaWriters = [];
+		this.chmodDnaWriters = [{ margin : "0 10 5 0", bodyPadding : "0 0 0 9px", xtype : "button", cls : (__map_reserved.DNMT != null?mapFam.existsReserved("DNMT"):mapFam.h.hasOwnProperty("DNMT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-dnmt":(__map_reserved.DNMT != null?mapFam.existsReserved("DNMT"):mapFam.h.hasOwnProperty("DNMT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-dnmt-gene":(__map_reserved.DNMT != null?mapFam.existsReserved("DNMT"):mapFam.h.hasOwnProperty("DNMT")) == false && this.treeType == "domain"?"x-btn-target-dnmt":"x-btn-target-dnmt-gene", handler : function() {
+			_g.treeName = "DNMT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "DNMT: Methylate CpG dinucleotides"}}];
+		this.chmodDnaReaders = [];
+		this.chmodDnaReaders = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.CXXC != null?mapFam.existsReserved("CXXC"):mapFam.h.hasOwnProperty("CXXC")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-cxxc":(__map_reserved.CXXC != null?mapFam.existsReserved("CXXC"):mapFam.h.hasOwnProperty("CXXC")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-cxxc-gene":(__map_reserved.CXXC != null?mapFam.existsReserved("CXXC"):mapFam.h.hasOwnProperty("CXXC")) == false && this.treeType == "domain"?"x-btn-target-cxxc":"x-btn-target-cxxc-gene", handler : function() {
+			_g.treeName = "CXXC";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "CXXC: Bind to nonmethyl-CpG dinucleotides"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.MBD != null?mapFam.existsReserved("MBD"):mapFam.h.hasOwnProperty("MBD")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-mbd":(__map_reserved.MBD != null?mapFam.existsReserved("MBD"):mapFam.h.hasOwnProperty("MBD")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-mbd-gene":(__map_reserved.MBD != null?mapFam.existsReserved("MBD"):mapFam.h.hasOwnProperty("MBD")) == false && this.treeType == "domain"?"x-btn-target-mbd":"x-btn-target-mbd-gene", handler : function() {
+			_g.treeName = "MBD";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "MBD: Bind to methyl-CpG dinucleotides"}}];
+		this.chmodDnaErasers = [];
+		this.chmodDnaErasers = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.TET != null?mapFam.existsReserved("TET"):mapFam.h.hasOwnProperty("TET")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-tet":(__map_reserved.TET != null?mapFam.existsReserved("TET"):mapFam.h.hasOwnProperty("TET")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-tet-gene":(__map_reserved.TET != null?mapFam.existsReserved("TET"):mapFam.h.hasOwnProperty("TET")) == false && this.treeType == "domain"?"x-btn-target-tet":"x-btn-target-tet-gene", handler : function() {
+			_g.treeName = "TET";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "TET: DNA hydroxylases. Participate in DNA de-methylation"}}];
+		this.chmodRnaWriters = [];
+		this.chmodRnaWriters = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.RNMT != null?mapFam.existsReserved("RNMT"):mapFam.h.hasOwnProperty("RNMT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-rnmt":(__map_reserved.RNMT != null?mapFam.existsReserved("RNMT"):mapFam.h.hasOwnProperty("RNMT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-rnmt-gene":(__map_reserved.RNMT != null?mapFam.existsReserved("RNMT"):mapFam.h.hasOwnProperty("RNMT")) == false && this.treeType == "domain"?"x-btn-target-rnmt":"x-btn-target-rnmt-gene", handler : function() {
+			_g.treeName = "RNMT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "RNMT: Methylate RNA"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.PUS != null?mapFam.existsReserved("PUS"):mapFam.h.hasOwnProperty("PUS")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-pus":(__map_reserved.PUS != null?mapFam.existsReserved("PUS"):mapFam.h.hasOwnProperty("PUS")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-pus-gene":(__map_reserved.PUS != null?mapFam.existsReserved("PUS"):mapFam.h.hasOwnProperty("PUS")) == false && this.treeType == "domain"?"x-btn-target-pus":"x-btn-target-pus-gene", handler : function() {
+			_g.treeName = "PUS";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "Pseudouridine synthases: catalyze the site-specific isomerization of uridines on RNA"}}];
+		this.chmodRnaReaders = [];
+		this.chmodRnaReaders = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.YTH != null?mapFam.existsReserved("YTH"):mapFam.h.hasOwnProperty("YTH")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-yth":(__map_reserved.YTH != null?mapFam.existsReserved("YTH"):mapFam.h.hasOwnProperty("YTH")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-yth-gene":(__map_reserved.YTH != null?mapFam.existsReserved("YTH"):mapFam.h.hasOwnProperty("YTH")) == false && this.treeType == "domain"?"x-btn-target-yth":"x-btn-target-yth-gene", handler : function() {
+			_g.treeName = "YTH";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "YTH: bind to methylated RNA"}}];
+		this.chmodRnaErasers = [];
+		this.chmodRnaErasers = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved["RNA-DMT"] != null?mapFam.existsReserved("RNA-DMT"):mapFam.h.hasOwnProperty("RNA-DMT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-rna-dmt":(__map_reserved["RNA-DMT"] != null?mapFam.existsReserved("RNA-DMT"):mapFam.h.hasOwnProperty("RNA-DMT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-rna-dmt-gene":(__map_reserved["RNA-DMT"] != null?mapFam.existsReserved("RNA-DMT"):mapFam.h.hasOwnProperty("RNA-DMT")) == false && this.treeType == "domain"?"x-btn-target-rna-dmt":"x-btn-target-rna-dmt-gene", handler : function() {
+			_g.treeName = "RNA-DMT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "RNA-DMT"}}];
+		this.chmodDna = [];
+		this.chmodDna = [{ title : "Writers", flex : 1, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating", items : this.chmodDnaWriters},{ title : "Readers", flex : 2, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating2", items : this.chmodDnaReaders},{ title : "Erasers", flex : 1, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating", items : this.chmodDnaErasers}];
+		this.chmodRna = [];
+		this.chmodRna = [{ title : "Writers", flex : 2, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating2", items : this.chmodRnaWriters},{ title : "Readers", flex : 1, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating", items : this.chmodRnaReaders},{ title : "Erasers", flex : 1, margin : "0 10 0 0", xtype : "panel", cls : "x-panel-floating", items : this.chmodRnaErasers}];
+		this.chromatin = [];
+		this.chromatin = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.DEXDc != null?mapFam.existsReserved("DEXDc"):mapFam.h.hasOwnProperty("DEXDc")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-dexdc":(__map_reserved.DEXDc != null?mapFam.existsReserved("DEXDc"):mapFam.h.hasOwnProperty("DEXDc")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-dexdc-gene":(__map_reserved.DEXDc != null?mapFam.existsReserved("DEXDc"):mapFam.h.hasOwnProperty("DEXDc")) == false && this.treeType == "domain"?"x-btn-target-dexdc":"x-btn-target-dexdc-gene", handler : function() {
+			_g.treeName = "DEXDc";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "DEXDc"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.Helicases != null?mapFam.existsReserved("Helicases"):mapFam.h.hasOwnProperty("Helicases")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-helicc":(__map_reserved.Helicases != null?mapFam.existsReserved("Helicases"):mapFam.h.hasOwnProperty("Helicases")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-helicc-gene":(__map_reserved.Helicases != null?mapFam.existsReserved("Helicases"):mapFam.h.hasOwnProperty("Helicases")) == false && this.treeType == "domain"?"x-btn-target-helicc":"x-btn-target-helicc-gene", handler : function() {
+			_g.treeName = "HELICC/Helicases";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "HELICc"}},{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.SANT != null?mapFam.existsReserved("SANT"):mapFam.h.hasOwnProperty("SANT")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-sant":(__map_reserved.SANT != null?mapFam.existsReserved("SANT"):mapFam.h.hasOwnProperty("SANT")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-sant-gene":(__map_reserved.SANT != null?mapFam.existsReserved("SANT"):mapFam.h.hasOwnProperty("SANT")) == false && this.treeType == "domain"?"x-btn-target-sant":"x-btn-target-sant-gene", handler : function() {
+			_g.treeName = "SANT";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : "SANT: Involved in chromatin remodeling"}}];
+		this.histones = [];
+		this.histones = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.HISTONE != null?mapFam.existsReserved("HISTONE"):mapFam.h.hasOwnProperty("HISTONE")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-histone":(__map_reserved.HISTONE != null?mapFam.existsReserved("HISTONE"):mapFam.h.hasOwnProperty("HISTONE")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-histone-gene":(__map_reserved.HISTONE != null?mapFam.existsReserved("HISTONE"):mapFam.h.hasOwnProperty("HISTONE")) == false && this.treeType == "domain"?"x-btn-target-histone":"x-btn-target-histone-gene", handler : function() {
+			_g.treeName = "Histone";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : this.treeType == "gene"?"Histone":"There is no domain-based alignment for this family. Select \"full length proteins\" above to see access this tree."}}];
+		this.wdr = [];
+		this.wdr = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.WDR != null?mapFam.existsReserved("WDR"):mapFam.h.hasOwnProperty("WDR")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-wdr":(__map_reserved.WDR != null?mapFam.existsReserved("WDR"):mapFam.h.hasOwnProperty("WDR")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-wdr-gene":(__map_reserved.WDR != null?mapFam.existsReserved("WDR"):mapFam.h.hasOwnProperty("WDR")) == false && this.treeType == "domain"?"x-btn-target-wdr":"x-btn-target-wdr-gene", handler : function() {
+			_g.treeName = "WDR";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : this.treeType == "gene"?"WDR: Versatile binding module":"There is no domain-based alignment for this family. Select \"full length proteins\" above to see access this tree."}}];
+		this.nudix = [];
+		this.nudix = [{ margin : "0 10 5 0", xtype : "button", cls : (__map_reserved.NUDIX != null?mapFam.existsReserved("NUDIX"):mapFam.h.hasOwnProperty("NUDIX")) == true && this.treeType == "domain"?"x-btn-target-found x-btn-target-nudix":(__map_reserved.NUDIX != null?mapFam.existsReserved("NUDIX"):mapFam.h.hasOwnProperty("NUDIX")) == true && this.treeType == "gene"?"x-btn-target-found x-btn-target-nudix-gene":(__map_reserved.NUDIX != null?mapFam.existsReserved("NUDIX"):mapFam.h.hasOwnProperty("NUDIX")) == false && this.treeType == "domain"?"x-btn-target-nudix":"x-btn-target-nudix-gene", handler : function() {
+			_g.treeName = "NUDIX";
+			_g.subtreeName = _g.treeName;
+			_g.generateTree(_g.treeName,_g.treeType);
+		}, tooltip : { dismissDelay : 10000, text : this.treeType == "gene"?"NUDIX: Break a phosphate bond from RNA caps and other substrates":"There is no domain-based alignment for this family. Select \"full length proteins\" above to see access this tree."}}];
+		this.addicon = [];
+		this.addicon = [{ margin : "0 10 5 0", xtype : "button", cls : "x-btn-target-ultradd", handler : function() {
+			_g.showUltraDDGenes();
+		}, tooltip : { dismissDelay : 10000, text : "Show UltraDD genes list"}}];
+	}
+	,showUltraDDGenes: function() {
+		var _g = this;
+		saturn.client.WorkspaceApplication.getApplication().getProvider().getByNamedQuery("getUltraDDGenes",{ param : ""},null,true,function(db_results,error) {
+			if(error == null) {
+				if(db_results.length != 0) {
+					var div;
+					div = [];
+					var i = 0;
+					var title = db_results.length;
+					var _g1 = 0;
+					var _g2 = db_results.length;
+					while(_g1 < _g2) {
+						var i1 = _g1++;
+						div[i1] = { xtype : "checkboxfield", boxLabel : db_results[i1].target_id, labelSeparator : "", name : "ultradd", cls : "ultradd-checkbox", inputValue : db_results[i1].target_id, id : "ultradd-" + i1};
+					}
+					var container = _g.getApplication().getSingleAppContainer();
+					var mydom = window.document.getElementById("id-centralPanel");
+					var parentWidth = mydom.clientWidth;
+					var parentHeight = mydom.clientHeight;
+					var cx = Math.round(parentWidth / 2) - 350;
+					var cy = Math.round(parentHeight / 5);
+					container.showUltraDDWindow(div,cx,cy,title,_g);
+				} else saturn.client.WorkspaceApplication.getApplication().showMessage("Alert","No UltraDD genes in the current database.");
+			}
+		});
+	}
+	,getJSonViewOptions: function() {
+		var _g = this;
+		saturn.client.core.CommonCore.getContent("/static/json/ViewOptionsBtns.json",function(content) {
+			var d = saturn.client.WorkspaceApplication.getApplication().getActiveProgram();
+			d.annotationManager.jsonFile = JSON.parse(content);
+			_g.getJSonTips();
+		},function(err) {
+			saturn.client.WorkspaceApplication.getApplication().debug(err);
+			_g.getJSonTips();
+		});
+	}
+	,getJSonTips: function() {
+		if(this.standaloneMode) saturn.client.core.CommonCore.getContent("/static/json/tipsHtmlData.json",function(content) {
+			var d = saturn.client.WorkspaceApplication.getApplication().getActiveProgram();
+			d.jsonTipsFile = JSON.parse(content);
+			saturn.client.WorkspaceApplication.getApplication().setMode(saturn.client.ScreenMode.SINGLE_APP);
+		},function(err) {
+			saturn.client.WorkspaceApplication.getApplication().debug(err);
+			saturn.client.WorkspaceApplication.getApplication().setMode(saturn.client.ScreenMode.SINGLE_APP);
+		});
+	}
+	,showTips: function(show) {
+		var cookies = Cookies;
+		if(show == true) {
+			var cookie = cookies.getJSON("tipday");
+			if(cookie != null) cookies.remove("tipday");
+		} else cookies.set("tipday",false,{ 'expires' : 14});
+	}
+	,__class__: saturn.client.programs.chromohub.ChromoHubViewer
+});
+saturn.client.programs.chromohub.ChromoHubDrawingMode = $hxClasses["saturn.client.programs.chromohub.ChromoHubDrawingMode"] = { __ename__ : ["saturn","client","programs","chromohub","ChromoHubDrawingMode"], __constructs__ : ["STRAIGHT","CIRCULAR"] };
+saturn.client.programs.chromohub.ChromoHubDrawingMode.STRAIGHT = ["STRAIGHT",0];
+saturn.client.programs.chromohub.ChromoHubDrawingMode.STRAIGHT.toString = $estr;
+saturn.client.programs.chromohub.ChromoHubDrawingMode.STRAIGHT.__enum__ = saturn.client.programs.chromohub.ChromoHubDrawingMode;
+saturn.client.programs.chromohub.ChromoHubDrawingMode.CIRCULAR = ["CIRCULAR",1];
+saturn.client.programs.chromohub.ChromoHubDrawingMode.CIRCULAR.toString = $estr;
+saturn.client.programs.chromohub.ChromoHubDrawingMode.CIRCULAR.__enum__ = saturn.client.programs.chromohub.ChromoHubDrawingMode;
+saturn.client.programs.chromohub.ChromoHubViewerHome = $hxClasses["saturn.client.programs.chromohub.ChromoHubViewerHome"] = function(viewer) {
+	this.viewer = viewer;
+};
+saturn.client.programs.chromohub.ChromoHubViewerHome.__name__ = ["saturn","client","programs","chromohub","ChromoHubViewerHome"];
+saturn.client.programs.chromohub.ChromoHubViewerHome.prototype = {
+	viewer: null
+	,uploadForm: null
+	,annotations: null
+	,addUploadForm: function() {
+		var _g = this;
+		var items = [];
+		items.push({ xtype : "textarea", fieldLabel : "FASTA upload", name : "fasta_content"});
+		items.push({ xtype : "button", text : "Generate Tree", handler : function() {
+			_g.generateTreeFromFASTA(_g.uploadForm.form.findField("fasta_content").lastValue);
+		}});
+		items.push({ xtype : "textarea", fieldLabel : "Newick upload", name : "newick_content"});
+		items.push({ xtype : "button", text : "Show Tree", handler : function() {
+			_g.viewer.setNewickStr(_g.uploadForm.form.findField("newick_content").lastValue);
+		}});
+		items.push({ xtype : "textarea", fieldLabel : "Annotations", name : "annotation_content"});
+		items.push({ xtype : "button", text : "Upload", handler : function() {
+			_g.loadAnnotations(_g.uploadForm.form.findField("annotation_content").lastValue);
+		}});
+		this.uploadForm = Ext.create("Ext.form.Panel",{ items : items});
+		this.viewer.centralTargetPanel.add(this.uploadForm);
+	}
+	,generateTreeFromFASTA: function(fasta) {
+		var _g = this;
+		saturn.client.BioinformaticsServicesClient.getClient().sendPhyloReportRequest(fasta,function(response,error) {
+			var phyloReport = response.json.phyloReport;
+			var location = window.location;
+			var dstURL = location.protocol + "//" + location.hostname + ":" + location.port + "/" + phyloReport;
+			Ext.Ajax.request({ url : dstURL, success : function(response1,opts) {
+				var newickString = response1.responseText;
+				_g.viewer.setNewickStr(newickString);
+			}, failure : function(response2,opts1) {
+			}});
+		});
+	}
+	,handleAnnotation: function(alias,params,clazz,cb) {
+		var annotationIndex = Std.parseInt(alias.charAt(alias.length - 1));
+		cb(this.annotations[annotationIndex],null);
+	}
+	,loadAnnotations: function(annotationString) {
+		var _g2 = this;
+		var lines = annotationString.split("\n");
+		var header = lines[0];
+		var cols = header.split(",");
+		this.annotations = [];
+		this.viewer.annotationManager.jsonFile = { btnGroup : [{ title : "Annotations", buttons : []}]};
+		var _g1 = 1;
+		var _g = cols.length;
+		while(_g1 < _g) {
+			var i = [_g1++];
+			this.annotations[i[0] - 1] = [];
+			var hookName = ["STANDALONE_ANNOTATION_" + (i[0] - 1)];
+			var styleAnnotation = (function(i) {
+				return function(target,data,selected,annotList,item,callBack) {
+					var colours = ["red","blue"];
+					var r = { hasAnnot : true, text : "", color : { color : colours[i[0] - 1], used : false}, defImage : 100};
+					if(data == null || data.annotation == "No") r.hasAnnot = false;
+					callBack(r);
+				};
+			})(i);
+			this.viewer.annotationManager.jsonFile.btnGroup[0].buttons.push({ label : cols[i[0]], hookName : hookName[0], annotCode : i[0], isTitle : false, enabled : true, familyMethod : "", hasMethod : styleAnnotation, hasClass : "", color : [{ color : "#ed0e2d", used : "false"}], shape : "cercle"});
+			saturn.client.core.CommonCore.getDefaultProvider((function(hookName) {
+				return function(error,provider) {
+					provider.resetCache();
+					provider.addHook($bind(_g2,_g2.handleAnnotation),hookName[0]);
+				};
+			})(hookName));
+		}
+		var _g11 = 1;
+		var _g3 = lines.length;
+		while(_g11 < _g3) {
+			var i1 = _g11++;
+			var cols1 = lines[i1].split(",");
+			var _g31 = 1;
+			var _g21 = cols1.length;
+			while(_g31 < _g21) {
+				var j = _g31++;
+				this.annotations[j - 1].push({ 'target_id' : cols1[0], 'annotation' : cols1[j]});
+			}
+		}
+		this.viewer.annotationManager.fillAnnotationwithJSonData();
+		this.viewer.annotationManager.createViewOptions();
+	}
+	,__class__: saturn.client.programs.chromohub.ChromoHubViewerHome
 };
 if(!saturn.client.programs.phylo5) saturn.client.programs.phylo5 = {};
 saturn.client.programs.phylo5.Phylo5Annotation = $hxClasses["saturn.client.programs.phylo5.Phylo5Annotation"] = function() {
@@ -20355,7 +28000,7 @@ saturn.client.programs.sequenceeditor.SVGAnnotationBlock.prototype = $extend(sat
 	theCanvas: null
 	,createElement: function() {
 		this.theCanvas = window.document.createElementNS("http://www.w3.org/2000/svg","svg");
-		new $(this.theCanvas).addClass("molbio-sequenceeditor-block");
+		this.theCanvas.classList.add("molbio-sequenceeditor-block");
 		this.theCanvas.setAttribute("style",Std.string(this.theCanvas.style) + ";margin-top:2px;margin-left:2px;margin-right:2px");
 		this.elem = this.theCanvas;
 	}
@@ -21240,6 +28885,9 @@ saturn.client.workspace.Workspace.prototype = {
 	}
 	,getComponent: function() {
 		return this.theComponent;
+	}
+	,getRawComponent: function() {
+		return this.getRawComponent();
 	}
 	,addListener: function(listener) {
 		this.theListeners.add(listener);
@@ -22362,6 +30010,24 @@ saturn.core.DNA = $hxClasses["saturn.core.DNA"] = function(seq) {
 	saturn.core.molecule.Molecule.call(this,seq);
 };
 saturn.core.DNA.__name__ = ["saturn","core","DNA"];
+saturn.core.DNA.isDNA = function(sequence) {
+	var seqLen = sequence.length;
+	var valid_nucs;
+	var _g = new haxe.ds.StringMap();
+	if(__map_reserved.A != null) _g.setReserved("A",true); else _g.h["A"] = true;
+	if(__map_reserved.T != null) _g.setReserved("T",true); else _g.h["T"] = true;
+	if(__map_reserved.G != null) _g.setReserved("G",true); else _g.h["G"] = true;
+	if(__map_reserved.C != null) _g.setReserved("C",true); else _g.h["C"] = true;
+	if(__map_reserved.U != null) _g.setReserved("U",true); else _g.h["U"] = true;
+	valid_nucs = _g;
+	var _g1 = 0;
+	while(_g1 < seqLen) {
+		var i = _g1++;
+		var nuc = sequence.charAt(i).toUpperCase();
+		if(!((__map_reserved[nuc] != null?valid_nucs.existsReserved(nuc):valid_nucs.h.hasOwnProperty(nuc)) && (__map_reserved[nuc] != null?valid_nucs.getReserved(nuc):valid_nucs.h[nuc]))) return false;
+	}
+	return true;
+};
 saturn.core.DNA.__super__ = saturn.core.molecule.Molecule;
 saturn.core.DNA.prototype = $extend(saturn.core.molecule.Molecule.prototype,{
 	protein: null
@@ -22977,6 +30643,17 @@ saturn.core.Protein.insertTranslation = function(dnaId,dnaAltName,dnaSeq,dnaSour
 		}
 	});
 };
+saturn.core.Protein.isProtein = function(sequence) {
+	var seqLen = sequence.length;
+	var valid_res = saturn.core.GeneticCodeRegistry.getDefault().getAAToCodonTable();
+	var _g = 0;
+	while(_g < seqLen) {
+		var i = _g++;
+		var res = sequence.charAt(i).toUpperCase();
+		if(!(__map_reserved[res] != null?valid_res.existsReserved(res):valid_res.h.hasOwnProperty(res))) return false;
+	}
+	return true;
+};
 saturn.core.Protein.__super__ = saturn.core.molecule.Molecule;
 saturn.core.Protein.prototype = $extend(saturn.core.molecule.Molecule.prototype,{
 	dna: null
@@ -23142,6 +30819,76 @@ saturn.core.ClustalOmegaParser.read = function(content) {
 		return new saturn.core.MSA(msaMap,seqOrder);
 	} else return new saturn.core.MSA();
 };
+saturn.core.ClustalOmegaParser.readStartStop = function(content,consreuctIdLength) {
+	var alignmentSymbols = "";
+	var startEndPos = [];
+	var lengthOfLeadingChars = 0;
+	var alignmentConstruct = "";
+	var alignmentTarget = "";
+	var alignmentSymbols1 = "";
+	var targetOffset = 0;
+	var lines = content.split("\n");
+	var firstConstructLine = lines[3];
+	var _g1 = consreuctIdLength;
+	var _g = firstConstructLine.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(firstConstructLine.charAt(i) != " ") {
+			lengthOfLeadingChars = i;
+			break;
+		}
+	}
+	var lineNumber = 4;
+	while(lineNumber < lines.length) {
+		var line = lines[lineNumber];
+		line = StringTools.replace(line,"\n","");
+		line = StringTools.replace(line,"\r","");
+		line = line.substring(lengthOfLeadingChars);
+		alignmentTarget = alignmentTarget + line;
+		lineNumber += 4;
+	}
+	var lineNumber1 = 5;
+	while(lineNumber1 < lines.length) {
+		var line1 = lines[lineNumber1];
+		line1 = StringTools.replace(line1,"\n","");
+		line1 = StringTools.replace(line1,"\r","");
+		line1 = line1.substring(lengthOfLeadingChars);
+		alignmentSymbols1 = alignmentSymbols1 + line1;
+		lineNumber1 += 4;
+	}
+	var lineNumber2 = 3;
+	while(lineNumber2 < lines.length) {
+		var line2 = lines[lineNumber2];
+		line2 = StringTools.replace(line2,"\n","");
+		line2 = StringTools.replace(line2,"\r","");
+		line2 = line2.substring(lengthOfLeadingChars);
+		alignmentConstruct = alignmentConstruct + line2;
+		lineNumber2 += 4;
+	}
+	var _g11 = 0;
+	var _g2 = alignmentTarget.length;
+	while(_g11 < _g2) {
+		var i1 = _g11++;
+		if(alignmentTarget.charAt(i1) != "-") {
+			targetOffset = i1;
+			break;
+		}
+	}
+	var startPos = alignmentSymbols1.indexOf("*") - targetOffset;
+	var endPos = alignmentSymbols1.lastIndexOf("*") - targetOffset;
+	var alignmentTargetSub = alignmentTarget.substring(startPos + targetOffset,endPos + targetOffset + 1);
+	var numberOfGaps = 0;
+	var _g12 = 0;
+	var _g3 = alignmentTargetSub.length;
+	while(_g12 < _g3) {
+		var i2 = _g12++;
+		if(alignmentTargetSub.charAt(i2) == "-") numberOfGaps += 1;
+	}
+	startEndPos.push(startPos);
+	startEndPos.push(endPos);
+	startEndPos.push(numberOfGaps);
+	return startEndPos;
+};
 saturn.core.Table = $hxClasses["saturn.core.Table"] = function() {
 };
 saturn.core.Table.__name__ = ["saturn","core","Table"];
@@ -23213,6 +30960,192 @@ saturn.core.Table.prototype = {
 	}
 	,__class__: saturn.core.Table
 };
+saturn.core.ComplexPlan = $hxClasses["saturn.core.ComplexPlan"] = function(useExample) {
+	if(useExample == null) useExample = false;
+	saturn.core.Table.call(this);
+	this.setErrorColumns([]);
+	var exampleData = null;
+	if(useExample) exampleData = [{ 'Select' : true, 'Construct ID 1' : "XXXXXX-c265", 'Construct ID 2' : "XXXXXX-c009", 'Construct ID 3' : "", 'Construct ID 4' : "", 'ELN ID' : "", 'Plate Name' : "MultiBac-Plate-3", 'Plate Well' : "H05", 'Target ID' : "", 'Entry Clone ID' : "", 'Allele ID' : "", 'Construct ID' : ""}]; else exampleData = [{ 'Select' : true, 'Construct ID 1' : "", 'Construct ID 2' : "", 'Construct ID 3' : "", 'Construct ID 4' : "", 'ELN ID' : "", 'Target ID' : "", 'Entry Clone ID' : "", 'Allele ID' : "", 'Construct ID' : "", 'Plate Name' : "", 'Plate Well' : ""}];
+	this.setData(exampleData,{ 'Select' : { 'xtype' : "checkcolumn", 'name' : "checkbox_name", 'dataindex' : "Select"}, 'Construct ID 1' : { 'editor' : "textfield"}, 'Construct ID 2' : { 'editor' : "textfield"}, 'Construct ID 3' : { 'editor' : "textfield"}, 'Construct ID 4' : { 'editor' : "textfield"}, 'Target ID' : { 'editor' : "textfield"}, 'Entry Clone ID' : { 'editor' : "textfield"}, 'Allele ID' : { 'editor' : "textfield"}, 'Construct ID' : { 'editor' : "textfield"}, 'ELN ID' : { 'editor' : "textfield"}, 'Plate Name' : { 'editor' : "textfield"}, 'Plate Well' : { 'editor' : "textfield"}});
+	this.setName("Complex Plan");
+};
+saturn.core.ComplexPlan.__name__ = ["saturn","core","ComplexPlan"];
+saturn.core.ComplexPlan.__super__ = saturn.core.Table;
+saturn.core.ComplexPlan.prototype = $extend(saturn.core.Table.prototype,{
+	provider: null
+	,getProvider: function() {
+		if(this.provider != null) return this.provider; else return saturn.client.WorkspaceApplication.getApplication().getProvider();
+	}
+	,save: function(cb) {
+		var data = this.getData();
+		var targetSet = new haxe.ds.StringMap();
+		var _g = 0;
+		while(_g < data.length) {
+			var row = data[_g];
+			++_g;
+			var targetId = Reflect.field(row,"Construct ID 1").split("-")[0];
+			if(__map_reserved[targetId] != null) targetSet.setReserved(targetId,null); else targetSet.h[targetId] = null;
+		}
+		var targetIds = [];
+		var $it0 = targetSet.keys();
+		while( $it0.hasNext() ) {
+			var targetId1 = $it0.next();
+			targetIds.push(targetId1);
+		}
+		var provider = this.getProvider();
+		provider.getByIds(targetIds,saturn.core.domain.SgcTarget,function(targets,err) {
+			if(err != null) cb(err); else {
+				var targetIdToTarget = new haxe.ds.StringMap();
+				var _g1 = 0;
+				while(_g1 < targets.length) {
+					var target = targets[_g1];
+					++_g1;
+					targetIdToTarget.set(target.targetId,target);
+				}
+				var complexTargets = [];
+				var complexEntryClones = [];
+				var complexAlleles = [];
+				var complexConstructs = [];
+				var defaultVector = new saturn.core.domain.SgcVector();
+				defaultVector.vectorId = "Mock-receptable-vector";
+				var _g2 = 0;
+				while(_g2 < data.length) {
+					var row1 = data[_g2];
+					++_g2;
+					var targetId2 = Reflect.field(row1,"Construct ID 1").split("-")[0];
+					var eln = Reflect.field(row1,"ELN");
+					var targetObj;
+					targetObj = __map_reserved[targetId2] != null?targetIdToTarget.getReserved(targetId2):targetIdToTarget.h[targetId2];
+					var complexTargetId = Reflect.field(row1,"Target ID");
+					var complexTargetObj = new saturn.core.domain.SgcTarget();
+					complexTargetObj.targetId = complexTargetId;
+					complexTargetObj.pi = targetObj.pi;
+					complexTargetObj.geneId = targetObj.geneId;
+					complexTargetObj.activeStatus = "10: Complex";
+					var complexComponents = [];
+					var maxComponents = 4;
+					var _g11 = 1;
+					while(_g11 < 4) {
+						var i = _g11++;
+						complexComponents.push(Reflect.field(row1,"Construct ID " + (i == null?"null":"" + i)));
+					}
+					complexTargetObj.complexComments = complexComponents.join(",");
+					complexTargetObj.complex = "Yes";
+					complexTargetObj.eln = eln;
+					var complexEntryClone = new saturn.core.domain.SgcEntryClone();
+					complexEntryClone.target = complexTargetObj;
+					complexEntryClone.entryCloneId = Reflect.field(row1,"Entry Clone ID");
+					complexEntryClone.elnId = eln;
+					complexEntryClone.complex = "Yes";
+					complexEntryClone.seqSource = "NA";
+					complexEntryClone.sequenceConfirmed = "NA";
+					var complexAllele = new saturn.core.domain.SgcAllele();
+					complexAllele.elnId = eln;
+					complexAllele.alleleId = Reflect.field(row1,"Allele ID");
+					complexAllele.alleleStatus = "NA";
+					complexAllele.complex = "Yes";
+					complexAllele.entryClone = complexEntryClone;
+					var allelePlate = new saturn.core.domain.SgcAllelePlate();
+					allelePlate.plateName = Reflect.field(row1,"Plate Name");
+					complexAllele.plate = allelePlate;
+					complexAllele.plateWell = Reflect.field(row1,"Plate Well");
+					var complexConstruct = new saturn.core.domain.SgcConstruct();
+					complexConstruct.allele = complexAllele;
+					complexConstruct.constructId = Reflect.field(row1,"Construct ID");
+					complexConstruct.elnId = eln;
+					complexConstruct.complex = "Yes";
+					complexConstruct.vector = defaultVector;
+					var constructPlate = new saturn.core.domain.SgcConstructPlate();
+					constructPlate.plateName = allelePlate.plateName;
+					complexConstruct.constructPlate = constructPlate;
+					complexConstruct.wellId = complexAllele.plateWell;
+					complexTargets.push(complexTargetObj);
+					complexEntryClones.push(complexEntryClone);
+					complexAlleles.push(complexAllele);
+					complexConstructs.push(complexConstruct);
+				}
+				provider.insertOrUpdate(complexTargets,function(err1) {
+					if(err1 == null) provider.insertOrUpdate(complexEntryClones,function(err2) {
+						if(err2 == null) provider.insertOrUpdate(complexAlleles,function(err3) {
+							if(err3 == null) provider.insertOrUpdate(complexConstructs,function(err4) {
+								cb(err4);
+							},true); else cb(err3);
+						},true); else cb(err2);
+					},true);
+				},true);
+			}
+		});
+	}
+	,generateIds: function(cb) {
+		var _g = this;
+		var data = this.getData();
+		var targetToNextId = new haxe.ds.StringMap();
+		var _g1 = 0;
+		while(_g1 < data.length) {
+			var row = data[_g1];
+			++_g1;
+			var constructId = Reflect.field(row,"Construct ID 1");
+			var targetId = constructId.split("-")[0];
+			if(__map_reserved[targetId] != null) targetToNextId.setReserved(targetId,0); else targetToNextId.h[targetId] = 0;
+		}
+		var targetList = [];
+		var $it0 = targetToNextId.keys();
+		while( $it0.hasNext() ) {
+			var targetId1 = $it0.next();
+			targetList.push(targetId1);
+		}
+		var next = null;
+		next = function() {
+			if(targetList.length == 0) {
+				var _g2 = 0;
+				while(_g2 < data.length) {
+					var row1 = data[_g2];
+					++_g2;
+					var constructId1 = Reflect.field(row1,"Construct ID 1");
+					var targetId3 = constructId1.split("-")[0];
+					var nextId;
+					nextId = (__map_reserved[targetId3] != null?targetToNextId.getReserved(targetId3):targetToNextId.h[targetId3]) + 1;
+					var complexTargetId = "XX" + StringTools.lpad(nextId == null?"null":"" + nextId,"0",2) + targetId3;
+					row1["Target ID"] = complexTargetId;
+					row1["Entry Clone ID"] = complexTargetId + "-s001";
+					row1["Allele ID"] = complexTargetId + "-a001";
+					row1["Construct ID"] = complexTargetId + "-c001";
+					if(__map_reserved[targetId3] != null) targetToNextId.setReserved(targetId3,nextId); else targetToNextId.h[targetId3] = nextId;
+				}
+				cb(null);
+				return;
+			}
+			var targetId2 = targetList.pop();
+			var clazz = Type.resolveClass("saturn.core.domain.SgcTarget");
+			var query = new saturn.db.query_lang.Query(_g.getProvider());
+			query.fetchRawResults();
+			query.getSelect().add(new saturn.db.query_lang.Field(clazz,"targetId")["as"]("targetId"));
+			query.getWhere().add(new saturn.db.query_lang.Field(clazz,"targetId").like(new saturn.db.query_lang.Value("%").concat("TREM2A")));
+			query.run(function(targets,err) {
+				if(err != null) cb(err); else {
+					var regex = new EReg("XX(\\d\\d)" + targetId2,"");
+					var leadingZeroRegEx = new EReg("^0+","");
+					var maxValue = 0;
+					var _g11 = 0;
+					while(_g11 < targets.length) {
+						var target = targets[_g11];
+						++_g11;
+						if(regex.match(target.targetId)) {
+							var digit = regex.matched(1);
+							var digitInt = Std.parseInt(leadingZeroRegEx.replace(digit,""));
+							if(digitInt > maxValue) maxValue = digitInt;
+						}
+					}
+					var value = ++maxValue;
+					if(__map_reserved[targetId2] != null) targetToNextId.setReserved(targetId2,value); else targetToNextId.h[targetId2] = value;
+					next();
+				}
+			});
+		};
+		next();
+	}
+	,__class__: saturn.core.ComplexPlan
+});
 saturn.core.ConstructDesignTable = $hxClasses["saturn.core.ConstructDesignTable"] = function(useExample) {
 	this.minLengthExtended = 32;
 	this.maxTMExtended = 75;
@@ -24765,6 +32698,12 @@ saturn.core.GridVar.prototype = {
 	}
 	,__class__: saturn.core.GridVar
 };
+saturn.core.HelloType = $hxClasses["saturn.core.HelloType"] = function() {
+};
+saturn.core.HelloType.__name__ = ["saturn","core","HelloType"];
+saturn.core.HelloType.prototype = {
+	__class__: saturn.core.HelloType
+};
 saturn.core.Home = $hxClasses["saturn.core.Home"] = function() {
 };
 saturn.core.Home.__name__ = ["saturn","core","Home"];
@@ -26021,7 +33960,7 @@ saturn.core.Util.saveFileAsDialog = function(contents,cb) {
 	saturn.core.Util.getNewFileDialog(function(err,dialog) {
 		dialog.setSelectExisting(false);
 		dialog.fileSelected.connect(function(fileName) {
-			js.Lib.alert(fileName);
+			js.Browser.alert(fileName);
 			saturn.core.Util.debug("Hello, saving " + fileName);
 			saturn.core.Util.saveFile(fileName,contents,function(err1) {
 				cb(err1,fileName);
@@ -26774,6 +34713,7 @@ saturn.core.domain.SgcAllele.prototype = $extend(saturn.core.DNA.prototype,{
 	,entryClone: null
 	,elnId: null
 	,alleleStatus: null
+	,complex: null
 	,forwardPrimer: null
 	,reversePrimer: null
 	,proteinSequenceObj: null
@@ -26862,6 +34802,7 @@ saturn.core.domain.SgcConstruct.prototype = $extend(saturn.core.DNA.prototype,{
 	,constructComments: null
 	,proteinSequenceObj: null
 	,proteinSequenceNoTagObj: null
+	,complex: null
 	,setup: function() {
 		this.setSequence(this.dnaSeq);
 		this.sequenceField = "dnaSeq";
@@ -26942,6 +34883,7 @@ saturn.core.domain.SgcEntryClone.prototype = $extend(saturn.core.DNA.prototype,{
 	,sourceId: null
 	,sequenceConfirmed: null
 	,elnId: null
+	,complex: null
 	,proteinSequenceObj: null
 	,getMoleculeName: function() {
 		return this.entryCloneId;
@@ -27091,6 +35033,9 @@ saturn.core.domain.SgcTarget.prototype = $extend(saturn.core.DNA.prototype,{
 	,pi: null
 	,comments: null
 	,proteinSequenceObj: null
+	,complexComments: null
+	,eln: null
+	,complex: null
 	,setup: function() {
 		this.setSequence(this.dnaSeq);
 		this.setName(this.targetId);
@@ -27136,7 +35081,7 @@ saturn.core.domain.SgcUtil.generateNextID = function(provider,targets,clazz,cb) 
 	var s = q.getSelect();
 	var model = provider.getModel(clazz);
 	var idField = new saturn.db.query_lang.Field(clazz,model.getFirstKey());
-	q.getSelect().add(idField.substr(0,idField.instr("-",1))["as"]("target"));
+	q.getSelect().add(idField.substr(1,idField.instr("-",1).minus(1))["as"]("target"));
 	q.getSelect().add(idField.substr(idField.instr("-",1).plus(2),idField.length())["as"]("ID"));
 	var _g1 = 0;
 	var _g = targets.length;
@@ -27275,6 +35220,18 @@ saturn.core.domain.TiddlyWiki.prototype = {
 	,setup: function() {
 	}
 	,__class__: saturn.core.domain.TiddlyWiki
+};
+if(!saturn.core.domain.chromohub) saturn.core.domain.chromohub = {};
+saturn.core.domain.chromohub.Target = $hxClasses["saturn.core.domain.chromohub.Target"] = function() {
+};
+saturn.core.domain.chromohub.Target.__name__ = ["saturn","core","domain","chromohub","Target"];
+saturn.core.domain.chromohub.Target.prototype = {
+	id: null
+	,targetId: null
+	,symbol: null
+	,geneid: null
+	,uniprot: null
+	,__class__: saturn.core.domain.chromohub.Target
 };
 if(!saturn.core.exceptions) saturn.core.exceptions = {};
 saturn.core.exceptions.LocusPrimerMissingException = $hxClasses["saturn.core.exceptions.LocusPrimerMissingException"] = function(message,primer) {
@@ -27824,6 +35781,7 @@ saturn.db.Provider.prototype = {
 	,setName: null
 	,getName: null
 	,getConfig: null
+	,setConfig: null
 	,evictObject: null
 	,getByExample: null
 	,query: null
@@ -27832,6 +35790,7 @@ saturn.db.Provider.prototype = {
 	,getModelByStringName: null
 	,getConnection: null
 	,uploadFile: null
+	,addHook: null
 	,__class__: saturn.db.Provider
 };
 saturn.db.DefaultProvider = $hxClasses["saturn.db.DefaultProvider"] = function(binding_map,config,autoClose) {
@@ -27876,12 +35835,17 @@ saturn.db.DefaultProvider.prototype = {
 	,regexs: null
 	,platform: null
 	,setPlatform: function() {
+		null;
+		return;
 	}
 	,generateQualifiedName: function(schemaName,tableName) {
 		return null;
 	}
 	,getConfig: function() {
 		return this.config;
+	}
+	,setConfig: function(config) {
+		this.config = config;
 	}
 	,setName: function(name) {
 		this.name = name;
@@ -27917,6 +35881,9 @@ saturn.db.DefaultProvider.prototype = {
 		provider.winConversions = this.winConversions;
 		provider.conversions = this.conversions;
 		provider.regexs = this.regexs;
+		provider.namedQueryHookConfigs = this.namedQueryHookConfigs;
+		provider.config = this.config;
+		provider.objectCache = new haxe.ds.StringMap();
 		return provider;
 	}
 	,enableCache: function(cached) {
@@ -27977,6 +35944,7 @@ saturn.db.DefaultProvider.prototype = {
 			var d = this.theBindingMap.get(class_name);
 			var value = this.getName();
 			d.set("provider_name",value);
+			saturn.core.Util.debug(class_name + " on " + this.getName());
 		}
 		if(this.isModel(saturn.core.domain.FileProxy)) {
 			var this1 = this.getModel(saturn.core.domain.FileProxy).getOptions();
@@ -28009,35 +35977,37 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,resetCache: function() {
 		this.objectCache = new haxe.ds.StringMap();
-		var $it0 = this.theBindingMap.keys();
-		while( $it0.hasNext() ) {
-			var className = $it0.next();
-			var this1 = this.theBindingMap.get(className);
-			var value = new haxe.ds.StringMap();
-			this1.set("statements",value);
-			var value1 = new haxe.ds.StringMap();
-			this.objectCache.set(className,value1);
-			if((function($this) {
-				var $r;
-				var this2 = $this.theBindingMap.get(className);
-				$r = this2.exists("indexes");
-				return $r;
-			}(this))) {
-				var $it1 = (function($this) {
+		if(this.theBindingMap != null) {
+			var $it0 = this.theBindingMap.keys();
+			while( $it0.hasNext() ) {
+				var className = $it0.next();
+				var this1 = this.theBindingMap.get(className);
+				var value = new haxe.ds.StringMap();
+				this1.set("statements",value);
+				var value1 = new haxe.ds.StringMap();
+				this.objectCache.set(className,value1);
+				if((function($this) {
 					var $r;
-					var this3;
-					{
-						var this4 = $this.theBindingMap.get(className);
-						this3 = this4.get("indexes");
-					}
-					$r = this3.keys();
+					var this2 = $this.theBindingMap.get(className);
+					$r = this2.exists("indexes");
 					return $r;
-				}(this));
-				while( $it1.hasNext() ) {
-					var field = $it1.next();
-					var this5 = this.objectCache.get(className);
-					var value2 = new haxe.ds.StringMap();
-					this5.set(field,value2);
+				}(this))) {
+					var $it1 = (function($this) {
+						var $r;
+						var this3;
+						{
+							var this4 = $this.theBindingMap.get(className);
+							this3 = this4.get("indexes");
+						}
+						$r = this3.keys();
+						return $r;
+					}(this));
+					while( $it1.hasNext() ) {
+						var field = $it1.next();
+						var this5 = this.objectCache.get(className);
+						var value2 = new haxe.ds.StringMap();
+						this5.set(field,value2);
+					}
 				}
 			}
 		}
@@ -28197,7 +36167,9 @@ saturn.db.DefaultProvider.prototype = {
 		var _g = this;
 		var prefetched = null;
 		var idsToFetch = null;
+		saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 		if(this.useCache) {
+			saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 			var model = this.getModel(clazz);
 			if(model != null) {
 				prefetched = [];
@@ -28272,50 +36244,31 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,getByNamedQuery: function(queryId,parameters,clazz,cache,callBack) {
 		var _g = this;
-		saturn.core.Util.debug("In getByNamedQuery");
+		saturn.core.Util.debug("In getByNamedQuery " + (cache == null?"null":"" + cache));
 		try {
-			var isCached = false;
-			if(cache && this.namedQueryCache.exists(queryId)) {
-				var qResults = null;
+			if(cache) {
+				saturn.core.Util.debug("Looking for cached result");
 				var queries = this.namedQueryCache.get(queryId);
-				var _g1 = 0;
-				while(_g1 < queries.length) {
-					var query = queries[_g1];
-					++_g1;
-					saturn.core.Util.debug("Checking for existing results");
-					var serialParamString = haxe.Serializer.run(parameters);
-					if(query.queryParamSerial == serialParamString) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-				if(qResults != null) {
+				var serialParamString = haxe.Serializer.run(parameters);
+				var crc1 = haxe.crypto.Md5.encode(queryId + "/" + serialParamString);
+				if(this.namedQueryCache.exists(crc1)) {
+					var qResults = this.namedQueryCache.get(crc1).queryResults;
+					saturn.core.Util.debug("Use cached result");
 					callBack(qResults,null);
 					return;
 				}
-			} else {
-				var value = [];
-				this.namedQueryCache.set(queryId,value);
 			}
 			var privateCB = function(toBind,exception) {
-				if(toBind == null) {
-					if(isCached == false && _g.useCache && cache) {
+				if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
+					if(_g.useCache) {
+						saturn.core.Util.debug("Caching result");
 						var namedQuery = new saturn.db.NamedQueryCache();
 						namedQuery.queryName = queryId;
 						namedQuery.queryParams = parameters;
 						namedQuery.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery.queryResults = toBind;
-						_g.namedQueryCache.get(queryId).push(namedQuery);
-					}
-					callBack(toBind,exception);
-				} else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-					if(isCached == false && _g.useCache && cache) {
-						var namedQuery1 = new saturn.db.NamedQueryCache();
-						namedQuery1.queryName = queryId;
-						namedQuery1.queryParams = parameters;
-						namedQuery1.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery1.queryResults = objs;
-						_g.namedQueryCache.get(queryId).push(namedQuery1);
+						namedQuery.queryResults = objs;
+						var crc = haxe.crypto.Md5.encode(queryId + "/" + namedQuery.queryParamSerial);
+						_g.namedQueryCache.set(crc,namedQuery);
 					}
 					callBack(objs,err);
 				},clazz,null,cache);
@@ -28360,53 +36313,35 @@ saturn.db.DefaultProvider.prototype = {
 			this.namedQueryHookConfigs.set(name,value);
 		}
 	}
+	,addHook: function(hook,name) {
+		var value = hook;
+		this.namedQueryHooks.set(name,value);
+	}
 	,_getByNamedQuery: function(queryId,parameters,clazz,callBack) {
 	}
 	,getByIdStartsWith: function(id,field,clazz,limit,callBack) {
 		var _g = this;
+		saturn.core.Util.debug("Starts with using cache " + Std.string(this.useCache));
 		var queryId = "__STARTSWITH_" + Type.getClassName(clazz);
 		var parameters = [];
 		parameters.push(field);
 		parameters.push(id);
-		var isCached = false;
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g1 = 0;
-			while(_g1 < queries.length) {
-				var query = queries[_g1];
-				++_g1;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g11 = qParams.length;
-					while(_g2 < _g11) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-			}
-			if(qResults != null) {
-				callBack(qResults,null);
+		var crc = null;
+		if(this.useCache) {
+			var crc1 = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+			if(this.namedQueryCache.exists(crc1)) {
+				callBack(this.namedQueryCache.get(crc1).queryResults,null);
 				return;
 			}
-		} else {
-			var value = [];
-			this.namedQueryCache.set(queryId,value);
 		}
 		this._getByIdStartsWith(id,field,clazz,limit,function(toBind,exception) {
 			if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-				if(isCached == false && _g.useCache) {
+				if(_g.useCache) {
 					var namedQuery = new saturn.db.NamedQueryCache();
 					namedQuery.queryName = queryId;
 					namedQuery.queryParams = parameters;
 					namedQuery.queryResults = objs;
-					_g.namedQueryCache.get(queryId).push(namedQuery);
+					_g.namedQueryCache.set(crc,namedQuery);
 				}
 				callBack(objs,err);
 			},clazz,null,false,false);
@@ -28482,30 +36417,8 @@ saturn.db.DefaultProvider.prototype = {
 		}
 	}
 	,evictNamedQuery: function(queryId,parameters) {
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g = 0;
-			while(_g < queries.length) {
-				var query = queries[_g];
-				++_g;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g1 = qParams.length;
-					while(_g2 < _g1) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						HxOverrides.remove(queries,query);
-						break;
-					}
-				}
-			}
-			if(queries.length > 0) this.namedQueryCache.remove(queryId); else this.namedQueryCache.set(queryId,queries);
-		}
+		var crc = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+		if(this.namedQueryCache.exists(crc)) this.namedQueryCache.remove(crc);
 	}
 	,updateObjects: function(objs,callBack) {
 		this.synchronizeInternalLinks(objs);
@@ -28973,6 +36886,7 @@ saturn.db.DefaultProvider.prototype = {
 		var $it0 = this.theBindingMap.keys();
 		while( $it0.hasNext() ) {
 			var classStr = $it0.next();
+			saturn.core.Util.debug(classStr);
 			var clazz = Type.resolveClass(classStr);
 			if(clazz != null) this.modelClasses.push(this.getModel(clazz));
 		}
@@ -30551,6 +38465,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.person != null) _g2.setReserved("person","PERSON"); else _g2.h["person"] = "PERSON";
 		if(__map_reserved.constructStart != null) _g2.setReserved("constructStart","CONSTRUCTSTART"); else _g2.h["constructStart"] = "CONSTRUCTSTART";
 		if(__map_reserved.constructStop != null) _g2.setReserved("constructStop","CONSTRUCTSTOP"); else _g2.h["constructStop"] = "CONSTRUCTSTOP";
+		if(__map_reserved.complex != null) _g2.setReserved("complex","COMPLEX"); else _g2.h["complex"] = "COMPLEX";
 		value1 = _g2;
 		if(__map_reserved.fields != null) _g1.setReserved("fields",value1); else _g1.h["fields"] = value1;
 		var value2;
@@ -30886,6 +38801,7 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.sourceId != null) _g47.setReserved("sourceId","SOURCEID"); else _g47.h["sourceId"] = "SOURCEID";
 		if(__map_reserved.sequenceConfirmed != null) _g47.setReserved("sequenceConfirmed","SEQUENCECONFIRMED"); else _g47.h["sequenceConfirmed"] = "SEQUENCECONFIRMED";
 		if(__map_reserved.elnId != null) _g47.setReserved("elnId","ELNEXPERIMENTID"); else _g47.h["elnId"] = "ELNEXPERIMENTID";
+		if(__map_reserved.complex != null) _g47.setReserved("complex","COMPLEX"); else _g47.h["complex"] = "COMPLEX";
 		value46 = _g47;
 		if(__map_reserved.fields != null) _g46.setReserved("fields",value46); else _g46.h["fields"] = value46;
 		var value47;
@@ -31360,6 +39276,8 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.activeStatus != null) _g123.setReserved("activeStatus","ACTIVESTATUS"); else _g123.h["activeStatus"] = "ACTIVESTATUS";
 		if(__map_reserved.pi != null) _g123.setReserved("pi","PI"); else _g123.h["pi"] = "PI";
 		if(__map_reserved.comments != null) _g123.setReserved("comments","COMMENTS"); else _g123.h["comments"] = "COMMENTS";
+		if(__map_reserved.complexComments != null) _g123.setReserved("complexComments","COMPLEXCOMPONENTS"); else _g123.h["complexComments"] = "COMPLEXCOMPONENTS";
+		if(__map_reserved.complex != null) _g123.setReserved("complex","COMPLEX"); else _g123.h["complex"] = "COMPLEX";
 		value122 = _g123;
 		if(__map_reserved.fields != null) _g122.setReserved("fields",value122); else _g122.h["fields"] = value122;
 		var value123;
@@ -31407,7 +39325,6 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.alias != null) _g130.setReserved("alias","Targets"); else _g130.h["alias"] = "Targets";
 		if(__map_reserved["file.new.label"] != null) _g130.setReserved("file.new.label","Target"); else _g130.h["file.new.label"] = "Target";
 		if(__map_reserved.icon != null) _g130.setReserved("icon","protein_16.png"); else _g130.h["icon"] = "protein_16.png";
-		_g130.set("actions",[]);
 		if(__map_reserved.auto_activate != null) _g130.setReserved("auto_activate","3"); else _g130.h["auto_activate"] = "3";
 		value129 = _g130;
 		if(__map_reserved.options != null) _g122.setReserved("options",value129); else _g122.h["options"] = value129;
@@ -32234,420 +40151,435 @@ saturn.db.mapping.SGC.prototype = {
 		var _g274 = new haxe.ds.StringMap();
 		var value274;
 		var _g275 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.PurificationHelper"] != null) _g275.setReserved("saturn.client.programs.PurificationHelper",false); else _g275.h["saturn.client.programs.PurificationHelper"] = false;
+		if(__map_reserved["saturn.client.programs.ComplexHelper"] != null) _g275.setReserved("saturn.client.programs.ComplexHelper",false); else _g275.h["saturn.client.programs.ComplexHelper"] = false;
 		value274 = _g275;
 		if(__map_reserved.programs != null) _g274.setReserved("programs",value274); else _g274.h["programs"] = value274;
 		var value275;
 		var _g276 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g276.setReserved("alias","Purifiaction Helper"); else _g276.h["alias"] = "Purifiaction Helper";
+		if(__map_reserved.alias != null) _g276.setReserved("alias","Complex Helper"); else _g276.h["alias"] = "Complex Helper";
+		if(__map_reserved.icon != null) _g276.setReserved("icon","protein_conical_16.png"); else _g276.h["icon"] = "protein_conical_16.png";
 		value275 = _g276;
 		if(__map_reserved.options != null) _g274.setReserved("options",value275); else _g274.h["options"] = value275;
 		value273 = _g274;
-		if(__map_reserved["saturn.core.PurificationHelperTable"] != null) _g.setReserved("saturn.core.PurificationHelperTable",value273); else _g.h["saturn.core.PurificationHelperTable"] = value273;
+		if(__map_reserved["saturn.core.ComplexPlan"] != null) _g.setReserved("saturn.core.ComplexPlan",value273); else _g.h["saturn.core.ComplexPlan"] = value273;
 		var value276;
 		var _g277 = new haxe.ds.StringMap();
 		var value277;
 		var _g278 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.SHRNADesigner"] != null) _g278.setReserved("saturn.client.programs.SHRNADesigner",false); else _g278.h["saturn.client.programs.SHRNADesigner"] = false;
+		if(__map_reserved["saturn.client.programs.PurificationHelper"] != null) _g278.setReserved("saturn.client.programs.PurificationHelper",false); else _g278.h["saturn.client.programs.PurificationHelper"] = false;
 		value277 = _g278;
 		if(__map_reserved.programs != null) _g277.setReserved("programs",value277); else _g277.h["programs"] = value277;
 		var value278;
 		var _g279 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g279.setReserved("alias","shRNA Designer"); else _g279.h["alias"] = "shRNA Designer";
-		if(__map_reserved.icon != null) _g279.setReserved("icon","shrna_16.png"); else _g279.h["icon"] = "shrna_16.png";
+		if(__map_reserved.alias != null) _g279.setReserved("alias","Purifiaction Helper"); else _g279.h["alias"] = "Purifiaction Helper";
 		value278 = _g279;
 		if(__map_reserved.options != null) _g277.setReserved("options",value278); else _g277.h["options"] = value278;
 		value276 = _g277;
-		if(__map_reserved["saturn.core.SHRNADesignTable"] != null) _g.setReserved("saturn.core.SHRNADesignTable",value276); else _g.h["saturn.core.SHRNADesignTable"] = value276;
+		if(__map_reserved["saturn.core.PurificationHelperTable"] != null) _g.setReserved("saturn.core.PurificationHelperTable",value276); else _g.h["saturn.core.PurificationHelperTable"] = value276;
 		var value279;
 		var _g280 = new haxe.ds.StringMap();
 		var value280;
 		var _g281 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g281.setReserved("saturn.client.programs.BasicTableViewer",false); else _g281.h["saturn.client.programs.BasicTableViewer"] = false;
+		if(__map_reserved["saturn.client.programs.SHRNADesigner"] != null) _g281.setReserved("saturn.client.programs.SHRNADesigner",false); else _g281.h["saturn.client.programs.SHRNADesigner"] = false;
 		value280 = _g281;
 		if(__map_reserved.programs != null) _g280.setReserved("programs",value280); else _g280.h["programs"] = value280;
 		var value281;
 		var _g282 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g282.setReserved("alias","Table"); else _g282.h["alias"] = "Table";
+		if(__map_reserved.alias != null) _g282.setReserved("alias","shRNA Designer"); else _g282.h["alias"] = "shRNA Designer";
+		if(__map_reserved.icon != null) _g282.setReserved("icon","shrna_16.png"); else _g282.h["icon"] = "shrna_16.png";
 		value281 = _g282;
 		if(__map_reserved.options != null) _g280.setReserved("options",value281); else _g280.h["options"] = value281;
 		value279 = _g280;
-		if(__map_reserved["saturn.core.Table"] != null) _g.setReserved("saturn.core.Table",value279); else _g.h["saturn.core.Table"] = value279;
+		if(__map_reserved["saturn.core.SHRNADesignTable"] != null) _g.setReserved("saturn.core.SHRNADesignTable",value279); else _g.h["saturn.core.SHRNADesignTable"] = value279;
 		var value282;
 		var _g283 = new haxe.ds.StringMap();
 		var value283;
 		var _g284 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g284.setReserved("id","PKEY"); else _g284.h["id"] = "PKEY";
-		if(__map_reserved.compoundId != null) _g284.setReserved("compoundId","SGCGLOBALID"); else _g284.h["compoundId"] = "SGCGLOBALID";
-		if(__map_reserved.shortCompoundId != null) _g284.setReserved("shortCompoundId","COMPOUND_ID"); else _g284.h["shortCompoundId"] = "COMPOUND_ID";
-		if(__map_reserved.supplierId != null) _g284.setReserved("supplierId","SUPPLIER_ID"); else _g284.h["supplierId"] = "SUPPLIER_ID";
-		if(__map_reserved.sdf != null) _g284.setReserved("sdf","SDF"); else _g284.h["sdf"] = "SDF";
-		if(__map_reserved.supplier != null) _g284.setReserved("supplier","SUPPLIER"); else _g284.h["supplier"] = "SUPPLIER";
-		if(__map_reserved.description != null) _g284.setReserved("description","DESCRIPTION"); else _g284.h["description"] = "DESCRIPTION";
-		if(__map_reserved.concentration != null) _g284.setReserved("concentration","CONCENTRATION"); else _g284.h["concentration"] = "CONCENTRATION";
-		if(__map_reserved.location != null) _g284.setReserved("location","LOCATION"); else _g284.h["location"] = "LOCATION";
-		if(__map_reserved.comments != null) _g284.setReserved("comments","COMMENTS"); else _g284.h["comments"] = "COMMENTS";
-		if(__map_reserved.solute != null) _g284.setReserved("solute","SOLUTE"); else _g284.h["solute"] = "SOLUTE";
-		if(__map_reserved.mw != null) _g284.setReserved("mw","MW"); else _g284.h["mw"] = "MW";
-		if(__map_reserved.confidential != null) _g284.setReserved("confidential","CONFIDENTIAL"); else _g284.h["confidential"] = "CONFIDENTIAL";
-		if(__map_reserved.inchi != null) _g284.setReserved("inchi","INCHI"); else _g284.h["inchi"] = "INCHI";
-		if(__map_reserved.smiles != null) _g284.setReserved("smiles","SMILES"); else _g284.h["smiles"] = "SMILES";
-		if(__map_reserved.datestamp != null) _g284.setReserved("datestamp","DATESTAMP"); else _g284.h["datestamp"] = "DATESTAMP";
-		if(__map_reserved.person != null) _g284.setReserved("person","PERSON"); else _g284.h["person"] = "PERSON";
-		if(__map_reserved.oldSGCGLobalId != null) _g284.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g284.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
+		if(__map_reserved["saturn.client.programs.BasicTableViewer"] != null) _g284.setReserved("saturn.client.programs.BasicTableViewer",false); else _g284.h["saturn.client.programs.BasicTableViewer"] = false;
 		value283 = _g284;
-		if(__map_reserved.fields != null) _g283.setReserved("fields",value283); else _g283.h["fields"] = value283;
+		if(__map_reserved.programs != null) _g283.setReserved("programs",value283); else _g283.h["programs"] = value283;
 		var value284;
 		var _g285 = new haxe.ds.StringMap();
-		if(__map_reserved.compoundId != null) _g285.setReserved("compoundId",false); else _g285.h["compoundId"] = false;
-		if(__map_reserved.id != null) _g285.setReserved("id",true); else _g285.h["id"] = true;
+		if(__map_reserved.alias != null) _g285.setReserved("alias","Table"); else _g285.h["alias"] = "Table";
 		value284 = _g285;
-		if(__map_reserved.indexes != null) _g283.setReserved("indexes",value284); else _g283.h["indexes"] = value284;
+		if(__map_reserved.options != null) _g283.setReserved("options",value284); else _g283.h["options"] = value284;
+		value282 = _g283;
+		if(__map_reserved["saturn.core.Table"] != null) _g.setReserved("saturn.core.Table",value282); else _g.h["saturn.core.Table"] = value282;
 		var value285;
 		var _g286 = new haxe.ds.StringMap();
-		if(__map_reserved.compoundId != null) _g286.setReserved("compoundId",null); else _g286.h["compoundId"] = null;
-		if(__map_reserved.shortCompoundId != null) _g286.setReserved("shortCompoundId",null); else _g286.h["shortCompoundId"] = null;
-		if(__map_reserved.supplierId != null) _g286.setReserved("supplierId",null); else _g286.h["supplierId"] = null;
-		if(__map_reserved.supplier != null) _g286.setReserved("supplier",null); else _g286.h["supplier"] = null;
-		if(__map_reserved.oldSGCGlobalId != null) _g286.setReserved("oldSGCGlobalId",null); else _g286.h["oldSGCGlobalId"] = null;
-		value285 = _g286;
-		if(__map_reserved.search != null) _g283.setReserved("search",value285); else _g283.h["search"] = value285;
 		var value286;
 		var _g287 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g287.setReserved("schema","SGC"); else _g287.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g287.setReserved("name","SGCCOMPOUND"); else _g287.h["name"] = "SGCCOMPOUND";
+		if(__map_reserved.id != null) _g287.setReserved("id","PKEY"); else _g287.h["id"] = "PKEY";
+		if(__map_reserved.compoundId != null) _g287.setReserved("compoundId","SGCGLOBALID"); else _g287.h["compoundId"] = "SGCGLOBALID";
+		if(__map_reserved.shortCompoundId != null) _g287.setReserved("shortCompoundId","COMPOUND_ID"); else _g287.h["shortCompoundId"] = "COMPOUND_ID";
+		if(__map_reserved.supplierId != null) _g287.setReserved("supplierId","SUPPLIER_ID"); else _g287.h["supplierId"] = "SUPPLIER_ID";
+		if(__map_reserved.sdf != null) _g287.setReserved("sdf","SDF"); else _g287.h["sdf"] = "SDF";
+		if(__map_reserved.supplier != null) _g287.setReserved("supplier","SUPPLIER"); else _g287.h["supplier"] = "SUPPLIER";
+		if(__map_reserved.description != null) _g287.setReserved("description","DESCRIPTION"); else _g287.h["description"] = "DESCRIPTION";
+		if(__map_reserved.concentration != null) _g287.setReserved("concentration","CONCENTRATION"); else _g287.h["concentration"] = "CONCENTRATION";
+		if(__map_reserved.location != null) _g287.setReserved("location","LOCATION"); else _g287.h["location"] = "LOCATION";
+		if(__map_reserved.comments != null) _g287.setReserved("comments","COMMENTS"); else _g287.h["comments"] = "COMMENTS";
+		if(__map_reserved.solute != null) _g287.setReserved("solute","SOLUTE"); else _g287.h["solute"] = "SOLUTE";
+		if(__map_reserved.mw != null) _g287.setReserved("mw","MW"); else _g287.h["mw"] = "MW";
+		if(__map_reserved.confidential != null) _g287.setReserved("confidential","CONFIDENTIAL"); else _g287.h["confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.inchi != null) _g287.setReserved("inchi","INCHI"); else _g287.h["inchi"] = "INCHI";
+		if(__map_reserved.smiles != null) _g287.setReserved("smiles","SMILES"); else _g287.h["smiles"] = "SMILES";
+		if(__map_reserved.datestamp != null) _g287.setReserved("datestamp","DATESTAMP"); else _g287.h["datestamp"] = "DATESTAMP";
+		if(__map_reserved.person != null) _g287.setReserved("person","PERSON"); else _g287.h["person"] = "PERSON";
+		if(__map_reserved.oldSGCGLobalId != null) _g287.setReserved("oldSGCGLobalId","OLD_SGCGLOBAL_ID"); else _g287.h["oldSGCGLobalId"] = "OLD_SGCGLOBAL_ID";
 		value286 = _g287;
-		if(__map_reserved.table_info != null) _g283.setReserved("table_info",value286); else _g283.h["table_info"] = value286;
+		if(__map_reserved.fields != null) _g286.setReserved("fields",value286); else _g286.h["fields"] = value286;
 		var value287;
 		var _g288 = new haxe.ds.StringMap();
-		if(__map_reserved.workspace_wrapper != null) _g288.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g288.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
-		if(__map_reserved.icon != null) _g288.setReserved("icon","compound_16.png"); else _g288.h["icon"] = "compound_16.png";
-		if(__map_reserved.alias != null) _g288.setReserved("alias","Compounds"); else _g288.h["alias"] = "Compounds";
+		if(__map_reserved.compoundId != null) _g288.setReserved("compoundId",false); else _g288.h["compoundId"] = false;
+		if(__map_reserved.id != null) _g288.setReserved("id",true); else _g288.h["id"] = true;
+		value287 = _g288;
+		if(__map_reserved.indexes != null) _g286.setReserved("indexes",value287); else _g286.h["indexes"] = value287;
 		var value288;
 		var _g289 = new haxe.ds.StringMap();
+		if(__map_reserved.compoundId != null) _g289.setReserved("compoundId",null); else _g289.h["compoundId"] = null;
+		if(__map_reserved.shortCompoundId != null) _g289.setReserved("shortCompoundId",null); else _g289.h["shortCompoundId"] = null;
+		if(__map_reserved.supplierId != null) _g289.setReserved("supplierId",null); else _g289.h["supplierId"] = null;
+		if(__map_reserved.supplier != null) _g289.setReserved("supplier",null); else _g289.h["supplier"] = null;
+		if(__map_reserved.oldSGCGlobalId != null) _g289.setReserved("oldSGCGlobalId",null); else _g289.h["oldSGCGlobalId"] = null;
+		value288 = _g289;
+		if(__map_reserved.search != null) _g286.setReserved("search",value288); else _g286.h["search"] = value288;
 		var value289;
 		var _g290 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g290.setReserved("schema","SGC"); else _g290.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g290.setReserved("name","SGCCOMPOUND"); else _g290.h["name"] = "SGCCOMPOUND";
+		value289 = _g290;
+		if(__map_reserved.table_info != null) _g286.setReserved("table_info",value289); else _g286.h["table_info"] = value289;
 		var value290;
 		var _g291 = new haxe.ds.StringMap();
-		if(__map_reserved.user_suffix != null) _g291.setReserved("user_suffix","Assay Results"); else _g291.h["user_suffix"] = "Assay Results";
-		if(__map_reserved["function"] != null) _g291.setReserved("function","saturn.core.domain.Compound.assaySearch"); else _g291.h["function"] = "saturn.core.domain.Compound.assaySearch";
-		value290 = _g291;
-		if(__map_reserved.assay_results != null) _g290.setReserved("assay_results",value290); else _g290.h["assay_results"] = value290;
-		value289 = _g290;
-		if(__map_reserved.search_bar != null) _g289.setReserved("search_bar",value289); else _g289.h["search_bar"] = value289;
-		value288 = _g289;
-		_g288.set("actions",value288);
-		value287 = _g288;
-		if(__map_reserved.options != null) _g283.setReserved("options",value287); else _g283.h["options"] = value287;
+		if(__map_reserved.workspace_wrapper != null) _g291.setReserved("workspace_wrapper","saturn.client.workspace.CompoundWO"); else _g291.h["workspace_wrapper"] = "saturn.client.workspace.CompoundWO";
+		if(__map_reserved.icon != null) _g291.setReserved("icon","compound_16.png"); else _g291.h["icon"] = "compound_16.png";
+		if(__map_reserved.alias != null) _g291.setReserved("alias","Compounds"); else _g291.h["alias"] = "Compounds";
 		var value291;
 		var _g292 = new haxe.ds.StringMap();
-		if(__map_reserved["Global ID"] != null) _g292.setReserved("Global ID","compoundId"); else _g292.h["Global ID"] = "compoundId";
-		if(__map_reserved["Oxford ID"] != null) _g292.setReserved("Oxford ID","shortCompoundId"); else _g292.h["Oxford ID"] = "shortCompoundId";
-		if(__map_reserved["Supplier ID"] != null) _g292.setReserved("Supplier ID","supplierId"); else _g292.h["Supplier ID"] = "supplierId";
-		if(__map_reserved.Supplier != null) _g292.setReserved("Supplier","supplier"); else _g292.h["Supplier"] = "supplier";
-		if(__map_reserved.Description != null) _g292.setReserved("Description","description"); else _g292.h["Description"] = "description";
-		if(__map_reserved.Concentration != null) _g292.setReserved("Concentration","concentration"); else _g292.h["Concentration"] = "concentration";
-		if(__map_reserved.Location != null) _g292.setReserved("Location","location"); else _g292.h["Location"] = "location";
-		if(__map_reserved.Solute != null) _g292.setReserved("Solute","solute"); else _g292.h["Solute"] = "solute";
-		if(__map_reserved.Comments != null) _g292.setReserved("Comments","comments"); else _g292.h["Comments"] = "comments";
-		if(__map_reserved.MW != null) _g292.setReserved("MW","mw"); else _g292.h["MW"] = "mw";
-		if(__map_reserved.Confidential != null) _g292.setReserved("Confidential","CONFIDENTIAL"); else _g292.h["Confidential"] = "CONFIDENTIAL";
-		if(__map_reserved.Date != null) _g292.setReserved("Date","datestamp"); else _g292.h["Date"] = "datestamp";
-		if(__map_reserved.Person != null) _g292.setReserved("Person","person"); else _g292.h["Person"] = "person";
-		if(__map_reserved.InChi != null) _g292.setReserved("InChi","inchi"); else _g292.h["InChi"] = "inchi";
-		if(__map_reserved.smiles != null) _g292.setReserved("smiles","smiles"); else _g292.h["smiles"] = "smiles";
-		value291 = _g292;
-		if(__map_reserved.model != null) _g283.setReserved("model",value291); else _g283.h["model"] = value291;
 		var value292;
 		var _g293 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.CompoundViewer"] != null) _g293.setReserved("saturn.client.programs.CompoundViewer",true); else _g293.h["saturn.client.programs.CompoundViewer"] = true;
-		value292 = _g293;
-		if(__map_reserved.programs != null) _g283.setReserved("programs",value292); else _g283.h["programs"] = value292;
-		value282 = _g283;
-		if(__map_reserved["saturn.core.domain.Compound"] != null) _g.setReserved("saturn.core.domain.Compound",value282); else _g.h["saturn.core.domain.Compound"] = value282;
 		var value293;
 		var _g294 = new haxe.ds.StringMap();
+		if(__map_reserved.user_suffix != null) _g294.setReserved("user_suffix","Assay Results"); else _g294.h["user_suffix"] = "Assay Results";
+		if(__map_reserved["function"] != null) _g294.setReserved("function","saturn.core.domain.Compound.assaySearch"); else _g294.h["function"] = "saturn.core.domain.Compound.assaySearch";
+		value293 = _g294;
+		if(__map_reserved.assay_results != null) _g293.setReserved("assay_results",value293); else _g293.h["assay_results"] = value293;
+		value292 = _g293;
+		if(__map_reserved.search_bar != null) _g292.setReserved("search_bar",value292); else _g292.h["search_bar"] = value292;
+		value291 = _g292;
+		_g291.set("actions",value291);
+		value290 = _g291;
+		if(__map_reserved.options != null) _g286.setReserved("options",value290); else _g286.h["options"] = value290;
 		var value294;
 		var _g295 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g295.setReserved("id","PKEY"); else _g295.h["id"] = "PKEY";
-		if(__map_reserved.glycanId != null) _g295.setReserved("glycanId","GLYCANID"); else _g295.h["glycanId"] = "GLYCANID";
-		if(__map_reserved.content != null) _g295.setReserved("content","CONTENT"); else _g295.h["content"] = "CONTENT";
-		if(__map_reserved.contentType != null) _g295.setReserved("contentType","CONTENT_TYPE"); else _g295.h["contentType"] = "CONTENT_TYPE";
-		if(__map_reserved.description != null) _g295.setReserved("description","DESCRIPTION"); else _g295.h["description"] = "DESCRIPTION";
+		if(__map_reserved["Global ID"] != null) _g295.setReserved("Global ID","compoundId"); else _g295.h["Global ID"] = "compoundId";
+		if(__map_reserved["Oxford ID"] != null) _g295.setReserved("Oxford ID","shortCompoundId"); else _g295.h["Oxford ID"] = "shortCompoundId";
+		if(__map_reserved["Supplier ID"] != null) _g295.setReserved("Supplier ID","supplierId"); else _g295.h["Supplier ID"] = "supplierId";
+		if(__map_reserved.Supplier != null) _g295.setReserved("Supplier","supplier"); else _g295.h["Supplier"] = "supplier";
+		if(__map_reserved.Description != null) _g295.setReserved("Description","description"); else _g295.h["Description"] = "description";
+		if(__map_reserved.Concentration != null) _g295.setReserved("Concentration","concentration"); else _g295.h["Concentration"] = "concentration";
+		if(__map_reserved.Location != null) _g295.setReserved("Location","location"); else _g295.h["Location"] = "location";
+		if(__map_reserved.Solute != null) _g295.setReserved("Solute","solute"); else _g295.h["Solute"] = "solute";
+		if(__map_reserved.Comments != null) _g295.setReserved("Comments","comments"); else _g295.h["Comments"] = "comments";
+		if(__map_reserved.MW != null) _g295.setReserved("MW","mw"); else _g295.h["MW"] = "mw";
+		if(__map_reserved.Confidential != null) _g295.setReserved("Confidential","CONFIDENTIAL"); else _g295.h["Confidential"] = "CONFIDENTIAL";
+		if(__map_reserved.Date != null) _g295.setReserved("Date","datestamp"); else _g295.h["Date"] = "datestamp";
+		if(__map_reserved.Person != null) _g295.setReserved("Person","person"); else _g295.h["Person"] = "person";
+		if(__map_reserved.InChi != null) _g295.setReserved("InChi","inchi"); else _g295.h["InChi"] = "inchi";
+		if(__map_reserved.smiles != null) _g295.setReserved("smiles","smiles"); else _g295.h["smiles"] = "smiles";
 		value294 = _g295;
-		if(__map_reserved.fields != null) _g294.setReserved("fields",value294); else _g294.h["fields"] = value294;
+		if(__map_reserved.model != null) _g286.setReserved("model",value294); else _g286.h["model"] = value294;
 		var value295;
 		var _g296 = new haxe.ds.StringMap();
-		if(__map_reserved.glycanId != null) _g296.setReserved("glycanId",false); else _g296.h["glycanId"] = false;
-		if(__map_reserved.id != null) _g296.setReserved("id",true); else _g296.h["id"] = true;
+		if(__map_reserved["saturn.client.programs.CompoundViewer"] != null) _g296.setReserved("saturn.client.programs.CompoundViewer",true); else _g296.h["saturn.client.programs.CompoundViewer"] = true;
 		value295 = _g296;
-		if(__map_reserved.indexes != null) _g294.setReserved("indexes",value295); else _g294.h["indexes"] = value295;
+		if(__map_reserved.programs != null) _g286.setReserved("programs",value295); else _g286.h["programs"] = value295;
+		value285 = _g286;
+		if(__map_reserved["saturn.core.domain.Compound"] != null) _g.setReserved("saturn.core.domain.Compound",value285); else _g.h["saturn.core.domain.Compound"] = value285;
 		var value296;
 		var _g297 = new haxe.ds.StringMap();
-		if(__map_reserved.glycanId != null) _g297.setReserved("glycanId",null); else _g297.h["glycanId"] = null;
-		value296 = _g297;
-		if(__map_reserved.search != null) _g294.setReserved("search",value296); else _g294.h["search"] = value296;
 		var value297;
 		var _g298 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g298.setReserved("schema","SGC"); else _g298.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g298.setReserved("name","GLYCAN"); else _g298.h["name"] = "GLYCAN";
+		if(__map_reserved.id != null) _g298.setReserved("id","PKEY"); else _g298.h["id"] = "PKEY";
+		if(__map_reserved.glycanId != null) _g298.setReserved("glycanId","GLYCANID"); else _g298.h["glycanId"] = "GLYCANID";
+		if(__map_reserved.content != null) _g298.setReserved("content","CONTENT"); else _g298.h["content"] = "CONTENT";
+		if(__map_reserved.contentType != null) _g298.setReserved("contentType","CONTENT_TYPE"); else _g298.h["contentType"] = "CONTENT_TYPE";
+		if(__map_reserved.description != null) _g298.setReserved("description","DESCRIPTION"); else _g298.h["description"] = "DESCRIPTION";
 		value297 = _g298;
-		if(__map_reserved.table_info != null) _g294.setReserved("table_info",value297); else _g294.h["table_info"] = value297;
+		if(__map_reserved.fields != null) _g297.setReserved("fields",value297); else _g297.h["fields"] = value297;
 		var value298;
 		var _g299 = new haxe.ds.StringMap();
-		if(__map_reserved.workspace_wrapper != null) _g299.setReserved("workspace_wrapper","saturn.client.workspace.GlycanWO"); else _g299.h["workspace_wrapper"] = "saturn.client.workspace.GlycanWO";
-		if(__map_reserved.icon != null) _g299.setReserved("icon","glycan_16.png"); else _g299.h["icon"] = "glycan_16.png";
-		if(__map_reserved.alias != null) _g299.setReserved("alias","Glycans"); else _g299.h["alias"] = "Glycans";
+		if(__map_reserved.glycanId != null) _g299.setReserved("glycanId",false); else _g299.h["glycanId"] = false;
+		if(__map_reserved.id != null) _g299.setReserved("id",true); else _g299.h["id"] = true;
 		value298 = _g299;
-		if(__map_reserved.options != null) _g294.setReserved("options",value298); else _g294.h["options"] = value298;
+		if(__map_reserved.indexes != null) _g297.setReserved("indexes",value298); else _g297.h["indexes"] = value298;
 		var value299;
 		var _g300 = new haxe.ds.StringMap();
-		if(__map_reserved["Glycan ID"] != null) _g300.setReserved("Glycan ID","glycanId"); else _g300.h["Glycan ID"] = "glycanId";
-		if(__map_reserved.Description != null) _g300.setReserved("Description","description"); else _g300.h["Description"] = "description";
-		if(__map_reserved.content != null) _g300.setReserved("content","content"); else _g300.h["content"] = "content";
-		if(__map_reserved.contentType != null) _g300.setReserved("contentType","contentType"); else _g300.h["contentType"] = "contentType";
+		if(__map_reserved.glycanId != null) _g300.setReserved("glycanId",null); else _g300.h["glycanId"] = null;
 		value299 = _g300;
-		if(__map_reserved.model != null) _g294.setReserved("model",value299); else _g294.h["model"] = value299;
+		if(__map_reserved.search != null) _g297.setReserved("search",value299); else _g297.h["search"] = value299;
 		var value300;
 		var _g301 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.GlycanBuilder"] != null) _g301.setReserved("saturn.client.programs.GlycanBuilder",true); else _g301.h["saturn.client.programs.GlycanBuilder"] = true;
+		if(__map_reserved.schema != null) _g301.setReserved("schema","SGC"); else _g301.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g301.setReserved("name","GLYCAN"); else _g301.h["name"] = "GLYCAN";
 		value300 = _g301;
-		if(__map_reserved.programs != null) _g294.setReserved("programs",value300); else _g294.h["programs"] = value300;
-		value293 = _g294;
-		if(__map_reserved["saturn.core.domain.Glycan"] != null) _g.setReserved("saturn.core.domain.Glycan",value293); else _g.h["saturn.core.domain.Glycan"] = value293;
+		if(__map_reserved.table_info != null) _g297.setReserved("table_info",value300); else _g297.h["table_info"] = value300;
 		var value301;
 		var _g302 = new haxe.ds.StringMap();
+		if(__map_reserved.workspace_wrapper != null) _g302.setReserved("workspace_wrapper","saturn.client.workspace.GlycanWO"); else _g302.h["workspace_wrapper"] = "saturn.client.workspace.GlycanWO";
+		if(__map_reserved.icon != null) _g302.setReserved("icon","glycan_16.png"); else _g302.h["icon"] = "glycan_16.png";
+		if(__map_reserved.alias != null) _g302.setReserved("alias","Glycans"); else _g302.h["alias"] = "Glycans";
+		value301 = _g302;
+		if(__map_reserved.options != null) _g297.setReserved("options",value301); else _g297.h["options"] = value301;
 		var value302;
 		var _g303 = new haxe.ds.StringMap();
+		if(__map_reserved["Glycan ID"] != null) _g303.setReserved("Glycan ID","glycanId"); else _g303.h["Glycan ID"] = "glycanId";
+		if(__map_reserved.Description != null) _g303.setReserved("Description","description"); else _g303.h["Description"] = "description";
+		if(__map_reserved.content != null) _g303.setReserved("content","content"); else _g303.h["content"] = "content";
+		if(__map_reserved.contentType != null) _g303.setReserved("contentType","contentType"); else _g303.h["contentType"] = "contentType";
+		value302 = _g303;
+		if(__map_reserved.model != null) _g297.setReserved("model",value302); else _g297.h["model"] = value302;
 		var value303;
 		var _g304 = new haxe.ds.StringMap();
-		if(__map_reserved.SGC != null) _g304.setReserved("SGC",true); else _g304.h["SGC"] = true;
+		if(__map_reserved["saturn.client.programs.GlycanBuilder"] != null) _g304.setReserved("saturn.client.programs.GlycanBuilder",true); else _g304.h["saturn.client.programs.GlycanBuilder"] = true;
 		value303 = _g304;
-		_g303.set("flags",value303);
-		value302 = _g303;
-		if(__map_reserved.options != null) _g302.setReserved("options",value302); else _g302.h["options"] = value302;
-		value301 = _g302;
-		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value301); else _g.h["saturn.app.SaturnClient"] = value301;
+		if(__map_reserved.programs != null) _g297.setReserved("programs",value303); else _g297.h["programs"] = value303;
+		value296 = _g297;
+		if(__map_reserved["saturn.core.domain.Glycan"] != null) _g.setReserved("saturn.core.domain.Glycan",value296); else _g.h["saturn.core.domain.Glycan"] = value296;
 		var value304;
 		var _g305 = new haxe.ds.StringMap();
 		var value305;
 		var _g306 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g306.setReserved("id","PKEY"); else _g306.h["id"] = "PKEY";
-		if(__map_reserved.username != null) _g306.setReserved("username","USERID"); else _g306.h["username"] = "USERID";
-		if(__map_reserved.fullname != null) _g306.setReserved("fullname","FULLNAME"); else _g306.h["fullname"] = "FULLNAME";
-		value305 = _g306;
-		if(__map_reserved.fields != null) _g305.setReserved("fields",value305); else _g305.h["fields"] = value305;
 		var value306;
 		var _g307 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g307.setReserved("id",true); else _g307.h["id"] = true;
-		if(__map_reserved.username != null) _g307.setReserved("username",false); else _g307.h["username"] = false;
+		if(__map_reserved.SGC != null) _g307.setReserved("SGC",true); else _g307.h["SGC"] = true;
 		value306 = _g307;
-		if(__map_reserved.indexes != null) _g305.setReserved("indexes",value306); else _g305.h["indexes"] = value306;
+		_g306.set("flags",value306);
+		value305 = _g306;
+		if(__map_reserved.options != null) _g305.setReserved("options",value305); else _g305.h["options"] = value305;
+		value304 = _g305;
+		if(__map_reserved["saturn.app.SaturnClient"] != null) _g.setReserved("saturn.app.SaturnClient",value304); else _g.h["saturn.app.SaturnClient"] = value304;
 		var value307;
 		var _g308 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g308.setReserved("schema","HIVE"); else _g308.h["schema"] = "HIVE";
-		if(__map_reserved.name != null) _g308.setReserved("name","USER_DETAILS"); else _g308.h["name"] = "USER_DETAILS";
-		value307 = _g308;
-		if(__map_reserved.table_info != null) _g305.setReserved("table_info",value307); else _g305.h["table_info"] = value307;
-		value304 = _g305;
-		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value304); else _g.h["saturn.core.User"] = value304;
 		var value308;
 		var _g309 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g309.setReserved("id","PKEY"); else _g309.h["id"] = "PKEY";
+		if(__map_reserved.username != null) _g309.setReserved("username","USERID"); else _g309.h["username"] = "USERID";
+		if(__map_reserved.fullname != null) _g309.setReserved("fullname","FULLNAME"); else _g309.h["fullname"] = "FULLNAME";
+		value308 = _g309;
+		if(__map_reserved.fields != null) _g308.setReserved("fields",value308); else _g308.h["fields"] = value308;
 		var value309;
 		var _g310 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g310.setReserved("id","PKEY"); else _g310.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g310.setReserved("name","NAME"); else _g310.h["name"] = "NAME";
+		if(__map_reserved.id != null) _g310.setReserved("id",true); else _g310.h["id"] = true;
+		if(__map_reserved.username != null) _g310.setReserved("username",false); else _g310.h["username"] = false;
 		value309 = _g310;
-		if(__map_reserved.fields != null) _g309.setReserved("fields",value309); else _g309.h["fields"] = value309;
+		if(__map_reserved.indexes != null) _g308.setReserved("indexes",value309); else _g308.h["indexes"] = value309;
 		var value310;
 		var _g311 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g311.setReserved("id",true); else _g311.h["id"] = true;
-		if(__map_reserved.name != null) _g311.setReserved("name",false); else _g311.h["name"] = false;
+		if(__map_reserved.schema != null) _g311.setReserved("schema","HIVE"); else _g311.h["schema"] = "HIVE";
+		if(__map_reserved.name != null) _g311.setReserved("name","USER_DETAILS"); else _g311.h["name"] = "USER_DETAILS";
 		value310 = _g311;
-		if(__map_reserved.index != null) _g309.setReserved("index",value310); else _g309.h["index"] = value310;
+		if(__map_reserved.table_info != null) _g308.setReserved("table_info",value310); else _g308.h["table_info"] = value310;
+		value307 = _g308;
+		if(__map_reserved["saturn.core.User"] != null) _g.setReserved("saturn.core.User",value307); else _g.h["saturn.core.User"] = value307;
 		var value311;
 		var _g312 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g312.setReserved("schema","SGC"); else _g312.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g312.setReserved("name","SATURNPERMISSION"); else _g312.h["name"] = "SATURNPERMISSION";
-		value311 = _g312;
-		if(__map_reserved.table_info != null) _g309.setReserved("table_info",value311); else _g309.h["table_info"] = value311;
-		value308 = _g309;
-		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value308); else _g.h["saturn.core.Permission"] = value308;
 		var value312;
 		var _g313 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g313.setReserved("id","PKEY"); else _g313.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g313.setReserved("name","NAME"); else _g313.h["name"] = "NAME";
+		value312 = _g313;
+		if(__map_reserved.fields != null) _g312.setReserved("fields",value312); else _g312.h["fields"] = value312;
 		var value313;
 		var _g314 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g314.setReserved("id","PKEY"); else _g314.h["id"] = "PKEY";
-		if(__map_reserved.permissionId != null) _g314.setReserved("permissionId","PERMISSIONID"); else _g314.h["permissionId"] = "PERMISSIONID";
-		if(__map_reserved.userId != null) _g314.setReserved("userId","USERID"); else _g314.h["userId"] = "USERID";
+		if(__map_reserved.id != null) _g314.setReserved("id",true); else _g314.h["id"] = true;
+		if(__map_reserved.name != null) _g314.setReserved("name",false); else _g314.h["name"] = false;
 		value313 = _g314;
-		if(__map_reserved.fields != null) _g313.setReserved("fields",value313); else _g313.h["fields"] = value313;
+		if(__map_reserved.index != null) _g312.setReserved("index",value313); else _g312.h["index"] = value313;
 		var value314;
 		var _g315 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g315.setReserved("id",true); else _g315.h["id"] = true;
+		if(__map_reserved.schema != null) _g315.setReserved("schema","SGC"); else _g315.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g315.setReserved("name","SATURNPERMISSION"); else _g315.h["name"] = "SATURNPERMISSION";
 		value314 = _g315;
-		if(__map_reserved.index != null) _g313.setReserved("index",value314); else _g313.h["index"] = value314;
+		if(__map_reserved.table_info != null) _g312.setReserved("table_info",value314); else _g312.h["table_info"] = value314;
+		value311 = _g312;
+		if(__map_reserved["saturn.core.Permission"] != null) _g.setReserved("saturn.core.Permission",value311); else _g.h["saturn.core.Permission"] = value311;
 		var value315;
 		var _g316 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g316.setReserved("schema","SGC"); else _g316.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g316.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g316.h["name"] = "SATURNUSER_TO_PERMISSION";
-		value315 = _g316;
-		if(__map_reserved.table_info != null) _g313.setReserved("table_info",value315); else _g313.h["table_info"] = value315;
-		value312 = _g313;
-		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value312); else _g.h["saturn.core.UserToPermission"] = value312;
 		var value316;
 		var _g317 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g317.setReserved("id","PKEY"); else _g317.h["id"] = "PKEY";
+		if(__map_reserved.permissionId != null) _g317.setReserved("permissionId","PERMISSIONID"); else _g317.h["permissionId"] = "PERMISSIONID";
+		if(__map_reserved.userId != null) _g317.setReserved("userId","USERID"); else _g317.h["userId"] = "USERID";
+		value316 = _g317;
+		if(__map_reserved.fields != null) _g316.setReserved("fields",value316); else _g316.h["fields"] = value316;
 		var value317;
 		var _g318 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g318.setReserved("id","PKEY"); else _g318.h["id"] = "PKEY";
-		if(__map_reserved.userName != null) _g318.setReserved("userName","USERNAME"); else _g318.h["userName"] = "USERNAME";
-		if(__map_reserved.isPublic != null) _g318.setReserved("isPublic","ISPUBLIC"); else _g318.h["isPublic"] = "ISPUBLIC";
-		if(__map_reserved.sessionContent != null) _g318.setReserved("sessionContent","SESSIONCONTENTS"); else _g318.h["sessionContent"] = "SESSIONCONTENTS";
-		if(__map_reserved.sessionName != null) _g318.setReserved("sessionName","SESSIONNAME"); else _g318.h["sessionName"] = "SESSIONNAME";
+		if(__map_reserved.id != null) _g318.setReserved("id",true); else _g318.h["id"] = true;
 		value317 = _g318;
-		if(__map_reserved.fields != null) _g317.setReserved("fields",value317); else _g317.h["fields"] = value317;
+		if(__map_reserved.index != null) _g316.setReserved("index",value317); else _g316.h["index"] = value317;
 		var value318;
 		var _g319 = new haxe.ds.StringMap();
-		if(__map_reserved.sessionName != null) _g319.setReserved("sessionName",false); else _g319.h["sessionName"] = false;
-		if(__map_reserved.id != null) _g319.setReserved("id",true); else _g319.h["id"] = true;
+		if(__map_reserved.schema != null) _g319.setReserved("schema","SGC"); else _g319.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g319.setReserved("name","SATURNUSER_TO_PERMISSION"); else _g319.h["name"] = "SATURNUSER_TO_PERMISSION";
 		value318 = _g319;
-		if(__map_reserved.indexes != null) _g317.setReserved("indexes",value318); else _g317.h["indexes"] = value318;
+		if(__map_reserved.table_info != null) _g316.setReserved("table_info",value318); else _g316.h["table_info"] = value318;
+		value315 = _g316;
+		if(__map_reserved["saturn.core.UserToPermission"] != null) _g.setReserved("saturn.core.UserToPermission",value315); else _g.h["saturn.core.UserToPermission"] = value315;
 		var value319;
 		var _g320 = new haxe.ds.StringMap();
-		if(__map_reserved["user.fullname"] != null) _g320.setReserved("user.fullname",null); else _g320.h["user.fullname"] = null;
-		value319 = _g320;
-		if(__map_reserved.search != null) _g317.setReserved("search",value319); else _g317.h["search"] = value319;
 		var value320;
 		var _g321 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g321.setReserved("schema","SGC"); else _g321.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g321.setReserved("name","SATURNSESSION"); else _g321.h["name"] = "SATURNSESSION";
+		if(__map_reserved.id != null) _g321.setReserved("id","PKEY"); else _g321.h["id"] = "PKEY";
+		if(__map_reserved.userName != null) _g321.setReserved("userName","USERNAME"); else _g321.h["userName"] = "USERNAME";
+		if(__map_reserved.isPublic != null) _g321.setReserved("isPublic","ISPUBLIC"); else _g321.h["isPublic"] = "ISPUBLIC";
+		if(__map_reserved.sessionContent != null) _g321.setReserved("sessionContent","SESSIONCONTENTS"); else _g321.h["sessionContent"] = "SESSIONCONTENTS";
+		if(__map_reserved.sessionName != null) _g321.setReserved("sessionName","SESSIONNAME"); else _g321.h["sessionName"] = "SESSIONNAME";
 		value320 = _g321;
-		if(__map_reserved.table_info != null) _g317.setReserved("table_info",value320); else _g317.h["table_info"] = value320;
+		if(__map_reserved.fields != null) _g320.setReserved("fields",value320); else _g320.h["fields"] = value320;
 		var value321;
 		var _g322 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g322.setReserved("alias","Session"); else _g322.h["alias"] = "Session";
-		if(__map_reserved.auto_activate != null) _g322.setReserved("auto_activate","3"); else _g322.h["auto_activate"] = "3";
+		if(__map_reserved.sessionName != null) _g322.setReserved("sessionName",false); else _g322.h["sessionName"] = false;
+		if(__map_reserved.id != null) _g322.setReserved("id",true); else _g322.h["id"] = true;
+		value321 = _g322;
+		if(__map_reserved.indexes != null) _g320.setReserved("indexes",value321); else _g320.h["indexes"] = value321;
 		var value322;
 		var _g323 = new haxe.ds.StringMap();
-		if(__map_reserved.user_constraint_field != null) _g323.setReserved("user_constraint_field","userName"); else _g323.h["user_constraint_field"] = "userName";
-		if(__map_reserved.public_constraint_field != null) _g323.setReserved("public_constraint_field","isPublic"); else _g323.h["public_constraint_field"] = "isPublic";
+		if(__map_reserved["user.fullname"] != null) _g323.setReserved("user.fullname",null); else _g323.h["user.fullname"] = null;
 		value322 = _g323;
-		_g322.set("constraints",value322);
+		if(__map_reserved.search != null) _g320.setReserved("search",value322); else _g320.h["search"] = value322;
 		var value323;
 		var _g324 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g324.setReserved("schema","SGC"); else _g324.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g324.setReserved("name","SATURNSESSION"); else _g324.h["name"] = "SATURNSESSION";
+		value323 = _g324;
+		if(__map_reserved.table_info != null) _g320.setReserved("table_info",value323); else _g320.h["table_info"] = value323;
 		var value324;
 		var _g325 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g325.setReserved("alias","Session"); else _g325.h["alias"] = "Session";
+		if(__map_reserved.auto_activate != null) _g325.setReserved("auto_activate","3"); else _g325.h["auto_activate"] = "3";
 		var value325;
 		var _g326 = new haxe.ds.StringMap();
-		if(__map_reserved.user_suffix != null) _g326.setReserved("user_suffix",""); else _g326.h["user_suffix"] = "";
-		if(__map_reserved["function"] != null) _g326.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g326.h["function"] = "saturn.core.domain.SaturnSession.load";
+		if(__map_reserved.user_constraint_field != null) _g326.setReserved("user_constraint_field","userName"); else _g326.h["user_constraint_field"] = "userName";
+		if(__map_reserved.public_constraint_field != null) _g326.setReserved("public_constraint_field","isPublic"); else _g326.h["public_constraint_field"] = "isPublic";
 		value325 = _g326;
-		if(__map_reserved.DEFAULT != null) _g325.setReserved("DEFAULT",value325); else _g325.h["DEFAULT"] = value325;
-		value324 = _g325;
-		if(__map_reserved.search_bar != null) _g324.setReserved("search_bar",value324); else _g324.h["search_bar"] = value324;
-		value323 = _g324;
-		_g322.set("actions",value323);
-		value321 = _g322;
-		if(__map_reserved.options != null) _g317.setReserved("options",value321); else _g317.h["options"] = value321;
+		_g325.set("constraints",value325);
 		var value326;
 		var _g327 = new haxe.ds.StringMap();
-		if(__map_reserved.USERNAME != null) _g327.setReserved("USERNAME","insert.username"); else _g327.h["USERNAME"] = "insert.username";
-		value326 = _g327;
-		if(__map_reserved.auto_functions != null) _g317.setReserved("auto_functions",value326); else _g317.h["auto_functions"] = value326;
 		var value327;
 		var _g328 = new haxe.ds.StringMap();
 		var value328;
 		var _g329 = new haxe.ds.StringMap();
-		if(__map_reserved.field != null) _g329.setReserved("field","userName"); else _g329.h["field"] = "userName";
-		if(__map_reserved["class"] != null) _g329.setReserved("class","saturn.core.User"); else _g329.h["class"] = "saturn.core.User";
-		if(__map_reserved.fk_field != null) _g329.setReserved("fk_field","username"); else _g329.h["fk_field"] = "username";
+		if(__map_reserved.user_suffix != null) _g329.setReserved("user_suffix",""); else _g329.h["user_suffix"] = "";
+		if(__map_reserved["function"] != null) _g329.setReserved("function","saturn.core.domain.SaturnSession.load"); else _g329.h["function"] = "saturn.core.domain.SaturnSession.load";
 		value328 = _g329;
-		_g328.set("user",value328);
+		if(__map_reserved.DEFAULT != null) _g328.setReserved("DEFAULT",value328); else _g328.h["DEFAULT"] = value328;
 		value327 = _g328;
-		if(__map_reserved["fields.synthetic"] != null) _g317.setReserved("fields.synthetic",value327); else _g317.h["fields.synthetic"] = value327;
-		value316 = _g317;
-		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value316); else _g.h["saturn.core.domain.SaturnSession"] = value316;
+		if(__map_reserved.search_bar != null) _g327.setReserved("search_bar",value327); else _g327.h["search_bar"] = value327;
+		value326 = _g327;
+		_g325.set("actions",value326);
+		value324 = _g325;
+		if(__map_reserved.options != null) _g320.setReserved("options",value324); else _g320.h["options"] = value324;
 		var value329;
 		var _g330 = new haxe.ds.StringMap();
+		if(__map_reserved.USERNAME != null) _g330.setReserved("USERNAME","insert.username"); else _g330.h["USERNAME"] = "insert.username";
+		value329 = _g330;
+		if(__map_reserved.auto_functions != null) _g320.setReserved("auto_functions",value329); else _g320.h["auto_functions"] = value329;
 		var value330;
 		var _g331 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g331.setReserved("id","PKEY"); else _g331.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g331.setReserved("name","NAME"); else _g331.h["name"] = "NAME";
-		if(__map_reserved.traceDataJson != null) _g331.setReserved("traceDataJson","TRACE_JSON"); else _g331.h["traceDataJson"] = "TRACE_JSON";
-		value330 = _g331;
-		if(__map_reserved.fields != null) _g330.setReserved("fields",value330); else _g330.h["fields"] = value330;
 		var value331;
 		var _g332 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g332.setReserved("name",false); else _g332.h["name"] = false;
-		if(__map_reserved.id != null) _g332.setReserved("id",true); else _g332.h["id"] = true;
+		if(__map_reserved.field != null) _g332.setReserved("field","userName"); else _g332.h["field"] = "userName";
+		if(__map_reserved["class"] != null) _g332.setReserved("class","saturn.core.User"); else _g332.h["class"] = "saturn.core.User";
+		if(__map_reserved.fk_field != null) _g332.setReserved("fk_field","username"); else _g332.h["fk_field"] = "username";
 		value331 = _g332;
-		if(__map_reserved.indexes != null) _g330.setReserved("indexes",value331); else _g330.h["indexes"] = value331;
+		_g331.set("user",value331);
+		value330 = _g331;
+		if(__map_reserved["fields.synthetic"] != null) _g320.setReserved("fields.synthetic",value330); else _g320.h["fields.synthetic"] = value330;
+		value319 = _g320;
+		if(__map_reserved["saturn.core.domain.SaturnSession"] != null) _g.setReserved("saturn.core.domain.SaturnSession",value319); else _g.h["saturn.core.domain.SaturnSession"] = value319;
 		var value332;
 		var _g333 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g333.setReserved("saturn.client.programs.ABITraceViewer",true); else _g333.h["saturn.client.programs.ABITraceViewer"] = true;
-		value332 = _g333;
-		if(__map_reserved.programs != null) _g330.setReserved("programs",value332); else _g330.h["programs"] = value332;
 		var value333;
 		var _g334 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g334.setReserved("alias","Trace Data"); else _g334.h["alias"] = "Trace Data";
-		if(__map_reserved.icon != null) _g334.setReserved("icon","dna_conical_16.png"); else _g334.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g334.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g334.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
+		if(__map_reserved.id != null) _g334.setReserved("id","PKEY"); else _g334.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g334.setReserved("name","NAME"); else _g334.h["name"] = "NAME";
+		if(__map_reserved.traceDataJson != null) _g334.setReserved("traceDataJson","TRACE_JSON"); else _g334.h["traceDataJson"] = "TRACE_JSON";
 		value333 = _g334;
-		if(__map_reserved.options != null) _g330.setReserved("options",value333); else _g330.h["options"] = value333;
+		if(__map_reserved.fields != null) _g333.setReserved("fields",value333); else _g333.h["fields"] = value333;
 		var value334;
 		var _g335 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g335.setReserved("schema","SGC"); else _g335.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g335.setReserved("name","TRACES"); else _g335.h["name"] = "TRACES";
+		if(__map_reserved.name != null) _g335.setReserved("name",false); else _g335.h["name"] = false;
+		if(__map_reserved.id != null) _g335.setReserved("id",true); else _g335.h["id"] = true;
 		value334 = _g335;
-		if(__map_reserved.table_info != null) _g330.setReserved("table_info",value334); else _g330.h["table_info"] = value334;
+		if(__map_reserved.indexes != null) _g333.setReserved("indexes",value334); else _g333.h["indexes"] = value334;
 		var value335;
 		var _g336 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g336.setReserved("name",true); else _g336.h["name"] = true;
+		if(__map_reserved["saturn.client.programs.ABITraceViewer"] != null) _g336.setReserved("saturn.client.programs.ABITraceViewer",true); else _g336.h["saturn.client.programs.ABITraceViewer"] = true;
 		value335 = _g336;
-		if(__map_reserved.search != null) _g330.setReserved("search",value335); else _g330.h["search"] = value335;
-		value329 = _g330;
-		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value329); else _g.h["saturn.core.domain.ABITrace"] = value329;
+		if(__map_reserved.programs != null) _g333.setReserved("programs",value335); else _g333.h["programs"] = value335;
 		var value336;
 		var _g337 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g337.setReserved("alias","Trace Data"); else _g337.h["alias"] = "Trace Data";
+		if(__map_reserved.icon != null) _g337.setReserved("icon","dna_conical_16.png"); else _g337.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g337.setReserved("workspace_wrapper","saturn.client.workspace.ABITraceWO"); else _g337.h["workspace_wrapper"] = "saturn.client.workspace.ABITraceWO";
+		value336 = _g337;
+		if(__map_reserved.options != null) _g333.setReserved("options",value336); else _g333.h["options"] = value336;
 		var value337;
 		var _g338 = new haxe.ds.StringMap();
-		if(__map_reserved.id != null) _g338.setReserved("id","PKEY"); else _g338.h["id"] = "PKEY";
-		if(__map_reserved.name != null) _g338.setReserved("name","NAME"); else _g338.h["name"] = "NAME";
-		if(__map_reserved.content != null) _g338.setReserved("content","CONTENT"); else _g338.h["content"] = "CONTENT";
-		if(__map_reserved.url != null) _g338.setReserved("url","URL"); else _g338.h["url"] = "URL";
+		if(__map_reserved.schema != null) _g338.setReserved("schema","SGC"); else _g338.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g338.setReserved("name","TRACES"); else _g338.h["name"] = "TRACES";
 		value337 = _g338;
-		if(__map_reserved.fields != null) _g337.setReserved("fields",value337); else _g337.h["fields"] = value337;
+		if(__map_reserved.table_info != null) _g333.setReserved("table_info",value337); else _g333.h["table_info"] = value337;
 		var value338;
 		var _g339 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g339.setReserved("name",false); else _g339.h["name"] = false;
-		if(__map_reserved.id != null) _g339.setReserved("id",true); else _g339.h["id"] = true;
+		if(__map_reserved.name != null) _g339.setReserved("name",true); else _g339.h["name"] = true;
 		value338 = _g339;
-		if(__map_reserved.indexes != null) _g337.setReserved("indexes",value338); else _g337.h["indexes"] = value338;
+		if(__map_reserved.search != null) _g333.setReserved("search",value338); else _g333.h["search"] = value338;
+		value332 = _g333;
+		if(__map_reserved["saturn.core.domain.ABITrace"] != null) _g.setReserved("saturn.core.domain.ABITrace",value332); else _g.h["saturn.core.domain.ABITrace"] = value332;
 		var value339;
 		var _g340 = new haxe.ds.StringMap();
-		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g340.setReserved("saturn.client.programs.AlignmentViewer",true); else _g340.h["saturn.client.programs.AlignmentViewer"] = true;
-		value339 = _g340;
-		if(__map_reserved.programs != null) _g337.setReserved("programs",value339); else _g337.h["programs"] = value339;
 		var value340;
 		var _g341 = new haxe.ds.StringMap();
-		if(__map_reserved.alias != null) _g341.setReserved("alias","Alignments"); else _g341.h["alias"] = "Alignments";
-		if(__map_reserved.icon != null) _g341.setReserved("icon","dna_conical_16.png"); else _g341.h["icon"] = "dna_conical_16.png";
-		if(__map_reserved.workspace_wrapper != null) _g341.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g341.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		if(__map_reserved.id != null) _g341.setReserved("id","PKEY"); else _g341.h["id"] = "PKEY";
+		if(__map_reserved.name != null) _g341.setReserved("name","NAME"); else _g341.h["name"] = "NAME";
+		if(__map_reserved.content != null) _g341.setReserved("content","CONTENT"); else _g341.h["content"] = "CONTENT";
+		if(__map_reserved.url != null) _g341.setReserved("url","URL"); else _g341.h["url"] = "URL";
 		value340 = _g341;
-		if(__map_reserved.options != null) _g337.setReserved("options",value340); else _g337.h["options"] = value340;
+		if(__map_reserved.fields != null) _g340.setReserved("fields",value340); else _g340.h["fields"] = value340;
 		var value341;
 		var _g342 = new haxe.ds.StringMap();
-		if(__map_reserved.schema != null) _g342.setReserved("schema","SGC"); else _g342.h["schema"] = "SGC";
-		if(__map_reserved.name != null) _g342.setReserved("name","ALIGNMENTS"); else _g342.h["name"] = "ALIGNMENTS";
+		if(__map_reserved.name != null) _g342.setReserved("name",false); else _g342.h["name"] = false;
+		if(__map_reserved.id != null) _g342.setReserved("id",true); else _g342.h["id"] = true;
 		value341 = _g342;
-		if(__map_reserved.table_info != null) _g337.setReserved("table_info",value341); else _g337.h["table_info"] = value341;
+		if(__map_reserved.indexes != null) _g340.setReserved("indexes",value341); else _g340.h["indexes"] = value341;
 		var value342;
 		var _g343 = new haxe.ds.StringMap();
-		if(__map_reserved.name != null) _g343.setReserved("name",true); else _g343.h["name"] = true;
+		if(__map_reserved["saturn.client.programs.AlignmentViewer"] != null) _g343.setReserved("saturn.client.programs.AlignmentViewer",true); else _g343.h["saturn.client.programs.AlignmentViewer"] = true;
 		value342 = _g343;
-		if(__map_reserved.search != null) _g337.setReserved("search",value342); else _g337.h["search"] = value342;
-		value336 = _g337;
-		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value336); else _g.h["saturn.core.domain.Alignment"] = value336;
+		if(__map_reserved.programs != null) _g340.setReserved("programs",value342); else _g340.h["programs"] = value342;
+		var value343;
+		var _g344 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g344.setReserved("alias","Alignments"); else _g344.h["alias"] = "Alignments";
+		if(__map_reserved.icon != null) _g344.setReserved("icon","dna_conical_16.png"); else _g344.h["icon"] = "dna_conical_16.png";
+		if(__map_reserved.workspace_wrapper != null) _g344.setReserved("workspace_wrapper","saturn.client.workspace.AlignmentWorkspaceObject"); else _g344.h["workspace_wrapper"] = "saturn.client.workspace.AlignmentWorkspaceObject";
+		value343 = _g344;
+		if(__map_reserved.options != null) _g340.setReserved("options",value343); else _g340.h["options"] = value343;
+		var value344;
+		var _g345 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g345.setReserved("schema","SGC"); else _g345.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g345.setReserved("name","ALIGNMENTS"); else _g345.h["name"] = "ALIGNMENTS";
+		value344 = _g345;
+		if(__map_reserved.table_info != null) _g340.setReserved("table_info",value344); else _g340.h["table_info"] = value344;
+		var value345;
+		var _g346 = new haxe.ds.StringMap();
+		if(__map_reserved.name != null) _g346.setReserved("name",true); else _g346.h["name"] = true;
+		value345 = _g346;
+		if(__map_reserved.search != null) _g340.setReserved("search",value345); else _g340.h["search"] = value345;
+		value339 = _g340;
+		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value339); else _g.h["saturn.core.domain.Alignment"] = value339;
 		this.models = _g;
 	}
 	,__class__: saturn.db.mapping.SGC
@@ -32746,9 +40678,10 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 			};
 			this.getColumns(connection,schemaName,tableName,func);
 		} else if(modelClazzes.length == 0 && this.modelsToProcess == 1) {
+			this.postConfigureModels();
 			this.closeConnection(connection);
 			if(cb != null) {
-				this.debug("All Models have been processed (handing back control to caller callback)");
+				this.debug("All Models have been processed (handing back control to caller callback2)");
 				cb(null);
 			}
 		} else {
@@ -33009,7 +40942,6 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 				_g.debug("startswith" + sql);
 				try {
 					connection.execute(sql,[id],function(err1,results) {
-						_g.debug("startswith" + err1);
 						if(err1 != null) callBack(null,err1); else callBack(results,null);
 						_g.closeConnection(connection);
 					});
@@ -33472,6 +41404,7 @@ saturn.db.query_lang.Token.prototype = {
 		this.tokens = tokens;
 	}
 	,addToken: function(token) {
+		if(!js.Boot.__instanceof(token,saturn.db.query_lang.Token)) token = new saturn.db.query_lang.Value(saturn.db.query_lang.Token);
 		if(this.tokens == null) this.tokens = [];
 		this.tokens.push(token);
 		return this;
@@ -33485,7 +41418,7 @@ saturn.db.query_lang.Token.prototype = {
 		if(js.Boot.__instanceof(token,saturn.db.query_lang.Operator)) {
 			var n = new saturn.db.query_lang.Token();
 			n.add(this);
-			n.tokens.push(token);
+			n.addToken(token);
 			return n;
 		} else return this.addToken(token);
 	}
@@ -33498,8 +41431,8 @@ saturn.db.query_lang.Token.prototype = {
 		return this.add(l);
 	}
 	,concat: function(token) {
-		var c = new saturn.db.query_lang.Concat(token);
-		return this.add(c);
+		var c = new saturn.db.query_lang.Concat([this,token]);
+		return c;
 	}
 	,substr: function(position,length) {
 		return new saturn.db.query_lang.Substr(this,position,length);
@@ -33564,6 +41497,22 @@ saturn.db.query_lang.And.__super__ = saturn.db.query_lang.Operator;
 saturn.db.query_lang.And.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
 	__class__: saturn.db.query_lang.And
 });
+saturn.db.query_lang.Function = $hxClasses["saturn.db.query_lang.Function"] = function(tokens) {
+	saturn.db.query_lang.Token.call(this,tokens);
+};
+saturn.db.query_lang.Function.__name__ = ["saturn","db","query_lang","Function"];
+saturn.db.query_lang.Function.__super__ = saturn.db.query_lang.Token;
+saturn.db.query_lang.Function.prototype = $extend(saturn.db.query_lang.Token.prototype,{
+	__class__: saturn.db.query_lang.Function
+});
+saturn.db.query_lang.Cast = $hxClasses["saturn.db.query_lang.Cast"] = function(expression,type) {
+	saturn.db.query_lang.Function.call(this,[expression,type]);
+};
+saturn.db.query_lang.Cast.__name__ = ["saturn","db","query_lang","Cast"];
+saturn.db.query_lang.Cast.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.Cast.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.Cast
+});
 saturn.db.query_lang.ClassToken = $hxClasses["saturn.db.query_lang.ClassToken"] = function(clazz) {
 	this.setClass(clazz);
 	saturn.db.query_lang.Token.call(this,null);
@@ -33584,21 +41533,21 @@ saturn.db.query_lang.ClassToken.prototype = $extend(saturn.db.query_lang.Token.p
 	}
 	,__class__: saturn.db.query_lang.ClassToken
 });
-saturn.db.query_lang.Concat = $hxClasses["saturn.db.query_lang.Concat"] = function(value) {
-	if(value == null) saturn.db.query_lang.Operator.call(this,null); else saturn.db.query_lang.Operator.call(this,value);
+saturn.db.query_lang.Concat = $hxClasses["saturn.db.query_lang.Concat"] = function(tokens) {
+	saturn.db.query_lang.Function.call(this,tokens);
 };
 saturn.db.query_lang.Concat.__name__ = ["saturn","db","query_lang","Concat"];
-saturn.db.query_lang.Concat.__super__ = saturn.db.query_lang.Operator;
-saturn.db.query_lang.Concat.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
+saturn.db.query_lang.Concat.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.Concat.prototype = $extend(saturn.db.query_lang.Function.prototype,{
 	__class__: saturn.db.query_lang.Concat
 });
-saturn.db.query_lang.Function = $hxClasses["saturn.db.query_lang.Function"] = function(tokens) {
-	saturn.db.query_lang.Token.call(this,tokens);
+saturn.db.query_lang.ConcatOperator = $hxClasses["saturn.db.query_lang.ConcatOperator"] = function(token) {
+	saturn.db.query_lang.Operator.call(this,token);
 };
-saturn.db.query_lang.Function.__name__ = ["saturn","db","query_lang","Function"];
-saturn.db.query_lang.Function.__super__ = saturn.db.query_lang.Token;
-saturn.db.query_lang.Function.prototype = $extend(saturn.db.query_lang.Token.prototype,{
-	__class__: saturn.db.query_lang.Function
+saturn.db.query_lang.ConcatOperator.__name__ = ["saturn","db","query_lang","ConcatOperator"];
+saturn.db.query_lang.ConcatOperator.__super__ = saturn.db.query_lang.Operator;
+saturn.db.query_lang.ConcatOperator.prototype = $extend(saturn.db.query_lang.Operator.prototype,{
+	__class__: saturn.db.query_lang.ConcatOperator
 });
 saturn.db.query_lang.Count = $hxClasses["saturn.db.query_lang.Count"] = function(token) {
 	saturn.db.query_lang.Function.call(this,[token]);
@@ -34146,6 +42095,14 @@ saturn.db.query_lang.QueryVisitor.prototype = {
 	translateQuery: null
 	,__class__: saturn.db.query_lang.QueryVisitor
 };
+saturn.db.query_lang.RegexpLike = $hxClasses["saturn.db.query_lang.RegexpLike"] = function(field,expression) {
+	saturn.db.query_lang.Function.call(this,[field,expression]);
+};
+saturn.db.query_lang.RegexpLike.__name__ = ["saturn","db","query_lang","RegexpLike"];
+saturn.db.query_lang.RegexpLike.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.RegexpLike.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.RegexpLike
+});
 saturn.db.query_lang.SQLVisitor = $hxClasses["saturn.db.query_lang.SQLVisitor"] = function(provider,valPos,aliasToGenerated,nextAliasId) {
 	if(nextAliasId == null) nextAliasId = 0;
 	if(valPos == null) valPos = 1;
@@ -34201,7 +42158,7 @@ saturn.db.query_lang.SQLVisitor.prototype = {
 			if(token.getTokens() != null) {
 				var tokenTranslations = [];
 				if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) {
-					if(this.provider.getProviderType() == "SQLITE") {
+					if(this.provider.getProviderType() == "SQLITE" || this.provider.getProviderType() == "MYSQL") {
 						token.tokens.pop();
 						token.tokens.pop();
 					}
@@ -34241,7 +42198,7 @@ saturn.db.query_lang.SQLVisitor.prototype = {
 					if(this.provider.getProviderType() == "SQLITE") sqlTranslation += "ltrim(" + nestedTranslation + ",'0'" + ")"; else sqlTranslation += "Trim( leading '0' from " + nestedTranslation + ")";
 				} else {
 					var funcName = "";
-					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH";
+					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Concat)) funcName = "CONCAT";
 					sqlTranslation += funcName + "( " + nestedTranslation + " )";
 				}
 			} else if(js.Boot.__instanceof(token,saturn.db.query_lang.Select)) sqlTranslation += " SELECT " + nestedTranslation; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Field)) {
@@ -34926,6 +42883,9 @@ haxe.io.FPHelper.i64tmp = (function($this) {
 }(this));
 js.Boot.__toStr = {}.toString;
 js.html.compat.Uint8Array.BYTES_PER_ELEMENT = 1;
+phylo.PhyloNewickParser.newLineReg = new EReg("\n","g");
+phylo.PhyloNewickParser.carLineReg = new EReg("\r","g");
+phylo.PhyloNewickParser.whiteSpaceReg = new EReg("\\s","g");
 saturn.client.WorkspaceApplication.layoutsSuspended = 0;
 saturn.app.SaturnClient.reg_edit = new EReg("edit\\s+","");
 saturn.app.SaturnClient.reg_wiki = new EReg("wiki-\\s+","");
@@ -34965,6 +42925,8 @@ saturn.client.workspace.GlycanWO.FILE_IMPORT_FORMATS = ["glycoct_condensed"];
 saturn.client.programs.GlycanBuilder.CLASS_SUPPORT = [saturn.client.workspace.GlycanWO];
 saturn.client.workspace.GridVarWO.FILE_IMPORT_FORMATS = ["csv"];
 saturn.client.programs.GridVarViewer.CLASS_SUPPORT = [saturn.client.workspace.GridVarWO];
+saturn.client.workspace.HelloTypeWO.FILE_IMPORT_FORMATS = [];
+saturn.client.programs.HelloWorldViewer.CLASS_SUPPORT = [saturn.client.workspace.HelloTypeWO];
 saturn.client.workspace.HomeWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.HomePage.CLASS_SUPPORT = [saturn.client.workspace.HomeWO];
 saturn.client.workspace.LigationWO.FILE_IMPORT_FORMATS = [];
@@ -34991,6 +42953,11 @@ saturn.client.workspace.WONKAWO.FILE_IMPORT_FORMATS = [];
 saturn.client.programs.WONKA.CLASS_SUPPORT = [saturn.client.workspace.WONKAWO];
 saturn.client.workspace.WebPageWorkspaceObject.FILE_IMPORT_FORMATS = ["html"];
 saturn.client.programs.WebPageViewer.CLASS_SUPPORT = [saturn.client.workspace.WebPageWorkspaceObject];
+saturn.client.workspace.ChromoHubWorkspaceObject.FILE_IMPORT_FORMATS = [];
+saturn.client.programs.chromohub.ChromoHubViewer.CLASS_SUPPORT = [saturn.client.workspace.ChromoHubWorkspaceObject];
+saturn.client.programs.chromohub.ChromoHubViewer.newLineReg = new EReg("\n","g");
+saturn.client.programs.chromohub.ChromoHubViewer.carLineReg = new EReg("\r","g");
+saturn.client.programs.chromohub.ChromoHubViewer.whiteSpaceReg = new EReg("\\s","g");
 saturn.client.programs.plugins.DisoPredAnnotationPlugin.reg_predLines = new EReg("pred:\\s+([\\.\\*A-Z]+)","");
 saturn.client.programs.plugins.SSAnnotationPlugin.reg_predLines = new EReg("Pred:\\s+([A-Z]+)","");
 saturn.client.programs.plugins.SVGDomainAnnotationPlugin.reg_pfam = new EReg("pfam([0-9]+)","");

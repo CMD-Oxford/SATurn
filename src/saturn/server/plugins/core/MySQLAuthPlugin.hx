@@ -25,7 +25,7 @@ class MySQLAuthPlugin implements AuthenticationManager{
     public function authenticate(username : String, password : String, onSuccess : User->Void, onFailure : String->Void, src :Dynamic) : Void{
         var mysql = Node.require('mysql2');
 
-        Util.debug('Connecting as ' + username);
+        Util.debug('Connecting as ' + username + ' to ' + username + ' with password ' + password + ' on ' + config.hostname);
 
         var connection = mysql.createConnection({
             host: config.hostname,
@@ -79,7 +79,7 @@ class MySQLAuthPlugin implements AuthenticationManager{
         connection.on('error', function(err){
             Node.console.log('Error: ' + err);
             onFailure('Unable to connect');
-            connection.end();
+            //connection.end();
         });
     }
 }
