@@ -76,6 +76,12 @@ class ProteinStructureAnnotation {
             var num='-1';
             var dom='';
             var al='structure_images/'+fam;
+
+            var viewer = cast(WorkspaceApplication.getApplication().getActiveProgram(), ChromoHubViewer);
+            var selectedAnnotations = viewer.annotationManager.getSelectedAnnotationOptions(screenData.annot);
+            var cutoff = selectedAnnotations[0].cutoff;
+            var cutoffParam = '';
+
             if(tree_type=='domain'){
                 if (screenData.target.indexOf('(')!=-1 || screenData.target.indexOf('-')!=-1){
                     var auxArray=screenData.target.split('');
@@ -89,7 +95,14 @@ class ProteinStructureAnnotation {
                 dom='_domain';
             } else{
 
-                imgSrc=al+'/'+name+num+'_'+fam;
+                if(cutoff == '40%') {
+                    cutoffParam = '_40';
+                }
+                if(cutoff == '95% or best') {
+                    cutoffParam = '_best';
+                }
+
+                imgSrc = al+'/'+name+num+'_'+fam+cutoffParam;
                 dom='';
             }
 
@@ -172,7 +185,10 @@ class ProteinStructureAnnotation {
 
         var r : HasAnnotationType = {hasAnnot: true, text:'',color:{color:'',used:true},defImage:100};
 
-        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookStructures', [{'treeType':tree_type,'familyTree':family,'st_select':option,'cutoff':cutoff,'xray':xray, 'searchGenes':searchGenes}], null, false,function(db_results, error){
+        var args = [{'treeType':tree_type,'familyTree':family, 'st_select':option, 'cutoff':cutoff, 'xray':xray, 'searchGenes':searchGenes}];
+        annotationManager.setSelectedAnnotationOptions(annotation, args);
+
+        WorkspaceApplication.getApplication().getProvider().getByNamedQuery('hookStructures', args, null, false,function(db_results, error){
             if(error == null) {
                 if (db_results!=null){
                     annotationManager.activeAnnotation[annotation]=true;

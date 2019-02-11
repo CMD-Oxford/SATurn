@@ -30,6 +30,7 @@ class SingleAppContainer {
     var messageWindow : Dynamic;
     var messageDomainWindow : Dynamic;
     var tipWindow : Dynamic;
+    var demoWindow: Dynamic;
     var progressBar : Dynamic;
 
     var deflayout : String;
@@ -674,7 +675,7 @@ class SingleAppContainer {
             x:px,
             y:py,
             // width: '500px',
-// height: '200px',
+            // height: '200px',
             cls: 'x-annot-window',
             modal:false,
             autoscroll: true,
@@ -1133,6 +1134,74 @@ class SingleAppContainer {
     }
     public function getTipWindow():Dynamic{
         return tipWindow;
+    }
+
+
+    /********* Demo Video window *********/
+    public function createDemoWindow(viewer:ChromoHubViewer, top:Int, left:Int, width:Int, height:Int, text:String){
+        var th=Std.int(height*0.85);
+        var fh=Std.int(th*0.85);
+        var bh=height-fh;
+        demoWindow = Ext.create('Ext.window.Window', {
+            width:  width,
+            height: height,
+            maxHeight:600,
+            y:    5,
+            x:   left,
+            cls:    'x-tip-window',
+            modal:  true,
+            resizable: false,
+            closable: true,
+            title:  'Demo'
+        });
+        demoWindow.add({
+            xtype : 'form',
+            iconCls: 'x-popup-form',
+            width:  width,
+            buttonAlign : 'left',
+            id:'demoForm',
+            items: [{
+                xtype: "container",
+                cls: 'x-leo-form',
+                width:  width,
+                height: height-150,
+                html: text,
+                boxLabel:'',
+                id:'id-demo-html'
+            }],
+            buttons: [{
+                iconCls: 'x-close-demo-btn',
+                text: 'Close',
+                id:'close-demo-btn',
+                handler: function(){
+                    var checkoption = this.demoWindow.getComponent('click_demo_finish');
+                    hideDemoWindow();
+                }
+
+            }],
+            listeners:{
+                close:function(win){
+                    var checkoption = this.demoWindow.getComponent('click_demo_finish');
+                    hideDemoWindow();
+
+                }
+            }
+        });
+        demoWindow.show();
+    }
+
+    public function hideDemoWindow(){
+        demoWindow.hide();
+    }
+
+    public function showDemoWindow(){
+        if(subMenuToolBar!=null) hideSubMenuToolBar();
+        if(helpingDiv!=null) hideHelpingDiv();
+        demoWindow.show();
+    }
+
+    public function getDemoWindow():Dynamic{
+        return demoWindow;
     }
 
 
