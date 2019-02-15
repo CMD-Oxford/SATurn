@@ -590,6 +590,10 @@ class Molecule {
             });
         }
     }
+
+    public function getAtPosition(pos : Int) : String{
+        return sequence.charAt(pos);
+    }
 }
 
 enum MoleculeFloatAttribute{

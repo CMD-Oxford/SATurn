@@ -736,7 +736,11 @@ class GeneticCode {
         
         populateTable();
     }
-    
+
+    public function isAA(aa : String) : Bool {
+        return this.aaToCodonTable.exists(aa);
+    }
+
     public function addStartCodon(codon : String){
         startCodons.set(codon, "1");
     }

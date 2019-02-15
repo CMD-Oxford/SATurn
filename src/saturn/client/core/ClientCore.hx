@@ -14,7 +14,7 @@ import saturn.db.NodeProvider;
 import haxe.Json;
 import saturn.core.User;
 import bindings.Ext;
-import js.Lib;
+
 import haxe.Http;
 import saturn.core.Util;
 
@@ -144,9 +144,11 @@ class ClientCore implements ConversationHelper{
                 if(err == null){
                     installProviders();
 
-                    for(listener in loginListeners){
+                    // Redundant as authenticateSocket calls login listeners
+
+                    /*for(listener in loginListeners){
                         listener(user);
-                    }
+                    }*/
                 }
 
                 if(cb != null){

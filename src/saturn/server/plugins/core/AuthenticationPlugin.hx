@@ -85,6 +85,8 @@ class AuthenticationPlugin extends BaseServerPlugin{
                 // Store user UUID
                 db.set('USER_UUID: ' + user.uuid, user.username);
 
+
+
                 // Generate JWT token.
                 // !!!! IMPORTANT - ALL THE PAYLOAD BELOW WON'T BE ENCRYPTED !!!!
                 var token = jwt.sign({
@@ -98,6 +100,8 @@ class AuthenticationPlugin extends BaseServerPlugin{
                     config.jwt_secret,
                     {expiresIn: config.jwt_timeout + 'm'}
                 );
+
+                res.header('Set-Cookie', 'saturn_token=' + token);
 
                 // Send the JSON token to the client
                 // TODO: Why are we sending detials like the full_name twice.  The client should be able to extract
