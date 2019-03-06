@@ -55,34 +55,38 @@ class ConstructDesignTable extends Table{
         if(useExample){
             exampleData = [
                 {
-                'Select': true,
-                'Plate Name': 'BioTech15',
-                'Allele ID': 'BRD1A-a001',
-                'Allele Well': 'A01',
-                'Construct ID': 'BRD1A-c001',
-                'Construct Well': 'A01',
-                'Vector Name': 'pNIC28-Bsa4',
-                'Entry Clone': 'BRD1A-s001',
-                'Restriction Site 1': 'Lic5',
-                'Restriction Site 2': 'Lic3',
-                'Start position': 10,
-                'Stop position': 60,
-                'ELN ID': 'PAGE15-00001',
-                'Forward Primer': 'BRD1A-f001',
-                'Reverse Primer': 'BRD1A-r001',
-                'Forward Seq': '',
-                'Forward Error': '',
-                'Reverse Seq': '',
-                'Reverse Error': '',
-                'Allele DNA Sequence': '',
-                'Allele Protein Sequence': '',
-                'PCR Error': '',
-                'Construct Error': '',
-                'Construct DNA': '',
-                'Construct Protein': '',
-                'Construct Protein (no tag)': '',
-                'Construct Mass': '',
-                'Construct Mass (no tag)': ''}
+                    'Select': true,
+                    'Plate Name': 'BioTech15',
+                    'Allele ID': 'BRD1A-a001',
+                    'Allele Well': 'A01',
+                    'Construct ID': 'BRD1A-c001',
+                    'Construct Well': 'A01',
+                    'Vector Name': 'pNIC28-Bsa4',
+                    'Entry Clone': 'BRD1A-s001',
+                    'Restriction Site 1': 'Lic5',
+                    'Restriction Site 2': 'Lic3',
+                    'Start position': 10,
+                    'Stop position': 60,
+                    'ELN ID': 'PAGE15-00001',
+                    'Forward Primer': 'BRD1A-f001',
+                    'Reverse Primer': 'BRD1A-r001',
+                    'Forward Seq': '',
+                    'Forward Error': '',
+                    'Reverse Seq': '',
+                    'Reverse Error': '',
+                    'Allele DNA Sequence': '',
+                    'Allele Protein Sequence': '',
+                    'PCR Error': '',
+                    'Construct Error': '',
+                    'Construct DNA': '',
+                    'Construct Protein': '',
+                    'Construct Protein (no tag)': '',
+                    'Construct Mass': '',
+                    'Construct Mass (no tag)': '',
+                    'Mutations': 'S11A:A12S',
+                    'Mutation Forward Primer':'',
+                    'Mutation Reverse Primer':''
+                }
             ];
         }else{
             exampleData = [
@@ -114,7 +118,10 @@ class ConstructDesignTable extends Table{
                     'Construct Protein': '',
                     'Construct Protein (no tag)': '',
                     'Construct Mass': '',
-                    'Construct Mass (no tag)': ''
+                    'Construct Mass (no tag)': '',
+                    'Mutations': '',
+                    'Mutation Forward Primer':'',
+                    'Mutation Reverse Primer':''
                 }
             ];
         }
@@ -152,7 +159,10 @@ class ConstructDesignTable extends Table{
                 'Construct Protein': {'editor': 'textfield'},
                 'Construct Protein (no tag)': {'editor': 'textfield'},
                 'Construct Mass': {'editor': 'textfield'},
-                'Construct Mass (no tag)': {'editor': 'textfield'}
+                'Construct Mass (no tag)': {'editor': 'textfield'},
+                'Mutations': {'editor': 'textfield'},
+                'Mutation Forward Primer': {'editor': 'textfield'},
+                'Mutation Reverse Primer': {'editor': 'textfield'}
             }
         );
 
@@ -695,10 +705,16 @@ class ConstructDesignTable extends Table{
             Reflect.setField(row, 'Construct Mass (no tag)', '');
             Reflect.setField(row, 'Construct Error', '');
 
-            var template = new DNA(entryClone.dnaSeq);
-
             var forwardExtensionLength = 0;
             var reverseExtensionLength = 0;
+
+            var registry : GeneticCodeRegistry = GeneticCodeRegistry.getRegistry();
+            var geneticCode : GeneticCode = registry.getGeneticCodeByEnum(GeneticCodes.STANDARD);
+
+            var template = new DNA(entryClone.dnaSeq);
+
+            var mutant_template = new DNA(entryClone.dnaSeq);
+            var translation = new Protein(mutant_template.getTranslation(GeneticCodes.STANDARD,0,true));
 
             try {
                 var nucPosition = template.getCodonStartPosition(Frame.ONE, startPosition);
@@ -756,6 +772,114 @@ class ConstructDesignTable extends Table{
                 Reflect.setField(row, 'Reverse Error', ex);
             }
 
+            var mutationStr = Reflect.field(row,'Mutations');
+            if(mutationStr != null && mutationStr != ''){
+                var mut_pattern :EReg =~/([A-Z]{1})(\d+)([A-Z]{1})/;
+                var mutations = mutationStr.split(':');
+
+                var minPos = null;
+                var maxPos = null;
+
+                var continueFlag = false;
+
+                for(mutation in mutations){
+                    mutation = mutation.toUpperCase();
+
+                    if(mut_pattern.match(mutation)){
+                        var aa = mut_pattern.matched(1);
+                        var pos = Std.parseInt(mut_pattern.matched(2));
+                        var toAA = mut_pattern.matched(3);
+
+                        if(pos > template.getLength()){
+                            Reflect.setField(row, 'Construct Error', 'Mutation pos ' + pos + ' is out of range');
+
+                            continueFlag = true;
+                            break;
+                        }
+
+                        if(!geneticCode.isAA(toAA)){
+                            Reflect.setField(row, 'Construct Error', 'Amino acid ' + toAA + ' is not valid');
+
+                            continueFlag = true;
+                            break;
+                        }
+
+                        if(translation.getAtPosition(pos-1) != aa){
+                            Reflect.setField(row, 'Construct Error', 'Amino acid at position ' + pos + ' does not match amino acid ' + aa);
+
+                            continueFlag = true;
+                            break;
+                        }
+
+                        mutant_template = new DNA(mutant_template.mutateResidue(Frame.ONE, GeneticCodes.STANDARD,pos, toAA));
+
+                        if(minPos == null || pos < minPos){
+                            minPos = pos;
+                        }
+
+                        if(maxPos == null || pos > maxPos){
+                            maxPos = pos;
+                        }
+                    }else{
+                        Reflect.setField(row, 'Construct Error', 'Mutation definition -' + mutation + '- is not valid');
+
+                        continueFlag = true;
+                        break;
+                    }
+                }
+
+                if(continueFlag){
+                    clearPrimers(row);
+                    continue;
+                }
+
+                if(maxPos != minPos && maxPos - minPos + 1 > 20){
+                    Reflect.setField(row, 'Construct Error', 'Mutations are greater than 20 residues apart from each other and so can not be included on the same primer');
+
+                    clearPrimers(row);
+                    continue;
+                }
+
+                if (minPos > 7 && maxPos < translation.getLength() - 7){
+                    var mutantStartPosition = (minPos -1) * 3 - 19;
+
+                    var mutantPrimerLength = (maxPos - minPos + 1) * 3 + 40;
+
+                    var forwardMutationPrimer = mutant_template.getRegion(mutantStartPosition, mutantStartPosition + mutantPrimerLength - 1);
+                    var reverseMutationPrimer = new DNA(forwardMutationPrimer).getInverseComplement();
+
+                    Reflect.setField(row, 'Mutation Forward Primer', forwardMutationPrimer);
+                    Reflect.setField(row, 'Mutation Reverse Primer', reverseMutationPrimer);
+                }
+
+                if (minPos <= 7) {
+                    var mutantStartPosition = 1;
+                    var mutantPrimerLength = maxPos * 3 + 20;
+                    var forwardMutationPrimer = mutant_template.getRegion(mutantStartPosition, mutantStartPosition + mutantPrimerLength - 1);
+                    forwardMutationPrimer = vector.requiredForwardExtension + forwardMutationPrimer;
+
+                    Reflect.setField(row, 'Forward Seq', forwardMutationPrimer);
+
+                    Reflect.setField(row, 'Mutation Forward Primer', forwardMutationPrimer);
+                    Reflect.setField(row, 'Mutation Reverse Primer', '');
+                }
+
+                if (maxPos >= translation.getLength() - 7) {
+                    var mutantPrimerLength = (translation.getLength() - minPos + 1) * 3 + 20;
+                    var mutantStartPosition = translation.getLength() * 3 - mutantPrimerLength + 1;
+                    var forwardMutationPrimer = mutant_template.getRegion(mutantStartPosition, mutantStartPosition + mutantPrimerLength - 1);
+                    var reverseMutationPrimer = new DNA(forwardMutationPrimer).getInverseComplement();
+                    reverseMutationPrimer = vector.requiredReverseExtension + reverseMutationPrimer;
+
+                    Reflect.setField(row, 'Mutation Forward Primer', '');
+                    Reflect.setField(row, 'Mutation Reverse Primer', reverseMutationPrimer);
+
+                    Reflect.setField(row, 'Reverse Seq', reverseMutationPrimer);
+                }
+
+                template = mutant_template;
+            }
+
             //Calculate PCR product
             var forwardSeq = Reflect.field(row, 'Forward Seq');
             var reverseSeq = Reflect.field(row, 'Reverse Seq');
@@ -804,6 +928,8 @@ class ConstructDesignTable extends Table{
                         direction = CutProductDirection.DOWNSTREAM;
                     }else{
                         Reflect.setField(row, 'Construct Error', 'Invalid value for Vector field protease product direction should be either UPSTREAM or DOWNSTREAM');
+
+                        clearPrimers(row);
                         continue;
                     }
 
@@ -818,6 +944,8 @@ class ConstructDesignTable extends Table{
                     var startCodonPosition = ligation.getFirstStartCodonPosition(GeneticCodes.STANDARD);
                     if(startCodonPosition == -1){
                         Reflect.setField(row, 'Construct Error', 'Ligation product is missing a start codon');
+
+                        clearPrimers(row);
                         continue;
                     }
 
@@ -842,6 +970,13 @@ class ConstructDesignTable extends Table{
         }
 
         cb();
+    }
+
+    public function clearPrimers(row : Dynamic){
+        Reflect.setField(row, 'Mutation Forward Primer', '');
+        Reflect.setField(row, 'Mutation Reverse Primer', '');
+        Reflect.setField(row, 'Forward Seq', '');
+        Reflect.setField(row, 'Reverse Seq', '');
     }
 
     public function duplicateAndChangeVector(newVectorName : String, cb : Void->Void){

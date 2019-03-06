@@ -16,6 +16,7 @@ import bindings.Ext.NodeSocket;
 import saturn.core.User;
 import saturn.server.plugins.core.BaseServerPlugin;
 import saturn.server.plugins.socket.core.BaseServerSocketPlugin;
+import saturn.server.plugins.core.RESTSocketWrapperPlugin;
 
 import js.Node;
 
@@ -58,14 +59,26 @@ class SaturnServer {
     static var beforeListen : Dynamic;
     static var afterListen : Dynamic;
 
+    var internalConnectionHostName : String;
+
     var authPlugin : AuthenticationPlugin;
+
+    var usingEncryption = false;
 
     public static function main(){
         defaultServer = new SaturnServer();
     }
 
+    public function isEncrypted() : Bool{
+        return usingEncryption;
+    }
+
     public static function getDefaultServer(){
         return defaultServer;
+    }
+
+    public function getInternalConnectionHostName() : String{
+        return internalConnectionHostName;
     }
 
     public static function debuglog(name : String, value : String){
@@ -105,16 +118,31 @@ class SaturnServer {
     }
 
     public function initialiseServer(index_page){
-        var http_config = {};
+        var http_config :Dynamic = {};
 
         var serverConfig = getServerConfig();
+
+        if(Reflect.hasField(serverConfig, 'internalConnectionHostName')){
+            internalConnectionHostName = Reflect.field(serverConfig, 'internalConnectionHostName');
+        }else{
+            internalConnectionHostName = Reflect.field(serverConfig,'hostname');
+        }
 
         if(Reflect.hasField(serverConfig, 'restify_http_options')){
             http_config = Reflect.field(serverConfig, 'restify_http_options');
             Util.debug(Util.string(http_config));
-        }
 
-        server = restify.createServer(http_config);
+            if(Reflect.hasField(http_config, 'cert')){
+                var certificate = Reflect.field(http_config, 'cert');
+                if(certificate != null && certificate != ''){
+                    usingEncryption = true;
+
+                    server = restify.createServer({'httpsServerOptions':http_config});
+                }
+            }
+        }else{
+            server = restify.createServer();
+        }
 
         //below conflicts with GlycanBuilder
         //server.use(restify.plugins.bodyParser({mapParams: true}));
@@ -126,6 +154,10 @@ class SaturnServer {
         server.use(restify.plugins.bodyParser({
             mapParams: true
         }));
+
+        var CookieParser = js.Node.require('restify-cookies');
+
+        server.use(CookieParser.parse);
 
         installPlugins();
 
@@ -165,16 +197,18 @@ class SaturnServer {
 
                 socketPlugins.push(plugin);
             }
+
+            var Queue = Node.require('bull');
+
+            theServerSocket.sockets.on('connection', function (socket : Dynamic) {
+                //socket.handshake.decoded_token
+                for(plugin in socketPlugins){
+                    plugin.addListeners(socket);
+                }
+            });
         }
 
-        var Queue = Node.require('bull');
 
-        theServerSocket.sockets.on('connection', function (socket : Dynamic) {
-            //socket.handshake.decoded_token
-            for(plugin in socketPlugins){
-                plugin.addListeners(socket);
-            }
-        });
     }
 
     private function installPlugins(){
