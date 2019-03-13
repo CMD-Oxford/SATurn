@@ -11,6 +11,7 @@
 -D  js-unflatten
 -D CHROMOHUB
 -lib compiletime
+-lib phial
 -D CLIENT_SIDE
 -main saturn.app.ChromoHubClientLauncher
 

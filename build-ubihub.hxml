@@ -9,9 +9,9 @@
 --macro include('saturn.core.domain')
 -D js-classic
 -D  js-unflatten
--lib phial
 -D CHROMOHUB
 -D UBIHUB
+-lib phial
 -lib compiletime
 -D CLIENT_SIDE
 -main saturn.app.ChromoHubClientLauncher
