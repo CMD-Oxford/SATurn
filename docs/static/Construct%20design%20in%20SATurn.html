@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Construct design in SATurn
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 12 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><h1 class=''>Introduction</h1><p>SATurn has been designed to simplify the type of medium/high throughput plate-based cloning conducted at the <a class='tc-tiddlylink-external' href='https://www.thesgc.org' target='_blank'>SGC</a> which involves creating various different constructs of the same gene with varying: construct boundaries, N/C terminal tags, point mutations, deletions, insertions, and vector combinations with the aim of obtaining protein for use in: crystallization, electron microscopy, biophysical and cell based assays.  SATurn isn't meant to replace tools like <a class='tc-tiddlylink-external' href='http://www.snapgene.com/' target='_blank'>SnapGene</a> or <a class='tc-tiddlylink-external' href='https://www.thermofisher.com/uk/en/home/life-science/cloning/vector-nti-software.html' target='_blank'>VectorNTI</a> but rather to complement these tools by making highly repetitive tasks easier with regards to construct design and downstream analysis and to provide a degree of validation before experiments are conducted.  To put this into context the SGC has designed 165,000 constructs over the period 2004 - 2018.</p><p>The basic construct design workflow everybody is familiar with is shown below along with the names we use in SATurn to refer to the various cloning entities.  
+<table style='width:100%'>
+ <thead>
+  <tr>
+   <th>
+    Workflow
+   </th>
+   <th>
+   SATurn Entity Name
+   </th>
+   <th>
+   ID Example
+   </th>
+   <th style='width:50%'>
+    Description
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+     <td>1. Select gene</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Gene.html'>Gene</a></td>
+     <td></td>
+     <td>Select the gene of interest that you wish to work on</td>
+  </tr>
+  <tr>
+     <td>2.  Select isoform</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Target.html'>Target</a></td>
+     <td>BRD1A</td>
+     <td>Specific isoform you wish to work on</td>
+  </tr>
+  <tr>
+     <td>3.  Select entry clone</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Entry%2520clone.html'>Entry clone</a></td>
+     <td>BRDA1-s001</td>
+     <td>Template DNA for PCR</td>
+  </tr>
+  <tr>
+     <td>4. Select construct boundaries</td>
+     <td></td>
+     <td></td>
+     <td></td>
+  </tr>
+  <tr>
+     <td>5. Enter primers</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Forward%2520%252F%2520Reverse%2520Primers.html'>Forward / Reverse Primers</a></td>
+     <td>BRDA1-f001/r001</td>
+     <td></td>
+  </tr> 
+  <tr>
+     <td>6. Enter PCR product</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Allele.html'>Allele</a></td>
+     <td>BRDA1-a001</td>
+     <td>SATurn adopts the SGC nomenclature of calling the DNA we are inserting into a vector an Allele</td>
+  </tr>
+  <tr>
+     <td>7. Select vector</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Vector.html'>Vector</a></td>
+     <td></td>
+     <td></td>
+  </tr>
+  <tr>
+     <td>8.  Enter construct</td>
+     <td><a class='tc-tiddlylink tc-tiddlylink-missing' href='Construct.html'>Construct</a></td>
+     <td>BRDA1-c001</td>
+     <td>Ligation product of <a class='tc-tiddlylink tc-tiddlylink-missing' href='Vector.html'>Vector</a> and <a class='tc-tiddlylink tc-tiddlylink-missing' href='Allele.html'>Allele</a></td>
+  </tr>
+ </tbody>
+</table>
+Note that within the SATurn database: a construct is connected to an allele and vector,  an allele to an entry clone and forward/reverse primers, and an entry clone to a target.  Within the SGC all of our sample IDs start with the target ID which is formed from the gene symbol plus a single sequential character to indicate the isoform.  After the target ID all samples have a &quot;-&quot; then a single character which is specific to the sample type (see above table) followed by a zero padded sequential integer.  So for example the first entry clone for BRD1A is BRD1A-s001 and the second BRD1A-s002.</p><p>SATurn allows you to save all of the above cloning entities into it's database which can either be created one-by-one or automatically by using the construct design tool which requires only that you specify the start/end positions of the construct along with the entry clone name and vector to use.</p><p><a class='welcome_button tc-tiddlylink tc-tiddlylink-resolves' href='Construct%2520Designer.html'>Creating constructs</a>  <a class='welcome_button tc-tiddlylink tc-tiddlylink-resolves' href='Viewing%2520plates%2520%2526%2520making%2520changes.html'>Viewing plates &amp; making changes</a></p></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

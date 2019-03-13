@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Internal: Configuring development environment
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 12 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><p><font color='red'>Before following these instructions please consider whether you need the full SATurn development environment configured. For example you can create Python extensions without needing the full environment installed</font></p><h1 class=''>Windows</h1><p>The full SATurn development environment is fairly complicated to install from scratch which is why we provide the package <a class='tc-tiddlylink tc-tiddlylink-missing' href='SaturnDeveloper.html'>SaturnDeveloper</a>.exe which includes an almost complete environment which you can use to make changes to SATurn and build deployment packages to give to people</p><ol><li>Download <a class='tc-tiddlylink tc-tiddlylink-missing' href='SATurnDeveloper.html'>SATurnDeveloper</a>.exe and install to a location you have write access to</li><li>Configure environment variables<br>File-&gt;Explorer-&gt;Right Click (This PC)-&gt;Advanced System Settings-&gt;<a class='tc-tiddlylink tc-tiddlylink-missing' href='EnvironmentVariables.html'>EnvironmentVariables</a><ol><li>Add Haxe &amp; Neko to PATH<blockquote><p>$SATURN\<a class='tc-tiddlylink tc-tiddlylink-missing' href='HaxeToolkit.html'>HaxeToolkit</a>\haxe<br>$SATURN\<a class='tc-tiddlylink tc-tiddlylink-missing' href='HaxeToolkit.html'>HaxeToolkit</a>\neko</p></blockquote></li><li>Create NEKO_INSTPATH environment variable<blockquote><p>NEKO_INSTPATH =&gt; C:\<a class='tc-tiddlylink tc-tiddlylink-missing' href='HaxeToolkit.html'>HaxeToolkit</a>\neko</p></blockquote></li><li>Create NEKOPATH environment variable<blockquote><p>NEKOPATH C:\<a class='tc-tiddlylink tc-tiddlylink-missing' href='HaxeToolkit.html'>HaxeToolkit</a>\neko</p></blockquote></li></ol></li><li>Install <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a><blockquote><p>developer_tools/ideaIC-2017.3.4.exe</p></blockquote></li><li>Add the Haxe plugin to <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a><blockquote><p>File-&gt;Settings-&gt;Plugin-&gt;Browse Repositories<br>Install the Haxe plugin</p></blockquote></li><li>Open the SATurn project in <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a><blockquote><p>File-&gt;Open<br>Navigate to the folder you extracted SATurn to</p></blockquote></li><li>Test Haxe transpile within <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a><blockquote><p>Ctrl+F9</p></blockquote></li></ol><p>If you plan to build packages to distribute to people then you will also need to install the following.</p><ol><li>Install developer_tools/<a class='tc-tiddlylink tc-tiddlylink-missing' href='VisualStudioBootStrap.html'>VisualStudioBootStrap</a>.exe</li><li>Install developer_tools/qt-unified-windows-x86-3.0.2-online.exe<blockquote><p>Install 5.10 for MSVC 2017 with <a class='tc-tiddlylink tc-tiddlylink-missing' href='QWebEngine.html'>QWebEngine</a> and QT Creator</p></blockquote></li><li>Install developer_tools/<a class='tc-tiddlylink tc-tiddlylink-missing' href='QtInstallerFramework.html'>QtInstallerFramework</a>-win-x86.exe</li></ol></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

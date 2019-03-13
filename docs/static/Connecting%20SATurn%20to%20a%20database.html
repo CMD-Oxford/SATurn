@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Connecting SATurn to a database
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 10 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><h1 class=''>Summary</h1><p>SATurn includes a basic ORM (Object relational mapping) technology which allows SATurn to automatically map classes and their corresponding fields with relational tables and their corresponding columns.  Within the service configuration file which starts SATurn you will find within the plugin section that the plugin &quot;<a class='tc-tiddlylink tc-tiddlylink-missing' href='DefaultProviderPlugin.html'>DefaultProviderPlugin</a>&quot; is loaded.  Within the <a class='tc-tiddlylink tc-tiddlylink-missing' href='DefaultProviderPlugin.html'>DefaultProviderPlugin</a> configuration you will find a connections block which defines an array of databases that you would like to connect SATurn to.</p><p><img src='./images/sqlite_connection_def.png'>.</p><p>The image above shows the connection block which we use in the standalone version of SATurn to connect SATurn to an SQLite database.</p><p>The SATurn ORM is fairly comprehensive in the types of relationships (i.e. foreign keys) it supports and the types of advanced queries it supports.  We hope to update this documentation shortly.  But in the meantime a quick example is shown below which describes how to add entities and insert and retrieve them.</p><h1 class=''>Example of mapping an entity</h1><p>The following assumes that you are still using the SQLite database.</p><p>1. Create a table in the SQLite database with the following definition</p><blockquote><p>CREATE TABLE STARS(PKEY INTEGER PRIMARY KEY AUTOINCREMENT, STAR_ID VARCHAR(30), STAR_TYPE VARCHAR(100));</p></blockquote><p>2. Create the following file src/saturn/core/domain/Star.hx</p><pre><code>package saturn.core.domain;
+
+class Star {
+    public var id : Int;
+    public var starId : String;
+    public var starType : String;
+
+    public function new(){
+        
+    }</code></pre><p>3. Add the following to buildModels in SGCSQLite.hx</p><pre><code>models.set('saturn.core.domain.Star', {
+            [
+                'fields'=&gt;[
+                    'starId' =&gt; 'STAR_ID',
+                    'id' =&gt; 'PKEY',
+                    'starType' =&gt; 'STAR_TYPE'
+                ],
+                'indexes'=&gt;[
+                    'starId'=&gt;false,
+                    'id'=&gt;true
+                ],
+                'table_info' =&gt; [
+                    'schema' =&gt; 'SGC',
+                    'name' =&gt; 'STARS',
+                    'human_name' =&gt; 'Star',
+                    'human_name_plural' =&gt; 'Stars'
+                ]
+            ]
+});
+</code></pre><p>4. Recompile the SATurn code</p><blockquote><p>haxe build.hxml (or Ctrl + F9 in <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a>)</p></blockquote><p>5. Restart SATurn &amp; hard reload the web-page (In Chrome hold down refresh and click on Empty Cache and hard reload)</p><p>Test the new mapping as follows</p><p>6. Click on File-&gt;New-&gt;Script
+7. Enter the following code to insert a new entity</p><pre><code>var starObj = new saturn.core,domain.Star();
+starObj.starId = 'Alpha Centauri C';
+starObj.starType = 'red dwarf';
+
+DB.save(starObj, function(err){
+   if(err != null){
+     print(err);
+   }else{
+     print(starObj.starId + ' saved');
+   }
+
+  flush();
+}</code></pre><p>8. Now retrieve the star from the database</p><pre><code>DB.getById('Alpha Centauri C', saturn.core.domain.Star, function(starObj, error){
+  if(err != null){
+     print(err);
+  }else{
+     print(starObj.starId + ' is a ' + starObj.starType);
+  }
+  flush();
+}</code></pre></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

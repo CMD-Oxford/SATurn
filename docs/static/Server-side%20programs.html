@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Server-side programs
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 10 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><h1 class=''>Summary</h1><p>SATurn can be extended with server-side programs in a number of different ways.  The simplest way to add server-side functionality to SATurn is by connecting scripts via the JSON bridge layer which is described <a class='tc-tiddlylink tc-tiddlylink-missing' href='%255DConnecting%2520external%2520scripts.html'>here</a>.  You can however create more native-type server-side programs which are written in the Haxe programming language and which gain access to the full SATurn server-side API which includes among-st other things access to core SATurn libraries for handling DNA and protein sequences.</p><p>To add a native plugin you can follow the guide below which assumes you have already set-up your development environment (see <a class='tc-tiddlylink tc-tiddlylink-missing' href='Configuring%2520development%2520environment.html'>Configuring development environment</a> for further instructions).  There is a more low-level API for adding server-side programs which you will see used for many of our plugins like this <a class='tc-tiddlylink-external' href='https://github.com/ddamerell53/SATurn/blob/master/src/saturn/server/plugins/socket/ClustalPlugin.hx' target='_blank'>one</a>.  However we would encourage all new program to be written as follows as it's far simpler.</p><h1 class=''>Creating a server-side program</h1><p>1. Save the following to src/saturn/db/provider/hooks/<a class='tc-tiddlylink tc-tiddlylink-missing' href='SayHelloHook.html'>SayHelloHook</a>.hx</p><pre><code>package saturn.db.provider.hooks;
+
+import haxe.Json;
+import saturn.core.Util;
+
+import js.Node.NodeChildProcess;
+import bindings.NodeTemp;
+import saturn.app.SaturnServer;
+
+class SayHelloHook {
+    public static function run(query : String, params : Array&lt;Dynamic&gt;, clazz : String, cb : Dynamic-&gt;String-&gt;Void, hookConfig : Map&lt;String, Dynamic&gt;){
+      var msg = Hello ' +params[0].name;
+
+      cb({'msg':msg}, null); 
+   }</code></pre><p>2. Open services/<a class='tc-tiddlylink tc-tiddlylink-missing' href='ServicesLocalLite.html'>ServicesLocalLite</a>.json and locate the plugins-&gt;Connections-&gt;named_query_hooks section
+3. Add the following</p><pre><code>{
+  &quot;name&quot;: &quot;saturn.db.provider.hooks.SayHelloHook&quot;,
+  &quot;class&quot;: &quot;ssaturn.db.provider.hooks.SayHelloHook&quot;
+}</code></pre><p>4. Compile the new code </p><blockquote><p>haxe build.hxml (Ctrl+F9 in <a class='tc-tiddlylink tc-tiddlylink-missing' href='IntelliJ.html'>IntelliJ</a>)</p></blockquote><p>5. Restart SATurn </p><p>6. In the SATurn interface click on File-&gt;New-&gt;Script</p><p>7. Paste the following code into the script window</p><pre><code>saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.db.provider.hooks.SayHelloHook', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0].msg);
+        }
+
+        flush();
+    }
+);</code></pre><p>8. Click on &quot;Run&quot;</p></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Configuring BLAST databases
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 12 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><p>BLAST databases are configured in the start-up configuration of SATurn.  To add or remove BLAST databases follow the instructions below and restart the SATurn application.</p><h2 class=''>Adding a BLAST database</h2><ol><li>Open $SATURN/build/services/<a class='tc-tiddlylink tc-tiddlylink-missing' href='ServicesLocalLite.html'>ServicesLocalLite</a>.json in your editor of choice</li><li>Find the BLAST_DB configuration section and add a block as shown below<blockquote><p><code>  &quot;Constructs (DNA)&quot; :{
+       &quot;dbtype&quot;: &quot;nucl&quot;,
+       &quot;dbpath&quot;: &quot;databases/constructs_nucleotide.fasta&quot;,
+       &quot;prog&quot;: &quot;blastn&quot;
+    }</code></p><p>dbtype: &quot;nucl&quot; for DNA or &quot;prot&quot; for Protein<br>prog: &quot;blastn&quot; for DNA or &quot;blastp&quot; for Protein<br>dbpath: file path to BLASTDB (see <a class='tc-tiddlylink tc-tiddlylink-resolves' href='Creating%2520a%2520BLASTDB.html'>Creating a BLASTDB</a>) - can be relative</p></blockquote></li></ol><h2 class=''>Remove a BLAST database</h2><ol><li>Open $SATURN/build/services/<a class='tc-tiddlylink tc-tiddlylink-missing' href='ServicesLocalLite.html'>ServicesLocalLite</a>.json in your editor of choice</li><li>Find the BLAST_DB configuration section and add a block as shown below</li><li>Remove the block for the database you want to remove</li></ol></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

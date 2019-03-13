@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Connecting external scripts
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 10 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><h1 class=''>Summary</h1><p>An external provider hook allows you to communicate via JSON with an external program.  This is accomplished via the static method saturn.db.provider.hooks.<a class='tc-tiddlylink tc-tiddlylink-missing' href='ExternalJsonHook.html'>ExternalJsonHook</a>.run.  <a class='tc-tiddlylink tc-tiddlylink-missing' href='ExternalJsonHook.html'>ExternalJsonHook</a>.run can pass any arguments you like to an external program but it will always pass the location of two files to your program as the last arguments.  The first of these files contains a serialized version of the JSON you send to <a class='tc-tiddlylink tc-tiddlylink-missing' href='ExternalJsonHook.html'>ExternalJsonHook</a>.run.  The second is the location of an empty file, which your external program must populate with the serialized JSON it wants to send to back.  After your external program has finished executing <a class='tc-tiddlylink tc-tiddlylink-missing' href='ExternalJsonHook.html'>ExternalJsonHook</a>.run will parse the returned JSON and pass this to the callback you have provided. </p><p>Language instructions</p><ul><li><a class='tc-tiddlylink tc-tiddlylink-resolves' href='Python%2520External%2520Provider%2520Hook.html'>Python</a></li><li><a class='tc-tiddlylink tc-tiddlylink-resolves' href='Perl%2520External%2520Provider%2520Hook.html'>Perl</a></li><li><a class='tc-tiddlylink tc-tiddlylink-resolves' href='Java%2520External%2520Provider%2520Hook.html'>Java</a></li></ul><p>When you have the SATurn viewer installed you can also directly execute programs on your system.</p></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

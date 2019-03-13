@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Perl External Provider Hook
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 10 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><h1 class=''>Synopsis </h1><p>Save the following Perl to saturn/build/bin/hooks/example_perl_hook.pl</p><pre><code>use JSON;
+
+use strict;
+
+my $argNum = $#ARGV+1;
+
+if($argNum &lt; 2){
+  die(&quot;Invalid number of arguments provided: &quot; . $argNum);
+}
+
+print 'ARGS: ' . join('|', @ARGV);
+
+my $inputJsonPath = $ARGV[length(@ARGV)-3];
+my $outputJsonPath = $ARGV[length(@ARGV)-2];
+
+print 'Input file ' . $inputJsonPath;
+
+my $inputJson = undef;
+
+# Read JSON from SATurn
+
+open(JSON_FILE, &quot;&lt;$inputJsonPath&quot;) || die &quot;Unable to open $inputJsonPath for reading\n&quot;;
+$inputJson = from_json(join('',&lt;JSON_FILE&gt;));
+close(READ);
+  
+# Do something with the JSON from SATurn and generate return JSON
+my %outputJson = (greeting =&gt; 'Hello ' . $inputJson-&gt;{'name'}, language =&gt; 'Perl');
+
+open(OUTPUT_FILE, &quot;&gt;$outputJsonPath&quot;) || die &quot;Unable to open $outputJsonPath for writing\n&quot;;
+print OUTPUT_FILE encode_json \%outputJson;
+close(OUTPUT_FILE);</code></pre><p>Connect the Perl script to the web-service by adding the following block to the Provider configuration within <a class='tc-tiddlylink tc-tiddlylink-missing' href='ServicesLocalLite.html'>ServicesLocalLite</a>.json.  You can decide whether to execute this via <a class='tc-tiddlylink tc-tiddlylink-missing' href='NodeJS.html'>NodeJS</a> or QT (SATurn viewer only) by placing this block into the configuration of the correct provider.</p><pre><code>{
+  &quot;name&quot;: &quot;saturn.server.plugins.ExternalJsonPlugin:PerlExample&quot;,
+  &quot;class&quot;: &quot;saturn.server.plugins.ExternalJsonPlugin&quot;,
+  &quot;method&quot;: &quot;run&quot;,
+  &quot;program&quot;: &quot;perl&quot;,
+  &quot;arguments&quot;: [&quot;bin/hooks/example_perl_hook.pl&quot;]
+}</code></pre><p>You can call your Perl script from the client by copying the following code into the SATurn code editor</p><pre><code>saturn.core.Util.getProvider().getByNamedQuery(
+    'saturn.server.plugins.ExternalJsonPlugin:PerlExample', 
+    [{'name': 'David'}], 
+    null, 
+    false, 
+    function(objs, err){
+        if(err != null){
+            print(err);
+        }else{
+            print(objs[0]);
+        }
+
+        flush();
+    }
+);</code></pre></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>

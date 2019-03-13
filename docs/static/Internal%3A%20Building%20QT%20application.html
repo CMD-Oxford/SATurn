@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="TiddlyWiki" />
+<meta name="tiddlywiki-version" content="5.1.4" />
+<meta name="format-detection" content="telephone=no">
+<link id="faviconLink" rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="static.css">
+<title>SATurn — Modular Bioinformatics Framework</title>
+</head>
+<body class="tc-body">
+
+<section class="tc-story-river">
+
+<p><div class='tc-tiddler-frame tc-tiddler-view-frame tc-tiddler-exists   '><div class='tc-tiddler-title'>
+<h2 class='tc-titlebar'>
+<span class='tc-tiddler-controls'>
+<span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='info' class='tc-btn-invisible' title='Show information for this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='edit' class='tc-btn-invisible' title='Edit this tiddler'>
+
+
+</button>
+</span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal' hidden='true'></span><span class=' tc-reveal'><button aria-label='close' class='tc-btn-invisible' title='Close this tiddler'>
+
+
+</button></span>
+</span>
+
+<span style='fill:;'>
+
+</span>
+
+
+
+<span class='tc-title'>
+Internal: Building QT application
+</span>
+
+</h2>
+
+<div class='tc-tiddler-info tc-popup tc-reveal' hidden='true'></div>
+</div><div class='tc-subtitle'>
+<a class='tc-tiddlylink tc-tiddlylink-missing' href='.html'>
+
+</a> 11 months ago
+</div>
+<div class='tc-tags-wrapper'></div>
+
+<div class='tc-tiddler-body'><p>The instructions below guide you through the process of building the QT application which launches the standalone version of SATurn and provides the interface through which the web-portal is shown to the user.</p><h1 class=''>Windows</h1><ol><li>Install Microsoft Visual Studio 2017 (Community editor is fine)<blockquote><p><a class='tc-tiddlylink tc-tiddlylink-missing' href='SaturnDeveloper.html'>SaturnDeveloper</a>.exe/developer_tools/<a class='tc-tiddlylink tc-tiddlylink-missing' href='VisualStudioBootStrap.html'>VisualStudioBootStrap</a>.exe</p></blockquote></li><li>Install QT for MSVC 2017 and be sure to include QT <a class='tc-tiddlylink tc-tiddlylink-missing' href='WebEngine.html'>WebEngine</a> and QT Creator<blockquote><p><a class='tc-tiddlylink tc-tiddlylink-missing' href='SaturnDeveloper.html'>SaturnDeveloper</a>.exe/developer_tools/qt-unified-windows-x86-3.0.2-online.exe</p></blockquote></li><li>Open QT Creator<blockquote><p>File-&gt;Open Project<br>Navigate to saturn/src_qt/Launcher/Saturn.pro</p></blockquote></li><li>Switch to the &quot;Release&quot; build &amp; click on the green play button to compile<blockquote><p><img src='./images/qt_creator_compile_buttons.png'></p></blockquote></li><li>Create deployable version<blockquote><p>deploy_qt.bat<br>(copies deployable version to build/qt along with all required QT libraries)</p></blockquote></li></ol><h1 class=''>OSX</h1><ol><li>Install the latest version of XCode</li><li>Install QT 5.10.1 (be sure to select the <a class='tc-tiddlylink tc-tiddlylink-missing' href='QtWebEngine.html'>QtWebEngine</a> during install)<blockquote><p>If you install a different version of QT some of the links in saturn/src_qt_Launcher_fix_osx_executables.sh will need updated</p></blockquote></li></ol><h2 class=''>Build QML File Helper</h2><ol><li>Open QT Creator</li><li>Load File Helper project<blockquote><p>File-&gt;Open Project<br>Navigate to saturn/src_qt/<a class='tc-tiddlylink tc-tiddlylink-missing' href='FileReader.html'>FileReader</a>/filereader.pro</p></blockquote></li><li>Click on configure for QT 5.10.1 Desktop</li><li>Build-&gt;Build Project (be sure to be in release and not debug mode)</li></ol><h2 class=''>Build SATurn Launcher</h2><ol><li><blockquote><p>File-&gt;Open Project<br>Navigate to saturn/src_qt/Launcher/Saturn.pro</p></blockquote></li><li>When prompted configure for QT 5.10.0</li><li>Build-&gt;Build Project (be sure to be in release and not debug mode</li><li>Run the following post-fix script<blockquote><p>saturn/src_qt/Launcher/fix_osx_executables.sh</p></blockquote></li><li>To test the build run the following<blockquote><p>cd saturn/build/qt</p><p>Saturn.app/Contents/<a class='tc-tiddlylink tc-tiddlylink-missing' href='MacOS.html'>MacOS</a>/Saturn <u>DEFAULT</u> <a class='tc-tiddlylink-external' href='http://localhost:8091' target='_blank'>http://localhost:8091</a> ALL –disable-web-security</p></blockquote></li></ol></div>
+
+
+
+</div>
+
+</p>
+
+</section>
+</body>
+</html>
