@@ -121,9 +121,6 @@ class ABITrace {
         var template = alnStrs[0];
         var query = alnStrs[1];
 
-        js.Browser.window.console.log(template);
-        js.Browser.window.console.log(query);
-
         var newTrace = new ABITrace();
         var seqPos = 0;
         for(i in 0...getReadingCount()){

@@ -394,12 +394,16 @@ class DefaultProvider implements Provider{
 
     }
 
-    public function getByExample(obj : Dynamic, cb : Dynamic->Array<Dynamic>->Void) : Void{
+    public function getByExample(obj : Dynamic, cb : Dynamic = null) : Query{
         var q = getQuery();
 
         q.addExample(obj);
 
-        query(q, cb);
+        //query(q, cb);
+
+        q.run(cb);
+
+        return q;
     }
 
     public function query(query : Query, cb : Array<Dynamic>->Dynamic->Void){
@@ -1325,7 +1329,7 @@ class DefaultProvider implements Provider{
                 continue;
             }
 
-            for(field in model.getFields()){
+            for(field in model.getAttributes()){
                 var value : Dynamic = Reflect.field(original, field);
 
                 var isObject = false;
@@ -1452,7 +1456,7 @@ class DefaultProvider implements Provider{
         // Iterate across ExtJS model
         for(model in models){
             // Iterate list of ExtJS model fields
-            for(field in modelDef.getFields()){
+            for(field in modelDef.getAttributes()){
                 // Fields with a period are synthetic and need to be deconvoluted
                 if(field.indexOf('.') > -1){
                     var parts = field.split('.');
@@ -1529,7 +1533,7 @@ class DefaultProvider implements Provider{
                     var mappedModel = Type.createEmptyInstance(clazz);
 
                     // Iterate list of ExtJS model fields
-                    for(field in modelDef.getFields()){
+                    for(field in modelDef.getAttributes()){
                         // Fields with a period are synthetic and need to be deconvoluted
                         if(field.indexOf('.') > -1){
                             var parts = field.split('.');

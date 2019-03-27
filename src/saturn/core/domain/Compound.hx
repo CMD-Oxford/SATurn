@@ -46,6 +46,9 @@ class Compound {
         compoundId = 'Compound';
     }
 
+    public function setup(){
+
+    }
 
     public function substructureSearch(cb : Dynamic-> Void){
         #if CLIENT_SIDE

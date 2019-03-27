@@ -1355,6 +1355,255 @@ class SGC {
                 'search'=>[
                     'name' => true
                 ]
+            ],
+			 'saturn.core.domain.SgcXtalPlate'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'barcode' => 'BARCODE',
+                    'purificationId' => 'SGCPURIFICATION_PKEY'
+                ],
+                'indexes'=>[
+                    'barcode'=>false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'XTAL_PLATES'
+                ],
+                'fields.synthetic' => [
+                    'purification' => [ 'field' => 'purificationId', 'class' => 'saturn.core.domain.SgcPurification', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Plates'
+                ],
+                'model' => [
+                    'Barcode' => 'barcode'
+                ]
+            ],
+            'saturn.core.domain.SgcXtbm'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'xtbmId' => 'XTBMID',
+                    'plateRow' => 'PLATEROW',
+                    'plateColumn' => 'PLATECOLUMN',
+                    'subwell' => 'SUBWELL',
+                    'xtalPlateId' => 'XTALPLATES_ID',
+                    'score' => 'CATEGORYSCORE',
+                    'barcode' => 'BARCODE'
+                ],
+                'indexes'=>[
+                    'xtbmId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'CRYSTALSTOBEMOUNTED'
+                ],
+                'fields.synthetic' => [
+                    'xtalPlate' => [ 'field' => 'xtalPlateId', 'class' => 'saturn.core.domain.SgcXtalPlate', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'XTBM'
+                ],
+                'model' => [
+                    'XTBM ID' => 'xtbmId',
+                    'Plate ID' => 'xtalPlateId'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalMount'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'xtalMountId' => 'XTAL_MOUNT_ID',
+                    'xtbmId' => 'SGCCRYSTALSTOBEMOUNTED_PKEY',
+                    'xtalProjectId' => 'SGCPROJECTS_PKEY',
+                    'dropStatus' => 'DROPSTATUS',
+                    'compoundId' => 'SGCCOMPOUND_PKEY',
+                    'pinId' => 'SGCPIN_PKEY',
+                    'xtalFormId' => 'SGCXTALFORM_PKEY'
+                ],
+                'indexes'=>[
+                    'xtalMountId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'XTAL_MOUNT'
+                ],
+                'fields.synthetic' => [
+                    'xtbm' => [ 'field' => 'xtbmId', 'class' => 'saturn.core.domain.SgcXtbm', 'fk_field' => 'id'],
+                    'xtalProject' => [ 'field' => 'xtalProjectId', 'class' => 'saturn.core.domain.SgcXtalProject', 'fk_field' => 'id'],
+                    'compound' => [ 'field' => 'compoundId', 'class' => 'saturn.core.domain.Compound', 'fk_field' => 'id'],
+                    'xtalForm' => [ 'field' => 'xtalFormId', 'class' => 'saturn.core.domain.SgcXtalForm', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Mounted Xtal'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalDataSet'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'xtalDataSetId' => 'DATASETID',
+                    'xtalMountId' => 'SGCXTALMOUNT_PKEY',
+                    'estimatedResolution' => 'ESTRESOLUTION',
+                    'scaledResolution' => 'RESOLUTION',
+                    'xtalProjectId' => 'SGCPROJECTS_PKEY',
+                    'beamline' => 'BEAMLINE',
+                    'outcome' => 'OUTCOME',
+                    'dsType' => 'DSTYPE',
+                    'visit' => 'VISIT',
+                    'spaceGroup' => 'SPACEGROUP',
+                    'dateRecordCreated' => 'DATESTAMP'
+                ],
+                'indexes'=>[
+                    'xtalDataSetId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'XTAL_DATASET'
+                ],
+                'fields.synthetic' => [
+                    'xtalMount' => [ 'field' => 'xtalMountId', 'class' => 'saturn.core.domain.SgcXtalMount', 'fk_field' => 'id'],
+                    'xtalProject' => [ 'field' => 'xtalProjectId', 'class' => 'saturn.core.domain.SgcXtalProject', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal DataSet'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalModel'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'xtalModelId' => 'MODELID',
+                    'modelType' => 'MODELTYPE',
+                    'compound1Id' => 'SGCCOMPOUND1_PKEY',
+                    'compound2Id' => 'SGCCOMPOUND2_PKEY',
+                    'xtalDataSetId' => 'SGCXTALDATASET_PKEY',
+                    'status' => 'STATUS',
+                    'pathToCrystallographicPDB' =>'PATHTOPDB',
+                    'pathToChemistsPDB' =>'PATHTOBOUNDPDB',
+                    'pathToMTZ' => 'PATHTOMTZ',
+                    'pathToXDSLog' =>'PATHTOLOG',
+                    'estimatedEffort' =>'ESTEFFORT',
+                    'proofingEffort' =>'PROOFEFFORT',
+                    'spaceGroup' => 'SPACEGROUP'
+                ],
+                'indexes'=>[
+                    'xtalModelId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'MODEL'
+                ],
+                'fields.synthetic' => [
+                    'xtalDataSet' => [ 'field' => 'xtalDataSetId', 'class' => 'saturn.core.domain.SgcXtalDataSet', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Model'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalDeposition'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'pdbId' => 'PDBID',
+                    'counted' => 'COUNTED',
+                    'site' => 'SITE',
+                    'followup' => 'FOLLOWUP',
+                    'xtalModelId' => 'SGCMODEL_PKEY',
+                    'dateDeposited' => 'DATEDEPOSITED',
+                    'depType' => 'DEPTYPE'
+                ],
+                'indexes'=>[
+                    'pdbId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'DEPOSITION'
+                ],
+                'fields.synthetic' => [
+                    'xtalModel' => [ 'field' => 'xtalModelId', 'class' => 'saturn.core.domain.SgcXtalModel', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Model'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalProject'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'xtalProjectId' => 'PROJECTID',
+                    'dataPath' => 'DATA_PATH',
+                    'targetId' => 'SGCTARGET_PKEY'
+                ],
+                'indexes'=>[
+                    'xtalProjectId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'PROJECTS'
+                ],
+                'fields.synthetic' => [
+                    'target' => [ 'field' => 'targetId', 'class' => 'saturn.core.domain.SgcTarget', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Model',
+                    'auto_activate' => '3'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalForm'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'formId' => 'FORMID',
+                    'phasingId' => 'SGCPHASING_PKEY',
+                    'a' => 'A',
+                    'b' => 'B',
+                    'c' => 'C',
+                    'alpha' => 'ALPHA',
+                    'beta' => 'BETA',
+                    'gamma' => 'GAMMA',
+                    'lattice' => 'LATTICE',
+                    'latticeSymbol' => 'LATTICESYMBOL',
+                    'spaceGroup' => 'SPACEGROUP'
+                ],
+                'indexes'=>[
+                    'formId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'XTAL_FORM'
+                ],
+                'fields.synthetic' => [
+                    'xtalPhasing' => [ 'field' => 'phasingId', 'class' => 'saturn.core.domain.SgcXtalPhasing', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Form'
+                ]
+            ],
+            'saturn.core.domain.SgcXtalPhasing'=>[
+                'fields'=>[
+                    'id' => 'PKEY',
+                    'phasingId' => 'PHASINGID',
+                    'xtalDataSetId' => 'SGCXTALDATASET_PKEY1',
+                    'phasingMethod' => 'PHASINGMETHOD',
+                    'phasingConfidence' => 'CONFIDENCE',
+                    'spaceGroup' => 'SPACEGROUP'
+                ],
+                'indexes'=>[
+                    'phasingId' => false,
+                    'id'=>true
+                ],
+                'table_info' => [
+                    'schema' => 'SGC',
+                    'name' => 'XTAL_PHASING'
+                ],
+                'fields.synthetic' => [
+                    'xtalDataSet' => [ 'field' => 'xtalDataSetId', 'class' => 'saturn.core.domain.SgcXtalDataSet', 'fk_field' => 'id']
+                ],
+                'options' => [
+                    'alias' => 'Xtal Phasing'
+                ]
             ]
         ];
     }

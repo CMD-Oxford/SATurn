@@ -33,6 +33,9 @@ class Query extends Token{
     public var pageSize : Token;
     public var lastPagedRowValue : Token;
 
+    public var results :Array<Dynamic>;
+    public var error : String;
+
     public function new(provider : Provider) {
         super(null);
 
@@ -182,7 +185,7 @@ class Query extends Token{
         throw new HaxeException("Can't call addToken on a query instance");
     }*/
 
-    public function or() {
+    override public function or() {
         getWhere().addToken(new Or());
     }
 
@@ -314,7 +317,18 @@ class Query extends Token{
                 }
             }
 
-            cb(objs, err);
+            this.results = objs;
+            this.error = err;
+
+            #if PYTHON
+            if(this.error != null){
+              throw this.error;
+            }
+            #end
+
+            if(cb != null){
+                cb(objs, err);
+            }
         });
     }
 
@@ -434,7 +448,7 @@ class Query extends Token{
             getSelect().addToken(new Field(clazz, '*'));
         }
 
-        var fields = model.getFields();
+        var fields = model.getAttributes();
 
         var hasPrevious = false;
 
@@ -449,24 +463,59 @@ class Query extends Token{
                     getWhere().addToken(new And());
                 }
 
-                getWhere().addToken(new Field(clazz, field));
+                var fieldToken = new Field(clazz, field);
 
-                getWhere().addToken(new Equals());
+                getWhere().addToken(fieldToken);
 
                 if(Std.is(value, IsNull)){
                     Util.print('Found NULL');
                     getWhere().addToken(new IsNull());
                 }else if(Std.is(value, IsNotNull)){
                     getWhere().addToken(new IsNotNull());
+                }else if(Std.is(value, Operator)){
+                    getWhere().addToken(value);
                 }else{
-                    Util.print('Found value' + Type.getClassName(Type.getClass(value)));
-                    getWhere().addToken(new Value(value));
-                }
+                    getWhere().addToken(new Equals());
 
+                    if(Std.is(value, Token)){
+                        getWhere().addToken(value);
+                    }else{
+                        Util.print('Found value' + Type.getClassName(Type.getClass(value)));
+                        getWhere().addToken(new Value(value));
+                    }
+                }
                 hasPrevious = true;
             }
         }
 
         getWhere().addToken(new EndBlock());
+    }
+
+    public function getResults() : Array<Dynamic> {
+        return this.results;
+    }
+
+    public function hasResults() : Bool {
+        return this.results != null && this.results.length > 0;
+    }
+
+    public function getError() : String{
+        return this.error;
+    }
+
+    public static function startsWith(value : String) {
+        var t= new Like();
+
+        t.add(new Value(value).concat('%'));
+
+        return t;
+    }
+
+    public static function getByExample(provider : Provider, example : Dynamic, cb = null) : Query{
+        var q = new Query(provider);
+        q.addExample(example);
+        q.run(cb);
+
+        return q;
     }
 }

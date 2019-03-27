@@ -158,5 +158,8 @@ class Token {
         return list;
     }
 
+    public function or(){
+        add(new Or());
+    }
 
 }
