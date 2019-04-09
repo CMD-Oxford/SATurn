@@ -1,207 +1,321 @@
 {
-    "commands": {
-        "sendBlastReport" : {
-            "direction": "IN",
-            "arguments": {
-                "BLAST_DB" : {
-                    "pos": 1,
-                    "allowedValues": {
-                      "Constructs (DNA)" :{
-                        "dbtype": "nucl",
-                        "dbpath": "databases/constructs_nucleotide.fasta",
-                        "prog": "blastn"
-                      },
-                      "PDB" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/pdb.fasta",
-                        "prog": "blastp"
-                      },
-                      "Targets (DNA)" :{
-                        "dbtype": "nucl",
-                        "dbpath": "databases/targets_nucleotide.fasta",
-                        "prog": "blastn"
-                      },
-                      "Entry Clones (DNA)" :{
-                        "dbtype": "nucl",
-                        "dbpath": "databases/entryclones_nucleotide.fasta",
-                        "prog": "blastn"
-                      },
-                      "Entry Clones (Protein)" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/entryclones_protein.fasta",
-                        "prog": "blastp"
-                      },
-                      "Vectors (DNA)":{
-                        "dbtype": "nucl",
-                        "dbpath": "/db/blast/vectors_nucleotide.fasta",
-                        "prog" : "blastn"
-                      },
-                      "Targets (Protein)" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/targets_protein.fasta",
-                        "prog": "blastp"
-                      },
-                      "Targets (Nucleotide)" :{
-                        "dbtype": "nucl",
-                        "dbpath": "databases/targets_nucleotide.fasta",
-                        "prog": "blastn"
-                      },
-                      "MGC" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/mgc_aa",
-                        "prog": "blastp"
-                      },
-                      "Human Proteome (RefSeq)" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/human.protein.faa",
-                        "prog": "blastp"
-                      },
-                      "Constructs (Protein)" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/constructs_protein.fasta",
-                        "prog": "blastp"
-                      },
-                      "Constructs (Protein No Tag)" :{
-                        "dbtype": "prot",
-                        "dbpath": "databases/constructs_protein_no_tag.fasta",
-                        "prog": "blastp"
-                      },"UniProt (Swiss-Prot)" :{
-                            "dbtype": "prot",
-                            "dbpath": "databases/uniprot_sprot.fasta",
-                            "prog" : "blastp"
-                        }
-                    }
-                },"fasta" : {
-                    "pos" : 2
-                }
+  "commands": {
+    "sendBlastReport": {
+      "direction": "IN",
+      "arguments": {
+        "BLAST_DB": {
+          "pos": 1,
+          "allowedValues": {
+            "Constructs (DNA)": {
+              "dbtype": "nucl",
+              "dbpath": "databases/constructs_nucleotide.fasta",
+              "prog": "blastn"
+            },
+            "PDB": {
+              "dbtype": "prot",
+              "dbpath": "databases/pdb.fasta",
+              "prog": "blastp"
+            },
+            "Targets (DNA)": {
+              "dbtype": "nucl",
+              "dbpath": "databases/targets_nucleotide.fasta",
+              "prog": "blastn"
+            },
+            "Entry Clones (DNA)": {
+              "dbtype": "nucl",
+              "dbpath": "databases/entryclones_nucleotide.fasta",
+              "prog": "blastn"
+            },
+            "Entry Clones (Protein)": {
+              "dbtype": "prot",
+              "dbpath": "databases/entryclones_protein.fasta",
+              "prog": "blastp"
+            },
+            "Vectors (DNA)": {
+              "dbtype": "nucl",
+              "dbpath": "/db/blast/vectors_nucleotide.fasta",
+              "prog": "blastn"
+            },
+            "Targets (Protein)": {
+              "dbtype": "prot",
+              "dbpath": "databases/targets_protein.fasta",
+              "prog": "blastp"
+            },
+            "Targets (Nucleotide)": {
+              "dbtype": "nucl",
+              "dbpath": "databases/targets_nucleotide.fasta",
+              "prog": "blastn"
+            },
+            "MGC": {
+              "dbtype": "prot",
+              "dbpath": "databases/mgc_aa",
+              "prog": "blastp"
+            },
+            "Human Proteome (RefSeq)": {
+              "dbtype": "prot",
+              "dbpath": "databases/human.protein.faa",
+              "prog": "blastp"
+            },
+            "Constructs (Protein)": {
+              "dbtype": "prot",
+              "dbpath": "databases/constructs_protein.fasta",
+              "prog": "blastp"
+            },
+            "Constructs (Protein No Tag)": {
+              "dbtype": "prot",
+              "dbpath": "databases/constructs_protein_no_tag.fasta",
+              "prog": "blastp"
+            },
+            "UniProt (Swiss-Prot)": {
+              "dbtype": "prot",
+              "dbpath": "databases/uniprot_sprot.fasta",
+              "prog": "blastp"
             }
+          }
+        },
+        "fasta": {
+          "pos": 2
         }
+      }
+    }
+  },
+  "port": 8091,
+  "redis_port": 6379,
+  "hostname": "0.0.0.0",
+  "origins": "http://localhost:*/",
+  "index_page": "/static/SaturnClient.html",
+  "default_rest_credentials": {
+    "username" : "<username>",
+    "password" : "<password>"
+  },
+  "socket_plugins": [
+    {
+      "clazz": "saturn.server.plugins.socket.ClustalPlugin",
+      "namespaces": [
+        {
+          "name": "_clustal_"
+        }
+      ]
     },
-    "port" : 8091,
-    "redis_port" : 6379,
-	"hostname": "0.0.0.0",
-    "origins" : "http://localhost:*/",
-     "index_page":"/static/SaturnClient.html",
-    "socket_plugins": [
-      {"clazz": "saturn.server.plugins.socket.ClustalPlugin", "namespaces": [{"name": "_clustal_"}]},
-      {"clazz": "saturn.server.plugins.socket.PhyloPlugin", "namespaces": [{"name": "_phylo_"}]},
-      {"clazz": "saturn.server.plugins.socket.PDBRetrievalPlugin", "namespaces": [{"name": "_pdb_"}]},
-      {"clazz": "saturn.server.plugins.socket.BLASTPlugin", "namespaces": [{"name": "_blast_"}]},
-      {"clazz": "saturn.server.plugins.socket.ABIConverter", "namespaces": [{"name": "_abi_"}]},
-      {"clazz": "saturn.server.plugins.socket.THMMPlugin", "namespaces": [{"name": "_thmm_"}]},
-      {"clazz": "saturn.server.plugins.socket.PSIPREDPlugin", "namespaces": [{"name": "_psipred_"}]},
-      {"clazz": "saturn.server.plugins.socket.DisoPredPlugin", "namespaces": [{"name": "_disopred_"}]},
-      {"clazz": "saturn.server.plugins.socket.BLASTDBUpdater", "namespaces": [{"name": "_blast_updater_"}]},
+    {
+      "clazz": "saturn.server.plugins.socket.PhyloPlugin",
+      "namespaces": [
         {
-            "clazz": "saturn.server.plugins.socket.FileUploader",
-            "namespaces": [{"name": "_uploader_"}],
-            "authentication": {
-                "upload": {"role": ["ANY"]}
-            }
-        },
-        {
-            "clazz": "saturn.server.plugins.socket.core.RemoteProviderPlugin",
-            "namespaces": [{"name": "_remote_provider_"}],
-
-            "connect_as_user": true
-        },
-        {
-            "clazz": "saturn.server.plugins.socket.EmailPlugin",
-            "namespaces": [{"name": "_email_"}],
-            "authentication": {
-                "*": {"role": ["ANY"]}
-            },
-            "port": "",
-            "host": "",
-            "auth": {
-                "user": "",
-                "password": ""
-            },
-            "from": "",
-            "plugins": [
-
-                {
-
-                    "clazz": "saturn.server.plugins.socket.email.SgcPrimerEmailPlugin",
-                    "authentication": {
-                        "sgc_primer_email": {"role": ["ANY"]}
-                     },
-                     "to": "",
-                     "cc": [""]
-                }
-            ]
+          "name": "_phylo_"
         }
-    ],
-    "plugins":[
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.PDBRetrievalPlugin",
+      "namespaces": [
         {
-            "clazz": "saturn.server.plugins.core.DefaultProviderPlugin",
-            "connections" : [{
-                    "file_name" : "databases/saturn.sqlite",
-                    "driver" : "saturn.db.provider.SQLiteProvider",
-                    "named_queries": {
-                        "TARGET_SEQDATA" : "select   PKEY AS PKEY,   CASE :1 WHEN 'Nucleotide' THEN     DNASEQ   WHEN 'Protein' THEN     PROTSEQ   ELSE     null   END AS SEQ,   NULL AS SEQTYPE,   '1' AS VERSION,   PKEY AS SGCTARGET_PKEY,   NULL AS CRC,   TARGET_ID AS TARGET_ID FROM   TARGET WHERE TARGET_ID = :0",
-                        "TARGET_TO_ALLELES" : "SELECT a.* from ALLELE a, ENTRY_CLONE b, TARGET c WHERE c.TARGET_ID=:0 and b.SGCTARGET_PKEY=c.PKEY and a.SGCENTRYCLONE_PKEY=b.PKEY ORDER BY a.ALLELE_ID",
-                        "TARGET_TO_CONSTRUCTS" : "SELECT d.* from ALLELE a, ENTRY_CLONE b, TARGET c, CONSTRUCT d WHERE c.TARGET_ID=:1 and b.SGCTARGET_PKEY=c.PKEY and a.SGCENTRYCLONE_PKEY=b.PKEY and d.SGCALLELE_PKEY = a.PKEY ORDER BY d.CONSTRUCT_ID",
-                        "TARGET_TO_TARGETS" : "select   PKEY AS PKEY,   CASE :1 WHEN 'Nucleotide' THEN     DNASEQ   WHEN 'Protein' THEN     PROTSEQ   ELSE     null   END AS SEQ,   :1 AS SEQTYPE,   '1' AS TARGETVERSION,   PKEY AS SGCTARGET_PKEY,   NULL AS CRC,   TARGET_ID AS TARGET_ID FROM   TARGET WHERE   TARGET_ID = :0",
-                        "TARGET_PKEY_TO_DOMAIN" : "SELECT a.* FROM SGC.PROTDOMAIN a, SGC.TARGET B where b.PKEY=:0 and a.SGCTARGET_PKEY = b.PKEY ORDER BY DOMAININDEX",
-                        "ALLELE_PLATE_SEARCH" : "SELECT PLATENAME FROM PLATE WHERE PLATENAME LIKE :0",
-                        "CONSTRUCT_PLATE_SEARCH" : "SELECT PLATENAME FROM CONSTRUCTPLATE WHERE PLATENAME LIKE :0",
-                        "FETCH_ALLELE_PLATE" : "SELECT a.* FROM ALLELE a, PLATE b WHERE b.PLATENAME=:0 AND a.SGCPLATE_PKEY=b.PKEY",
-                        "FETCH_CONSTRUCT_PLATE" : "SELECT a.* FROM CONSTRUCT a, CONSTRUCTPLATE b WHERE b.PLATENAME=:0 AND a.SGCCONSTRUCTPLATE_PKEY=b.PKEY",
-                        "TARGET_TO_ENTRY_CLONES" : "SELECT b.* from ENTRY_CLONE b, TARGET c WHERE c.TARGET_ID=:0 and b.SGCTARGET_PKEY=c.PKEY ORDER BY b.ENTRY_CLONE_ID"
-                    },
-                    "use_pool": false,
-                    "model_mapping": "saturn.db.mapping.SGCSQLite",
-                    "default_provider": true,
-                    "name": "sgcdata",
-                    "named_query_hooks": [
-                        {"name": "HOOK_TEST", "class":  "saturn.db.HookTest", "method": "test"},
-                      {
-                        "name": "saturn.workflow.HMMer.query", "class":  "saturn.workflow.HMMer", "method": "query"
-                      },
-                      {
-                        "name": "saturn.server.plugins.core.ConfigurationPlugin:clientConfiguration",
-                        "class": "saturn.server.plugins.core.ConfigurationPlugin",
-                        "method": "getConfiguration",
-                        "config":{
-                          "connections":[
-                            {
-                              "driver" : "saturn.db.provider.NodeProvider",
-                              "name" : "DEFAULT",
-                              "named_query_hooks": [
-
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-            }]
-        },
+          "name": "_pdb_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.BLASTPlugin",
+      "namespaces": [
         {
-                    "clazz": "saturn.server.plugins.core.SocketPlugin"
-        },
+          "name": "_blast_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.ABIConverter",
+      "namespaces": [
         {
-                    "clazz": "saturn.server.plugins.core.AuthenticationPlugin",
-                    "authentication_manager": {
-                        "clazz": "saturn.server.plugins.core.MySQLAuthPlugin",
-                        "hostname": ""
-                    },
-                    "jwt_timeout": "300",
-                    "jwt_secret": "CHANGEME",
-                    "password_in_token": true
-        },{
-          "clazz": "saturn.server.plugins.core.ProxyPlugin",
-          "routes":{
-            "/GlycanBuilder/.*" :{
-              "target": "http://localhost:8080/",
-              "GET": true,
-              "POST": true,
-              "prestart": "sh",
-              "args":["catalina.sh", "start"],
-              "cwd":"bin/deployed_bin/GlycanBuilder/bin"
+          "name": "_abi_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.THMMPlugin",
+      "namespaces": [
+        {
+          "name": "_thmm_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.PSIPREDPlugin",
+      "namespaces": [
+        {
+          "name": "_psipred_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.DisoPredPlugin",
+      "namespaces": [
+        {
+          "name": "_disopred_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.BLASTDBUpdater",
+      "namespaces": [
+        {
+          "name": "_blast_updater_"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.FileUploader",
+      "namespaces": [
+        {
+          "name": "_uploader_"
+        }
+      ],
+      "authentication": {
+        "upload": {
+          "role": [
+            "ANY"
+          ]
+        }
+      }
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.core.RemoteProviderPlugin",
+      "namespaces": [
+        {
+          "name": "_remote_provider_"
+        }
+      ],
+      "connect_as_user": true
+    },
+    {
+      "clazz": "saturn.server.plugins.socket.EmailPlugin",
+      "namespaces": [
+        {
+          "name": "_email_"
+        }
+      ],
+      "authentication": {
+        "*": {
+          "role": [
+            "ANY"
+          ]
+        }
+      },
+      "port": "",
+      "host": "",
+      "auth": {
+        "user": "",
+        "password": ""
+      },
+      "from": "",
+      "plugins": [
+        {
+          "clazz": "saturn.server.plugins.socket.email.SgcPrimerEmailPlugin",
+          "authentication": {
+            "sgc_primer_email": {
+              "role": [
+                "ANY"
+              ]
             }
-         }
-       }
-    ]
+          },
+          "to": "",
+          "cc": [
+            ""
+          ]
+        }
+      ]
+    }
+  ],
+  "plugins": [
+    {
+      "clazz": "saturn.server.plugins.core.RESTSocketWrapperPlugin",
+      "commands": [
+        {
+          "route": "/api/blastdbs/:database",
+          "format_request_clazz": "SATurnDefaultRESTRouter",
+          "format_request_method": "update_blastdb",
+          "http_method": "PUT"
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.core.DefaultProviderPlugin",
+      "connections": [
+        {
+          "file_name": "databases/saturn.sqlite",
+          "driver": "saturn.db.provider.SQLiteProvider",
+          "named_queries": {
+            "TARGET_SEQDATA": "select   PKEY AS PKEY,   CASE :1 WHEN 'Nucleotide' THEN     DNASEQ   WHEN 'Protein' THEN     PROTSEQ   ELSE     null   END AS SEQ,   NULL AS SEQTYPE,   '1' AS VERSION,   PKEY AS SGCTARGET_PKEY,   NULL AS CRC,   TARGET_ID AS TARGET_ID FROM   TARGET WHERE TARGET_ID = :0",
+            "TARGET_TO_ALLELES": "SELECT a.* from ALLELE a, ENTRY_CLONE b, TARGET c WHERE c.TARGET_ID=:0 and b.SGCTARGET_PKEY=c.PKEY and a.SGCENTRYCLONE_PKEY=b.PKEY ORDER BY a.ALLELE_ID",
+            "TARGET_TO_CONSTRUCTS": "SELECT d.* from ALLELE a, ENTRY_CLONE b, TARGET c, CONSTRUCT d WHERE c.TARGET_ID=:1 and b.SGCTARGET_PKEY=c.PKEY and a.SGCENTRYCLONE_PKEY=b.PKEY and d.SGCALLELE_PKEY = a.PKEY ORDER BY d.CONSTRUCT_ID",
+            "TARGET_TO_TARGETS": "select   PKEY AS PKEY,   CASE :1 WHEN 'Nucleotide' THEN     DNASEQ   WHEN 'Protein' THEN     PROTSEQ   ELSE     null   END AS SEQ,   :1 AS SEQTYPE,   '1' AS TARGETVERSION,   PKEY AS SGCTARGET_PKEY,   NULL AS CRC,   TARGET_ID AS TARGET_ID FROM   TARGET WHERE   TARGET_ID = :0",
+            "TARGET_PKEY_TO_DOMAIN": "SELECT a.* FROM SGC.PROTDOMAIN a, SGC.TARGET B where b.PKEY=:0 and a.SGCTARGET_PKEY = b.PKEY ORDER BY DOMAININDEX",
+            "ALLELE_PLATE_SEARCH": "SELECT PLATENAME FROM PLATE WHERE PLATENAME LIKE :0",
+            "CONSTRUCT_PLATE_SEARCH": "SELECT PLATENAME FROM CONSTRUCTPLATE WHERE PLATENAME LIKE :0",
+            "FETCH_ALLELE_PLATE": "SELECT a.* FROM ALLELE a, PLATE b WHERE b.PLATENAME=:0 AND a.SGCPLATE_PKEY=b.PKEY",
+            "FETCH_CONSTRUCT_PLATE": "SELECT a.* FROM CONSTRUCT a, CONSTRUCTPLATE b WHERE b.PLATENAME=:0 AND a.SGCCONSTRUCTPLATE_PKEY=b.PKEY",
+            "TARGET_TO_ENTRY_CLONES": "SELECT b.* from ENTRY_CLONE b, TARGET c WHERE c.TARGET_ID=:0 and b.SGCTARGET_PKEY=c.PKEY ORDER BY b.ENTRY_CLONE_ID"
+          },
+          "use_pool": false,
+          "model_mapping": "saturn.db.mapping.SGCSQLite",
+          "default_provider": true,
+          "name": "sgcdata",
+          "named_query_hooks": [
+            {
+              "name": "HOOK_TEST",
+              "class": "saturn.db.HookTest",
+              "method": "test"
+            },
+            {
+              "name": "saturn.workflow.HMMer.query",
+              "class": "saturn.workflow.HMMer",
+              "method": "query"
+            },
+            {
+              "name": "saturn.server.plugins.core.ConfigurationPlugin:clientConfiguration",
+              "class": "saturn.server.plugins.core.ConfigurationPlugin",
+              "method": "getConfiguration",
+              "config": {
+                "connections": [
+                  {
+                    "driver": "saturn.db.provider.NodeProvider",
+                    "name": "DEFAULT",
+                    "named_query_hooks": [
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "clazz": "saturn.server.plugins.core.SocketPlugin"
+    },
+    {
+      "clazz": "saturn.server.plugins.core.AuthenticationPlugin",
+      "authentication_manager": {
+        "clazz": "saturn.server.plugins.core.MySQLAuthPlugin",
+        "hostname": ""
+      },
+      "jwt_timeout": "300",
+      "jwt_secret": "CHANGEME",
+      "password_in_token": true
+    },
+    {
+      "clazz": "saturn.server.plugins.core.ProxyPlugin",
+      "routes": {
+        "/GlycanBuilder/.*": {
+          "target": "http://localhost:8080/",
+          "GET": true,
+          "POST": true,
+          "prestart": "sh",
+          "args": [
+            "catalina.sh",
+            "start"
+          ],
+          "cwd": "bin/deployed_bin/GlycanBuilder/bin"
+        }
+      }
+    }
+  ]
 }
