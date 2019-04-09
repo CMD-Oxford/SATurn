@@ -32,7 +32,7 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
     public function extractAuthenticationToken(req : Dynamic) : String{
         var cookies = req.cookies;
 
-        if(cookies.saturn_token != null){
+        if(cookies != null && cookies.saturn_token != null){
             return cookies.saturn_token;
         }else{
             return req.params.token;
@@ -42,7 +42,7 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
     public function invalidAuthentication(req, res, next){
         // respond with bad uuid
         res.status(403);
-        res.send('Bad uuid');
+        res.send('Bad token');
         next();
     }
 
@@ -53,7 +53,7 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
             var token : String = extractAuthenticationToken(req);
 
             if(token == null){
-                invalidAuthentication(req,req,next);
+                invalidAuthentication(req,res,next);
                 return;
             }
 
@@ -88,38 +88,40 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
             }
         });
 
-        var handle_function = function (path : String, req : Dynamic, res : Dynamic, next) {
+        var handle_function = function (path : String, req : Dynamic, res : Dynamic, next, command : String =  null, json : Dynamic = null) {
             debug('In Function');
             // User provided username & password
             var token : String = extractAuthenticationToken(req);
 
             if(token == null){
-                invalidAuthentication(req,req,next);
+                invalidAuthentication(req,res,next);
                 return;
             }
 
-            var command : String = req.params.command;
-            var json : Dynamic = js.Node.parse(req.params.json);
+            if(command == null && json == null){
+                command = req.params.command;
+                json  = js.Node.parse(req.params.json);
 
-            if(path == '/api/command/'){
-                if(command == '_remote_provider_._data_request_objects_namedquery'){
+                if(path == '/api/command/'){
+                    if(command == '_remote_provider_._data_request_objects_namedquery'){
+                        var d :Dynamic = {};
+
+                        d.queryId = json.queryId;
+                        d.parameters = haxe.Serializer.run(json.parameters);
+
+                        json = d;
+                    }
+                }else if(path == '/api/provider/command/'){
                     var d :Dynamic = {};
 
-                    d.queryId = json.queryId;
+                    d.queryId = command;
+
+                    command = '_remote_provider_._data_request_objects_namedquery';
+
                     d.parameters = haxe.Serializer.run(json.parameters);
 
                     json = d;
                 }
-            }else if(path == '/api/provider/command/'){
-                var d :Dynamic = {};
-
-                d.queryId = command;
-
-                command = '_remote_provider_._data_request_objects_namedquery';
-
-                d.parameters = haxe.Serializer.run(json.parameters);
-
-                json = d;
             }
 
             var wait = 'no';
@@ -246,9 +248,40 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
         saturn.getServer().post('/api/provider/command/:command', function (req : Dynamic, res : Dynamic, next){
             handle_function('/api/provider/command/', req, res, next);
         });
+
+        if(Reflect.hasField(this.config, 'commands')){
+            var commands :Array<Dynamic> = Reflect.field(config, 'commands');
+
+            for(command in commands){
+                var route = command.route;
+                var format_method_clazz = command.format_request_clazz;
+                var format_method_method = command.format_request_method;
+                var http_method = command.http_method;
+
+                if(http_method == 'POST'){
+                    saturn.getServer().post(route, function(req : Dynamic, res : Dynamic, next){
+                        var clazz = Type.resolveClass(format_method_clazz);
+                        Reflect.field(clazz, format_method_method)(route, req, res, next, handle_function);
+                    });
+                }else if(http_method == 'PUT'){
+                    saturn.getServer().put(route, function(req : Dynamic, res : Dynamic, next){
+                        var clazz = Type.resolveClass(format_method_clazz);
+                        Reflect.field(clazz, format_method_method)(route, req, res, next, handle_function);
+                    });
+                }
+            }
+        }
     }
 
-    function respond(uuid, statusCode, socket, wait, data, status, res){
+    function respond(uuid, statusCode, socket, wait, data : Dynamic, status, res){
+        if(Reflect.hasField(data, 'bioinfJobId') && Reflect.hasField(data, 'json') && Reflect.hasField(data.json, 'error') && Reflect.hasField(data.json, 'objects')){
+            data = {
+                "uuid": data.bioinfJobId,
+                "error": data.json.error,
+                "result-set": data.json.objects
+            }
+        }
+
         if(wait == 'yes'){
             debug('Sending response');
             res.status(statusCode);
@@ -274,5 +307,23 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
         debug('Sending command ' + command);
 
         socket.emit(command, json);
+    }
+
+    public static function fetch_compound(path : String , req : Dynamic, res : Dynamic, next, handle_function){
+        var command = '_remote_provider_._data_request_objects_namedquery';
+
+        var d :Dynamic = {};
+        var json :Dynamic= {};
+
+        if(Reflect.hasField(req.params, 'format') && req.params.format == 'svg'){
+            json.action = 'as_svg';
+            json.ctab_content = req.params.molblock;
+        }
+
+        d.queryId = 'saturn.db.provider.hooks.ExternalJsonHook:Fetch';
+
+        d.parameters = haxe.Serializer.run([json]);
+
+        handle_function(path,req, res, next, command, d);
     }
 }
