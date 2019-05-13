@@ -66,7 +66,7 @@ class ABIConverter  extends QueuePlugin{
         if(code == "0"){
             Node.console.info('ABI parse complete');
 
-            var err, data = @await Node.fs.readFile(json_info.path + '_pruned_data.json', 'utf8');
+            var err, data = @await Node.fs.readFile(json_info.path + '_pruned_data.json', {'encoding':'utf8'});
 
             if(err != null){
                 handleError(job,err, done);
