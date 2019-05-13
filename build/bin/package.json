@@ -16,6 +16,7 @@
     "pg": "^7.4.1",
     "redis": "^2.8.0",
     "restify": "^4.3.1",
+    "restify-cookies": "^0.2.5",
     "restify-json-body-parser": "^0.1.2",
     "socket.io": "^2.0.4",
     "socketio-jwt": "^4.5.0",
