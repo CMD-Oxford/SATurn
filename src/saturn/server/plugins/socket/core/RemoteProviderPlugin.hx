@@ -317,7 +317,7 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
 
     public function getByNamedQuery(data : Dynamic, provider : Provider, user: User, cb : Void->Void){
         try{
-            debug('Start');
+            debug('Start ' + data.queryId);
             var params = haxe.Unserializer.run(data.parameters);
             debug('End');
             if(data.queryId == 'saturn.workflow'){
@@ -333,6 +333,8 @@ class RemoteProviderPlugin extends BaseServerSocketPlugin{
             }
 
             provider.getByNamedQuery(data.queryId, params, clazz, provider.getConfig().enable_cache, function(objs, err){
+                debug('Returning from named query ' + data.queryId);
+
                 var json : Dynamic = {};
 
                 CommonCore.releaseResource(provider);
