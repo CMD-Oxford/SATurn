@@ -108,13 +108,12 @@ class ClientCore implements ConversationHelper{
 
             var cookies = untyped __js__('Cookies');
 
-            cookies.set('user', {'fullname': obj.full_name,'token': obj.token, 'username': username.toUpperCase(), 'projects': obj.projects}, {'expires': 14});
+            cookies.set('user', {'fullname': obj.full_name,'token': obj.token, 'username': username.toUpperCase()}, {'expires': 14});
 
             var user = new User();
             user.fullname = obj.full_name;
             user.token = obj.token;
             user.username =  username.toUpperCase();
-            user.projects = obj.projects;
 
             refreshSession(cb);
         };
@@ -138,7 +137,6 @@ class ClientCore implements ConversationHelper{
             user.fullname = cookie.fullname;
             user.token = cookie.token;
             user.username = cookie.username;
-            user.projects = cookie.projects;
 
             authenticateSocket(user, function(err : String, user : User){
                 if(err == null){
