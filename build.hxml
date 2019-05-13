@@ -80,6 +80,8 @@
 --next
 -cp src
 -js build/chemireg.js
+-D js-classic
+-D  js-unflatten
 -lib continuation
 -lib nodejs
 -lib compiletime
