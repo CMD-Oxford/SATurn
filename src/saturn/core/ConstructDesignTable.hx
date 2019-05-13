@@ -745,6 +745,7 @@ class ConstructDesignTable extends Table{
                 Reflect.setField(row,'Forward Seq',extensionSeq + forwardObj.findPrimer(1, minLength, maxLength, minTM, maxTM, extensionSeq, minLengthExtended, minTMExtended, maxTMExtended));
             }catch(ex : HaxeException){
                 Reflect.setField(row, 'Forward Error', ex);
+                continue;
             }
 
             try {
@@ -770,6 +771,7 @@ class ConstructDesignTable extends Table{
                 Reflect.setField(row,'Reverse Seq',extensionSeq + icCut.findPrimer(1, minLength, maxLength, minTM, maxTM, extensionSeq, minLengthExtended, minTMExtended, maxTMExtended));
             }catch(ex : HaxeException){
                 Reflect.setField(row, 'Reverse Error', ex);
+                continue;
             }
 
             var mutationStr = Reflect.field(row,'Mutations');
@@ -902,6 +904,7 @@ class ConstructDesignTable extends Table{
                     Reflect.setField(row, 'Allele Protein Sequence', product.getTranslation(GeneticCodes.STANDARD, pos, true));
                 }catch(ex : HaxeException){
                     Reflect.setField(row, 'PCR Error', ex);
+                    continue;
                 }
 
                 // Calculate Construct
