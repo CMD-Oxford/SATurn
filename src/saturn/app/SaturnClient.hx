@@ -77,7 +77,6 @@ import saturn.core.domain.SgcReversePrimer;
 import saturn.core.domain.SgcForwardPrimer;
 import saturn.core.domain.SgcConstruct;
 import saturn.core.scarab.LabPage;
-import saturn.db.ScarabProvider;
 import saturn.client.programs.MultiConstructHelper;
 import js.Lib;
 import saturn.client.WorkspaceApplication;
@@ -123,7 +122,6 @@ import saturn.client.programs.BasicTableViewer;
 import saturn.client.programs.EmptyViewer;
 
 import saturn.client.programs.ConstructDesigner;
-import saturn.client.programs.HelloWorldViewer;
 //<IMPORTS>
 
 class SaturnClient extends EXTApplication implements SearchBarListener{
@@ -343,9 +341,6 @@ class SaturnClient extends EXTApplication implements SearchBarListener{
         this.getProgramRegistry().registerProgram(GlycanBuilder, true);
 
         this.getProgramRegistry().registerProgram(HomePage, true);
-
-
-		this.getProgramRegistry().registerProgram(HelloWorldViewer, true);
 
         this.getProgramRegistry().registerProgram(ComplexHelper, true);
 
