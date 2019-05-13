@@ -39,6 +39,9 @@ EReg.prototype = {
 	,matched: function(n) {
 		if(this.r.m != null && n >= 0 && n < this.r.m.length) return this.r.m[n]; else throw new js._Boot.HaxeError("EReg::matched");
 	}
+	,replace: function(s,by) {
+		return s.replace(this.r,by);
+	}
 	,__class__: EReg
 };
 var HxOverrides = $hxClasses["HxOverrides"] = function() { };
@@ -804,6 +807,32 @@ haxe.Serializer.prototype = {
 	}
 	,__class__: haxe.Serializer
 };
+haxe.Timer = $hxClasses["haxe.Timer"] = function(time_ms) {
+	var me = this;
+	this.id = setInterval(function() {
+		me.run();
+	},time_ms);
+};
+haxe.Timer.__name__ = ["haxe","Timer"];
+haxe.Timer.delay = function(f,time_ms) {
+	var t = new haxe.Timer(time_ms);
+	t.run = function() {
+		t.stop();
+		f();
+	};
+	return t;
+};
+haxe.Timer.prototype = {
+	id: null
+	,stop: function() {
+		if(this.id == null) return;
+		clearInterval(this.id);
+		this.id = null;
+	}
+	,run: function() {
+	}
+	,__class__: haxe.Timer
+};
 haxe.Unserializer = $hxClasses["haxe.Unserializer"] = function(buf) {
 	this.buf = buf;
 	this.length = buf.length;
@@ -1098,6 +1127,179 @@ haxe.Unserializer.prototype = {
 		throw new js._Boot.HaxeError("Invalid char " + this.buf.charAt(this.pos) + " at position " + this.pos);
 	}
 	,__class__: haxe.Unserializer
+};
+if(!haxe.crypto) haxe.crypto = {};
+haxe.crypto.Md5 = $hxClasses["haxe.crypto.Md5"] = function() {
+};
+haxe.crypto.Md5.__name__ = ["haxe","crypto","Md5"];
+haxe.crypto.Md5.encode = function(s) {
+	var m = new haxe.crypto.Md5();
+	var h = m.doEncode(haxe.crypto.Md5.str2blks(s));
+	return m.hex(h);
+};
+haxe.crypto.Md5.str2blks = function(str) {
+	var nblk = (str.length + 8 >> 6) + 1;
+	var blks = [];
+	var blksSize = nblk * 16;
+	var _g = 0;
+	while(_g < blksSize) {
+		var i1 = _g++;
+		blks[i1] = 0;
+	}
+	var i = 0;
+	while(i < str.length) {
+		blks[i >> 2] |= HxOverrides.cca(str,i) << (str.length * 8 + i) % 4 * 8;
+		i++;
+	}
+	blks[i >> 2] |= 128 << (str.length * 8 + i) % 4 * 8;
+	var l = str.length * 8;
+	var k = nblk * 16 - 2;
+	blks[k] = l & 255;
+	blks[k] |= (l >>> 8 & 255) << 8;
+	blks[k] |= (l >>> 16 & 255) << 16;
+	blks[k] |= (l >>> 24 & 255) << 24;
+	return blks;
+};
+haxe.crypto.Md5.prototype = {
+	bitOR: function(a,b) {
+		var lsb = a & 1 | b & 1;
+		var msb31 = a >>> 1 | b >>> 1;
+		return msb31 << 1 | lsb;
+	}
+	,bitXOR: function(a,b) {
+		var lsb = a & 1 ^ b & 1;
+		var msb31 = a >>> 1 ^ b >>> 1;
+		return msb31 << 1 | lsb;
+	}
+	,bitAND: function(a,b) {
+		var lsb = a & 1 & (b & 1);
+		var msb31 = a >>> 1 & b >>> 1;
+		return msb31 << 1 | lsb;
+	}
+	,addme: function(x,y) {
+		var lsw = (x & 65535) + (y & 65535);
+		var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+		return msw << 16 | lsw & 65535;
+	}
+	,hex: function(a) {
+		var str = "";
+		var hex_chr = "0123456789abcdef";
+		var _g = 0;
+		while(_g < a.length) {
+			var num = a[_g];
+			++_g;
+			var _g1 = 0;
+			while(_g1 < 4) {
+				var j = _g1++;
+				str += hex_chr.charAt(num >> j * 8 + 4 & 15) + hex_chr.charAt(num >> j * 8 & 15);
+			}
+		}
+		return str;
+	}
+	,rol: function(num,cnt) {
+		return num << cnt | num >>> 32 - cnt;
+	}
+	,cmn: function(q,a,b,x,s,t) {
+		return this.addme(this.rol(this.addme(this.addme(a,q),this.addme(x,t)),s),b);
+	}
+	,ff: function(a,b,c,d,x,s,t) {
+		return this.cmn(this.bitOR(this.bitAND(b,c),this.bitAND(~b,d)),a,b,x,s,t);
+	}
+	,gg: function(a,b,c,d,x,s,t) {
+		return this.cmn(this.bitOR(this.bitAND(b,d),this.bitAND(c,~d)),a,b,x,s,t);
+	}
+	,hh: function(a,b,c,d,x,s,t) {
+		return this.cmn(this.bitXOR(this.bitXOR(b,c),d),a,b,x,s,t);
+	}
+	,ii: function(a,b,c,d,x,s,t) {
+		return this.cmn(this.bitXOR(c,this.bitOR(b,~d)),a,b,x,s,t);
+	}
+	,doEncode: function(x) {
+		var a = 1732584193;
+		var b = -271733879;
+		var c = -1732584194;
+		var d = 271733878;
+		var step;
+		var i = 0;
+		while(i < x.length) {
+			var olda = a;
+			var oldb = b;
+			var oldc = c;
+			var oldd = d;
+			step = 0;
+			a = this.ff(a,b,c,d,x[i],7,-680876936);
+			d = this.ff(d,a,b,c,x[i + 1],12,-389564586);
+			c = this.ff(c,d,a,b,x[i + 2],17,606105819);
+			b = this.ff(b,c,d,a,x[i + 3],22,-1044525330);
+			a = this.ff(a,b,c,d,x[i + 4],7,-176418897);
+			d = this.ff(d,a,b,c,x[i + 5],12,1200080426);
+			c = this.ff(c,d,a,b,x[i + 6],17,-1473231341);
+			b = this.ff(b,c,d,a,x[i + 7],22,-45705983);
+			a = this.ff(a,b,c,d,x[i + 8],7,1770035416);
+			d = this.ff(d,a,b,c,x[i + 9],12,-1958414417);
+			c = this.ff(c,d,a,b,x[i + 10],17,-42063);
+			b = this.ff(b,c,d,a,x[i + 11],22,-1990404162);
+			a = this.ff(a,b,c,d,x[i + 12],7,1804603682);
+			d = this.ff(d,a,b,c,x[i + 13],12,-40341101);
+			c = this.ff(c,d,a,b,x[i + 14],17,-1502002290);
+			b = this.ff(b,c,d,a,x[i + 15],22,1236535329);
+			a = this.gg(a,b,c,d,x[i + 1],5,-165796510);
+			d = this.gg(d,a,b,c,x[i + 6],9,-1069501632);
+			c = this.gg(c,d,a,b,x[i + 11],14,643717713);
+			b = this.gg(b,c,d,a,x[i],20,-373897302);
+			a = this.gg(a,b,c,d,x[i + 5],5,-701558691);
+			d = this.gg(d,a,b,c,x[i + 10],9,38016083);
+			c = this.gg(c,d,a,b,x[i + 15],14,-660478335);
+			b = this.gg(b,c,d,a,x[i + 4],20,-405537848);
+			a = this.gg(a,b,c,d,x[i + 9],5,568446438);
+			d = this.gg(d,a,b,c,x[i + 14],9,-1019803690);
+			c = this.gg(c,d,a,b,x[i + 3],14,-187363961);
+			b = this.gg(b,c,d,a,x[i + 8],20,1163531501);
+			a = this.gg(a,b,c,d,x[i + 13],5,-1444681467);
+			d = this.gg(d,a,b,c,x[i + 2],9,-51403784);
+			c = this.gg(c,d,a,b,x[i + 7],14,1735328473);
+			b = this.gg(b,c,d,a,x[i + 12],20,-1926607734);
+			a = this.hh(a,b,c,d,x[i + 5],4,-378558);
+			d = this.hh(d,a,b,c,x[i + 8],11,-2022574463);
+			c = this.hh(c,d,a,b,x[i + 11],16,1839030562);
+			b = this.hh(b,c,d,a,x[i + 14],23,-35309556);
+			a = this.hh(a,b,c,d,x[i + 1],4,-1530992060);
+			d = this.hh(d,a,b,c,x[i + 4],11,1272893353);
+			c = this.hh(c,d,a,b,x[i + 7],16,-155497632);
+			b = this.hh(b,c,d,a,x[i + 10],23,-1094730640);
+			a = this.hh(a,b,c,d,x[i + 13],4,681279174);
+			d = this.hh(d,a,b,c,x[i],11,-358537222);
+			c = this.hh(c,d,a,b,x[i + 3],16,-722521979);
+			b = this.hh(b,c,d,a,x[i + 6],23,76029189);
+			a = this.hh(a,b,c,d,x[i + 9],4,-640364487);
+			d = this.hh(d,a,b,c,x[i + 12],11,-421815835);
+			c = this.hh(c,d,a,b,x[i + 15],16,530742520);
+			b = this.hh(b,c,d,a,x[i + 2],23,-995338651);
+			a = this.ii(a,b,c,d,x[i],6,-198630844);
+			d = this.ii(d,a,b,c,x[i + 7],10,1126891415);
+			c = this.ii(c,d,a,b,x[i + 14],15,-1416354905);
+			b = this.ii(b,c,d,a,x[i + 5],21,-57434055);
+			a = this.ii(a,b,c,d,x[i + 12],6,1700485571);
+			d = this.ii(d,a,b,c,x[i + 3],10,-1894986606);
+			c = this.ii(c,d,a,b,x[i + 10],15,-1051523);
+			b = this.ii(b,c,d,a,x[i + 1],21,-2054922799);
+			a = this.ii(a,b,c,d,x[i + 8],6,1873313359);
+			d = this.ii(d,a,b,c,x[i + 15],10,-30611744);
+			c = this.ii(c,d,a,b,x[i + 6],15,-1560198380);
+			b = this.ii(b,c,d,a,x[i + 13],21,1309151649);
+			a = this.ii(a,b,c,d,x[i + 4],6,-145523070);
+			d = this.ii(d,a,b,c,x[i + 11],10,-1120210379);
+			c = this.ii(c,d,a,b,x[i + 2],15,718787259);
+			b = this.ii(b,c,d,a,x[i + 9],21,-343485551);
+			a = this.addme(a,olda);
+			b = this.addme(b,oldb);
+			c = this.addme(c,oldc);
+			d = this.addme(d,oldd);
+			i += 16;
+		}
+		return [a,b,c,d];
+	}
+	,__class__: haxe.crypto.Md5
 };
 if(!haxe.ds) haxe.ds = {};
 haxe.ds.IntMap = $hxClasses["haxe.ds.IntMap"] = function() {
@@ -1501,10 +1703,8 @@ js.Browser.createXMLHttpRequest = function() {
 	if(typeof ActiveXObject != "undefined") return new ActiveXObject("Microsoft.XMLHTTP");
 	throw new js._Boot.HaxeError("Unable to create XMLHttpRequest object.");
 };
-js.Lib = $hxClasses["js.Lib"] = function() { };
-js.Lib.__name__ = ["js","Lib"];
-js.Lib.alert = function(v) {
-	alert(js.Boot.__string_rec(v,""));
+js.Browser.alert = function(v) {
+	window.alert(js.Boot.__string_rec(v,""));
 };
 if(!js.html) js.html = {};
 if(!js.html.compat) js.html.compat = {};
@@ -1695,6 +1895,3676 @@ js.html.compat.Uint8Array._subarray = function(start,end) {
 	a.byteOffset = start;
 	return a;
 };
+var phylo = phylo || {};
+phylo.PhyloAnnotation = $hxClasses["phylo.PhyloAnnotation"] = function() {
+	this.hasAnnot = false;
+	this.color = [];
+	this.text = "";
+	this.splitresults = false;
+	this.optionSelected = [];
+	this.alfaAnnot = [];
+	this.hasAnnot = false;
+	this.fromresults = [];
+	this.auxMap = new haxe.ds.StringMap();
+};
+phylo.PhyloAnnotation.__name__ = ["phylo","PhyloAnnotation"];
+phylo.PhyloAnnotation.prototype = {
+	type: null
+	,annotImg: null
+	,defaultImg: null
+	,shape: null
+	,color: null
+	,hookName: null
+	,text: null
+	,options: null
+	,optionSelected: null
+	,dbData: null
+	,legend: null
+	,legendClazz: null
+	,legendMethod: null
+	,hidden: null
+	,hasClass: null
+	,hasMethod: null
+	,divMethod: null
+	,familyMethod: null
+	,hasAnnot: null
+	,alfaAnnot: null
+	,splitresults: null
+	,popup: null
+	,popMethod: null
+	,option: null
+	,fromresults: null
+	,label: null
+	,myleaf: null
+	,auxMap: null
+	,uploadImg: function(imgList) {
+		var i;
+		this.annotImg = [];
+		var _g1 = 0;
+		var _g = imgList.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			this.annotImg[i1] = window.document.createElement("img");
+			this.annotImg[i1].src = imgList[i1];
+			this.annotImg[i1].onload = function() {
+			};
+		}
+	}
+	,saveAnnotationData: function(annotation,data,option,r) {
+		this.type = annotation;
+		this.dbData = [];
+		this.dbData = data;
+		this.option = option;
+		if(r[annotation] != null) {
+			if(this.color != null) this.color = r[annotation].color; else {
+				this.color = [];
+				this.color = r[annotation].color;
+			}
+			this.text = r[annotation].text;
+		} else {
+			this.defaultImg = r.defImage;
+			if(this.color != null) this.color[0] = saturn.core.Util.clone(r.color); else {
+				this.color = [];
+				this.color[0] = saturn.core.Util.clone(r.color);
+			}
+			this.text = "" + Std.string(r.text) + "";
+		}
+		this.hasAnnot = true;
+	}
+	,__class__: phylo.PhyloAnnotation
+};
+phylo.PhyloAnnotationConfiguration = $hxClasses["phylo.PhyloAnnotationConfiguration"] = function() {
+};
+phylo.PhyloAnnotationConfiguration.__name__ = ["phylo","PhyloAnnotationConfiguration"];
+phylo.PhyloAnnotationConfiguration.prototype = {
+	name: null
+	,annotationFunction: null
+	,styleFunction: null
+	,legendFunction: null
+	,infoFunction: null
+	,shape: null
+	,colour: null
+	,getColourOldFormat: function() {
+		return { color : this.colour, 'used' : "false"};
+	}
+	,__class__: phylo.PhyloAnnotationConfiguration
+};
+phylo.PhyloAnnotationManager = $hxClasses["phylo.PhyloAnnotationManager"] = function() {
+	this.selectedAnnotationOptions = [];
+	this.annotations = [];
+	this.activeAnnotation = [];
+	this.alreadyGotAnnotation = new haxe.ds.StringMap();
+	this.selectedAnnotationOptions = [];
+	this.searchedGenes = [];
+	this.annotationListeners = [];
+	this.skipAnnotation = [];
+	this.skipCurrentLegend = [];
+};
+phylo.PhyloAnnotationManager.__name__ = ["phylo","PhyloAnnotationManager"];
+phylo.PhyloAnnotationManager.prototype = {
+	annotations: null
+	,rootNode: null
+	,canvas: null
+	,numTotalAnnot: null
+	,searchedGenes: null
+	,annotationListeners: null
+	,annotationData: null
+	,annotationString: null
+	,annotationConfigs: null
+	,nameAnnot: null
+	,jsonFile: null
+	,activeAnnotation: null
+	,alreadyGotAnnotation: null
+	,selectedAnnotationOptions: null
+	,annotationNameToConfig: null
+	,skipAnnotation: null
+	,skipCurrentLegend: null
+	,showAssociatedData: function(active,data,mx,my) {
+		var annotation = this.annotations[data.annotation.type];
+		if(!active && annotation.divMethod != null) annotation.divMethod(data,mx,my);
+	}
+	,showScreenData: function(active,data,mx,my) {
+		if(this.canvas == null) return;
+		this.showAssociatedData(active,data,mx,my);
+	}
+	,fillAnnotationwithJSonData: function() {
+		var i = 0;
+		var j = 0;
+		var z = 0;
+		this.nameAnnot = [];
+		var b = 0;
+		while(i < this.jsonFile.btnGroup.length) {
+			j = 0;
+			while(j < this.jsonFile.btnGroup[i].buttons.length) {
+				if(this.jsonFile.btnGroup[i].buttons[j].isTitle == false) {
+					var a;
+					a = this.jsonFile.btnGroup[i].buttons[j].annotCode;
+					this.annotations[a] = new phylo.PhyloAnnotation();
+					this.selectedAnnotationOptions[a] = null;
+					if(this.jsonFile.btnGroup[i].buttons[j].shape == "image") this.annotations[a].uploadImg(this.jsonFile.btnGroup[i].buttons[j].annotImg);
+					{
+						this.alreadyGotAnnotation.set(this.jsonFile.btnGroup[i].buttons[j].annotCode,false);
+						false;
+					}
+					this.annotations[a].shape = this.jsonFile.btnGroup[i].buttons[j].shape;
+					this.annotations[a].label = this.jsonFile.btnGroup[i].buttons[j].label;
+					this.annotations[a].color = this.jsonFile.btnGroup[i].buttons[j].color;
+					this.annotations[a].hookName = this.jsonFile.btnGroup[i].buttons[j].hookName;
+					this.annotations[a].splitresults = this.jsonFile.btnGroup[i].buttons[j].splitresults;
+					this.annotations[a].popup = this.jsonFile.btnGroup[i].buttons[j].popUpWindows;
+					if(this.jsonFile.btnGroup[i].buttons[j].hasClass != null) this.annotations[a].hasClass = this.jsonFile.btnGroup[i].buttons[j].hasClass;
+					if(this.jsonFile.btnGroup[i].buttons[j].hasMethod != null) this.annotations[a].hasMethod = this.jsonFile.btnGroup[i].buttons[j].hasMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].divMethod != null) this.annotations[a].divMethod = this.jsonFile.btnGroup[i].buttons[j].divMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].familyMethod != null) this.annotations[a].familyMethod = this.jsonFile.btnGroup[i].buttons[j].familyMethod;
+					if(this.jsonFile.btnGroup[i].buttons[j].popUpWindows != null && this.jsonFile.btnGroup[i].buttons[j].popUpWindows == true) this.annotations[a].popMethod = this.jsonFile.btnGroup[i].buttons[j].windowsData[0].popMethod;
+					this.annotations[a].options = [];
+					if(this.jsonFile.btnGroup[i].buttons[j].legend != null) {
+						this.annotations[a].legend = this.jsonFile.btnGroup[i].buttons[j].legend.image;
+						if(this.jsonFile.btnGroup[i].buttons[j].legend.clazz != null) {
+							this.annotations[a].legendClazz = this.jsonFile.btnGroup[i].buttons[j].legend.clazz;
+							this.annotations[a].legendMethod = this.jsonFile.btnGroup[i].buttons[j].legend.method;
+						} else if(this.jsonFile.btnGroup[i].buttons[j].legend.method != null) this.annotations[a].legendMethod = this.jsonFile.btnGroup[i].buttons[j].legend.method;
+					}
+					if(this.jsonFile.btnGroup[i].buttons[j].hidden != null) this.annotations[a].hidden = this.jsonFile.btnGroup[i].buttons[j].hidden;
+					if(this.jsonFile.btnGroup[i].buttons[j].submenu == true) {
+						var zz;
+						var _g1 = 0;
+						var _g = this.jsonFile.btnGroup[i].buttons[j].options.length;
+						while(_g1 < _g) {
+							var zz1 = _g1++;
+							this.annotations[a].options[zz1] = this.jsonFile.btnGroup[i].buttons[j].options[zz1].hookName;
+							if(this.jsonFile.btnGroup[i].buttons[j].options[zz1].defaultImg != null) this.annotations[a].defaultImg = this.jsonFile.btnGroup[i].buttons[j].options[zz1].defaultImg;
+						}
+						this.annotations[a].optionSelected[0] = this.jsonFile.btnGroup[i].buttons[j].optionSelected[0];
+					}
+					this.nameAnnot[b] = this.jsonFile.btnGroup[i].buttons[j].label;
+					b++;
+				}
+				j++;
+			}
+			this.numTotalAnnot = this.numTotalAnnot + j;
+			i++;
+		}
+	}
+	,closeAnnotWindows: function() {
+	}
+	,addAnnotData: function(annotData,annotation,option,callback) {
+		var i;
+		var mapResults;
+		mapResults = new haxe.ds.StringMap();
+		var j = 0;
+		var target;
+		var _g1 = 0;
+		var _g = annotData.length;
+		while(_g1 < _g) {
+			var i1 = _g1++;
+			target = Std.string(annotData[i1].target_id) + "_" + j;
+			while(__map_reserved[target] != null?mapResults.existsReserved(target):mapResults.h.hasOwnProperty(target)) {
+				j++;
+				target = Std.string(annotData[i1].target_id) + "_" + j;
+			}
+			j = 0;
+			var value = annotData[i1];
+			mapResults.set(target,value);
+		}
+		var items = [];
+		var _g11 = 0;
+		var _g2 = this.rootNode.targets.length;
+		while(_g11 < _g2) {
+			var i2 = _g11++;
+			items[i2] = this.rootNode.targets[i2];
+		}
+		this.processAnnotationsSimple(items,mapResults,annotation,option,callback);
+	}
+	,processAnnotationsSimple: function(items,mapResults,annotation,option,cb) {
+		var _g1 = this;
+		var toComplete = items.length;
+		var onDone = function() {
+			if(toComplete == 0) cb();
+		};
+		if(toComplete == 0) {
+			cb();
+			return;
+		}
+		var _g = 0;
+		while(_g < items.length) {
+			var item = [items[_g]];
+			++_g;
+			var name = item[0] + "_0";
+			var res = [__map_reserved[name] != null?mapResults.getReserved(name):mapResults.h[name]];
+			if(this.annotations[annotation].hasClass != null && this.annotations[annotation].hasMethod != null) {
+				var clazz = this.annotations[annotation].hasClass;
+				var method = this.annotations[annotation].hasMethod;
+				var _processAnnotation = (function(res,item) {
+					return function(r) {
+						if(r.hasAnnot) {
+							var leafaux;
+							leafaux = _g1.rootNode.leafNameToNode.get(item[0]);
+							leafaux.activeAnnotation[annotation] = true;
+							if(leafaux.annotations[annotation] == null) {
+								leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].myleaf = leafaux;
+								leafaux.annotations[annotation].text = r.text;
+								leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].saveAnnotationData(annotation,res[0],option,r);
+							} else if(_g1.annotations[annotation].splitresults == true) {
+								leafaux.annotations[annotation].splitresults = true;
+								var z = 0;
+								while(leafaux.annotations[annotation].alfaAnnot[z] != null) z++;
+								leafaux.annotations[annotation].alfaAnnot[z] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].alfaAnnot[z].myleaf = leafaux;
+								leafaux.annotations[annotation].alfaAnnot[z].text = "";
+								leafaux.annotations[annotation].alfaAnnot[z].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].alfaAnnot[z].saveAnnotationData(annotation,res[0],option,r);
+								if(leafaux.annotations[annotation].alfaAnnot[z].text == leafaux.annotations[annotation].text) leafaux.annotations[annotation].alfaAnnot[z] = null;
+							} else if(leafaux.annotations[annotation].option != _g1.annotations[annotation].optionSelected[0]) {
+								leafaux.annotations[annotation] = new phylo.PhyloAnnotation();
+								leafaux.annotations[annotation].myleaf = leafaux;
+								leafaux.annotations[annotation].text = "";
+								leafaux.annotations[annotation].defaultImg = _g1.annotations[annotation].defaultImg;
+								leafaux.annotations[annotation].saveAnnotationData(annotation,res[0],option,r);
+							}
+						}
+						toComplete--;
+						onDone();
+					};
+				})(res,item);
+				if(Reflect.isFunction(method)) method(name,res[0],option,this.annotations,item[0],_processAnnotation); else {
+					var hook = Reflect.field(Type.resolveClass(clazz),method);
+					hook(name,res[0],option,this.annotations,item[0],_processAnnotation);
+				}
+			} else {
+				var col = "";
+				if(this.annotations[annotation].color[0] != null) col = this.annotations[annotation].color[0].color;
+				var r1 = { hasAnnot : true, text : "", color : { color : col, used : true}, defImage : this.annotations[annotation].defaultImg};
+				var leafaux1 = this.rootNode.leafNameToNode.get(item[0]);
+				leafaux1.activeAnnotation[annotation] = true;
+				if(leafaux1.annotations[annotation] == null) {
+					leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].myleaf = leafaux1;
+					leafaux1.annotations[annotation].text = "";
+					leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].saveAnnotationData(annotation,res[0],option,r1);
+				} else if(leafaux1.annotations[annotation].splitresults == true) {
+					var z1 = 0;
+					while(leafaux1.annotations[annotation].alfaAnnot[z1] != null) z1++;
+					leafaux1.annotations[annotation].alfaAnnot[z1] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].alfaAnnot[z1].myleaf = leafaux1;
+					leafaux1.annotations[annotation].alfaAnnot[z1].text = "";
+					leafaux1.annotations[annotation].alfaAnnot[z1].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].alfaAnnot[z1].saveAnnotationData(annotation,res[0],option,r1);
+				} else if(leafaux1.annotations[annotation].option != this.annotations[annotation].optionSelected[0]) {
+					leafaux1.annotations[annotation] = new phylo.PhyloAnnotation();
+					leafaux1.annotations[annotation].myleaf = leafaux1;
+					leafaux1.annotations[annotation].text = "";
+					leafaux1.annotations[annotation].defaultImg = this.annotations[annotation].defaultImg;
+					leafaux1.annotations[annotation].saveAnnotationData(annotation,res[0],option,r1);
+				}
+				toComplete--;
+				onDone();
+			}
+		}
+	}
+	,reloadAnnotationConfigurations: function() {
+		this.setAnnotationConfigs(this.getAnnotationConfigs(),true,function() {
+		});
+	}
+	,setAnnotationConfigs: function(configs,restoreData,cb) {
+		var _g = this;
+		this.annotationConfigs = configs;
+		this.annotationNameToConfig = new haxe.ds.StringMap();
+		var _g1 = 0;
+		var _g11 = this.annotationConfigs;
+		while(_g1 < _g11.length) {
+			var config = _g11[_g1];
+			++_g1;
+			this.annotationNameToConfig.set(config.name,config);
+		}
+		var oldData = this.annotationData;
+		this.annotationData = [];
+		var activeAnnotationNames = new haxe.ds.StringMap();
+		saturn.client.core.CommonCore.getDefaultProvider(function(err,provider) {
+			if(err == null && provider != null) {
+				provider.resetCache();
+				var _g2 = 0;
+				var _g12 = _g.activeAnnotation.length;
+				while(_g2 < _g12) {
+					var i = _g2++;
+					if(_g.activeAnnotation[i]) {
+						activeAnnotationNames.set(_g.annotations[i].label,"");
+						_g.activeAnnotation[i] = false;
+					}
+				}
+				if(_g.rootNode != null) _g.rootNode.clearAnnotations();
+				_g.annotations = [];
+				_g.jsonFile = { btnGroup : [{ title : "Annotations", buttons : []}]};
+				var _g21 = 0;
+				var _g13 = configs.length;
+				while(_g21 < _g13) {
+					var i1 = _g21++;
+					var config1 = [configs[i1]];
+					_g.annotationData[i1] = [];
+					var hookName = ["STANDALONE_ANNOTATION_" + i1];
+					var def = { label : config1[0].name, hookName : hookName[0], annotCode : i1 + 1, isTitle : false, enabled : true, familyMethod : "", hasMethod : config1[0].styleFunction, hasClass : "", legend : { method : config1[0].legendFunction}, divMethod : config1[0].infoFunction, color : [{ color : config1[0].colour, used : "false"}], shape : config1[0].shape};
+					_g.jsonFile.btnGroup[0].buttons.push(def);
+					saturn.client.core.CommonCore.getDefaultProvider((function(hookName,config1) {
+						return function(error,provider1) {
+							provider1.resetCache();
+							provider1.addHook(config1[0].annotationFunction,hookName[0]);
+						};
+					})(hookName,config1));
+				}
+				_g.fillAnnotationwithJSonData();
+				if(restoreData) _g.annotationData = oldData;
+				_g.annotationsChanged(activeAnnotationNames);
+				cb();
+			}
+		});
+	}
+	,getAnnotationConfigs: function() {
+		return this.annotationConfigs;
+	}
+	,getAnnotationConfigByName: function(name) {
+		return this.annotationNameToConfig.get(name);
+	}
+	,getAnnotationConfigById: function(id) {
+		return this.getAnnotationConfigByName(this.annotations[id].label);
+	}
+	,loadAnnotationsFromString: function(annotationString,configs) {
+		var _g2 = this;
+		this.annotationString = annotationString;
+		var lines = annotationString.split("\n");
+		var header = lines[0];
+		var cols = header.split(",");
+		var configMap = new haxe.ds.StringMap();
+		if(configs != null) {
+			var _g = 0;
+			while(_g < configs.length) {
+				var config = configs[_g];
+				++_g;
+				configMap.set(config.name,config);
+			}
+		}
+		var finalConfigs = [];
+		var _g1 = 1;
+		var _g3 = cols.length;
+		while(_g1 < _g3) {
+			var i = _g1++;
+			var styleAnnotation = function(target,data,selected,annotList,item,callBack) {
+				var config1 = _g2.getAnnotationConfigById(selected);
+				var r = { hasAnnot : true, text : "", color : config1.getColourOldFormat(), defImage : 100};
+				if(data == null || data.annotation == "No") r.hasAnnot = false;
+				callBack(r);
+			};
+			var legendMethod = function(legendWidget,config2) {
+				var row = new phylo.PhyloLegendRowWidget(legendWidget,config2);
+			};
+			var divMethod = function(data1,mx,my) {
+				var $window = new phylo.PhyloWindowWidget(window.document.body,data1.target,false);
+				var container = $window.getContainer();
+				container.style.left = mx;
+				container.style.top = my;
+				container.style.width = "400px";
+				container.style.height = "200px";
+			};
+			var name = cols[i];
+			var hookFunction = $bind(this,this.handleAnnotation);
+			var config3 = new phylo.PhyloAnnotationConfiguration();
+			config3.shape = "cercle";
+			config3.colour = "green";
+			config3.name = name;
+			config3.styleFunction = styleAnnotation;
+			config3.annotationFunction = hookFunction;
+			config3.infoFunction = divMethod;
+			config3.legendFunction = legendMethod;
+			if(__map_reserved[name] != null?configMap.existsReserved(name):configMap.h.hasOwnProperty(name)) {
+				var configUser;
+				configUser = __map_reserved[name] != null?configMap.getReserved(name):configMap.h[name];
+				if(configUser.colour != null) config3.colour = configUser.colour;
+				if(configUser.annotationFunction != null) config3.annotationFunction = configUser.annotationFunction;
+				if(configUser.styleFunction != null) config3.styleFunction = configUser.styleFunction;
+				if(configUser.legendFunction != null) config3.legendFunction = configUser.legendFunction;
+				if(configUser.shape != null) config3.shape = configUser.shape;
+			}
+			finalConfigs.push(config3);
+		}
+		this.annotationData = [];
+		var headerCols = header.split(",");
+		var _g11 = 1;
+		var _g4 = headerCols.length;
+		while(_g11 < _g4) {
+			var j = _g11++;
+			this.annotationData[j - 1] = [];
+		}
+		var _g12 = 1;
+		var _g5 = lines.length;
+		while(_g12 < _g5) {
+			var i1 = _g12++;
+			var cols1 = lines[i1].split(",");
+			var _g31 = 1;
+			var _g21 = cols1.length;
+			while(_g31 < _g21) {
+				var j1 = _g31++;
+				this.annotationData[j1 - 1].push({ 'target_id' : cols1[0], 'annotation' : cols1[j1]});
+			}
+		}
+		this.setAnnotationConfigs(finalConfigs,true,function() {
+		});
+	}
+	,handleAnnotation: function(alias,params,clazz,cb) {
+		var annotationIndex = Std.parseInt(alias.charAt(alias.length - 1));
+		cb(this.annotationData[annotationIndex],null);
+	}
+	,addAnnotationListener: function(listener) {
+		this.annotationListeners.push(listener);
+	}
+	,annotationsChanged: function(activeAnnotationNames) {
+		if(activeAnnotationNames != null) {
+			if(this.canvas != null && this.canvas.getConfig().enableAnnotationMenu) {
+				this.canvas.getAnnotationMenu().update(activeAnnotationNames);
+				return;
+			}
+		}
+		var _g = 0;
+		var _g1 = this.annotationListeners;
+		while(_g < _g1.length) {
+			var listener = _g1[_g];
+			++_g;
+			listener();
+		}
+	}
+	,toggleAnnotation: function(annotCode) {
+		if(this.isAnnotationActive(annotCode)) this.setActiveAnnotation(annotCode,false); else this.setActiveAnnotation(annotCode,true);
+	}
+	,isAnnotationActive: function(annotCode) {
+		return this.activeAnnotation[annotCode];
+	}
+	,setActiveAnnotation: function(annotCode,active) {
+		var _g = this;
+		this.activeAnnotation[annotCode] = active;
+		if(active) {
+			var annot = this.annotations[annotCode];
+			saturn.client.core.CommonCore.getDefaultProvider(function(err,provider) {
+				var parameters = _g.canvas.getRootNode().targets;
+				provider.getByNamedQuery(annot.hookName,{ param : parameters},null,true,function(db_results,error) {
+					if(error == null) _g.canvas.getAnnotationManager().addAnnotData(db_results,annotCode,annotCode,function() {
+						_g.annotationsChanged();
+					});
+				});
+			});
+		} else this.annotationsChanged();
+	}
+	,getActiveAnnotations: function() {
+		var annotations = [];
+		var _g1 = 0;
+		var _g = this.activeAnnotation.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(this.activeAnnotation[i]) annotations.push(this.annotations[i]);
+		}
+		return annotations;
+	}
+	,getAnnotationString: function() {
+		return this.annotationString;
+	}
+	,setRootNode: function(rootNode) {
+		this.rootNode = rootNode;
+	}
+	,getTreeName: function() {
+		return "tree";
+	}
+	,hideAnnotationWindows: function() {
+	}
+	,__class__: phylo.PhyloAnnotationManager
+};
+phylo.PhyloAnnotationMenuWidget = $hxClasses["phylo.PhyloAnnotationMenuWidget"] = function(canvas,activeAnnotations) {
+	this.canvas = canvas;
+	this.activeAnnotations = activeAnnotations;
+	this.build();
+};
+phylo.PhyloAnnotationMenuWidget.__name__ = ["phylo","PhyloAnnotationMenuWidget"];
+phylo.PhyloAnnotationMenuWidget.prototype = {
+	canvas: null
+	,container: null
+	,activeAnnotations: null
+	,items: null
+	,build: function() {
+		this.addContainer();
+		this.addAnnotationButtons();
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,update: function(activeAnnotations) {
+		this.activeAnnotations = activeAnnotations;
+		this.addAnnotationButtons();
+	}
+	,clearAnnotationItems: function() {
+		if(this.items != null) {
+			var _g = 0;
+			var _g1 = this.items;
+			while(_g < _g1.length) {
+				var item = _g1[_g];
+				++_g;
+				this.container.removeChild(item);
+			}
+		}
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.height = "100%";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Annotations</h1>";
+	}
+	,addAnnotationButtons: function() {
+		var _g3 = this;
+		var btnGroups = this.canvas.getAnnotationManager().jsonFile.btnGroup;
+		this.clearAnnotationItems();
+		this.items = [];
+		var _g1 = 0;
+		var _g = btnGroups.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var btnGroupDef = btnGroups[i];
+			var btnDefs = btnGroupDef.buttons;
+			var _g2 = 0;
+			while(_g2 < btnDefs.length) {
+				var btnDef = [btnDefs[_g2]];
+				++_g2;
+				var row = window.document.createElement("div");
+				row.style.display = "flex";
+				var tooltipBtn = window.document.createElement("button");
+				tooltipBtn.innerText = "?";
+				tooltipBtn.style.backgroundColor = "rgb(247, 248, 251)";
+				tooltipBtn.style.border = "none";
+				tooltipBtn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+				tooltipBtn.style.cursor = "pointer";
+				var enabledBtn = [window.document.createElement("button")];
+				enabledBtn[0].innerHTML = " &#9744;";
+				enabledBtn[0].style.backgroundColor = "rgb(247, 248, 251)";
+				enabledBtn[0].style.border = "none";
+				enabledBtn[0].style.font = "normal 16px/20px tahoma, arial, verdana, sans-serif";
+				enabledBtn[0].style.cursor = "pointer";
+				var btn = [window.document.createElement("button")];
+				btn[0].innerText = btnDef[0].label;
+				btn[0].style.backgroundColor = "rgb(247, 248, 251)";
+				btn[0].style.border = "none";
+				btn[0].style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+				btn[0].style.cursor = "pointer";
+				btn[0].style.textAlign = "left";
+				btn[0].style.flexGrow = "1";
+				btn[0].setAttribute("title",btnDef[0].helpText);
+				btn[0].addEventListener("mouseover",(function(btn) {
+					return function() {
+						btn[0].style.backgroundColor = "#dddee1";
+					};
+				})(btn));
+				btn[0].addEventListener("mouseout",(function(btn) {
+					return function() {
+						btn[0].style.backgroundColor = "rgb(247, 248, 251)";
+					};
+				})(btn));
+				btn[0].addEventListener("click",(function(enabledBtn,btnDef) {
+					return function() {
+						if(_g3.canvas.getAnnotationManager().isAnnotationActive(btnDef[0].annotCode)) enabledBtn[0].innerHTML = "&#9744;"; else enabledBtn[0].innerHTML = "&#9745;";
+						_g3.canvas.getAnnotationManager().toggleAnnotation(btnDef[0].annotCode);
+					};
+				})(enabledBtn,btnDef));
+				row.appendChild(tooltipBtn);
+				row.appendChild(enabledBtn[0]);
+				row.appendChild(btn[0]);
+				this.items.push(row);
+				this.container.appendChild(row);
+				if(this.activeAnnotations != null && (function($this) {
+					var $r;
+					var key = btnDef[0].label;
+					$r = $this.activeAnnotations.exists(key);
+					return $r;
+				}(this))) {
+					this.canvas.getAnnotationManager().toggleAnnotation(btnDef[0].annotCode);
+					enabledBtn[0].innerHTML = "&#9745;";
+				}
+			}
+		}
+	}
+	,__class__: phylo.PhyloAnnotationMenuWidget
+};
+phylo.PhyloRendererI = $hxClasses["phylo.PhyloRendererI"] = function() { };
+phylo.PhyloRendererI.__name__ = ["phylo","PhyloRendererI"];
+phylo.PhyloRendererI.prototype = {
+	mesureText: null
+	,__class__: phylo.PhyloRendererI
+};
+phylo.PhyloCanvasRenderer = $hxClasses["phylo.PhyloCanvasRenderer"] = function(width,height,parentElement,rootNode,config,annotationManager) {
+	this.autoFitting = false;
+	this.nodeClickListeners = [];
+	this.contextDiv = null;
+	this.translateY = 0.;
+	this.translateX = 0.;
+	this.scale = 1.0;
+	this.parent = parentElement;
+	this.width = width;
+	this.height = height;
+	this.annotationManager = annotationManager;
+	if(this.annotationManager == null) this.annotationManager = new phylo.PhyloAnnotationManager();
+	this.annotationManager.addAnnotationListener($bind(this,this.onAnnotationChange));
+	this.annotationManager.rootNode = rootNode;
+	this.annotationManager.canvas = this;
+	this.rootNode = rootNode;
+	var doc;
+	if(config == null) config = new phylo.PhyloCanvasConfiguration();
+	this.config = config;
+	config.dataChanged = true;
+	if(config.enableTools) this.addNodeClickListener($bind(this,this.defaultNodeClickListener));
+	this.createContainer();
+	if(config.enableToolbar) this.toolBar = new phylo.PhyloToolBar(this);
+	if(this.getConfig().autoFit) this.autoFitRedraw(); else this.redraw(true);
+};
+phylo.PhyloCanvasRenderer.__name__ = ["phylo","PhyloCanvasRenderer"];
+phylo.PhyloCanvasRenderer.__interfaces__ = [phylo.PhyloRendererI];
+phylo.PhyloCanvasRenderer.main = function() {
+};
+phylo.PhyloCanvasRenderer.prototype = {
+	canvas: null
+	,ctx: null
+	,scale: null
+	,parent: null
+	,rootNode: null
+	,cx: null
+	,cy: null
+	,config: null
+	,width: null
+	,height: null
+	,translateX: null
+	,translateY: null
+	,selectedNode: null
+	,contextDiv: null
+	,annotationManager: null
+	,nodeClickListeners: null
+	,contextMenu: null
+	,toolBar: null
+	,container: null
+	,outerContainer: null
+	,autoFitting: null
+	,legendWidget: null
+	,annotationMenu: null
+	,onAnnotationChange: function() {
+		this.redraw();
+		if(this.config.enableLegend) this.legendWidget.redraw();
+	}
+	,getRootNode: function() {
+		return this.rootNode;
+	}
+	,getAnnotationManager: function() {
+		return this.annotationManager;
+	}
+	,createContainer: function() {
+		this.container = window.document.createElement("div");
+		if(this.config.enableAnnotationMenu || this.config.enableLegend || this.config.enableImport) {
+			this.outerContainer = window.document.createElement("div");
+			this.outerContainer.style.display = "flex";
+			this.outerContainer.style.height = "100%";
+			var leftContainer = window.document.createElement("div");
+			leftContainer.style.height = "100%";
+			leftContainer.style.display = "flex";
+			leftContainer.style.flexDirection = "column";
+			if(this.config.enableAnnotationMenu) {
+				this.annotationMenu = new phylo.PhyloAnnotationMenuWidget(this);
+				this.annotationMenu.getContainer().style.flexGrow = "1";
+				leftContainer.appendChild(this.annotationMenu.getContainer());
+			}
+			if(this.config.enableImport) {
+				var importWidget = new phylo.PhyloImportWidget(this);
+				leftContainer.appendChild(importWidget.getContainer());
+			}
+			this.outerContainer.appendChild(leftContainer);
+			this.outerContainer.appendChild(this.container);
+			this.container.style.display = "inline-block";
+			this.container.style.position = "relative";
+			this.container.style.flexGrow = "1";
+			if(this.config.enableLegend) {
+				this.legendWidget = new phylo.PhyloLegendWidget(this);
+				this.outerContainer.appendChild(this.legendWidget.getContainer());
+			}
+			this.parent.appendChild(this.outerContainer);
+		} else {
+			this.container.style.height = "100%";
+			this.parent.appendChild(this.container);
+		}
+	}
+	,getCanvas: function() {
+		return this.canvas;
+	}
+	,getParent: function() {
+		return this.parent;
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,destroy: function() {
+		if(this.config.enableAnnotationMenu || this.config.enableLegend || this.config.enableImport) this.parent.removeChild(this.outerContainer); else this.parent.removeChild(this.container);
+	}
+	,notifyNodeClickListeners: function(node,data,e) {
+		var _g = 0;
+		var _g1 = this.nodeClickListeners;
+		while(_g < _g1.length) {
+			var listener = _g1[_g];
+			++_g;
+			listener(node,data,e);
+		}
+	}
+	,defaultNodeClickListener: function(node,data,e) {
+		if(node == null) {
+			if(this.contextMenu != null) {
+				this.closeContextMenu();
+				return;
+			}
+		} else {
+			if(this.contextMenu != null) this.closeContextMenu();
+			this.contextMenu = new phylo.PhyloContextMenu(this.parent,this,node,data,e);
+		}
+	}
+	,addNodeClickListener: function(listener) {
+		this.nodeClickListeners.push(listener);
+	}
+	,createCanvas: function() {
+		var _g = this;
+		if(this.config.enableLegend || this.config.enableAnnotationMenu || this.config.enableAnnotationMenu) {
+			this.width = this.container.clientWidth;
+			this.height = this.container.clientHeight;
+		}
+		if(this.canvas != null) {
+			this.ctx.save();
+			this.ctx.setTransform(1,0,0,1,0,0);
+			this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+			this.ctx.restore();
+		} else {
+			this.canvas = window.document.createElement("canvas");
+			this.container.appendChild(this.canvas);
+			this.canvas.width = this.width;
+			this.canvas.height = this.height;
+			this.ctx = this.canvas.getContext("2d");
+			this.cx = Math.round(this.width / 2);
+			this.cy = Math.round(this.height / 2);
+			this.ctx.translate(this.cx,this.cy);
+			if(this.config.enableZoom) {
+				this.canvas.addEventListener("mousewheel",function(e) {
+					if(e.wheelDelta < 0) _g.zoomIn(); else _g.zoomOut();
+				});
+				var mouseDownX = 0.;
+				var mouseDownY = 0.;
+				var mouseDown = false;
+				this.canvas.addEventListener("mousedown",function(e1) {
+					_g.annotationManager.hideAnnotationWindows();
+					_g.annotationManager.closeAnnotWindows();
+					mouseDownX = e1.pageX - _g.translateX;
+					mouseDownY = e1.pageY - _g.translateY;
+					mouseDown = true;
+					if(_g.contextDiv != null) {
+						_g.container.removeChild(_g.contextDiv);
+						_g.contextDiv = null;
+					}
+					_g.notifyNodeClickListeners(null,null,null);
+				});
+				this.canvas.addEventListener("mousemove",function(e2) {
+					if(mouseDown && mouseDownX != 0 && mouseDownY != 0) {
+						_g.newPosition(e2.pageX - mouseDownX,e2.pageY - mouseDownY);
+						_g.notifyNodeClickListeners(null,null,null);
+					}
+				});
+				this.canvas.addEventListener("mouseup",function(e3) {
+					mouseDown = false;
+					mouseDownX = 0;
+					mouseDownY = 0;
+					var d = _g.checkPosition(e3);
+					if(d != null) {
+						if(d.isAnnot == true) _g.annotationManager.showScreenData(false,d,e3.pageX,e3.pageY); else {
+							_g.selectedNode = _g.rootNode.nodeIdToNode.get(d.nodeId);
+							_g.notifyNodeClickListeners(_g.selectedNode,d,e3);
+						}
+					} else _g.notifyNodeClickListeners(null,null,e3);
+				});
+			}
+		}
+	}
+	,exportPNG: function(cb) {
+		this.canvas.toBlob(function(blob) {
+			cb(blob);
+		});
+	}
+	,exportPNGToFile: function() {
+		var _g = this;
+		this.exportPNG(function(blob) {
+			var uWin = window;
+			uWin.saveAs(blob,_g.getAnnotationManager().getTreeName() + "_tree.png");
+		});
+	}
+	,exportSVG: function() {
+		var width = this.width;
+		var height = this.height;
+		var svgCtx = new C2S(width,height);
+		var ctx = this.ctx;
+		this.ctx = svgCtx;
+		var rTranslateX = this.translateX;
+		var rTranslateY = this.translateY;
+		this.translateX = width / 2;
+		this.translateY = height / 2;
+		this.redraw(false);
+		this.translateX = rTranslateX;
+		this.translateY = rTranslateY;
+		this.ctx = ctx;
+		return svgCtx.getSerializedSvg(true);
+	}
+	,exportSVGToFile: function() {
+		var svgStr = this.exportSVG();
+		var blob = new Blob([svgStr],{ type : "text/plain;charset=utf-8"});
+		var uWin = window;
+		uWin.saveAs(blob,this.getAnnotationManager().getTreeName() + "_tree.svg");
+	}
+	,showHighlightDialog: function() {
+		var dialog = new phylo.PhyloHighlightWidget(this.parent,this);
+	}
+	,center: function() {
+		this.newPosition(0,0);
+	}
+	,newPosition: function(x,y) {
+		this.createCanvas();
+		this.translateX = x;
+		this.translateY = y;
+		this.redraw(false);
+	}
+	,drawLine: function(x0,y0,x1,y1,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(x0),Math.round(y0));
+		this.ctx.lineTo(Math.round(x1),Math.round(y1));
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawArc: function(x,y,radius,sAngle,eAngle,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.arc(x,y,Math.abs(radius),sAngle,eAngle);
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawWedge: function(x,y,radius,sAngle,eAngle,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.ctx.fillStyle = strokeStyle;
+		this.ctx.globalAlpha = 0.5;
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(0,0);
+		this.ctx.arc(x,y,Math.abs(radius),sAngle,eAngle);
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.closePath();
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,bezierCurve: function(x0,y0,x1,y1,firstX,firstY,secondX,secondY,strokeStyle,lineWidth) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.strokeStyle = strokeStyle;
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(x0),Math.round(y0));
+		this.ctx.bezierCurveTo(Math.round(firstX),Math.round(firstY),Math.round(secondX),Math.round(secondY),Math.round(x1),Math.round(y1));
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+	,drawText: function(text,tx,ty,x,y,rotation,textAlign,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.translate(tx,ty);
+		this.ctx.rotate(rotation);
+		this.ctx.textAlign = textAlign;
+		this.ctx.fillStyle = color;
+		this.ctx.fillText(text,x,y);
+		this.ctx.restore();
+	}
+	,drawTextNoTranslate: function(text,tx,ty,x,y,rotation,textAlign,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.translate(tx,ty);
+		this.ctx.rotate(rotation);
+		this.ctx.textAlign = textAlign;
+		this.ctx.fillStyle = color;
+		this.ctx.fillText(text,x,y);
+		this.ctx.restore();
+	}
+	,drawSquare: function(tx,ty,color) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.rect(tx,ty,10,10);
+		this.ctx.fillStyle = color;
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,drawCircle: function(tx,ty,color) {
+		var radius = 5;
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.strokeStyle = color;
+		this.ctx.arc(tx,ty,radius,0,2 * Math.PI);
+		this.ctx.fillStyle = color;
+		this.ctx.fill();
+		this.ctx.restore();
+	}
+	,drawGraphic: function(tx,ty,columns) {
+		this.ctx.save();
+		this.applyDefaultConfiguration();
+		this.ctx.beginPath();
+		this.ctx.moveTo(Math.round(tx),Math.round(ty - 10));
+		this.ctx.moveTo(Math.round(tx),Math.round(ty + 6));
+		this.ctx.lineTo(Math.round(tx + 14),Math.round(ty + 6));
+		this.ctx.strokeStyle = "rgb(6,6,6)";
+		this.ctx.stroke();
+		var len = columns[1];
+		var pos = ty + 6 - columns[1];
+		this.ctx.fillStyle = "rgb(41,128,214)";
+		this.ctx.rect(tx + 1,pos,2,len);
+		var len2 = columns[2];
+		var pos2 = ty + 6 - columns[2];
+		this.ctx.fillStyle = "rgb(191,0,0)";
+		this.ctx.fillRect(tx + 3,pos2,2,len2);
+		var len3 = columns[3];
+		var pos3 = ty + 6 - columns[3];
+		this.ctx.fillStyle = "rgb(99,207,27)";
+		this.ctx.fillRect(tx + 5,pos3,2,len3);
+		var len4 = columns[4];
+		var pos4 = ty + 6 - columns[4];
+		this.ctx.fillStyle = "rgb(255,128,0)";
+		this.ctx.fillRect(tx + 7,pos4,2,len4);
+		var len5 = columns[5];
+		var pos5 = ty + 6 - columns[5];
+		this.ctx.fillStyle = "rgb(192,86,145)";
+		this.ctx.fillRect(tx + 9,pos5,2,len5);
+		var len6 = columns[6];
+		var pos6 = ty + 6 - columns[6];
+		this.ctx.fillStyle = "rgb(255,204,0)";
+		this.ctx.fillRect(tx + 11,pos6,2,len6);
+		var len7 = columns[7];
+		var pos7 = ty + 6 - columns[7];
+		this.ctx.fillStyle = "rgb(121,63,243)";
+		this.ctx.fillRect(tx + 13,pos7,2,len7);
+		this.ctx.restore();
+	}
+	,drawImg: function(tx,ty,img,mode) {
+		this.applyDefaultConfiguration();
+		if(mode == 0) this.ctx.drawImage(img,tx,ty); else this.ctx.drawImage(img,28,0,125,125,tx,ty,20,20);
+	}
+	,mesureText: function(text) {
+		return this.ctx.measureText(text).width;
+	}
+	,startGroup: function(groupName) {
+	}
+	,endGroup: function() {
+	}
+	,zoomIn: function(scale) {
+		if(scale == null) {
+			if(this.config.scale <= 4.0) this.config.scale = this.config.scale + 0.2;
+			scale = this.config.scale;
+		}
+		this.scale = scale;
+		this.redraw();
+	}
+	,zoomOut: function(scale) {
+		if(scale == null) {
+			this.config.scale = this.config.scale - 0.2;
+			scale = this.config.scale;
+		}
+		this.scale = scale;
+		this.redraw();
+	}
+	,updateActions: function() {
+		if(this.toolBar != null) {
+			this.toolBar.setLineTypeButtonVisible(this.config.drawingMode == phylo.PhyloDrawingMode.STRAIGHT);
+			this.toolBar.setTitle(this.config.title);
+		}
+	}
+	,autoFitRedraw: function() {
+		var _g = this;
+		this.autoFitting = true;
+		this.config.dataChanged = true;
+		this.redraw(true);
+		haxe.Timer.delay(function() {
+			_g.autoFit();
+			_g.autoFitting = false;
+			_g.canvas.style.display = "block";
+		},1);
+	}
+	,redraw: function(create) {
+		if(create == null) create = true;
+		if(!this.autoFitting && this.config.autoFit && this.config.dataChanged) {
+			this.autoFitRedraw();
+			return;
+		}
+		this.updateActions();
+		if(create) this.createCanvas();
+		if(this.autoFitting) this.canvas.style.display = "none";
+		var newWidth = this.canvas.width * this.scale;
+		var newHeight = this.canvas.height * this.scale;
+		this.ctx.save();
+		this.ctx.translate(0,0);
+		this.ctx.scale(1,1);
+		this.ctx.clearRect(0,0,this.width,this.height);
+		this.ctx.translate(this.translateX,this.translateY);
+		this.ctx.scale(this.scale,this.scale);
+		var radialRendererObj = new phylo.PhyloRadialTreeLayout(this.canvas.width,this.canvas.height);
+		this.rootNode.screen = [];
+		this.rootNode.rectangleLeft = this.rootNode.children[0].x | 0;
+		this.rootNode.rectangleRight = this.rootNode.children[0].x | 0;
+		this.rootNode.rectangleBottom = this.rootNode.children[0].y | 0;
+		this.rootNode.rectangleTop = this.rootNode.children[0].y | 0;
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) radialRendererObj.renderCircle(this.rootNode,this,this.annotationManager.activeAnnotation,this.annotationManager.annotations); else radialRendererObj.render(this.rootNode,this,this.annotationManager.activeAnnotation,this.annotationManager.annotations);
+		this.ctx.restore();
+		this.config.dataChanged = false;
+	}
+	,setConfig: function(config) {
+		this.config = config;
+	}
+	,getConfig: function() {
+		return this.config;
+	}
+	,applyDefaultConfiguration: function() {
+		if(this.config.enableShadow) {
+			this.ctx.shadowOffsetX = 4;
+			this.ctx.shadowOffsetY = 4;
+			this.ctx.shadowBlur = 7;
+			this.ctx.shadowColor = this.config.shadowColour;
+		}
+	}
+	,checkPosition: function(e) {
+		var i;
+		var j;
+		var sx;
+		var sy;
+		var res;
+		res = false;
+		var auxx;
+		var auxy;
+		var elementOffsetX = this.canvas.getBoundingClientRect().left - window.document.getElementsByTagName("html")[0].getBoundingClientRect().left;
+		var auxx1 = e.clientX + window.pageXOffset - elementOffsetX - this.translateX;
+		var elementOffsetY = this.canvas.getBoundingClientRect().top - window.document.getElementsByTagName("html")[0].getBoundingClientRect().top;
+		var auxy1 = e.clientY + window.pageYOffset - elementOffsetY - this.translateY;
+		var x;
+		var y;
+		x = auxx1 - Math.round(this.cx);
+		y = auxy1 - Math.round(this.cy);
+		var active;
+		active = false;
+		i = 0;
+		while(i < this.rootNode.screen.length && res == false) {
+			if(this.rootNode.screen[i].checkMouse(x,y) == true) {
+				res = true;
+				this.rootNode.screen[i].root = this.rootNode;
+				this.rootNode.divactive = i;
+			} else this.rootNode.screen[i].created = false;
+			i = i + 1;
+		}
+		if(res == true) return this.rootNode.screen[i - 1]; else return null;
+	}
+	,setLineWidth: function(width) {
+		this.rootNode.setLineWidth(width);
+		this.redraw();
+	}
+	,toggleType: function() {
+		this.dataChanged(true);
+		this.translateX = 0;
+		this.translateY = 0;
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) {
+			this.config.drawingMode = phylo.PhyloDrawingMode.STRAIGHT;
+			this.rootNode.preOrderTraversal2();
+		} else {
+			this.config.drawingMode = phylo.PhyloDrawingMode.CIRCULAR;
+			this.rootNode.preOrderTraversal();
+		}
+		this.closeContextMenu();
+		this.redraw();
+	}
+	,closeContextMenu: function() {
+		if(this.contextMenu != null) {
+			this.contextMenu.close();
+			this.contextMenu = null;
+		}
+	}
+	,toggleLineMode: function() {
+		if(this.config.bezierLines) {
+			this.rootNode.setLineMode(phylo.LineMode.STRAIGHT);
+			this.config.bezierLines = false;
+		} else {
+			this.rootNode.setLineMode(phylo.LineMode.BEZIER);
+			this.config.bezierLines = true;
+		}
+		this.redraw();
+	}
+	,rotateNode: function(node,clockwise) {
+		node.rotateNode(clockwise,this.getConfig().drawingMode);
+		this.redraw();
+	}
+	,setShadowColour: function(colour) {
+		if(colour == null) {
+			this.getConfig().shadowColour = null;
+			this.getConfig().enableShadow = false;
+		} else {
+			this.getConfig().shadowColour = colour;
+			this.getConfig().enableShadow = true;
+		}
+		this.redraw();
+	}
+	,toggleShadow: function() {
+		this.getConfig().enableShadow = !this.getConfig().enableShadow;
+		this.redraw();
+	}
+	,autoFit: function() {
+		var minX = null;
+		var maxX = null;
+		var minY = null;
+		var maxY = null;
+		var screenDataList = this.rootNode.screen;
+		var _g = 0;
+		while(_g < screenDataList.length) {
+			var screenData = screenDataList[_g];
+			++_g;
+			var x = screenData.x;
+			var y = screenData.y;
+			if(minX == null || x < minX) minX = x;
+			if(maxX == null || x > maxX) maxX = x;
+			if(minY == null || y < minY) minY = y;
+			if(maxY == null || y > maxY) maxY = y;
+		}
+		var requiredWidth = maxX - minX + 300;
+		var requiredHeight = maxY - minY + 300;
+		var widthScale = 1.;
+		var heightScale = 1.;
+		widthScale = this.width / requiredWidth;
+		heightScale = this.height / requiredHeight;
+		var fitScale = 1.;
+		if(widthScale < 1 || heightScale < 1) fitScale = Math.min(widthScale,heightScale);
+		if(this.config.drawingMode != phylo.PhyloDrawingMode.CIRCULAR) {
+		}
+		if(fitScale == this.scale) {
+		} else {
+			this.config.autoFit = true;
+			this.config.dataChanged = true;
+			this.setScale(fitScale,false);
+		}
+	}
+	,setScale: function(scale,disableAutoFit) {
+		if(disableAutoFit == null) disableAutoFit = true;
+		this.scale = scale;
+		this.config.scale = scale;
+		if(disableAutoFit) this.config.autoFit = false;
+		this.redraw(true);
+	}
+	,dataChanged: function(changed) {
+		this.getConfig().scale = 1;
+		this.scale = 1;
+		this.getConfig().dataChanged = changed;
+	}
+	,setNewickString: function(newickString) {
+		var parser = new phylo.PhyloNewickParser();
+		var rootNode = parser.parse(newickString);
+		rootNode.calculateScale();
+		rootNode.postOrderTraversal();
+		if(this.config.drawingMode == phylo.PhyloDrawingMode.CIRCULAR) rootNode.preOrderTraversal(1); else rootNode.preOrderTraversal2(1);
+		this.rootNode = rootNode;
+		this.getAnnotationManager().setRootNode(rootNode);
+		if(this.getAnnotationManager().getAnnotationString() != null) {
+			this.getAnnotationManager().loadAnnotationsFromString(this.getAnnotationManager().getAnnotationString(),this.getAnnotationManager().getAnnotationConfigs());
+			this.redraw(true);
+		} else this.redraw(true);
+	}
+	,getAnnotationMenu: function() {
+		return this.annotationMenu;
+	}
+	,setFromFasta: function(fasta) {
+		var _g = this;
+		saturn.client.BioinformaticsServicesClient.getClient().sendPhyloReportRequest(fasta,function(response,error) {
+			var phyloReport = response.json.phyloReport;
+			var location = window.location;
+			var dstURL = location.protocol + "//" + location.hostname + ":" + location.port + "/" + phyloReport;
+			var fetchFunc = fetch;
+			fetchFunc(dstURL).then(function(response1) {
+				response1.text().then(function(text) {
+					_g.setNewickString(text);
+					_g.rootNode.setFasta(fasta);
+				});
+			});
+		});
+	}
+	,__class__: phylo.PhyloCanvasRenderer
+};
+phylo.PhyloCanvasConfiguration = $hxClasses["phylo.PhyloCanvasConfiguration"] = function() {
+	this.enableFastaImport = false;
+	this.enableImport = false;
+	this.enableLegend = false;
+	this.enableAnnotationMenu = false;
+	this.dataChanged = false;
+	this.autoFit = true;
+	this.verticalToolBar = false;
+	this.enableToolbar = false;
+	this.enableTools = false;
+	this.scale = 1;
+	this.enableZoom = false;
+	this.highlightedGenes = new haxe.ds.StringMap();
+	this.editmode = false;
+	this.drawingMode = phylo.PhyloDrawingMode.CIRCULAR;
+	this.bezierLines = false;
+	this.shadowColour = "gray";
+	this.enableShadow = false;
+};
+phylo.PhyloCanvasConfiguration.__name__ = ["phylo","PhyloCanvasConfiguration"];
+phylo.PhyloCanvasConfiguration.prototype = {
+	enableShadow: null
+	,shadowColour: null
+	,bezierLines: null
+	,drawingMode: null
+	,editmode: null
+	,highlightedGenes: null
+	,enableZoom: null
+	,scale: null
+	,enableTools: null
+	,enableToolbar: null
+	,verticalToolBar: null
+	,autoFit: null
+	,dataChanged: null
+	,title: null
+	,enableAnnotationMenu: null
+	,enableLegend: null
+	,enableImport: null
+	,enableFastaImport: null
+	,__class__: phylo.PhyloCanvasConfiguration
+};
+phylo.PhyloDrawingMode = $hxClasses["phylo.PhyloDrawingMode"] = { __ename__ : ["phylo","PhyloDrawingMode"], __constructs__ : ["STRAIGHT","CIRCULAR"] };
+phylo.PhyloDrawingMode.STRAIGHT = ["STRAIGHT",0];
+phylo.PhyloDrawingMode.STRAIGHT.toString = $estr;
+phylo.PhyloDrawingMode.STRAIGHT.__enum__ = phylo.PhyloDrawingMode;
+phylo.PhyloDrawingMode.CIRCULAR = ["CIRCULAR",1];
+phylo.PhyloDrawingMode.CIRCULAR.toString = $estr;
+phylo.PhyloDrawingMode.CIRCULAR.__enum__ = phylo.PhyloDrawingMode;
+phylo.PhyloContextMenu = $hxClasses["phylo.PhyloContextMenu"] = function(parent,canvas,node,data,e) {
+	this.parent = parent;
+	this.node = node;
+	this.data = data;
+	this.e = e;
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloContextMenu.__name__ = ["phylo","PhyloContextMenu"];
+phylo.PhyloContextMenu.prototype = {
+	contextContainer: null
+	,parent: null
+	,node: null
+	,data: null
+	,e: null
+	,canvas: null
+	,build: function() {
+		this.addContainer();
+		if(this.canvas.getConfig().drawingMode == phylo.PhyloDrawingMode.CIRCULAR) this.addWedgeOptions();
+		this.addColourOption();
+		if(this.canvas.getConfig().drawingMode == phylo.PhyloDrawingMode.STRAIGHT) this.addRotateNode();
+		this.parent.appendChild(this.contextContainer);
+	}
+	,addContainer: function() {
+		this.contextContainer = window.document.createElement("div");
+		this.contextContainer.style.position = "absolute";
+		this.contextContainer.style.left = this.e.offsetX;
+		this.contextContainer.style.top = this.e.offsetY;
+		this.contextContainer.style.background = "#f7f8fb";
+		this.contextContainer.style.color = "black";
+		this.contextContainer.style.padding = "4px";
+	}
+	,destroyContainer: function() {
+		this.parent.removeChild(this.contextContainer);
+		this.parent = null;
+		this.node = null;
+		this.data = null;
+		this.e = null;
+		this.canvas = null;
+	}
+	,close: function() {
+		this.destroyContainer();
+	}
+	,addColourOption: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var lineColourInputLabel = window.document.createElement("label");
+		var lineColourRemoveButton = window.document.createElement("button");
+		lineColourInputLabel.setAttribute("for","line_colour_input");
+		lineColourInputLabel.innerText = "Pick line colour";
+		lineColourInputLabel.style.width = "100px";
+		lineColourInputLabel.style.display = "inline-block";
+		var lineInputColour = window.document.createElement("input");
+		lineInputColour.setAttribute("type","color");
+		lineInputColour.setAttribute("name","line_colour_input");
+		lineInputColour.style.width = "100px";
+		lineInputColour.addEventListener("change",function() {
+			_g.node.colour = lineInputColour.value;
+			lineColourRemoveButton.style.display = "inline-block";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(lineColourInputLabel);
+		rowContainer.appendChild(lineInputColour);
+		lineColourRemoveButton.setAttribute("for","wedge_colour_input");
+		lineColourRemoveButton.innerText = "Remove";
+		lineColourRemoveButton.style.marginLeft = "5px";
+		lineColourRemoveButton.style.display = "none";
+		lineColourRemoveButton.style.width = "100px";
+		lineColourRemoveButton.addEventListener("click",function() {
+			_g.node.colour = null;
+			lineColourRemoveButton.style.display = "none";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(lineColourRemoveButton);
+		if(this.node.colour != null) lineColourRemoveButton.style.display = "inline-block";
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,addWedgeOptions: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var wedgeInputLabel = window.document.createElement("label");
+		var wedgeButtonLabel = window.document.createElement("button");
+		wedgeInputLabel.setAttribute("for","wedge_colour_input");
+		wedgeInputLabel.setAttribute("for","wedge_colour_input");
+		wedgeInputLabel.innerText = "Pick wedge colour";
+		wedgeInputLabel.style.width = "100px";
+		wedgeInputLabel.style.display = "inline-block";
+		var wedgeInputColour = window.document.createElement("input");
+		wedgeInputColour.setAttribute("type","color");
+		wedgeInputColour.setAttribute("name","wedge_colour_input");
+		wedgeInputColour.style.width = "100px";
+		wedgeInputColour.addEventListener("change",function() {
+			_g.node.wedgeColour = wedgeInputColour.value;
+			wedgeButtonLabel.style.display = "inline-block";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(wedgeInputLabel);
+		rowContainer.appendChild(wedgeInputColour);
+		wedgeButtonLabel.setAttribute("for","wedge_colour_input");
+		wedgeButtonLabel.setAttribute("for","wedge_colour_input");
+		wedgeButtonLabel.innerText = "Remove";
+		wedgeButtonLabel.style.marginLeft = "5px";
+		wedgeButtonLabel.style.width = "100px";
+		wedgeButtonLabel.style.display = "none";
+		wedgeButtonLabel.addEventListener("click",function() {
+			_g.node.wedgeColour = null;
+			wedgeButtonLabel.style.display = "none";
+			_g.canvas.redraw();
+		});
+		rowContainer.appendChild(wedgeButtonLabel);
+		if(this.node.wedgeColour != null) wedgeButtonLabel.style.display = "inline-block";
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,addRotateNode: function() {
+		var _g = this;
+		var rowContainer = window.document.createElement("div");
+		var label = window.document.createElement("label");
+		label.innerText = "Rotate branch";
+		label.style.display = "inline-block";
+		label.style.width = "100px";
+		rowContainer.appendChild(label);
+		var rotateNodeClockwiseButton = window.document.createElement("button");
+		rotateNodeClockwiseButton.innerText = "Clockwise";
+		rotateNodeClockwiseButton.style.marginRight = "5px";
+		rotateNodeClockwiseButton.style.width = "100px";
+		rotateNodeClockwiseButton.style.display = "inline-block";
+		rotateNodeClockwiseButton.addEventListener("click",function(e) {
+			_g.canvas.rotateNode(_g.node,true);
+		});
+		rowContainer.appendChild(rotateNodeClockwiseButton);
+		var rotateNodeAnticlockwiseButton = window.document.createElement("button");
+		rotateNodeAnticlockwiseButton.innerText = "Anticlockwise";
+		rotateNodeAnticlockwiseButton.style.marginRight = "5px";
+		rotateNodeAnticlockwiseButton.style.width = "100px";
+		rotateNodeAnticlockwiseButton.style.display = "inline-block";
+		rotateNodeAnticlockwiseButton.addEventListener("click",function(e1) {
+			_g.canvas.rotateNode(_g.node,false);
+		});
+		rowContainer.appendChild(rotateNodeAnticlockwiseButton);
+		this.contextContainer.appendChild(rowContainer);
+	}
+	,__class__: phylo.PhyloContextMenu
+};
+phylo.PhyloWindowWidget = $hxClasses["phylo.PhyloWindowWidget"] = function(parent,title,modal) {
+	if(modal == null) modal = false;
+	this.parent = parent;
+	this.title = title;
+	this.modal = modal;
+	this.build();
+};
+phylo.PhyloWindowWidget.__name__ = ["phylo","PhyloWindowWidget"];
+phylo.PhyloWindowWidget.prototype = {
+	container: null
+	,content: null
+	,parent: null
+	,header: null
+	,title: null
+	,modal: null
+	,onCloseFunc: null
+	,setOnCloseEvent: function(func) {
+		this.onCloseFunc = func;
+	}
+	,build: function() {
+		this.addContainer();
+		this.addWindowHeader();
+		this.addContent();
+		this.container.appendChild(this.content);
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.position = "fixed";
+		this.container.style.zIndex = 1;
+		this.container.style.paddingTop = "20px";
+		this.container.style.left = 0;
+		this.container.style.top = 0;
+		this.container.style.minWidth = "200px";
+		this.container.style.minHeight = "100px";
+		this.container.style.backgroundColor = "rgb(247, 248, 251)";
+		if(!this.isModal()) this.installMoveListeners();
+		this.parent.appendChild(this.container);
+	}
+	,isModal: function() {
+		return this.modal;
+	}
+	,addWindowHeader: function() {
+		this.header = window.document.createElement("div");
+		this.header.style.position = "absolute";
+		this.header.style.top = "0px";
+		this.header.style.backgroundColor = "rgb(125, 117, 117)";
+		this.header.style.height = "20px";
+		this.header.style.width = "100%";
+		this.addTitle();
+		this.addCloseButton();
+		this.container.appendChild(this.header);
+	}
+	,addTitle: function() {
+		var titleSpan = window.document.createElement("span");
+		titleSpan.innerText = this.title;
+		titleSpan.style.color = "white";
+		titleSpan.style.fontSize = "16px";
+		titleSpan.style.fontWeight = "bold";
+		this.header.appendChild(titleSpan);
+	}
+	,addCloseButton: function() {
+		var _g = this;
+		var closeButton = window.document.createElement("span");
+		closeButton.style.color = "white";
+		closeButton.style["float"] = "right";
+		closeButton.style.fontSize = "16px";
+		closeButton.style.fontWeight = "bold";
+		closeButton.innerHTML = "&times;";
+		closeButton.style.cursor = "pointer";
+		closeButton.addEventListener("click",function(e) {
+			_g.close();
+		});
+		this.header.appendChild(closeButton);
+	}
+	,addContent: function() {
+		this.content = window.document.createElement("div");
+		this.content.style.backgroundColor = "#fefefe";
+		this.content.style.width = "100%";
+	}
+	,close: function() {
+		this.onClose();
+		this.parent.removeChild(this.container);
+	}
+	,onClose: function() {
+		if(this.onCloseFunc != null) this.onCloseFunc(this);
+	}
+	,installMoveListeners: function() {
+		var _g = this;
+		var isDown = false;
+		var offsetX = 0.;
+		var offsetY = 0.;
+		var moveListener = function(event) {
+			event.preventDefault();
+			if(isDown) {
+				_g.container.style.left = event.clientX + offsetX + "px";
+				_g.container.style.top = event.clientY + offsetY + "px";
+			}
+		};
+		this.container.addEventListener("mousedown",function(e) {
+			isDown = true;
+			offsetX = _g.container.offsetLeft - e.clientX;
+			offsetY = _g.container.offsetTop - e.clientY;
+			window.document.body.addEventListener("mousemove",moveListener);
+		});
+		this.container.addEventListener("mouseup",function() {
+			isDown = false;
+			window.document.body.removeEventListener("mousemove",moveListener);
+		});
+	}
+	,__class__: phylo.PhyloWindowWidget
+};
+phylo.PhyloGlassPaneWidget = $hxClasses["phylo.PhyloGlassPaneWidget"] = function(parent,title,modal) {
+	if(modal == null) modal = true;
+	phylo.PhyloWindowWidget.call(this,parent,title,modal);
+	this.container.style.width = "100%";
+	this.container.style.height = "100%";
+	this.container.style.backgroundColor = "rgba(0,0,0,0.4)";
+	this.header.style.width = "50%";
+	this.header.style.margin = "auto";
+	this.header.style.position = "initial";
+	this.header.style.padding = "20px";
+	this.content.style.backgroundColor = "#fefefe";
+	this.content.style.margin = "auto";
+	this.content.style.padding = "20px";
+	this.content.style.width = "50%";
+};
+phylo.PhyloGlassPaneWidget.__name__ = ["phylo","PhyloGlassPaneWidget"];
+phylo.PhyloGlassPaneWidget.__super__ = phylo.PhyloWindowWidget;
+phylo.PhyloGlassPaneWidget.prototype = $extend(phylo.PhyloWindowWidget.prototype,{
+	addContainer: function() {
+		phylo.PhyloWindowWidget.prototype.addContainer.call(this);
+	}
+	,__class__: phylo.PhyloGlassPaneWidget
+});
+phylo.PhyloHighlightWidget = $hxClasses["phylo.PhyloHighlightWidget"] = function(parent,canvas) {
+	this.canvas = canvas;
+	phylo.PhyloGlassPaneWidget.call(this,parent,"Select genes to highlight in tree",true);
+};
+phylo.PhyloHighlightWidget.__name__ = ["phylo","PhyloHighlightWidget"];
+phylo.PhyloHighlightWidget.__super__ = phylo.PhyloGlassPaneWidget;
+phylo.PhyloHighlightWidget.prototype = $extend(phylo.PhyloGlassPaneWidget.prototype,{
+	highlightInputs: null
+	,canvas: null
+	,onClose: function() {
+		this.canvas.getConfig().highlightedGenes = new haxe.ds.StringMap();
+		var _g = 0;
+		var _g1 = this.highlightInputs;
+		while(_g < _g1.length) {
+			var inputElement = _g1[_g];
+			++_g;
+			if(inputElement.checked) {
+				var this1 = this.canvas.getConfig().highlightedGenes;
+				var key = inputElement.getAttribute("value");
+				this1.set(key,true);
+			}
+		}
+		this.canvas.redraw();
+	}
+	,addContent: function() {
+		phylo.PhyloGlassPaneWidget.prototype.addContent.call(this);
+		this.addHighlightList();
+	}
+	,addHighlightList: function() {
+		var formContainer = window.document.createElement("div");
+		formContainer.setAttribute("id","highlight-box");
+		formContainer.style.margin = "auto";
+		formContainer.style.overflowY = "scroll";
+		formContainer.style.height = "75%";
+		this.highlightInputs = [];
+		var targets = this.canvas.getRootNode().targets;
+		targets.sort(function(a,b) {
+			var targetA = a.toUpperCase();
+			var targetB = b.toUpperCase();
+			if(targetA < targetB) return -1; else if(targetA > targetB) return 1; else return 0;
+		});
+		var i = 0;
+		var _g = 0;
+		while(_g < targets.length) {
+			var target = targets[_g];
+			++_g;
+			if(target == null || target == "") continue;
+			i += 1;
+			var elementWrapper = window.document.createElement("div");
+			elementWrapper.setAttribute("class","element-wrapper");
+			elementWrapper.style["float"] = "left";
+			elementWrapper.style.marginRight = "28px";
+			elementWrapper.style.marginBottom = "10px";
+			var name = "target_highlight_" + i;
+			var inputLabel = window.document.createElement("label");
+			inputLabel.setAttribute("for",name);
+			inputLabel.innerText = target;
+			inputLabel.style["float"] = "left";
+			inputLabel.style.width = "55px";
+			inputLabel.style.margin = "0";
+			var inputElement = window.document.createElement("input");
+			inputElement.setAttribute("type","checkbox");
+			inputElement.setAttribute("value",target);
+			inputElement.setAttribute("name",name);
+			inputElement.style.width = "15px";
+			inputElement.style.height = "15px";
+			inputElement.style.margin = "1px";
+			this.highlightInputs.push(inputElement);
+			formContainer.appendChild(elementWrapper);
+			elementWrapper.appendChild(inputLabel);
+			elementWrapper.appendChild(inputElement);
+		}
+		this.content.appendChild(formContainer);
+	}
+	,__class__: phylo.PhyloHighlightWidget
+});
+phylo.PhyloHubMath = $hxClasses["phylo.PhyloHubMath"] = function() { };
+phylo.PhyloHubMath.__name__ = ["phylo","PhyloHubMath"];
+phylo.PhyloHubMath.degreesToRadians = function(a) {
+	return a * (Math.PI / 180);
+};
+phylo.PhyloHubMath.radiansToDegrees = function(b) {
+	return b * (180 / Math.PI);
+};
+phylo.PhyloHubMath.getMaxOfArray = function(a) {
+	var i;
+	var n;
+	n = a[0];
+	var _g1 = 1;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i1 = _g1++;
+		if(n < a[i1]) n = a[i1];
+	}
+	return n;
+};
+phylo.PhyloImportWidget = $hxClasses["phylo.PhyloImportWidget"] = function(canvas) {
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloImportWidget.__name__ = ["phylo","PhyloImportWidget"];
+phylo.PhyloImportWidget.prototype = {
+	canvas: null
+	,container: null
+	,build: function() {
+		this.addContainer();
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Import</h1>";
+		this.addButtons();
+	}
+	,addButtons: function() {
+		this.addImportNewickButton();
+		this.addImportAnnotationsButton();
+		if(this.canvas.getConfig().enableFastaImport) this.addGenerateFromFASTAButton();
+	}
+	,addImportNewickButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import Newick";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","ImportNewick");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"Newick String","Enter newick string",_g.canvas.getRootNode().getNewickString());
+			dialog.setOnCloseEvent($bind(_g,_g.updateTree));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateTree: function(dialog) {
+		this.canvas.setNewickString(dialog.getText());
+	}
+	,addImportAnnotationsButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import Annotations";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","ImportNewick");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"Annotations in CSV format (first column is gene name)","Enter Annotations",_g.canvas.getAnnotationManager().getAnnotationString());
+			dialog.setOnCloseEvent($bind(_g,_g.updateAnnotations));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateAnnotations: function(dialog) {
+		this.canvas.getAnnotationManager().loadAnnotationsFromString(dialog.getText(),this.canvas.getAnnotationManager().getAnnotationConfigs());
+	}
+	,addGenerateFromFASTAButton: function() {
+		var _g = this;
+		var btn = window.document.createElement("button");
+		btn.innerText = "Import FASTA";
+		btn.style.backgroundColor = "rgb(247, 248, 251)";
+		btn.style.border = "none";
+		btn.style.font = "normal 11px/16px tahoma, arial, verdana, sans-serif";
+		btn.style.cursor = "pointer";
+		btn.style.textAlign = "left";
+		btn.style.width = "100%";
+		btn.setAttribute("title","Import Fasta");
+		btn.addEventListener("mouseover",function() {
+			btn.style.backgroundColor = "#dddee1";
+		});
+		btn.addEventListener("mouseout",function() {
+			btn.style.backgroundColor = "rgb(247, 248, 251)";
+		});
+		btn.addEventListener("click",function() {
+			var dialog = new phylo.PhyloInputModalWidget(window.document.body,"FASTA format","Enter sequences",_g.canvas.getRootNode().getFasta());
+			dialog.setOnCloseEvent($bind(_g,_g.updateFASTA));
+		});
+		this.container.appendChild(btn);
+	}
+	,updateFASTA: function(dialog) {
+		this.canvas.setFromFasta(dialog.getText());
+	}
+	,__class__: phylo.PhyloImportWidget
+};
+phylo.PhyloInputModalWidget = $hxClasses["phylo.PhyloInputModalWidget"] = function(parent,message,title,initialValue) {
+	this.message = message;
+	this.initialValue = initialValue;
+	phylo.PhyloGlassPaneWidget.call(this,parent,title);
+};
+phylo.PhyloInputModalWidget.__name__ = ["phylo","PhyloInputModalWidget"];
+phylo.PhyloInputModalWidget.__super__ = phylo.PhyloGlassPaneWidget;
+phylo.PhyloInputModalWidget.prototype = $extend(phylo.PhyloGlassPaneWidget.prototype,{
+	message: null
+	,initialValue: null
+	,textArea: null
+	,addContent: function() {
+		phylo.PhyloGlassPaneWidget.prototype.addContent.call(this);
+		this.addMessage();
+		this.addInputField();
+	}
+	,addMessage: function() {
+		var p = window.document.createElement("p");
+		p.innerText = this.message;
+		this.content.appendChild(p);
+	}
+	,addInputField: function() {
+		this.textArea = window.document.createElement("textarea");
+		this.textArea.value = this.initialValue;
+		this.textArea.style.width = "100%";
+		this.textArea.setAttribute("rows","10");
+		this.content.appendChild(this.textArea);
+	}
+	,getText: function() {
+		return this.textArea.value;
+	}
+	,__class__: phylo.PhyloInputModalWidget
+});
+phylo.PhyloLegendRowWidget = $hxClasses["phylo.PhyloLegendRowWidget"] = function(legend,config) {
+	this.legend = legend;
+	this.config = config;
+	this.build();
+};
+phylo.PhyloLegendRowWidget.__name__ = ["phylo","PhyloLegendRowWidget"];
+phylo.PhyloLegendRowWidget.prototype = {
+	legend: null
+	,config: null
+	,container: null
+	,build: function() {
+		this.addContainer();
+		this.addLabel();
+		this.addColourChooser();
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.legend.getLegendContainer().appendChild(this.container);
+	}
+	,addLabel: function() {
+		var label = window.document.createElement("span");
+		label.innerText = this.config.name;
+		label.style.marginLeft = "5px";
+		label.style.width = "100px";
+		label.style.display = "inline-block";
+		this.container.appendChild(label);
+	}
+	,addColourChooser: function() {
+		var _g = this;
+		var picker = window.document.createElement("input");
+		picker.setAttribute("type","color");
+		picker.setAttribute("name","line_colour_input");
+		picker.setAttribute("value",this.standardizeColour(this.config.colour));
+		picker.style.width = "40px";
+		picker.addEventListener("change",function() {
+			_g.config.colour = picker.value;
+			_g.legend.getCanvas().getAnnotationManager().reloadAnnotationConfigurations();
+		});
+		this.container.appendChild(picker);
+	}
+	,standardizeColour: function(colourStr) {
+		var canvas = window.document.createElement("canvas");
+		var ctx = canvas.getContext("2d");
+		ctx.fillStyle = colourStr;
+		return ctx.fillStyle;
+	}
+	,__class__: phylo.PhyloLegendRowWidget
+};
+phylo.PhyloLegendWidget = $hxClasses["phylo.PhyloLegendWidget"] = function(canvas) {
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloLegendWidget.__name__ = ["phylo","PhyloLegendWidget"];
+phylo.PhyloLegendWidget.prototype = {
+	canvas: null
+	,container: null
+	,legendContainer: null
+	,build: function() {
+		this.addContainer();
+	}
+	,getCanvas: function() {
+		return this.canvas;
+	}
+	,getContainer: function() {
+		return this.container;
+	}
+	,addContainer: function() {
+		this.container = window.document.createElement("div");
+		this.container.style.display = "inline-block";
+		this.container.style.minWidth = "160px";
+		this.container.style.position = "relative";
+		this.container.style.verticalAlign = "top";
+		this.container.style.height = "100%";
+		this.container.style.backgroundColor = "#f7f8fb";
+		this.container.marginLeft = "0px";
+		this.container.marginTop = "0px";
+		this.container.innerHTML = "<h1 style=\"margin-left:5px;margin-right:5px\">Legend</h1>";
+		this.legendContainer = window.document.createElement("div");
+		this.container.appendChild(this.legendContainer);
+		this.redraw();
+	}
+	,clearLegendContainer: function() {
+		while(this.legendContainer.firstChild) this.legendContainer.removeChild(this.legendContainer.firstChild);
+	}
+	,getLegendContainer: function() {
+		return this.legendContainer;
+	}
+	,redraw: function() {
+		this.clearLegendContainer();
+		var annotationManager = this.canvas.getAnnotationManager();
+		var activeAnnotations = annotationManager.getActiveAnnotations();
+		var _g = 0;
+		while(_g < activeAnnotations.length) {
+			var annotationDef = activeAnnotations[_g];
+			++_g;
+			var config = this.canvas.getAnnotationManager().getAnnotationConfigByName(annotationDef.label);
+			if(config.legendFunction != null) {
+				var func = config.legendFunction;
+				func(this,config);
+			}
+		}
+	}
+	,__class__: phylo.PhyloLegendWidget
+};
+phylo.PhyloNewickParser = $hxClasses["phylo.PhyloNewickParser"] = function() {
+};
+phylo.PhyloNewickParser.__name__ = ["phylo","PhyloNewickParser"];
+phylo.PhyloNewickParser.prototype = {
+	parse: function(newickString) {
+		newickString = phylo.PhyloNewickParser.whiteSpaceReg.replace(newickString,"");
+		newickString = phylo.PhyloNewickParser.newLineReg.replace(newickString,"");
+		newickString = phylo.PhyloNewickParser.carLineReg.replace(newickString,"");
+		var rootNode;
+		rootNode = new phylo.PhyloTreeNode();
+		rootNode.newickString = newickString;
+		var currentNode = rootNode;
+		var a;
+		var branch;
+		var charArray = newickString.split("");
+		var j = 0;
+		var _g1 = 0;
+		var _g = charArray.length;
+		while(_g1 < _g) {
+			var j1 = _g1++;
+			var i = j1;
+			if(charArray[i] == "(" && charArray[i + 1] == "(") {
+				var childNode = new phylo.PhyloTreeNode(currentNode,"",false,0);
+				currentNode = childNode;
+			} else if(charArray[i] == "(" && charArray[i + 1] != "(" && charArray[i - 1] != "/" || charArray[i] == "," && charArray[i + 1] != "(") {
+				i++;
+				var name = "";
+				while(charArray[i] != ":" && charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] == "/")) {
+					var p = charArray[i];
+					if(charArray[i] == "/" && (charArray[i + 1] == "[" || charArray[i + 1] == "(")) i++;
+					if(charArray[i] == "[") name += "("; else if(charArray[i] == "]") name += ")"; else name += charArray[i];
+					i++;
+				}
+				if(charArray[i] == ":") {
+					i++;
+					branch = "";
+					while(charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] == "/") && charArray[i] != ";") {
+						branch += charArray[i];
+						i++;
+					}
+					i--;
+					branch = Std.parseFloat(branch);
+				} else branch = 1;
+				var child = new phylo.PhyloTreeNode(currentNode,name,true,branch);
+			} else if(charArray[i] == "," && charArray[i + 1] == "(") {
+				var child1 = new phylo.PhyloTreeNode(currentNode,"",false,0);
+				currentNode = child1;
+			} else if(charArray[i] == ")" && charArray[i - 1] != "/") {
+				if(charArray[i + 1] == ":") {
+					i += 2;
+					branch = "";
+					while(charArray[i] != "," && (charArray[i] != ")" || charArray[i] == ")" && charArray[i - 1] != "/") && charArray[i] != ";") {
+						branch += charArray[i];
+						i++;
+					}
+					i--;
+					currentNode.branch = Std.parseFloat(branch);
+				}
+				currentNode = currentNode.parent;
+			}
+		}
+		if(currentNode == null) return rootNode; else return currentNode;
+	}
+	,__class__: phylo.PhyloNewickParser
+};
+phylo.PhyloRadialTreeLayout = $hxClasses["phylo.PhyloRadialTreeLayout"] = function(width,height) {
+	this.cx = width / 2;
+	this.cy = height / 2;
+};
+phylo.PhyloRadialTreeLayout.__name__ = ["phylo","PhyloRadialTreeLayout"];
+phylo.PhyloRadialTreeLayout.prototype = {
+	cx: null
+	,cy: null
+	,annotations: null
+	,renderCircle: function(treeNode,renderer,annotations,annotList,lineColour) {
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		if(treeNode.colour != null) lineColour = treeNode.colour;
+		this._renderCircle(treeNode,renderer,annotations,annotList,lineColour,lineColour);
+	}
+	,_renderCircle: function(treeNode,renderer,annotations,annotList,lineColour,parentColour) {
+		if(parentColour == null) parentColour = "rgb(28,102,224)";
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		var blue = "rgb(41,128,214)";
+		var red = "rgb(255,0,0)";
+		var black = "rgb(68,68,68)";
+		if(treeNode.parent == null) {
+		}
+		treeNode.space = 0;
+		var cx = renderer.cx;
+		var cy = renderer.cy;
+		var textSize = null;
+		var branch = cx * 2 / treeNode.root.getHeight() / (4 - treeNode.root.getHeight() * 0.011);
+		var k = 2 * Math.PI / treeNode.root.getLeafCount();
+		var fontW = 12;
+		var fontH = 12;
+		var firstChild = treeNode.children[0];
+		var lastChild = treeNode.children[treeNode.children.length - 1];
+		var i = treeNode.angle;
+		var _g = 0;
+		var _g1 = treeNode.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			var childLineColour = lineColour;
+			if(child.colour != null) childLineColour = child.colour;
+			i = this._renderCircle(child,renderer,annotations,annotList,childLineColour,lineColour);
+		}
+		var h = null;
+		var ph = null;
+		var angle = null;
+		var y1;
+		var y2 = null;
+		var x1;
+		var x2 = null;
+		if(treeNode.parent != null) {
+			h = branch * (treeNode.root.getHeight() - treeNode.getHeight());
+			ph = branch * (treeNode.root.getHeight() - treeNode.parent.getHeight());
+			if(treeNode.wedgeColour != null) {
+				var startNode = null;
+				var endNode = null;
+				if(!treeNode.isLeaf()) {
+					startNode = treeNode.findLastLeaf();
+					endNode = treeNode.findFirstLeaf();
+				} else {
+					startNode = treeNode.parent.findLastLeaf();
+					endNode = treeNode.parent.findFirstLeaf();
+				}
+				var wedgeH = treeNode.root.getHeight() * (cx * 2 / treeNode.root.getHeight() / (4 - treeNode.root.getHeight() * 0.011));
+				renderer.drawWedge(0,0,wedgeH,endNode.angle,startNode.angle,treeNode.wedgeColour,1);
+			}
+			if(treeNode.isLeaf()) angle = i; else {
+				angle = (lastChild.angle - firstChild.angle) / 2 + firstChild.angle;
+				if(Math.abs(phylo.PhyloHubMath.radiansToDegrees(lastChild.angle - firstChild.angle)) < 10) renderer.drawLine(firstChild.x,firstChild.y,lastChild.x,lastChild.y,lineColour,firstChild.lineWidth); else renderer.drawArc(0,0,h,firstChild.angle,lastChild.angle,lineColour,treeNode.lineWidth);
+			}
+			treeNode.angle = angle;
+			if(angle == 0) {
+				y1 = 0;
+				y2 = 0;
+			} else {
+				y1 = h * Math.sin(angle);
+				y2 = ph * Math.sin(angle);
+			}
+			x1 = h * Math.cos(angle);
+			x2 = ph * Math.cos(angle);
+			treeNode.x = x2;
+			treeNode.y = y2;
+			renderer.drawLine(x1,y1,x2,y2,lineColour,treeNode.lineWidth);
+			if(treeNode.isLeaf()) {
+				var dy = y1 - y2;
+				var dx = x1 - x2;
+				var x = 0;
+				var y = 0;
+				var gap = 2;
+				var ta;
+				if(dx < 0) {
+					ta = Math.atan2(dy,dx) - Math.PI;
+					x = -renderer.mesureText(treeNode.name) - gap;
+				} else {
+					ta = Math.atan2(dy,dx);
+					x = gap;
+				}
+				y = 3;
+				var labelColour = black;
+				if((function($this) {
+					var $r;
+					var this1 = renderer.getConfig().highlightedGenes;
+					$r = this1.exists(treeNode.name);
+					return $r;
+				}(this)) == true) labelColour = "red";
+				renderer.drawTextNoTranslate(treeNode.name,x2 + dx,y2 + dy,x,y,ta,"top",labelColour);
+				i += k;
+				var t = treeNode.root.getMaximumLeafNameLength(renderer) + 10;
+				treeNode.rad = ta;
+				treeNode.x = x1;
+				treeNode.y = y1;
+				renderer.ctx.save();
+				if(treeNode.y > y2 && treeNode.x > x2) treeNode.quad = 1;
+				if(treeNode.y < y2 && treeNode.x > x2) treeNode.quad = 2;
+				if(treeNode.y < y2 && treeNode.x < x2) treeNode.quad = 3;
+				if(treeNode.y > y2 && treeNode.x < x2) treeNode.quad = 4;
+				if(treeNode.y == y2 && treeNode.x > x2) treeNode.quad = 5;
+				if(treeNode.y == y2 && treeNode.x < x2) treeNode.quad = 6;
+				if(treeNode.y > y2 && treeNode.x == x2) treeNode.quad = 7;
+				if(treeNode.y < y2 && treeNode.x == x2) treeNode.quad = 8;
+				var j;
+				var _g11 = 1;
+				var _g2 = annotations.length;
+				while(_g11 < _g2) {
+					var j1 = _g11++;
+					if(annotations[j1] == true) {
+						var added;
+						added = this.addAnnotation(treeNode,j1,t,renderer,annotList);
+						if(treeNode.annotations[j1] != null && treeNode.annotations[j1].alfaAnnot[0] != null && treeNode.annotations[j1].alfaAnnot.length > 0) {
+							var u = 0;
+							if(added == true) treeNode.space = treeNode.space - 1;
+							treeNode.space = treeNode.space + 1;
+							var _g3 = 0;
+							var _g21 = treeNode.annotations[j1].alfaAnnot.length;
+							while(_g3 < _g21) {
+								var u1 = _g3++;
+								if(annotList[j1].shape == "text" && treeNode.quad == 2) treeNode.space = treeNode.space + 2; else if(annotList[j1].shape == "text" && treeNode.quad == 1) treeNode.space = treeNode.space + 2; else treeNode.space = treeNode.space + 1;
+								added = this.addAlfaAnnotation(treeNode,treeNode.annotations[j1].alfaAnnot[u1],j1,t,renderer,annotList);
+							}
+							if(added == true) treeNode.space = treeNode.space + 1;
+						} else if(added == true) treeNode.space = treeNode.space + 1;
+					}
+				}
+				renderer.ctx.restore();
+				treeNode.x = x2;
+				treeNode.y = y2;
+			}
+		}
+		var _g4 = 0;
+		var _g12 = treeNode.children;
+		while(_g4 < _g12.length) {
+			var child1 = _g12[_g4];
+			++_g4;
+			var data;
+			data = new phylo.PhyloScreenData();
+			data.renderer = renderer;
+			data.isAnnot = false;
+			data.nodeId = child1.nodeId;
+			data.point = 5;
+			data.width = 10;
+			data.height = 10;
+			data.parentx = Math.round(treeNode.x);
+			data.parenty = Math.round(treeNode.y);
+			data.x = Math.round(child1.x);
+			data.y = Math.round(child1.y);
+			treeNode.root.screen[treeNode.root.screen.length] = data;
+		}
+		if(treeNode.parent == null) {
+			var rootScreen = new phylo.PhyloScreenData();
+			rootScreen.x = treeNode.x;
+			rootScreen.y = treeNode.y;
+			rootScreen.nodeId = treeNode.nodeId;
+			rootScreen.renderer = renderer;
+			rootScreen.point = 5;
+			rootScreen.width = 10;
+			rootScreen.height = 10;
+			treeNode.screen.push(rootScreen);
+		}
+		return i;
+	}
+	,render: function(treeNode,renderer,annotations,annotList,lineColour) {
+		if(lineColour == null) lineColour = "rgb(28,102,224)";
+		var i = 0;
+		var x = treeNode.x;
+		var y = treeNode.y;
+		if(renderer.getConfig().editmode == true) lineColour = "rgb(234,147,28)";
+		while(i < treeNode.children.length) {
+			treeNode.children[i].space = 0;
+			if(treeNode.children[i].isLeaf()) {
+				if(treeNode.children[i].lineMode == phylo.LineMode.BEZIER) {
+					var deltaX1 = Math.abs(x - treeNode.children[i].x);
+					var deltaY1 = Math.abs(y - treeNode.children[i].y);
+					var firstY;
+					var secondY;
+					var firstX;
+					var secondX;
+					if(treeNode.children[i].xRandom == null) treeNode.children[i].xRandom = Math.random() * 0.3 + 0.3;
+					if(treeNode.children[i].yRandom == null) treeNode.children[i].yRandom = Math.random() * 0.4 + 0.4;
+					if(treeNode.children[i].y < y) {
+						firstY = y - deltaY1 * treeNode.children[i].yRandom;
+						secondY = treeNode.children[i].y + deltaY1 * treeNode.children[i].yRandom;
+					} else {
+						firstY = y + deltaY1 * treeNode.children[i].yRandom;
+						secondY = treeNode.children[i].y - deltaY1 * treeNode.children[i].yRandom;
+					}
+					if(treeNode.children[i].x > x) {
+						firstX = x + deltaX1 * 0.6;
+						secondX = treeNode.children[i].x - deltaX1 * treeNode.children[i].xRandom;
+					} else {
+						firstX = x - deltaX1 * 0.6;
+						secondX = treeNode.children[i].x + deltaX1 * treeNode.children[i].xRandom;
+					}
+					renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX,firstY,secondX,secondY,lineColour,treeNode.children[i].lineWidth);
+				} else renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour,treeNode.children[i].lineWidth);
+				var t;
+				var aux;
+				var aux1;
+				var yequalsign = false;
+				if(treeNode.children[i].y > 0 && y > 0) yequalsign = true; else if(treeNode.children[i].y < 0 && y < 0) yequalsign = true;
+				var xequalsign = false;
+				if(treeNode.children[i].x > 0 && x > 0) xequalsign = true; else if(treeNode.children[i].x < 0 && x < 0) xequalsign = true;
+				var deltaY;
+				var deltaX;
+				if(xequalsign == true) deltaX = Math.abs(treeNode.children[i].x - x); else deltaX = Math.abs(treeNode.children[i].x) + Math.abs(x);
+				if(yequalsign == true) deltaY = Math.abs(treeNode.children[i].y - y); else deltaY = Math.abs(treeNode.children[i].y) + Math.abs(y);
+				var tang = deltaY / deltaX;
+				treeNode.children[i].rad = Math.atan(tang);
+				var rot;
+				rot = 0;
+				var orign = "start";
+				if(treeNode.children[i].y > y && treeNode.children[i].x > x) {
+					rot = treeNode.children[i].rad;
+					orign = "start";
+					treeNode.children[i].quad = 1;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x > x) {
+					rot = 2 * Math.PI - treeNode.children[i].rad;
+					orign = "start";
+					treeNode.children[i].quad = 2;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x < x) {
+					rot = treeNode.children[i].rad;
+					orign = "end";
+					treeNode.children[i].quad = 3;
+				}
+				if(treeNode.children[i].y > y && treeNode.children[i].x < x) {
+					rot = 2 * Math.PI - treeNode.children[i].rad;
+					orign = "end";
+					treeNode.children[i].quad = 4;
+				}
+				if(treeNode.children[i].y == y && treeNode.children[i].x > x) {
+					treeNode.children[i].quad = 5;
+					rot = 0;
+				}
+				if(treeNode.children[i].y == y && treeNode.children[i].x < x) {
+					treeNode.children[i].quad = 6;
+					rot = Math.PI;
+				}
+				if(treeNode.children[i].y > y && treeNode.children[i].x == x) {
+					rot = 3 * Math.PI - Math.PI / 2;
+					treeNode.children[i].quad = 7;
+				}
+				if(treeNode.children[i].y < y && treeNode.children[i].x == x) {
+					treeNode.children[i].quad = 8;
+					rot = 3 * Math.PI / 4;
+				}
+				var namecolor = "#585b5f";
+				var ttar = treeNode.children[i].name;
+				if((function($this) {
+					var $r;
+					var this1 = renderer.getConfig().highlightedGenes;
+					$r = this1.exists(ttar);
+					return $r;
+				}(this)) == true) namecolor = "#ff0000";
+				renderer.drawText(" " + treeNode.children[i].name,treeNode.children[i].x,treeNode.children[i].y,-2,3,rot,orign,namecolor);
+				this.updateTreeRectangle(treeNode.children[i].x,treeNode.children[i].y,treeNode.root);
+				t = renderer.mesureText(treeNode.children[i].name) + 10;
+				treeNode.children[i].rad = rot;
+				var j;
+				var _g1 = 1;
+				var _g = annotations.length;
+				while(_g1 < _g) {
+					var j1 = _g1++;
+					if(annotations[j1] == true) {
+						var added;
+						added = this.addAnnotation(treeNode.children[i],j1,t,renderer,annotList);
+						if(treeNode.children[i].annotations[j1] != null && treeNode.children[i].annotations[j1].alfaAnnot[0] != null && treeNode.children[i].annotations[j1].alfaAnnot.length > 0) {
+							var u = 0;
+							if(added == true) treeNode.children[i].space = treeNode.children[i].space - 1;
+							treeNode.children[i].space = treeNode.children[i].space + 1;
+							var _g3 = 0;
+							var _g2 = treeNode.children[i].annotations[j1].alfaAnnot.length;
+							while(_g3 < _g2) {
+								var u1 = _g3++;
+								if(annotList[j1].shape == "text" && treeNode.children[i].quad == 2) treeNode.children[i].space = treeNode.children[i].space + 2; else if(annotList[j1].shape == "text" && treeNode.children[i].quad == 1) treeNode.children[i].space = treeNode.children[i].space + 2; else treeNode.children[i].space = treeNode.children[i].space + 1;
+								added = this.addAlfaAnnotation(treeNode.children[i],treeNode.children[i].annotations[j1].alfaAnnot[u1],j1,t,renderer,annotList);
+							}
+							if(added == true) treeNode.children[i].space = treeNode.children[i].space + 1;
+						} else if(added == true) treeNode.children[i].space = treeNode.children[i].space + 1;
+					}
+				}
+			} else {
+				var childLineColour = lineColour;
+				if(treeNode.children[i].colour != null) childLineColour = treeNode.children[i].colour;
+				this.render(treeNode.children[i],renderer,annotations,annotList,childLineColour);
+				if(treeNode.children[i].lineMode == phylo.LineMode.BEZIER) {
+					var deltaX2 = Math.abs(x - treeNode.children[i].x);
+					var deltaY2 = Math.abs(y - treeNode.children[i].y);
+					var firstY1;
+					var secondY1;
+					var firstX1;
+					var secondX1;
+					if(treeNode.children[i].xRandom == null) treeNode.children[i].xRandom = Math.random() * 0.3 + 0.3;
+					if(treeNode.children[i].yRandom == null) treeNode.children[i].yRandom = Math.random() * 0.4 + 0.4;
+					if(treeNode.children[i].y < y) {
+						firstY1 = y - deltaY2 * treeNode.children[i].yRandom;
+						secondY1 = treeNode.children[i].y + deltaY2 * treeNode.children[i].yRandom;
+					} else {
+						firstY1 = y + deltaY2 * treeNode.children[i].yRandom;
+						secondY1 = treeNode.children[i].y - deltaY2 * treeNode.children[i].yRandom;
+					}
+					if(treeNode.children[i].x > x) {
+						firstX1 = x + deltaX2 * 0.6;
+						secondX1 = treeNode.children[i].x - deltaX2 * treeNode.children[i].xRandom;
+					} else {
+						firstX1 = x - deltaX2 * 0.6;
+						secondX1 = treeNode.children[i].x + deltaX2 * treeNode.children[i].xRandom;
+					}
+					renderer.bezierCurve(x,y,treeNode.children[i].x,treeNode.children[i].y,firstX1,firstY1,secondX1,secondY1,lineColour,treeNode.children[i].lineWidth);
+				} else renderer.drawLine(x,y,treeNode.children[i].x,treeNode.children[i].y,lineColour,treeNode.children[i].lineWidth);
+				var data;
+				data = new phylo.PhyloScreenData();
+				data.renderer = renderer;
+				data.isAnnot = false;
+				data.nodeId = treeNode.children[i].nodeId;
+				data.point = 5;
+				data.width = 10;
+				data.height = 10;
+				data.parentx = Math.round(x);
+				data.parenty = Math.round(y);
+				data.x = Math.round(treeNode.children[i].x);
+				data.y = Math.round(treeNode.children[i].y);
+				treeNode.root.screen[treeNode.root.screen.length] = data;
+			}
+			i++;
+		}
+		if(treeNode.parent == null) {
+			var rootScreen = new phylo.PhyloScreenData();
+			rootScreen.x = treeNode.x;
+			rootScreen.y = treeNode.y;
+			rootScreen.nodeId = treeNode.nodeId;
+			rootScreen.renderer = renderer;
+			rootScreen.point = 5;
+			rootScreen.width = 10;
+			rootScreen.height = 10;
+			treeNode.screen.push(rootScreen);
+		}
+	}
+	,addAnnotation: function(leave,annotation,$long,renderer,annotList) {
+		if(annotList[annotation].optionSelected.length != 0) {
+			if(leave.annotations[annotation] != null) {
+				if(annotList[annotation].optionSelected[0] != leave.annotations[annotation].option) return false;
+			}
+		}
+		var res = false;
+		var data;
+		data = new phylo.PhyloScreenData();
+		data.renderer = renderer;
+		data.target = leave.name;
+		data.isAnnot = true;
+		var name;
+		name = "";
+		if(leave.name.indexOf("(") != -1 || leave.name.indexOf("-") != -1) {
+			var auxArray = leave.name.split("");
+			var j;
+			var _g1 = 0;
+			var _g = auxArray.length;
+			while(_g1 < _g) {
+				var j1 = _g1++;
+				if(auxArray[j1] == "(" || auxArray[j1] == "-") break;
+				name += auxArray[j1];
+			}
+			data.targetClean = name;
+		} else data.targetClean = leave.name;
+		data.annot = annotation;
+		data.annotation = leave.annotations[annotation];
+		var nx;
+		var ny;
+		nx = 0.0;
+		ny = 0.0;
+		if(leave.space == 0) $long = $long + 1;
+		var rootN = leave.root;
+		var _g2 = annotList[annotation].shape;
+		switch(_g2) {
+		case "cercle":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g11 = leave.quad;
+					switch(_g11) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						ny = leave.y;
+						$long = $long + 20 * leave.space;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawCircle(nx,ny,leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 14;
+					data.point = 3;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "image":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					if(annotList[annotation].annotImg[leave.annotations[annotation].defaultImg] != null) {
+						var _g12 = leave.quad;
+						switch(_g12) {
+						case 1:
+							$long = $long + 20 * leave.space;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 2:
+							$long = $long + 20 * leave.space;
+							nx = leave.x - 5 + Math.cos(leave.rad) * $long;
+							ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+							break;
+						case 3:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 4:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 5:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							break;
+						case 6:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x - Math.cos(leave.rad) * $long;
+							break;
+						case 7:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 8:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							break;
+						}
+						if(leave.space == 0) $long = $long + 1;
+						var imge = annotList[annotation].annotImg[leave.annotations[annotation].defaultImg];
+						if(imge != null) {
+							if(annotation == 1) renderer.drawImg(nx,ny,imge,1); else renderer.drawImg(nx,ny,imge,0);
+							data.x = Math.round(nx);
+							data.y = Math.round(ny);
+							data.width = 14;
+							data.height = 14;
+							data.point = 1;
+						}
+					}
+					res = true;
+				} else return false;
+			}
+			break;
+		case "square":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g13 = leave.quad;
+					switch(_g13) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawSquare(nx,ny,leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 10;
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "html":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g14 = leave.quad;
+					switch(_g14) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawGraphic(nx,ny,leave.results);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 14;
+					data.height = 10;
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "text":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(leave.annotations[annotation].hasAnnot == true) {
+					var _g15 = leave.quad;
+					switch(_g15) {
+					case 1:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 4:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 7:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 8:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 5);
+						break;
+					}
+					renderer.drawText(leave.annotations[annotation].text,nx,ny,-2,3,0,"start",leave.annotations[annotation].color[0].color);
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 7 * leave.annotations[annotation].text.length;
+					data.height = 7;
+					data.point = 2;
+					res = true;
+				} else return false;
+			}
+			break;
+		}
+		leave.root.screen[leave.root.screen.length] = data;
+		return res;
+	}
+	,addAlfaAnnotation: function(leave,alfaAnnot,annotation,$long,renderer,annotList) {
+		var res = false;
+		var data;
+		var nx;
+		var ny;
+		nx = 0.0;
+		ny = 0.0;
+		data = new phylo.PhyloScreenData();
+		data.renderer = renderer;
+		data.target = leave.name;
+		data.isAnnot = true;
+		var name;
+		name = "";
+		if(leave.name.indexOf("(") != -1 || leave.name.indexOf("-") != -1) {
+			var auxArray = leave.name.split("");
+			var j;
+			var _g1 = 0;
+			var _g = auxArray.length;
+			while(_g1 < _g) {
+				var j1 = _g1++;
+				if(auxArray[j1] == "(" || auxArray[j1] == "-") break;
+				name += auxArray[j1];
+			}
+			data.targetClean = name;
+		} else data.targetClean = leave.name;
+		data.annot = annotation;
+		data.annotation = alfaAnnot;
+		data.suboption = alfaAnnot.option;
+		var _g2 = annotList[annotation].shape;
+		switch(_g2) {
+		case "cercle":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					var _g11 = leave.quad;
+					switch(_g11) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 3);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 3);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 3);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 3);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						ny = leave.y;
+						$long = $long + 20 * leave.space;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					case 9:
+						$long = $long = $long + 20 * leave.space;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					if(leave.quad == 9) renderer.drawCircle(leave.x + $long,leave.y,alfaAnnot.color[0].color); else renderer.drawCircle(nx,ny,alfaAnnot.color[0].color);
+					var aux = nx * renderer.scale;
+					data.x = Math.round(aux) - 29;
+					aux = ny * renderer.scale;
+					data.y = Math.round(aux) - 3;
+					aux = 10 * renderer.scale;
+					data.width = Math.round(aux);
+					data.height = Math.round(aux);
+					data.point = 4;
+					res = true;
+				} else return false;
+			}
+			break;
+		case "image":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					if(annotList[annotation].annotImg[alfaAnnot.defaultImg] != null) {
+						var _g12 = leave.quad;
+						switch(_g12) {
+						case 1:
+							$long = $long + 20 * leave.space;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 2:
+							$long = $long + 20 * leave.space;
+							nx = leave.x - 5 + Math.cos(leave.rad) * $long;
+							ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+							break;
+						case 3:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 4:
+							$long = $long + 23 * leave.space;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+							break;
+						case 5:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x + Math.cos(leave.rad) * $long;
+							break;
+						case 6:
+							$long = $long + 20 * leave.space;
+							ny = leave.y;
+							nx = leave.x - Math.cos(leave.rad) * $long;
+							break;
+						case 7:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y + Math.sin(leave.rad) * $long;
+							break;
+						case 8:
+							$long = $long + 20 * leave.space;
+							nx = leave.x;
+							ny = leave.y - Math.sin(leave.rad) * $long;
+							break;
+						}
+						var imge = annotList[annotation].annotImg[alfaAnnot.defaultImg];
+						if(imge != null) {
+							if(annotation == 1) renderer.drawImg(nx,ny,imge,1); else renderer.drawImg(nx,ny,imge,0);
+							var aux1 = nx * renderer.scale;
+							data.x = Math.round(aux1);
+							aux1 = ny * renderer.scale;
+							data.y = Math.round(aux1);
+							aux1 = 14 * renderer.scale;
+							data.width = Math.round(aux1);
+							aux1 = 14 * renderer.scale;
+							data.height = Math.round(aux1);
+							data.point = 1;
+						}
+					}
+					res = true;
+				} else return false;
+			}
+			break;
+		case "square":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					var _g13 = leave.quad;
+					switch(_g13) {
+					case 1:
+						$long = $long + 23 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						ny = leave.y - 12 + Math.sin(leave.rad) * $long;
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - 12 - Math.sin(leave.rad) * $long;
+						nx = leave.x - 10 - Math.cos(leave.rad) * $long;
+						break;
+					case 4:
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * $long;
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * $long;
+						break;
+					case 7:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y + Math.sin(leave.rad) * $long;
+						break;
+					case 8:
+						nx = leave.x;
+						$long = $long + 20 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * $long;
+						break;
+					}
+					if(leave.space == 0) $long = $long + 1;
+					renderer.drawSquare(nx,ny,alfaAnnot.color[0].color);
+					data.point = 1;
+					var aux2 = nx * renderer.scale;
+					data.x = Math.round(aux2);
+					aux2 = ny * renderer.scale;
+					data.y = Math.round(aux2);
+					aux2 = 20 * renderer.scale;
+					data.width = Math.round(aux2);
+					aux2 = 20 * renderer.scale;
+					data.height = Math.round(aux2);
+					res = true;
+				} else return false;
+			}
+			break;
+		case "text":
+			if(leave.activeAnnotation[annotation] == true) {
+				if(alfaAnnot.hasAnnot == true) {
+					if(alfaAnnot.text == "H4K5/12") {
+						var i = 0;
+						var u = 0;
+						var ii = 0;
+					}
+					var _g14 = leave.quad;
+					switch(_g14) {
+					case 1:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 2:
+						$long = $long + 20 * leave.space;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 3:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 4:
+						$long = $long + 23 * leave.space;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 10);
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 5:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x + Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 6:
+						$long = $long + 20 * leave.space;
+						ny = leave.y;
+						nx = leave.x - Math.cos(leave.rad) * ($long + 10);
+						break;
+					case 7:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y + Math.sin(leave.rad) * ($long + 10);
+						break;
+					case 8:
+						$long = $long + 20 * leave.space;
+						nx = leave.x;
+						ny = leave.y - Math.sin(leave.rad) * ($long + 5);
+						break;
+					}
+					renderer.drawText(alfaAnnot.text,nx,ny,-2,3,0,"start",alfaAnnot.color[0].color);
+					var aux3 = nx * renderer.scale;
+					data.x = Math.round(nx);
+					data.y = Math.round(ny);
+					data.width = 7 * alfaAnnot.text.length;
+					data.y = Math.round(ny);
+					data.height = 7;
+					data.point = 2;
+					res = true;
+				} else return false;
+			}
+			break;
+		}
+		leave.root.screen[leave.root.screen.length] = data;
+		return res;
+	}
+	,updateTreeRectangle: function(x,y,treeNode) {
+		var top;
+		top = treeNode.rectangleTop | 0;
+		var right;
+		right = treeNode.rectangleRight | 0;
+		var bottom;
+		bottom = treeNode.rectangleBottom | 0;
+		var left;
+		left = treeNode.rectangleLeft | 0;
+		x = x | 0;
+		y = y | 0;
+		if(x < left) treeNode.rectangleLeft = x;
+		if(x > right) treeNode.rectangleRight = x;
+		if(y < bottom) treeNode.rectangleBottom = y;
+		if(y > top) treeNode.rectangleTop = y;
+	}
+	,__class__: phylo.PhyloRadialTreeLayout
+};
+phylo.PhyloScreenData = $hxClasses["phylo.PhyloScreenData"] = function() {
+	this.suboption = 0;
+	this.annotation = new phylo.PhyloAnnotation();
+	this.created = false;
+	this.divAccessed = false;
+};
+phylo.PhyloScreenData.__name__ = ["phylo","PhyloScreenData"];
+phylo.PhyloScreenData.prototype = {
+	point: null
+	,x: null
+	,y: null
+	,parentx: null
+	,parenty: null
+	,width: null
+	,height: null
+	,annotation: null
+	,created: null
+	,target: null
+	,targetClean: null
+	,annot: null
+	,divAccessed: null
+	,suboption: null
+	,renderer: null
+	,isAnnot: null
+	,nodeId: null
+	,checkMouse: function(mx,my) {
+		var scaleX = this.x * this.renderer.scale;
+		var scaleY = this.y * this.renderer.scale;
+		var scaleWidth = this.width * this.renderer.scale;
+		var scaleHeight = this.height * this.renderer.scale;
+		var _g = this.point;
+		switch(_g) {
+		case 1:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my < scaleY + scaleHeight && my >= scaleY) return true; else return false;
+			break;
+		case 2:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my > scaleY - scaleHeight && my <= scaleY) return true; else return false;
+			break;
+		case 3:
+			scaleWidth = this.width * this.renderer.scale / 2;
+			scaleHeight = this.height * this.renderer.scale / 2;
+			var inXBoundary = mx >= scaleX && mx < scaleX + scaleWidth || mx <= scaleX && mx > scaleX - scaleWidth;
+			var inYBoundary = my > scaleY - scaleHeight && my <= scaleY || my < scaleY + scaleHeight && my > scaleY;
+			if(inXBoundary && inYBoundary) return true; else return false;
+			break;
+		case 4:
+			if(mx >= scaleX && mx < scaleX + scaleWidth && my < scaleY + scaleHeight && my >= scaleY) return true; else return false;
+			break;
+		case 5:
+			if(mx + 5 >= scaleX && mx < scaleX + scaleWidth - 5 && my < scaleY + scaleHeight + 5 && my >= scaleY - 5) return true; else return false;
+			break;
+		default:
+			return false;
+		}
+	}
+	,__class__: phylo.PhyloScreenData
+};
+phylo.PhyloToolBar = $hxClasses["phylo.PhyloToolBar"] = function(canvas,parent) {
+	this.positionTop = false;
+	this.canvas = canvas;
+	this.build();
+};
+phylo.PhyloToolBar.__name__ = ["phylo","PhyloToolBar"];
+phylo.PhyloToolBar.prototype = {
+	canvas: null
+	,parent: null
+	,container: null
+	,positionTop: null
+	,titleElement: null
+	,toolbarContainer: null
+	,lineTypeButton: null
+	,build: function() {
+		if(this.parent == null) {
+			this.parent = this.canvas.getContainer();
+			this.positionTop = true;
+		}
+		this.createContainer();
+		this.parent.appendChild(this.container);
+	}
+	,createContainer: function() {
+		this.container = window.document.createElement("div");
+		if(this.positionTop) {
+			this.container.style.position = "absolute";
+			this.container.style.top = "15px";
+			this.container.style.left = "35px";
+		}
+		this.createTitleElement();
+		this.createToolBar();
+	}
+	,createTitleElement: function() {
+		this.titleElement = window.document.createElement("label");
+		this.titleElement.style.color = "#1c66e0";
+		this.titleElement.style.fontSize = "19px";
+		this.titleElement.style.margin = "10px 0px 0px 0px";
+		this.titleElement.style.left = "35px";
+		this.setTitle(this.canvas.getConfig().title);
+		this.container.appendChild(this.titleElement);
+	}
+	,createToolBar: function() {
+		this.toolbarContainer = window.document.createElement("div");
+		this.toolbarContainer.style.marginTop = "10px";
+		this.addCenterButton();
+		this.addZoomInButton();
+		this.addZoomOutButton();
+		this.addExportPNGButton();
+		this.addExportSVGButton();
+		this.addHighlightButton();
+		this.addSetLineWidthButton();
+		this.addTreeTypeButton();
+		this.addTreeLineTypeButton();
+		this.addShadowTypeButton();
+		this.addAutoFitButton();
+		this.container.appendChild(this.toolbarContainer);
+	}
+	,position: function(element) {
+		if(this.canvas.getConfig().verticalToolBar) {
+			element.style.display = "block";
+			element.style.marginLeft = "0px";
+			element.style.marginBottom = "20px";
+		} else element.style.display = "inline-block";
+	}
+	,addCenterButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/center-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.backgroundSize = "30px";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.center();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addZoomInButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/mag_plus-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.zoomIn();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addZoomOutButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/mag_minus-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.zoomOut();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addExportPNGButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/png-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.exportPNGToFile();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addExportSVGButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/svg-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.exportSVGToFile();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addHighlightButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.style.backgroundImage = "url(js/images/hightlight-single.png)";
+		button.style.backgroundRepeat = "no-repeat";
+		button.style.backgroundPosition = "center center";
+		button.style.backgroundSize = "30px";
+		button.style.height = "25px";
+		button.style.width = "25px";
+		button.style.backgroundColor = "initial";
+		button.style.border = "none";
+		button.style.cursor = "pointer";
+		button.style.marginRight = "20px";
+		button.addEventListener("click",function() {
+			_g.canvas.showHighlightDialog();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,setTitle: function(title) {
+		this.titleElement.innerText = title;
+	}
+	,addSetLineWidthButton: function() {
+		var _g = this;
+		var inputLabel = window.document.createElement("label");
+		inputLabel.setAttribute("for","tree_line_width");
+		inputLabel.innerText = "Pen width";
+		inputLabel.style.padding = "2px";
+		inputLabel.style.display = "inline-block";
+		var inputElement = window.document.createElement("input");
+		inputElement.setAttribute("type","text");
+		inputElement.style.width = "30px";
+		inputElement.setAttribute("value","1");
+		inputElement.style.padding = "2px";
+		inputElement.style.marginLeft = "5px";
+		this.position(inputElement);
+		inputElement.addEventListener("input",function(e) {
+			_g.canvas.setLineWidth(Std.parseFloat(inputElement.value));
+		});
+		this.toolbarContainer.appendChild(inputLabel);
+		this.toolbarContainer.appendChild(inputElement);
+	}
+	,addTreeTypeButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		this.position(button);
+		button.innerText = "Toggle Type";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginLeft = "25px";
+		button.style.marginRight = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.toggleType();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,addTreeLineTypeButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		button.innerText = "Toggle Line Type";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginRight = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.toggleLineMode();
+		});
+		this.toolbarContainer.appendChild(button);
+		this.lineTypeButton = button;
+	}
+	,setLineTypeButtonVisible: function(visible) {
+		if(visible) this.position(this.lineTypeButton); else this.lineTypeButton.style.display = "none";
+	}
+	,addShadowTypeButton: function() {
+		var _g = this;
+		var shadowInputColourLabel = window.document.createElement("label");
+		shadowInputColourLabel.innerText = "Shadow colour";
+		this.toolbarContainer.appendChild(shadowInputColourLabel);
+		var shadowInputColour = window.document.createElement("input");
+		var removeShadowButton = window.document.createElement("button");
+		shadowInputColour.style.marginLeft = "5px";
+		shadowInputColour.setAttribute("type","color");
+		shadowInputColour.setAttribute("name","shadow_colour_input");
+		shadowInputColour.style.width = "50px";
+		shadowInputColour.addEventListener("change",function() {
+			_g.canvas.setShadowColour(shadowInputColour.value);
+		});
+		removeShadowButton.innerText = "Toggle Shadow";
+		removeShadowButton.style.border = "1px solid #c1c1c1";
+		removeShadowButton.style.cursor = "pointer";
+		removeShadowButton.style.padding = "3px 6px";
+		removeShadowButton.style.marginLeft = "25px";
+		this.position(shadowInputColour);
+		this.position(removeShadowButton);
+		removeShadowButton.addEventListener("click",function() {
+			_g.canvas.toggleShadow();
+		});
+		this.toolbarContainer.appendChild(shadowInputColour);
+		this.toolbarContainer.appendChild(removeShadowButton);
+	}
+	,addAutoFitButton: function() {
+		var _g = this;
+		var button = window.document.createElement("button");
+		button.innerText = "Fit";
+		button.style.border = "1px solid #c1c1c1";
+		button.style.cursor = "pointer";
+		button.style.padding = "3px 6px";
+		button.style.marginLeft = "25px";
+		this.position(button);
+		button.addEventListener("click",function() {
+			_g.canvas.autoFit();
+		});
+		this.toolbarContainer.appendChild(button);
+	}
+	,__class__: phylo.PhyloToolBar
+};
+phylo.PhyloTreeNode = $hxClasses["phylo.PhyloTreeNode"] = function(parent,name,leaf,branch) {
+	this.wedgeColour = null;
+	this.maxNameLength = -1;
+	this.angle_new = 0;
+	this.lineMode = phylo.LineMode.STRAIGHT;
+	this.lineWidth = 1;
+	this.yRandom = null;
+	this.xRandom = null;
+	this.maxBranch = null;
+	this.minBranch = null;
+	this.numchild = 0;
+	this.leaves = 0;
+	this.ratio = 0.00006;
+	this.dist = 50;
+	this.space = 0;
+	this.parent = parent;
+	this.children = [];
+	this.name = name;
+	this.leaf = leaf;
+	this.branch = branch;
+	if(this.parent != null) {
+		this.parent.addChild(this);
+		this.root = this.parent.root;
+	} else {
+		this.targets = [];
+		this.root = this;
+		this.screen = [];
+		this.divactive = 99999;
+		this.leafNameToNode = new haxe.ds.StringMap();
+		this.nodeIdToNode = new haxe.ds.IntMap();
+	}
+	this.angle = 0;
+	this.x = 0;
+	this.y = 0;
+	this.wedge = 0;
+	this.length = 0;
+	this.targetFamilyGene = [];
+	this.l = 0;
+};
+phylo.PhyloTreeNode.__name__ = ["phylo","PhyloTreeNode"];
+phylo.PhyloTreeNode.prototype = {
+	parent: null
+	,nodeId: null
+	,name: null
+	,targetFamily: null
+	,targetFamilyGene: null
+	,leaf: null
+	,branch: null
+	,angle: null
+	,x: null
+	,y: null
+	,wedge: null
+	,length: null
+	,l: null
+	,root: null
+	,rad: null
+	,quad: null
+	,annotations: null
+	,activeAnnotation: null
+	,targets: null
+	,screen: null
+	,divactive: null
+	,space: null
+	,colour: null
+	,children: null
+	,dist: null
+	,ratio: null
+	,leaves: null
+	,numchild: null
+	,leafNameToNode: null
+	,nodeIdToNode: null
+	,rectangleTop: null
+	,rectangleRight: null
+	,rectangleBottom: null
+	,rectangleLeft: null
+	,results: null
+	,minBranch: null
+	,maxBranch: null
+	,xRandom: null
+	,yRandom: null
+	,lineWidth: null
+	,lineMode: null
+	,angle_new: null
+	,maxNameLength: null
+	,wedgeColour: null
+	,newickString: null
+	,fasta: null
+	,postOrderTraversal: function() {
+		if(this.isLeaf() == true) {
+			this.l = 1;
+			this.root.targets[this.root.leaves] = this.name;
+			this.root.leaves = this.root.leaves + 1;
+			this.annotations = [];
+			this.activeAnnotation = [];
+			this.root.leafNameToNode.set(this.name,this);
+		} else {
+			var i = 0;
+			while(i < this.children.length) {
+				this.children[i].postOrderTraversal();
+				this.l = this.l + this.children[i].l;
+				i++;
+			}
+		}
+	}
+	,preOrderTraversal2: function(mode) {
+		if(this.parent != null) {
+			var parent = this.parent;
+			this.x = parent.x + Math.cos(this.angle + this.wedge / 2) * this.root.dist;
+			this.y = parent.y + Math.sin(this.angle + this.wedge / 2) * this.root.dist;
+			if(mode == 1) {
+				this.nodeId = this.root.numchild;
+				this.root.nodeIdToNode.h[this.nodeId] = this;
+			}
+		} else if(mode == 1) this.nodeId = 0;
+		var n = this.angle;
+		var i = 0;
+		while(i < this.children.length) {
+			if(mode == 1) this.root.numchild = this.root.numchild + 1;
+			this.children[i].wedge = this.children[i].l / this.children[i].root.l * 2 * Math.PI + Math.PI / 50;
+			this.children[i].angle = n;
+			n = n + this.children[i].wedge;
+			this.children[i].preOrderTraversal2(mode);
+			i++;
+		}
+	}
+	,areAllChildrenLeaf: function() {
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(!child.isLeaf()) return false;
+		}
+		return true;
+	}
+	,preOrderTraversal: function(mode) {
+		if(this.parent != null) {
+			if(mode == 1) {
+				this.nodeId = this.root.numchild;
+				this.root.nodeIdToNode.h[this.nodeId] = this;
+			}
+			var a = this.getDepth() * this.root.ratio;
+			if(this.angle > this.parent.angle) this.angle += phylo.PhyloHubMath.degreesToRadians(a); else this.angle -= phylo.PhyloHubMath.degreesToRadians(a);
+			this.angle_new = this.angle + this.wedge / 2;
+			this.x = this.parent.x + Math.cos(this.angle_new) * this.root.dist;
+			this.y = this.parent.y + Math.sin(this.angle_new) * this.root.dist;
+		} else if(mode == 1) this.nodeId = 0;
+		var n = this.angle;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(mode == 1) this.root.numchild = this.root.numchild + 1;
+			child.wedge = 2 * Math.PI * child.getLeafCount() / child.root.getLeafCount();
+			child.angle = n;
+			child.angle_new = child.angle + child.wedge / 2;
+			n += child.wedge;
+			child.preOrderTraversal(mode);
+		}
+	}
+	,calculateScale: function() {
+		if(this.branch != null) {
+			if(this.root.maxBranch == null || this.branch > this.root.maxBranch) this.root.maxBranch = this.branch;
+			if(this.root.minBranch == null || this.branch < this.root.minBranch) this.root.minBranch = this.branch;
+		}
+		var _g1 = 0;
+		var _g = this.children.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.children[i].calculateScale();
+		}
+	}
+	,getChildren: function() {
+		return this.children;
+	}
+	,getChildN: function(i) {
+		return this.children[i];
+	}
+	,addChild: function(child) {
+		this.children[this.children.length] = child;
+	}
+	,isLeaf: function() {
+		return this.leaf;
+	}
+	,getLeafCount: function() {
+		if(this.isLeaf() == true) return 1; else {
+			var total = 0;
+			var i;
+			i = 0;
+			var _g1 = 0;
+			var _g = this.children.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				total += this.children[i1].getLeafCount();
+			}
+			return total;
+		}
+	}
+	,getDepth: function() {
+		if(this.parent == null) return 0; else return 1 + this.parent.getDepth();
+	}
+	,getHeight: function() {
+		if(this.isLeaf()) return 0; else {
+			var heightList = [];
+			var i;
+			i = 0;
+			var _g1 = 0;
+			var _g = this.children.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				heightList[i1] = this.children[i1].getHeight() + 1;
+			}
+			return phylo.PhyloHubMath.getMaxOfArray(heightList);
+		}
+	}
+	,getMaximumLeafNameLength: function(renderer) {
+		if(this.maxNameLength != -1) return this.maxNameLength;
+		var nodes = [];
+		nodes.push(this);
+		this.maxNameLength = 0;
+		var maxName = "";
+		var _g = 0;
+		while(_g < nodes.length) {
+			var node = nodes[_g];
+			++_g;
+			if(node.isLeaf()) {
+				var nodeNameLength = node.name.length;
+				if(nodeNameLength > this.maxNameLength) {
+					this.maxNameLength = nodeNameLength;
+					maxName = node.name;
+				}
+			} else {
+				var _g1 = 0;
+				var _g2 = node.children;
+				while(_g1 < _g2.length) {
+					var child = _g2[_g1];
+					++_g1;
+					nodes.push(child);
+				}
+			}
+		}
+		if(renderer != null) this.maxNameLength = renderer.mesureText(maxName);
+		return this.maxNameLength;
+	}
+	,findFirstLeaf: function() {
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(child.isLeaf()) return child; else return child.findFirstLeaf();
+		}
+		return null;
+	}
+	,findLastLeaf: function() {
+		var lastChild = null;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			if(child.isLeaf()) lastChild = child; else lastChild = child.findLastLeaf();
+		}
+		return lastChild;
+	}
+	,setLineWidth: function(width) {
+		this.lineWidth = width;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.setLineWidth(width);
+		}
+	}
+	,setLineMode: function(mode) {
+		this.lineMode = mode;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.setLineMode(mode);
+		}
+	}
+	,rotateNode: function(clockwise,drawingMode) {
+		var delta = -0.3;
+		if(clockwise) delta = 0.3;
+		this.x = (this.x - this.parent.x) * Math.cos(delta) - (this.y - this.parent.y) * Math.sin(delta) + this.parent.x;
+		this.y = (this.x - this.parent.x) * Math.sin(delta) + (this.y - this.parent.y) * Math.cos(delta) + this.parent.y;
+		this.angle = this.angle + delta;
+		var n = this.angle;
+		var _g = 0;
+		var _g1 = this.children;
+		while(_g < _g1.length) {
+			var child = _g1[_g];
+			++_g;
+			child.wedge = child.l / this.root.l * 2 * Math.PI + Math.PI / 20;
+			child.angle = n;
+			n = n + child.wedge;
+			if(drawingMode == phylo.PhyloDrawingMode.STRAIGHT) child.preOrderTraversal2(0); else if(drawingMode == phylo.PhyloDrawingMode.CIRCULAR) child.preOrderTraversal(0);
+		}
+	}
+	,clearAnnotations: function() {
+		this.annotations = [];
+		if(this.activeAnnotation != null) {
+			var _g1 = 0;
+			var _g = this.activeAnnotation.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.activeAnnotation[i] = false;
+			}
+		}
+		var _g2 = 0;
+		var _g11 = this.children;
+		while(_g2 < _g11.length) {
+			var child = _g11[_g2];
+			++_g2;
+			child.clearAnnotations();
+		}
+	}
+	,getNewickString: function() {
+		return this.newickString;
+	}
+	,setFasta: function(fasta) {
+		this.fasta = fasta;
+	}
+	,getFasta: function() {
+		return this.fasta;
+	}
+	,__class__: phylo.PhyloTreeNode
+};
+phylo.LineMode = $hxClasses["phylo.LineMode"] = { __ename__ : ["phylo","LineMode"], __constructs__ : ["STRAIGHT","BEZIER"] };
+phylo.LineMode.STRAIGHT = ["STRAIGHT",0];
+phylo.LineMode.STRAIGHT.toString = $estr;
+phylo.LineMode.STRAIGHT.__enum__ = phylo.LineMode;
+phylo.LineMode.BEZIER = ["BEZIER",1];
+phylo.LineMode.BEZIER.toString = $estr;
+phylo.LineMode.BEZIER.__enum__ = phylo.LineMode;
+phylo.PhyloUtil = $hxClasses["phylo.PhyloUtil"] = function() { };
+phylo.PhyloUtil.__name__ = ["phylo","PhyloUtil"];
+phylo.PhyloUtil.drawRadialFromNewick = function(newickStr,parent,config,annotationManager) {
+	var parser = new phylo.PhyloNewickParser();
+	var rootNode = parser.parse(newickStr);
+	return phylo.PhyloUtil.drawRadialFromTree(rootNode,parent,config,annotationManager);
+};
+phylo.PhyloUtil.drawRadialFromTree = function(rootNode,parent,config,annotationManager) {
+	rootNode.calculateScale();
+	rootNode.postOrderTraversal();
+	rootNode.preOrderTraversal(1);
+	var parentWidth = parent.clientWidth;
+	var parentHeight = parent.clientHeight;
+	if(config == null) config = new phylo.PhyloCanvasConfiguration();
+	var canvas = new phylo.PhyloCanvasRenderer(parentWidth,parentHeight,parent,rootNode,config,annotationManager);
+	return canvas;
+};
 var saturn = saturn || {};
 if(!saturn.client) saturn.client = {};
 saturn.client.WorkspaceApplication = $hxClasses["saturn.client.WorkspaceApplication"] = function() { };
@@ -1799,6 +5669,9 @@ saturn.client.BioinformaticsServicesClient.prototype = {
 			return cb;
 		} else return null;
 	}
+	,sendPhyloReportRequest: function(fasta,cb) {
+		this.helper.sendRequest("_phylo_",{ fasta : fasta},cb);
+	}
 	,sendBlastDatabaseListRequest: function(cb) {
 		this.helper.sendRequest("_blast_.database_list",{ },cb);
 	}
@@ -1864,6 +5737,7 @@ saturn.client.core.ClientCore = $hxClasses["saturn.client.core.ClientCore"] = fu
 	this.listeners = new haxe.ds.StringMap();
 	this.loginListeners = [];
 	this.logoutListeners = [];
+	debug.enable("saturn:plugin");
 	this.debugLogger = debug("saturn:plugin");
 };
 saturn.client.core.ClientCore.__name__ = ["saturn","client","core","ClientCore"];
@@ -1934,12 +5808,11 @@ saturn.client.core.ClientCore.prototype = {
 				return;
 			}
 			var cookies = Cookies;
-			cookies.set("user",{ 'fullname' : obj.full_name, 'token' : obj.token, 'username' : username.toUpperCase(), 'projects' : obj.projects},{ 'expires' : 14});
+			cookies.set("user",{ 'fullname' : obj.full_name, 'token' : obj.token, 'username' : username.toUpperCase()},{ 'expires' : 14});
 			var user = new saturn.core.User();
 			user.fullname = obj.full_name;
 			user.token = obj.token;
 			user.username = username.toUpperCase();
-			user.projects = obj.projects;
 			_g.refreshSession(cb);
 		};
 		req.onError = function(err) {
@@ -1957,30 +5830,20 @@ saturn.client.core.ClientCore.prototype = {
 			user.fullname = cookie.fullname;
 			user.token = cookie.token;
 			user.username = cookie.username;
-			user.projects = cookie.projects;
 			this.authenticateSocket(user,function(err,user1) {
-				if(err == null) {
-					_g.installProviders();
-					var _g1 = 0;
-					var _g2 = _g.loginListeners;
-					while(_g1 < _g2.length) {
-						var listener = _g2[_g1];
-						++_g1;
-						listener(user1);
-					}
-				}
+				if(err == null) _g.installProviders();
 				if(cb != null) cb(err);
 			});
 		} else {
 			saturn.core.Util.debug("Installing unauthenticated node socket");
 			this.installNodeSocket();
 			this.installProviders();
-			var _g3 = 0;
+			var _g1 = 0;
 			var _g11 = this.refreshListeners;
-			while(_g3 < _g11.length) {
-				var listener1 = _g11[_g3];
-				++_g3;
-				listener1();
+			while(_g1 < _g11.length) {
+				var listener = _g11[_g1];
+				++_g1;
+				listener();
 			}
 			if(cb != null) cb(null);
 		}
@@ -2167,6 +6030,16 @@ saturn.client.core.ClientCore.prototype = {
 			listener();
 		}
 		return msgId;
+	}
+	,printQueryTimes: function() {
+		var $it0 = this.msgIdToJobInfo.keys();
+		while( $it0.hasNext() ) {
+			var msgId = $it0.next();
+			if(Reflect.hasField(this.msgIdToJobInfo.get(msgId),"END_TIME")) {
+				saturn.core.Util.debug(">" + msgId + "\t\t" + Std.string(this.msgIdToJobInfo.get(msgId).msg) + "\t\t" + (this.msgIdToJobInfo.get(msgId).END_TIME - this.msgIdToJobInfo.get(msgId).START_TIME) / 1000);
+				saturn.core.Util.debug(this.msgIdToJobInfo.get(msgId).JSON);
+			}
+		}
 	}
 	,getCb: function(data) {
 		var msgId = data.msgId;
@@ -2414,7 +6287,6 @@ saturn.core.User.prototype = {
 	username: null
 	,fullname: null
 	,token: null
-	,projects: null
 	,__class__: saturn.core.User
 };
 saturn.core.Util = $hxClasses["saturn.core.Util"] = function() {
@@ -2451,7 +6323,7 @@ saturn.core.Util.saveFileAsDialog = function(contents,cb) {
 	saturn.core.Util.getNewFileDialog(function(err,dialog) {
 		dialog.setSelectExisting(false);
 		dialog.fileSelected.connect(function(fileName) {
-			js.Lib.alert(fileName);
+			js.Browser.alert(fileName);
 			saturn.core.Util.debug("Hello, saving " + fileName);
 			saturn.core.Util.saveFile(fileName,contents,function(err1) {
 				cb(err1,fileName);
@@ -2716,10 +6588,14 @@ saturn.db.Provider.__name__ = ["saturn","db","Provider"];
 saturn.db.Provider.prototype = {
 	getByIds: null
 	,getByPkeys: null
+	,getByNamedQuery: null
 	,getModel: null
+	,resetCache: null
 	,getByValues: null
 	,_closeConnection: null
 	,getConfig: null
+	,query: null
+	,addHook: null
 	,__class__: saturn.db.Provider
 };
 saturn.db.DefaultProvider = $hxClasses["saturn.db.DefaultProvider"] = function(binding_map,config,autoClose) {
@@ -2764,12 +6640,17 @@ saturn.db.DefaultProvider.prototype = {
 	,regexs: null
 	,platform: null
 	,setPlatform: function() {
+		null;
+		return;
 	}
 	,generateQualifiedName: function(schemaName,tableName) {
 		return null;
 	}
 	,getConfig: function() {
 		return this.config;
+	}
+	,setConfig: function(config) {
+		this.config = config;
 	}
 	,setName: function(name) {
 		this.name = name;
@@ -2805,6 +6686,9 @@ saturn.db.DefaultProvider.prototype = {
 		provider.winConversions = this.winConversions;
 		provider.conversions = this.conversions;
 		provider.regexs = this.regexs;
+		provider.namedQueryHookConfigs = this.namedQueryHookConfigs;
+		provider.config = this.config;
+		provider.objectCache = new haxe.ds.StringMap();
 		return provider;
 	}
 	,enableCache: function(cached) {
@@ -2865,6 +6749,7 @@ saturn.db.DefaultProvider.prototype = {
 			var d = this.theBindingMap.get(class_name);
 			var value = this.getName();
 			d.set("provider_name",value);
+			saturn.core.Util.debug(class_name + " on " + this.getName());
 		}
 		if(this.isModel(saturn.core.domain.FileProxy)) {
 			var this1 = this.getModel(saturn.core.domain.FileProxy).getOptions();
@@ -2897,35 +6782,37 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,resetCache: function() {
 		this.objectCache = new haxe.ds.StringMap();
-		var $it0 = this.theBindingMap.keys();
-		while( $it0.hasNext() ) {
-			var className = $it0.next();
-			var this1 = this.theBindingMap.get(className);
-			var value = new haxe.ds.StringMap();
-			this1.set("statements",value);
-			var value1 = new haxe.ds.StringMap();
-			this.objectCache.set(className,value1);
-			if((function($this) {
-				var $r;
-				var this2 = $this.theBindingMap.get(className);
-				$r = this2.exists("indexes");
-				return $r;
-			}(this))) {
-				var $it1 = (function($this) {
+		if(this.theBindingMap != null) {
+			var $it0 = this.theBindingMap.keys();
+			while( $it0.hasNext() ) {
+				var className = $it0.next();
+				var this1 = this.theBindingMap.get(className);
+				var value = new haxe.ds.StringMap();
+				this1.set("statements",value);
+				var value1 = new haxe.ds.StringMap();
+				this.objectCache.set(className,value1);
+				if((function($this) {
 					var $r;
-					var this3;
-					{
-						var this4 = $this.theBindingMap.get(className);
-						this3 = this4.get("indexes");
-					}
-					$r = this3.keys();
+					var this2 = $this.theBindingMap.get(className);
+					$r = this2.exists("indexes");
 					return $r;
-				}(this));
-				while( $it1.hasNext() ) {
-					var field = $it1.next();
-					var this5 = this.objectCache.get(className);
-					var value2 = new haxe.ds.StringMap();
-					this5.set(field,value2);
+				}(this))) {
+					var $it1 = (function($this) {
+						var $r;
+						var this3;
+						{
+							var this4 = $this.theBindingMap.get(className);
+							this3 = this4.get("indexes");
+						}
+						$r = this3.keys();
+						return $r;
+					}(this));
+					while( $it1.hasNext() ) {
+						var field = $it1.next();
+						var this5 = this.objectCache.get(className);
+						var value2 = new haxe.ds.StringMap();
+						this5.set(field,value2);
+					}
 				}
 			}
 		}
@@ -3059,7 +6946,8 @@ saturn.db.DefaultProvider.prototype = {
 	,getByExample: function(obj,cb) {
 		var q = this.getQuery();
 		q.addExample(obj);
-		this.query(q,cb);
+		q.run(cb);
+		return q;
 	}
 	,query: function(query,cb) {
 		var _g = this;
@@ -3085,7 +6973,9 @@ saturn.db.DefaultProvider.prototype = {
 		var _g = this;
 		var prefetched = null;
 		var idsToFetch = null;
+		saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 		if(this.useCache) {
+			saturn.core.Util.debug("Using cache " + Std.string(this.useCache));
 			var model = this.getModel(clazz);
 			if(model != null) {
 				prefetched = [];
@@ -3160,50 +7050,31 @@ saturn.db.DefaultProvider.prototype = {
 	}
 	,getByNamedQuery: function(queryId,parameters,clazz,cache,callBack) {
 		var _g = this;
-		saturn.core.Util.debug("In getByNamedQuery");
+		saturn.core.Util.debug("In getByNamedQuery " + (cache == null?"null":"" + cache));
 		try {
-			var isCached = false;
-			if(cache && this.namedQueryCache.exists(queryId)) {
-				var qResults = null;
+			if(cache) {
+				saturn.core.Util.debug("Looking for cached result");
 				var queries = this.namedQueryCache.get(queryId);
-				var _g1 = 0;
-				while(_g1 < queries.length) {
-					var query = queries[_g1];
-					++_g1;
-					saturn.core.Util.debug("Checking for existing results");
-					var serialParamString = haxe.Serializer.run(parameters);
-					if(query.queryParamSerial == serialParamString) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-				if(qResults != null) {
+				var serialParamString = haxe.Serializer.run(parameters);
+				var crc1 = haxe.crypto.Md5.encode(queryId + "/" + serialParamString);
+				if(this.namedQueryCache.exists(crc1)) {
+					var qResults = this.namedQueryCache.get(crc1).queryResults;
+					saturn.core.Util.debug("Use cached result");
 					callBack(qResults,null);
 					return;
 				}
-			} else {
-				var value = [];
-				this.namedQueryCache.set(queryId,value);
 			}
 			var privateCB = function(toBind,exception) {
-				if(toBind == null) {
-					if(isCached == false && _g.useCache && cache) {
+				if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
+					if(_g.useCache) {
+						saturn.core.Util.debug("Caching result");
 						var namedQuery = new saturn.db.NamedQueryCache();
 						namedQuery.queryName = queryId;
 						namedQuery.queryParams = parameters;
 						namedQuery.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery.queryResults = toBind;
-						_g.namedQueryCache.get(queryId).push(namedQuery);
-					}
-					callBack(toBind,exception);
-				} else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-					if(isCached == false && _g.useCache && cache) {
-						var namedQuery1 = new saturn.db.NamedQueryCache();
-						namedQuery1.queryName = queryId;
-						namedQuery1.queryParams = parameters;
-						namedQuery1.queryParamSerial = haxe.Serializer.run(parameters);
-						namedQuery1.queryResults = objs;
-						_g.namedQueryCache.get(queryId).push(namedQuery1);
+						namedQuery.queryResults = objs;
+						var crc = haxe.crypto.Md5.encode(queryId + "/" + namedQuery.queryParamSerial);
+						_g.namedQueryCache.set(crc,namedQuery);
 					}
 					callBack(objs,err);
 				},clazz,null,cache);
@@ -3220,15 +7091,19 @@ saturn.db.DefaultProvider.prototype = {
 					this._getByNamedQuery(queryId,parameters,clazz,privateCB);
 				}
 			} else if(this.namedQueryHooks.exists(queryId)) {
+				saturn.core.Util.debug("Hook is known");
 				var config1 = null;
 				if(this.namedQueryHookConfigs.exists(queryId)) config1 = this.namedQueryHookConfigs.get(queryId);
 				saturn.core.Util.debug("Calling hook");
 				this.namedQueryHooks.get(queryId)(queryId,parameters,clazz,privateCB,config1);
-			} else this._getByNamedQuery(queryId,parameters,clazz,privateCB);
+			} else {
+				saturn.core.Util.debug("Hook is not known");
+				this._getByNamedQuery(queryId,parameters,clazz,privateCB);
+			}
 		} catch( ex ) {
 			if (ex instanceof js._Boot.HaxeError) ex = ex.val;
-			callBack(null,"An unexpected exception has occurred");
 			saturn.core.Util.debug(ex);
+			callBack(null,"An unexpected exception has occurred");
 		}
 	}
 	,addHooks: function(hooks) {
@@ -3248,53 +7123,35 @@ saturn.db.DefaultProvider.prototype = {
 			this.namedQueryHookConfigs.set(name,value);
 		}
 	}
+	,addHook: function(hook,name) {
+		var value = hook;
+		this.namedQueryHooks.set(name,value);
+	}
 	,_getByNamedQuery: function(queryId,parameters,clazz,callBack) {
 	}
 	,getByIdStartsWith: function(id,field,clazz,limit,callBack) {
 		var _g = this;
+		saturn.core.Util.debug("Starts with using cache " + Std.string(this.useCache));
 		var queryId = "__STARTSWITH_" + Type.getClassName(clazz);
 		var parameters = [];
 		parameters.push(field);
 		parameters.push(id);
-		var isCached = false;
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g1 = 0;
-			while(_g1 < queries.length) {
-				var query = queries[_g1];
-				++_g1;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g11 = qParams.length;
-					while(_g2 < _g11) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						qResults = query.queryResults;
-						break;
-					}
-				}
-			}
-			if(qResults != null) {
-				callBack(qResults,null);
+		var crc = null;
+		if(this.useCache) {
+			var crc1 = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+			if(this.namedQueryCache.exists(crc1)) {
+				callBack(this.namedQueryCache.get(crc1).queryResults,null);
 				return;
 			}
-		} else {
-			var value = [];
-			this.namedQueryCache.set(queryId,value);
 		}
 		this._getByIdStartsWith(id,field,clazz,limit,function(toBind,exception) {
 			if(toBind == null) callBack(toBind,exception); else _g.initialiseObjects([],toBind,[],exception,function(objs,err) {
-				if(isCached == false && _g.useCache) {
+				if(_g.useCache) {
 					var namedQuery = new saturn.db.NamedQueryCache();
 					namedQuery.queryName = queryId;
 					namedQuery.queryParams = parameters;
 					namedQuery.queryResults = objs;
-					_g.namedQueryCache.get(queryId).push(namedQuery);
+					_g.namedQueryCache.set(crc,namedQuery);
 				}
 				callBack(objs,err);
 			},clazz,null,false,false);
@@ -3370,30 +7227,8 @@ saturn.db.DefaultProvider.prototype = {
 		}
 	}
 	,evictNamedQuery: function(queryId,parameters) {
-		if(this.namedQueryCache.exists(queryId)) {
-			var qResults = null;
-			var queries = this.namedQueryCache.get(queryId);
-			var _g = 0;
-			while(_g < queries.length) {
-				var query = queries[_g];
-				++_g;
-				var qParams = query.queryParams;
-				if(qParams.length != parameters.length) continue; else {
-					var matched = true;
-					var _g2 = 0;
-					var _g1 = qParams.length;
-					while(_g2 < _g1) {
-						var i = _g2++;
-						if(qParams[i] != parameters[i]) matched = false;
-					}
-					if(matched) {
-						HxOverrides.remove(queries,query);
-						break;
-					}
-				}
-			}
-			if(queries.length > 0) this.namedQueryCache.remove(queryId); else this.namedQueryCache.set(queryId,queries);
-		}
+		var crc = haxe.crypto.Md5.encode(queryId + "/" + haxe.Serializer.run(parameters));
+		if(this.namedQueryCache.exists(crc)) this.namedQueryCache.remove(crc);
 	}
 	,updateObjects: function(objs,callBack) {
 		this.synchronizeInternalLinks(objs);
@@ -3819,7 +7654,7 @@ saturn.db.DefaultProvider.prototype = {
 			var model = this.getModel(original);
 			if(model == null) continue;
 			var _g2 = 0;
-			var _g11 = model.getFields();
+			var _g11 = model.getAttributes();
 			while(_g2 < _g11.length) {
 				var field1 = _g11[_g2];
 				++_g2;
@@ -3861,6 +7696,7 @@ saturn.db.DefaultProvider.prototype = {
 		var $it0 = this.theBindingMap.keys();
 		while( $it0.hasNext() ) {
 			var classStr = $it0.next();
+			saturn.core.Util.debug(classStr);
 			var clazz = Type.resolveClass(classStr);
 			if(clazz != null) this.modelClasses.push(this.getModel(clazz));
 		}
@@ -3925,7 +7761,7 @@ saturn.db.DefaultProvider.prototype = {
 			var model = models[_g1];
 			++_g1;
 			var _g11 = 0;
-			var _g2 = modelDef.getFields();
+			var _g2 = modelDef.getAttributes();
 			while(_g11 < _g2.length) {
 				var field = _g2[_g11];
 				++_g11;
@@ -4023,7 +7859,7 @@ saturn.db.DefaultProvider.prototype = {
 					++_g4;
 					var mappedModel = Type.createEmptyInstance(clazz);
 					var _g12 = 0;
-					var _g21 = modelDef.getFields();
+					var _g21 = modelDef.getAttributes();
 					while(_g12 < _g21.length) {
 						var field1 = _g21[_g12];
 						++_g12;
@@ -4803,6 +8639,7 @@ saturn.db.query_lang.Token.prototype = {
 		this.tokens = tokens;
 	}
 	,addToken: function(token) {
+		if(!js.Boot.__instanceof(token,saturn.db.query_lang.Token)) token = new saturn.db.query_lang.Value(saturn.db.query_lang.Token);
 		if(this.tokens == null) this.tokens = [];
 		this.tokens.push(token);
 		return this;
@@ -4882,6 +8719,9 @@ saturn.db.query_lang.Field.prototype = $extend(saturn.db.query_lang.Token.protot
 			c = js.Boot.__cast(clazz , Class);
 			this.clazz = Type.getClassName(c);
 		} else this.clazz = clazz;
+	}
+	,getAttributeName: function() {
+		return this.attributeName;
 	}
 	,__class__: saturn.db.query_lang.Field
 });
@@ -4963,6 +8803,28 @@ saturn.db.query_lang.Query = $hxClasses["saturn.db.query_lang.Query"] = function
 	this.orderToken = new saturn.db.query_lang.OrderBy();
 };
 saturn.db.query_lang.Query.__name__ = ["saturn","db","query_lang","Query"];
+saturn.db.query_lang.Query.deserialise = function(querySer) {
+	var clone = haxe.Unserializer.run(querySer);
+	saturn.db.query_lang.Query.deserialiseToken(clone);
+	return clone;
+};
+saturn.db.query_lang.Query.deserialiseToken = function(token) {
+	if(token == null) return;
+	if(token.getTokens() != null) {
+		var _g = 0;
+		var _g1 = token.getTokens();
+		while(_g < _g1.length) {
+			var token1 = _g1[_g];
+			++_g;
+			saturn.db.query_lang.Query.deserialiseToken(token1);
+		}
+	}
+	if(js.Boot.__instanceof(token,saturn.db.query_lang.Query)) {
+		var qToken;
+		qToken = js.Boot.__cast(token , saturn.db.query_lang.Query);
+		qToken.provider = null;
+	}
+};
 saturn.db.query_lang.Query.__super__ = saturn.db.query_lang.Token;
 saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.prototype,{
 	selectToken: null
@@ -4975,6 +8837,11 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 	,pageOn: null
 	,pageSize: null
 	,lastPagedRowValue: null
+	,results: null
+	,error: null
+	,setLastPagedRowValue: function(t) {
+		this.lastPagedRowValue = t;
+	}
 	,isPaging: function() {
 		return this.pageOn != null && this.pageSize != null;
 	}
@@ -5048,12 +8915,36 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 	,getWhere: function() {
 		return this.whereToken;
 	}
+	,clone: function() {
+		var str = this.serialise();
+		return saturn.db.query_lang.Query.deserialise(str);
+	}
 	,serialise: function() {
 		var keepMe = this.provider;
 		this.provider = null;
 		var newMe = haxe.Serializer.run(this);
 		this.provider = keepMe;
 		return newMe;
+	}
+	,run: function(cb) {
+		var _g = this;
+		var clone = this.clone();
+		clone.provider = null;
+		clone.getTokens();
+		this.provider.query(clone,function(objs,err) {
+			if(err == null && objs.length > 0 && _g.isPaging()) {
+				var fieldName = null;
+				if(_g.pageOn.name != null) fieldName = _g.pageOn.name; else if(js.Boot.__instanceof(_g.pageOn,saturn.db.query_lang.Field)) {
+					var fToken;
+					fToken = js.Boot.__cast(_g.pageOn , saturn.db.query_lang.Field);
+					fieldName = fToken.getAttributeName();
+				}
+				if(fieldName == null) err = "Unable to determine value of last paged row"; else _g.setLastPagedRowValue(new saturn.db.query_lang.Value(Reflect.field(objs[objs.length - 1],fieldName)));
+			}
+			_g.results = objs;
+			_g.error = err;
+			if(cb != null) cb(objs,err);
+		});
 	}
 	,getSelectClassList: function() {
 		var set = new haxe.ds.StringMap();
@@ -5113,7 +9004,7 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 				}
 			}
 		} else this.getSelect().addToken(new saturn.db.query_lang.Field(clazz,"*"));
-		var fields = model.getFields();
+		var fields = model.getAttributes();
 		var hasPrevious = false;
 		this.getWhere().addToken(new saturn.db.query_lang.StartBlock());
 		var _g1 = 0;
@@ -5124,14 +9015,17 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 			var value = Reflect.field(obj,field1);
 			if(value != null) {
 				if(hasPrevious) this.getWhere().addToken(new saturn.db.query_lang.And());
-				this.getWhere().addToken(new saturn.db.query_lang.Field(clazz,field1));
-				this.getWhere().addToken(new saturn.db.query_lang.Equals());
+				var fieldToken = new saturn.db.query_lang.Field(clazz,field1);
+				this.getWhere().addToken(fieldToken);
 				if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNull)) {
 					saturn.core.Util.print("Found NULL");
 					this.getWhere().addToken(new saturn.db.query_lang.IsNull());
-				} else if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNotNull)) this.getWhere().addToken(new saturn.db.query_lang.IsNotNull()); else {
-					saturn.core.Util.print("Found value" + Type.getClassName(value == null?null:js.Boot.getClass(value)));
-					this.getWhere().addToken(new saturn.db.query_lang.Value(value));
+				} else if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNotNull)) this.getWhere().addToken(new saturn.db.query_lang.IsNotNull()); else if(js.Boot.__instanceof(value,saturn.db.query_lang.Operator)) this.getWhere().addToken(value); else {
+					this.getWhere().addToken(new saturn.db.query_lang.Equals());
+					if(js.Boot.__instanceof(value,saturn.db.query_lang.Token)) this.getWhere().addToken(value); else {
+						saturn.core.Util.print("Found value" + Type.getClassName(value == null?null:js.Boot.getClass(value)));
+						this.getWhere().addToken(new saturn.db.query_lang.Value(value));
+					}
 				}
 				hasPrevious = true;
 			}
@@ -5227,6 +9121,9 @@ haxe.io.FPHelper.i64tmp = (function($this) {
 }(this));
 js.Boot.__toStr = {}.toString;
 js.html.compat.Uint8Array.BYTES_PER_ELEMENT = 1;
+phylo.PhyloNewickParser.newLineReg = new EReg("\n","g");
+phylo.PhyloNewickParser.carLineReg = new EReg("\r","g");
+phylo.PhyloNewickParser.whiteSpaceReg = new EReg("\\s","g");
 saturn.client.core.CommonCore.pools = new haxe.ds.StringMap();
 saturn.client.core.CommonCore.resourceToPool = new haxe.ds.ObjectMap();
 saturn.client.core.CommonCore.providers = new haxe.ds.StringMap();
