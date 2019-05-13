@@ -268,17 +268,55 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
                         var clazz = Type.resolveClass(format_method_clazz);
                         Reflect.field(clazz, format_method_method)(route, req, res, next, handle_function);
                     });
+                }else if(http_method == 'DELETE'){
+                    saturn.getServer().del(route, function(req : Dynamic, res : Dynamic, next){
+                        var clazz = Type.resolveClass(format_method_clazz);
+                        Reflect.field(clazz, format_method_method)(route, req, res, next, handle_function);
+                    });
+                }else if(http_method == 'GET'){
+                    saturn.getServer().get(route, function(req : Dynamic, res : Dynamic, next){
+                        var clazz = Type.resolveClass(format_method_clazz);
+                        Reflect.field(clazz, format_method_method)(route, req, res, next, handle_function);
+                    });
                 }
             }
         }
     }
 
     function respond(uuid, statusCode, socket, wait, data : Dynamic, status, res){
-        if(Reflect.hasField(data, 'bioinfJobId') && Reflect.hasField(data, 'json') && Reflect.hasField(data.json, 'error') && Reflect.hasField(data.json, 'objects')){
-            data = {
-                "uuid": data.bioinfJobId,
-                "error": data.json.error,
-                "result-set": data.json.objects
+        var remappedData :Dynamic = data;
+
+        if(Reflect.hasField(data, 'json')){
+            if(Reflect.hasField(data,'bioinfJobId')){
+                remappedData = {
+                    "uuid": data.bioinfJobId
+                }
+            }
+
+            if(Reflect.hasField(data.json, 'error')){
+                remappedData.error = data.json.error;
+            }
+
+            if(Reflect.hasField(data.json, 'objects')){
+                var objects :Array<Dynamic> = data.json.objects;
+
+                var returnKey = 'result-set';
+
+                if(objects != null && objects.length > 0 && Reflect.hasField(objects[0], 'result-set')){
+                    objects = Reflect.field(objects[0], 'result-set');
+                }else if(objects != null && objects.length > 0 && Reflect.hasField(objects[0], 'refreshed_objects')){
+                    objects = Reflect.field(objects[0], 'refreshed_objects');
+                    returnKey = 'refreshed-objects';
+                }else if(objects != null && objects.length > 0 && Reflect.hasField(objects[0], 'upload_set')){
+                    objects = Reflect.field(objects[0], 'upload_set');
+                }
+
+
+                Reflect.setField(remappedData, returnKey, objects);
+            }else{
+                for(field in Reflect.fields(data.json)){
+                    Reflect.setField(remappedData, field, Reflect.field(data.json, field));
+                }
             }
         }
 
@@ -286,12 +324,12 @@ class RESTSocketWrapperPlugin extends BaseServerPlugin {
             debug('Sending response');
             res.status(statusCode);
 
-            res.send(data);
+            res.send(remappedData);
         }else{
             debug('Not sending response');
         }
 
-        uuidToResponse.set(uuid, data);
+        uuidToResponse.set(uuid, remappedData);
 
         socket.disconnect();
 
