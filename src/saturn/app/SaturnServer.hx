@@ -236,7 +236,7 @@ class SaturnServer {
     }
 
     @:cps public function loadServiceDefinition(){
-        var err : NodeErr, content : String = @await Node.fs.readFile(servicesFile,'utf8');
+        var err : NodeErr, content : String = @await Node.fs.readFile(servicesFile,{'encoding':'utf8'});
         if(err == null){
             serviceConfig = Node.json.parse(content);
 
