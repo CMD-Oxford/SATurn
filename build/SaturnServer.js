@@ -421,6 +421,15 @@ bindings.NodeTemp.__name__ = ["bindings","NodeTemp"];
 bindings.NodeTemp.open = function(prefix,cb) {
 	return bindings.NodeTemp.temp.open(prefix,cb);
 };
+bindings.NodeTemp.open_untracked = function(prefix,cb) {
+	var filePath = bindings.NodeTemp.temp.path(prefix);
+	var cnst = js.Node.require("constants");
+	var RDWR_EXCL = cnst.O_CREAT | cnst.O_TRUNC | cnst.O_RDWR | cnst.O_EXCL;
+	js.Node.require("fs").open(filePath,RDWR_EXCL,parseInt("0600",8),function(err,fd) {
+		if(cb != null) cb(err,{ path : filePath, fd : fd});
+	});
+	return 1;
+};
 var com = com || {};
 if(!com.dongxiguo) com.dongxiguo = {};
 if(!com.dongxiguo.continuation) com.dongxiguo.continuation = {};
@@ -1743,6 +1752,7 @@ js.Node.isNodeWebkit = function() {
 var saturn = saturn || {};
 if(!saturn.app) saturn.app = {};
 saturn.app.SaturnServer = $hxClasses["saturn.app.SaturnServer"] = function() {
+	this.usingEncryption = false;
 	this.__dirname = __dirname;
 	this.restify = js.Node.require("restify");
 	this.osLib = js.Node.require("os");
@@ -1809,7 +1819,15 @@ saturn.app.SaturnServer.prototype = {
 	,socketPlugins: null
 	,plugins: null
 	,redisClient: null
+	,internalConnectionHostName: null
 	,authPlugin: null
+	,usingEncryption: null
+	,isEncrypted: function() {
+		return this.usingEncryption;
+	}
+	,getInternalConnectionHostName: function() {
+		return this.internalConnectionHostName;
+	}
 	,getRedisPort: function() {
 		return this.redisPort;
 	}
@@ -1826,13 +1844,25 @@ saturn.app.SaturnServer.prototype = {
 		var _g = this;
 		var http_config = { };
 		var serverConfig = this.getServerConfig();
+		if(Object.prototype.hasOwnProperty.call(serverConfig,"internalConnectionHostName")) this.internalConnectionHostName = Reflect.field(serverConfig,"internalConnectionHostName"); else this.internalConnectionHostName = Reflect.field(serverConfig,"hostname");
 		if(Object.prototype.hasOwnProperty.call(serverConfig,"restify_http_options")) {
 			http_config = Reflect.field(serverConfig,"restify_http_options");
 			saturn.core.Util.debug(saturn.core.Util.string(http_config));
-		}
-		this.server = this.restify.createServer(http_config);
+			if(Object.prototype.hasOwnProperty.call(http_config,"cert")) {
+				var certificate = Reflect.field(http_config,"cert");
+				if(certificate != null && certificate != "") {
+					this.usingEncryption = true;
+					this.server = this.restify.createServer({ 'httpsServerOptions' : http_config});
+				}
+			}
+		} else this.server = this.restify.createServer();
+		var bunyan = js.Node.require("bunyan");
+		var $process = js.Node.require("process");
+		this.server.on("after",this.restify.plugins.auditLogger({ log : bunyan.createLogger({ name : "audit", stream : $process.stdout}), body : true, event : "after"}));
 		this.server["use"](this.restify.plugins.queryParser({ mapParams : true}));
 		this.server["use"](this.restify.plugins.bodyParser({ mapParams : true}));
+		var CookieParser = js.Node.require("restify-cookies");
+		this.server["use"](CookieParser.parse);
 		this.installPlugins();
 		this.installSocketPlugins();
 		this.server.get("/static/*",this.restify.plugins.serveStatic({ directory : "./public"}));
@@ -1860,17 +1890,17 @@ saturn.app.SaturnServer.prototype = {
 				var plugin = Type.createInstance(Type.resolveClass(pluginDef.clazz),[this,pluginDef]);
 				this.socketPlugins.push(plugin);
 			}
+			var Queue = js.Node.require("bull");
+			this.theServerSocket.sockets.on("connection",function(socket) {
+				var _g11 = 0;
+				var _g2 = _g.socketPlugins;
+				while(_g11 < _g2.length) {
+					var plugin1 = _g2[_g11];
+					++_g11;
+					plugin1.addListeners(socket);
+				}
+			});
 		}
-		var Queue = js.Node.require("bull");
-		this.theServerSocket.sockets.on("connection",function(socket) {
-			var _g11 = 0;
-			var _g2 = _g.socketPlugins;
-			while(_g11 < _g2.length) {
-				var plugin1 = _g2[_g11];
-				++_g11;
-				plugin1.addListeners(socket);
-			}
-		});
 	}
 	,installPlugins: function() {
 		if(Reflect.hasField(this.getServerConfig(),"plugins")) {
@@ -2784,6 +2814,9 @@ saturn.core.molecule.Molecule.prototype = {
 			cb(err,res);
 		});
 	}
+	,getAtPosition: function(pos) {
+		return this.sequence.charAt(pos);
+	}
 	,__class__: saturn.core.molecule.Molecule
 };
 saturn.core.DNA = $hxClasses["saturn.core.DNA"] = function(seq) {
@@ -3250,6 +3283,9 @@ saturn.core.GeneticCode.prototype = {
 	,aaToCodonTable: null
 	,startCodons: null
 	,stopCodons: null
+	,isAA: function(aa) {
+		return this.aaToCodonTable.exists(aa);
+	}
 	,addStartCodon: function(codon) {
 		this.startCodons.set(codon,"1");
 	}
@@ -4609,8 +4645,6 @@ saturn.core.domain.ABITrace.prototype = {
 		var alnStrs = aln.getAlignmentRegion();
 		var template = alnStrs[0];
 		var query = alnStrs[1];
-		window.console.log(template);
-		window.console.log(query);
 		var newTrace = new saturn.core.domain.ABITrace();
 		var seqPos = 0;
 		var _g1 = 0;
@@ -4812,6 +4846,8 @@ saturn.core.domain.Compound.prototype = {
 	,person: null
 	,inchi: null
 	,smiles: null
+	,setup: function() {
+	}
 	,substructureSearch: function(cb) {
 	}
 	,assaySearch: function(cb) {
@@ -5436,7 +5472,7 @@ saturn.core.domain.SgcUtil.generateNextID = function(provider,targets,clazz,cb) 
 	var q2 = new saturn.db.query_lang.Query(provider);
 	q2.fetchRawResults();
 	q2.getSelect().add(new saturn.db.query_lang.Field(null,"target","a")["as"]("targetName"));
-	q2.getSelect().add(new saturn.db.query_lang.Trim(new saturn.db.query_lang.Max(new saturn.db.query_lang.Field(null,"ID","a")))["as"]("lastId"));
+	q2.getSelect().add(new saturn.db.query_lang.Trim(new saturn.db.query_lang.Max(new saturn.db.query_lang.ToNumber(new saturn.db.query_lang.Field(null,"ID","a"))))["as"]("lastId"));
 	q2.getFrom().add(q["as"]("a"));
 	q2.getGroup().add(new saturn.db.query_lang.Field(null,"target","a"));
 	q2.run(function(objs,err) {
@@ -5500,6 +5536,164 @@ saturn.core.domain.SgcVector.prototype = $extend(saturn.core.DNA.prototype,{
 	}
 	,__class__: saturn.core.domain.SgcVector
 });
+saturn.core.domain.SgcXtalDataSet = $hxClasses["saturn.core.domain.SgcXtalDataSet"] = function() {
+};
+saturn.core.domain.SgcXtalDataSet.__name__ = ["saturn","core","domain","SgcXtalDataSet"];
+saturn.core.domain.SgcXtalDataSet.prototype = {
+	id: null
+	,xtalDataSetId: null
+	,xtalMountId: null
+	,estimatedResolution: null
+	,scaledResolution: null
+	,xtalMount: null
+	,beamline: null
+	,outcome: null
+	,dsType: null
+	,visit: null
+	,spaceGroup: null
+	,dateRecordCreated: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalDataSet
+};
+saturn.core.domain.SgcXtalDeposition = $hxClasses["saturn.core.domain.SgcXtalDeposition"] = function() {
+};
+saturn.core.domain.SgcXtalDeposition.__name__ = ["saturn","core","domain","SgcXtalDeposition"];
+saturn.core.domain.SgcXtalDeposition.prototype = {
+	id: null
+	,pdbId: null
+	,xtalModelId: null
+	,counted: null
+	,site: null
+	,followUp: null
+	,dateDeposited: null
+	,xtalModel: null
+	,depType: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalDeposition
+};
+saturn.core.domain.SgcXtalForm = $hxClasses["saturn.core.domain.SgcXtalForm"] = function() {
+};
+saturn.core.domain.SgcXtalForm.__name__ = ["saturn","core","domain","SgcXtalForm"];
+saturn.core.domain.SgcXtalForm.prototype = {
+	id: null
+	,formId: null
+	,phasingId: null
+	,a: null
+	,b: null
+	,c: null
+	,alpha: null
+	,beta: null
+	,gamma: null
+	,spaceGroup: null
+	,latticeSymbol: null
+	,lattice: null
+	,xtalPhasing: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalForm
+};
+saturn.core.domain.SgcXtalModel = $hxClasses["saturn.core.domain.SgcXtalModel"] = function() {
+};
+saturn.core.domain.SgcXtalModel.__name__ = ["saturn","core","domain","SgcXtalModel"];
+saturn.core.domain.SgcXtalModel.prototype = {
+	id: null
+	,xtalModelId: null
+	,modelType: null
+	,compound1Id: null
+	,compound2Id: null
+	,xtalDataSetId: null
+	,status: null
+	,pathToCrystallographicPDB: null
+	,pathToChemistsPDB: null
+	,pathToXDSLog: null
+	,pathToMTZ: null
+	,estimatedEffort: null
+	,proofingEffort: null
+	,spaceGroup: null
+	,xtalDataDataSet: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalModel
+};
+saturn.core.domain.SgcXtalMount = $hxClasses["saturn.core.domain.SgcXtalMount"] = function() {
+};
+saturn.core.domain.SgcXtalMount.__name__ = ["saturn","core","domain","SgcXtalMount"];
+saturn.core.domain.SgcXtalMount.prototype = {
+	id: null
+	,xtalMountId: null
+	,xtbmId: null
+	,xtalProjectId: null
+	,dropStatus: null
+	,compoundId: null
+	,pinId: null
+	,xtalFormId: null
+	,xtbm: null
+	,xtalProject: null
+	,compound: null
+	,xtalForm: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalMount
+};
+saturn.core.domain.SgcXtalPhasing = $hxClasses["saturn.core.domain.SgcXtalPhasing"] = function() {
+};
+saturn.core.domain.SgcXtalPhasing.__name__ = ["saturn","core","domain","SgcXtalPhasing"];
+saturn.core.domain.SgcXtalPhasing.prototype = {
+	id: null
+	,phasingId: null
+	,xtalDataSetId: null
+	,phasingMethod: null
+	,phasingConfidence: null
+	,spaceGroup: null
+	,xtalDataSet: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalPhasing
+};
+saturn.core.domain.SgcXtalPlate = $hxClasses["saturn.core.domain.SgcXtalPlate"] = function() {
+};
+saturn.core.domain.SgcXtalPlate.__name__ = ["saturn","core","domain","SgcXtalPlate"];
+saturn.core.domain.SgcXtalPlate.prototype = {
+	id: null
+	,barcode: null
+	,purificationId: null
+	,purification: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalPlate
+};
+saturn.core.domain.SgcXtalProject = $hxClasses["saturn.core.domain.SgcXtalProject"] = function() {
+};
+saturn.core.domain.SgcXtalProject.__name__ = ["saturn","core","domain","SgcXtalProject"];
+saturn.core.domain.SgcXtalProject.prototype = {
+	id: null
+	,xtalProjectId: null
+	,dataPath: null
+	,targetId: null
+	,target: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtalProject
+};
+saturn.core.domain.SgcXtbm = $hxClasses["saturn.core.domain.SgcXtbm"] = function() {
+};
+saturn.core.domain.SgcXtbm.__name__ = ["saturn","core","domain","SgcXtbm"];
+saturn.core.domain.SgcXtbm.prototype = {
+	id: null
+	,xtbmId: null
+	,plateRow: null
+	,plateColumn: null
+	,subwell: null
+	,xtalPlateId: null
+	,barcode: null
+	,xtalPlate: null
+	,score: null
+	,setup: function() {
+	}
+	,__class__: saturn.core.domain.SgcXtbm
+};
 saturn.core.domain.StructureModel = $hxClasses["saturn.core.domain.StructureModel"] = function() {
 	this.ribbonOn = true;
 	this.wireOn = false;
@@ -6456,7 +6650,8 @@ saturn.db.DefaultProvider.prototype = {
 	,getByExample: function(obj,cb) {
 		var q = this.getQuery();
 		q.addExample(obj);
-		this.query(q,cb);
+		q.run(cb);
+		return q;
 	}
 	,query: function(query,cb) {
 		var _g = this;
@@ -6600,15 +6795,19 @@ saturn.db.DefaultProvider.prototype = {
 					this._getByNamedQuery(queryId,parameters,clazz,privateCB);
 				}
 			} else if(this.namedQueryHooks.exists(queryId)) {
+				saturn.core.Util.debug("Hook is known");
 				var config1 = null;
 				if(this.namedQueryHookConfigs.exists(queryId)) config1 = this.namedQueryHookConfigs.get(queryId);
 				saturn.core.Util.debug("Calling hook");
 				this.namedQueryHooks.get(queryId)(queryId,parameters,clazz,privateCB,config1);
-			} else this._getByNamedQuery(queryId,parameters,clazz,privateCB);
+			} else {
+				saturn.core.Util.debug("Hook is not known");
+				this._getByNamedQuery(queryId,parameters,clazz,privateCB);
+			}
 		} catch( ex ) {
 			if (ex instanceof js._Boot.HaxeError) ex = ex.val;
-			callBack(null,"An unexpected exception has occurred");
 			saturn.core.Util.debug(ex);
+			callBack(null,"An unexpected exception has occurred");
 		}
 	}
 	,addHooks: function(hooks) {
@@ -7159,7 +7358,7 @@ saturn.db.DefaultProvider.prototype = {
 			var model = this.getModel(original);
 			if(model == null) continue;
 			var _g2 = 0;
-			var _g11 = model.getFields();
+			var _g11 = model.getAttributes();
 			while(_g2 < _g11.length) {
 				var field1 = _g11[_g2];
 				++_g2;
@@ -7266,7 +7465,7 @@ saturn.db.DefaultProvider.prototype = {
 			var model = models[_g1];
 			++_g1;
 			var _g11 = 0;
-			var _g2 = modelDef.getFields();
+			var _g2 = modelDef.getAttributes();
 			while(_g11 < _g2.length) {
 				var field = _g2[_g11];
 				++_g11;
@@ -7364,7 +7563,7 @@ saturn.db.DefaultProvider.prototype = {
 					++_g4;
 					var mappedModel = Type.createEmptyInstance(clazz);
 					var _g12 = 0;
-					var _g21 = modelDef.getFields();
+					var _g21 = modelDef.getAttributes();
 					while(_g12 < _g21.length) {
 						var field1 = _g21[_g12];
 						++_g12;
@@ -7563,7 +7762,7 @@ saturn.db.DefaultProvider.prototype = {
 		}); else run();
 	}
 	,uploadFile: function(contents,file_identifier,cb) {
-		if(file_identifier == null) bindings.NodeTemp.open("upload_file",function(err,info) {
+		if(file_identifier == null) bindings.NodeTemp.open_untracked("upload_file",function(err,info) {
 			if(err != null) cb(err,null); else {
 				var buffer = new Buffer(contents,"base64");
 				js.Node.require("fs").writeFile(info.path,buffer,function(err1) {
@@ -7579,7 +7778,7 @@ saturn.db.DefaultProvider.prototype = {
 		}); else {
 			var client1 = saturn.app.SaturnServer.getDefaultServer().getRedisClient();
 			client1.get(file_identifier,function(err2,filePath) {
-				if(err2 != null) cb(err2,null); else {
+				if(err2 != null || filePath == null || filePath == "") cb(err2,null); else {
 					var decodedContents = new Buffer(contents,"base64");
 					js.Node.require("fs").appendFile(filePath,decodedContents,function(err3) {
 						cb(err3,file_identifier);
@@ -14195,6 +14394,445 @@ saturn.db.mapping.SGC.prototype = {
 		if(__map_reserved.search != null) _g340.setReserved("search",value345); else _g340.h["search"] = value345;
 		value339 = _g340;
 		if(__map_reserved["saturn.core.domain.Alignment"] != null) _g.setReserved("saturn.core.domain.Alignment",value339); else _g.h["saturn.core.domain.Alignment"] = value339;
+		var value346;
+		var _g347 = new haxe.ds.StringMap();
+		var value347;
+		var _g348 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g348.setReserved("id","PKEY"); else _g348.h["id"] = "PKEY";
+		if(__map_reserved.barcode != null) _g348.setReserved("barcode","BARCODE"); else _g348.h["barcode"] = "BARCODE";
+		if(__map_reserved.purificationId != null) _g348.setReserved("purificationId","SGCPURIFICATION_PKEY"); else _g348.h["purificationId"] = "SGCPURIFICATION_PKEY";
+		value347 = _g348;
+		if(__map_reserved.fields != null) _g347.setReserved("fields",value347); else _g347.h["fields"] = value347;
+		var value348;
+		var _g349 = new haxe.ds.StringMap();
+		if(__map_reserved.barcode != null) _g349.setReserved("barcode",false); else _g349.h["barcode"] = false;
+		if(__map_reserved.id != null) _g349.setReserved("id",true); else _g349.h["id"] = true;
+		value348 = _g349;
+		if(__map_reserved.indexes != null) _g347.setReserved("indexes",value348); else _g347.h["indexes"] = value348;
+		var value349;
+		var _g350 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g350.setReserved("schema","SGC"); else _g350.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g350.setReserved("name","XTAL_PLATES"); else _g350.h["name"] = "XTAL_PLATES";
+		value349 = _g350;
+		if(__map_reserved.table_info != null) _g347.setReserved("table_info",value349); else _g347.h["table_info"] = value349;
+		var value350;
+		var _g351 = new haxe.ds.StringMap();
+		var value351;
+		var _g352 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g352.setReserved("field","purificationId"); else _g352.h["field"] = "purificationId";
+		if(__map_reserved["class"] != null) _g352.setReserved("class","saturn.core.domain.SgcPurification"); else _g352.h["class"] = "saturn.core.domain.SgcPurification";
+		if(__map_reserved.fk_field != null) _g352.setReserved("fk_field","id"); else _g352.h["fk_field"] = "id";
+		value351 = _g352;
+		_g351.set("purification",value351);
+		value350 = _g351;
+		if(__map_reserved["fields.synthetic"] != null) _g347.setReserved("fields.synthetic",value350); else _g347.h["fields.synthetic"] = value350;
+		var value352;
+		var _g353 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g353.setReserved("alias","Xtal Plates"); else _g353.h["alias"] = "Xtal Plates";
+		value352 = _g353;
+		if(__map_reserved.options != null) _g347.setReserved("options",value352); else _g347.h["options"] = value352;
+		var value353;
+		var _g354 = new haxe.ds.StringMap();
+		if(__map_reserved.Barcode != null) _g354.setReserved("Barcode","barcode"); else _g354.h["Barcode"] = "barcode";
+		value353 = _g354;
+		if(__map_reserved.model != null) _g347.setReserved("model",value353); else _g347.h["model"] = value353;
+		value346 = _g347;
+		if(__map_reserved["saturn.core.domain.SgcXtalPlate"] != null) _g.setReserved("saturn.core.domain.SgcXtalPlate",value346); else _g.h["saturn.core.domain.SgcXtalPlate"] = value346;
+		var value354;
+		var _g355 = new haxe.ds.StringMap();
+		var value355;
+		var _g356 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g356.setReserved("id","PKEY"); else _g356.h["id"] = "PKEY";
+		if(__map_reserved.xtbmId != null) _g356.setReserved("xtbmId","XTBMID"); else _g356.h["xtbmId"] = "XTBMID";
+		if(__map_reserved.plateRow != null) _g356.setReserved("plateRow","PLATEROW"); else _g356.h["plateRow"] = "PLATEROW";
+		if(__map_reserved.plateColumn != null) _g356.setReserved("plateColumn","PLATECOLUMN"); else _g356.h["plateColumn"] = "PLATECOLUMN";
+		if(__map_reserved.subwell != null) _g356.setReserved("subwell","SUBWELL"); else _g356.h["subwell"] = "SUBWELL";
+		if(__map_reserved.xtalPlateId != null) _g356.setReserved("xtalPlateId","XTALPLATES_ID"); else _g356.h["xtalPlateId"] = "XTALPLATES_ID";
+		if(__map_reserved.score != null) _g356.setReserved("score","CATEGORYSCORE"); else _g356.h["score"] = "CATEGORYSCORE";
+		if(__map_reserved.barcode != null) _g356.setReserved("barcode","BARCODE"); else _g356.h["barcode"] = "BARCODE";
+		value355 = _g356;
+		if(__map_reserved.fields != null) _g355.setReserved("fields",value355); else _g355.h["fields"] = value355;
+		var value356;
+		var _g357 = new haxe.ds.StringMap();
+		if(__map_reserved.xtbmId != null) _g357.setReserved("xtbmId",false); else _g357.h["xtbmId"] = false;
+		if(__map_reserved.id != null) _g357.setReserved("id",true); else _g357.h["id"] = true;
+		value356 = _g357;
+		if(__map_reserved.indexes != null) _g355.setReserved("indexes",value356); else _g355.h["indexes"] = value356;
+		var value357;
+		var _g358 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g358.setReserved("schema","SGC"); else _g358.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g358.setReserved("name","CRYSTALSTOBEMOUNTED"); else _g358.h["name"] = "CRYSTALSTOBEMOUNTED";
+		value357 = _g358;
+		if(__map_reserved.table_info != null) _g355.setReserved("table_info",value357); else _g355.h["table_info"] = value357;
+		var value358;
+		var _g359 = new haxe.ds.StringMap();
+		var value359;
+		var _g360 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g360.setReserved("field","xtalPlateId"); else _g360.h["field"] = "xtalPlateId";
+		if(__map_reserved["class"] != null) _g360.setReserved("class","saturn.core.domain.SgcXtalPlate"); else _g360.h["class"] = "saturn.core.domain.SgcXtalPlate";
+		if(__map_reserved.fk_field != null) _g360.setReserved("fk_field","id"); else _g360.h["fk_field"] = "id";
+		value359 = _g360;
+		_g359.set("xtalPlate",value359);
+		value358 = _g359;
+		if(__map_reserved["fields.synthetic"] != null) _g355.setReserved("fields.synthetic",value358); else _g355.h["fields.synthetic"] = value358;
+		var value360;
+		var _g361 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g361.setReserved("alias","XTBM"); else _g361.h["alias"] = "XTBM";
+		value360 = _g361;
+		if(__map_reserved.options != null) _g355.setReserved("options",value360); else _g355.h["options"] = value360;
+		var value361;
+		var _g362 = new haxe.ds.StringMap();
+		if(__map_reserved["XTBM ID"] != null) _g362.setReserved("XTBM ID","xtbmId"); else _g362.h["XTBM ID"] = "xtbmId";
+		if(__map_reserved["Plate ID"] != null) _g362.setReserved("Plate ID","xtalPlateId"); else _g362.h["Plate ID"] = "xtalPlateId";
+		value361 = _g362;
+		if(__map_reserved.model != null) _g355.setReserved("model",value361); else _g355.h["model"] = value361;
+		value354 = _g355;
+		if(__map_reserved["saturn.core.domain.SgcXtbm"] != null) _g.setReserved("saturn.core.domain.SgcXtbm",value354); else _g.h["saturn.core.domain.SgcXtbm"] = value354;
+		var value362;
+		var _g363 = new haxe.ds.StringMap();
+		var value363;
+		var _g364 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g364.setReserved("id","PKEY"); else _g364.h["id"] = "PKEY";
+		if(__map_reserved.xtalMountId != null) _g364.setReserved("xtalMountId","XTAL_MOUNT_ID"); else _g364.h["xtalMountId"] = "XTAL_MOUNT_ID";
+		if(__map_reserved.xtbmId != null) _g364.setReserved("xtbmId","SGCCRYSTALSTOBEMOUNTED_PKEY"); else _g364.h["xtbmId"] = "SGCCRYSTALSTOBEMOUNTED_PKEY";
+		if(__map_reserved.xtalProjectId != null) _g364.setReserved("xtalProjectId","SGCPROJECTS_PKEY"); else _g364.h["xtalProjectId"] = "SGCPROJECTS_PKEY";
+		if(__map_reserved.dropStatus != null) _g364.setReserved("dropStatus","DROPSTATUS"); else _g364.h["dropStatus"] = "DROPSTATUS";
+		if(__map_reserved.compoundId != null) _g364.setReserved("compoundId","SGCCOMPOUND_PKEY"); else _g364.h["compoundId"] = "SGCCOMPOUND_PKEY";
+		if(__map_reserved.pinId != null) _g364.setReserved("pinId","SGCPIN_PKEY"); else _g364.h["pinId"] = "SGCPIN_PKEY";
+		if(__map_reserved.xtalFormId != null) _g364.setReserved("xtalFormId","SGCXTALFORM_PKEY"); else _g364.h["xtalFormId"] = "SGCXTALFORM_PKEY";
+		value363 = _g364;
+		if(__map_reserved.fields != null) _g363.setReserved("fields",value363); else _g363.h["fields"] = value363;
+		var value364;
+		var _g365 = new haxe.ds.StringMap();
+		if(__map_reserved.xtalMountId != null) _g365.setReserved("xtalMountId",false); else _g365.h["xtalMountId"] = false;
+		if(__map_reserved.id != null) _g365.setReserved("id",true); else _g365.h["id"] = true;
+		value364 = _g365;
+		if(__map_reserved.indexes != null) _g363.setReserved("indexes",value364); else _g363.h["indexes"] = value364;
+		var value365;
+		var _g366 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g366.setReserved("schema","SGC"); else _g366.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g366.setReserved("name","XTAL_MOUNT"); else _g366.h["name"] = "XTAL_MOUNT";
+		value365 = _g366;
+		if(__map_reserved.table_info != null) _g363.setReserved("table_info",value365); else _g363.h["table_info"] = value365;
+		var value366;
+		var _g367 = new haxe.ds.StringMap();
+		var value367;
+		var _g368 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g368.setReserved("field","xtbmId"); else _g368.h["field"] = "xtbmId";
+		if(__map_reserved["class"] != null) _g368.setReserved("class","saturn.core.domain.SgcXtbm"); else _g368.h["class"] = "saturn.core.domain.SgcXtbm";
+		if(__map_reserved.fk_field != null) _g368.setReserved("fk_field","id"); else _g368.h["fk_field"] = "id";
+		value367 = _g368;
+		_g367.set("xtbm",value367);
+		var value368;
+		var _g369 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g369.setReserved("field","xtalProjectId"); else _g369.h["field"] = "xtalProjectId";
+		if(__map_reserved["class"] != null) _g369.setReserved("class","saturn.core.domain.SgcXtalProject"); else _g369.h["class"] = "saturn.core.domain.SgcXtalProject";
+		if(__map_reserved.fk_field != null) _g369.setReserved("fk_field","id"); else _g369.h["fk_field"] = "id";
+		value368 = _g369;
+		_g367.set("xtalProject",value368);
+		var value369;
+		var _g370 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g370.setReserved("field","compoundId"); else _g370.h["field"] = "compoundId";
+		if(__map_reserved["class"] != null) _g370.setReserved("class","saturn.core.domain.Compound"); else _g370.h["class"] = "saturn.core.domain.Compound";
+		if(__map_reserved.fk_field != null) _g370.setReserved("fk_field","id"); else _g370.h["fk_field"] = "id";
+		value369 = _g370;
+		_g367.set("compound",value369);
+		var value370;
+		var _g371 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g371.setReserved("field","xtalFormId"); else _g371.h["field"] = "xtalFormId";
+		if(__map_reserved["class"] != null) _g371.setReserved("class","saturn.core.domain.SgcXtalForm"); else _g371.h["class"] = "saturn.core.domain.SgcXtalForm";
+		if(__map_reserved.fk_field != null) _g371.setReserved("fk_field","id"); else _g371.h["fk_field"] = "id";
+		value370 = _g371;
+		_g367.set("xtalForm",value370);
+		value366 = _g367;
+		if(__map_reserved["fields.synthetic"] != null) _g363.setReserved("fields.synthetic",value366); else _g363.h["fields.synthetic"] = value366;
+		var value371;
+		var _g372 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g372.setReserved("alias","Mounted Xtal"); else _g372.h["alias"] = "Mounted Xtal";
+		value371 = _g372;
+		if(__map_reserved.options != null) _g363.setReserved("options",value371); else _g363.h["options"] = value371;
+		value362 = _g363;
+		if(__map_reserved["saturn.core.domain.SgcXtalMount"] != null) _g.setReserved("saturn.core.domain.SgcXtalMount",value362); else _g.h["saturn.core.domain.SgcXtalMount"] = value362;
+		var value372;
+		var _g373 = new haxe.ds.StringMap();
+		var value373;
+		var _g374 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g374.setReserved("id","PKEY"); else _g374.h["id"] = "PKEY";
+		if(__map_reserved.xtalDataSetId != null) _g374.setReserved("xtalDataSetId","DATASETID"); else _g374.h["xtalDataSetId"] = "DATASETID";
+		if(__map_reserved.xtalMountId != null) _g374.setReserved("xtalMountId","SGCXTALMOUNT_PKEY"); else _g374.h["xtalMountId"] = "SGCXTALMOUNT_PKEY";
+		if(__map_reserved.estimatedResolution != null) _g374.setReserved("estimatedResolution","ESTRESOLUTION"); else _g374.h["estimatedResolution"] = "ESTRESOLUTION";
+		if(__map_reserved.scaledResolution != null) _g374.setReserved("scaledResolution","RESOLUTION"); else _g374.h["scaledResolution"] = "RESOLUTION";
+		if(__map_reserved.xtalProjectId != null) _g374.setReserved("xtalProjectId","SGCPROJECTS_PKEY"); else _g374.h["xtalProjectId"] = "SGCPROJECTS_PKEY";
+		if(__map_reserved.beamline != null) _g374.setReserved("beamline","BEAMLINE"); else _g374.h["beamline"] = "BEAMLINE";
+		if(__map_reserved.outcome != null) _g374.setReserved("outcome","OUTCOME"); else _g374.h["outcome"] = "OUTCOME";
+		if(__map_reserved.dsType != null) _g374.setReserved("dsType","DSTYPE"); else _g374.h["dsType"] = "DSTYPE";
+		if(__map_reserved.visit != null) _g374.setReserved("visit","VISIT"); else _g374.h["visit"] = "VISIT";
+		if(__map_reserved.spaceGroup != null) _g374.setReserved("spaceGroup","SPACEGROUP"); else _g374.h["spaceGroup"] = "SPACEGROUP";
+		if(__map_reserved.dateRecordCreated != null) _g374.setReserved("dateRecordCreated","DATESTAMP"); else _g374.h["dateRecordCreated"] = "DATESTAMP";
+		value373 = _g374;
+		if(__map_reserved.fields != null) _g373.setReserved("fields",value373); else _g373.h["fields"] = value373;
+		var value374;
+		var _g375 = new haxe.ds.StringMap();
+		if(__map_reserved.xtalDataSetId != null) _g375.setReserved("xtalDataSetId",false); else _g375.h["xtalDataSetId"] = false;
+		if(__map_reserved.id != null) _g375.setReserved("id",true); else _g375.h["id"] = true;
+		value374 = _g375;
+		if(__map_reserved.indexes != null) _g373.setReserved("indexes",value374); else _g373.h["indexes"] = value374;
+		var value375;
+		var _g376 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g376.setReserved("schema","SGC"); else _g376.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g376.setReserved("name","XTAL_DATASET"); else _g376.h["name"] = "XTAL_DATASET";
+		value375 = _g376;
+		if(__map_reserved.table_info != null) _g373.setReserved("table_info",value375); else _g373.h["table_info"] = value375;
+		var value376;
+		var _g377 = new haxe.ds.StringMap();
+		var value377;
+		var _g378 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g378.setReserved("field","xtalMountId"); else _g378.h["field"] = "xtalMountId";
+		if(__map_reserved["class"] != null) _g378.setReserved("class","saturn.core.domain.SgcXtalMount"); else _g378.h["class"] = "saturn.core.domain.SgcXtalMount";
+		if(__map_reserved.fk_field != null) _g378.setReserved("fk_field","id"); else _g378.h["fk_field"] = "id";
+		value377 = _g378;
+		_g377.set("xtalMount",value377);
+		var value378;
+		var _g379 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g379.setReserved("field","xtalProjectId"); else _g379.h["field"] = "xtalProjectId";
+		if(__map_reserved["class"] != null) _g379.setReserved("class","saturn.core.domain.SgcXtalProject"); else _g379.h["class"] = "saturn.core.domain.SgcXtalProject";
+		if(__map_reserved.fk_field != null) _g379.setReserved("fk_field","id"); else _g379.h["fk_field"] = "id";
+		value378 = _g379;
+		_g377.set("xtalProject",value378);
+		value376 = _g377;
+		if(__map_reserved["fields.synthetic"] != null) _g373.setReserved("fields.synthetic",value376); else _g373.h["fields.synthetic"] = value376;
+		var value379;
+		var _g380 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g380.setReserved("alias","Xtal DataSet"); else _g380.h["alias"] = "Xtal DataSet";
+		value379 = _g380;
+		if(__map_reserved.options != null) _g373.setReserved("options",value379); else _g373.h["options"] = value379;
+		value372 = _g373;
+		if(__map_reserved["saturn.core.domain.SgcXtalDataSet"] != null) _g.setReserved("saturn.core.domain.SgcXtalDataSet",value372); else _g.h["saturn.core.domain.SgcXtalDataSet"] = value372;
+		var value380;
+		var _g381 = new haxe.ds.StringMap();
+		var value381;
+		var _g382 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g382.setReserved("id","PKEY"); else _g382.h["id"] = "PKEY";
+		if(__map_reserved.xtalModelId != null) _g382.setReserved("xtalModelId","MODELID"); else _g382.h["xtalModelId"] = "MODELID";
+		if(__map_reserved.modelType != null) _g382.setReserved("modelType","MODELTYPE"); else _g382.h["modelType"] = "MODELTYPE";
+		if(__map_reserved.compound1Id != null) _g382.setReserved("compound1Id","SGCCOMPOUND1_PKEY"); else _g382.h["compound1Id"] = "SGCCOMPOUND1_PKEY";
+		if(__map_reserved.compound2Id != null) _g382.setReserved("compound2Id","SGCCOMPOUND2_PKEY"); else _g382.h["compound2Id"] = "SGCCOMPOUND2_PKEY";
+		if(__map_reserved.xtalDataSetId != null) _g382.setReserved("xtalDataSetId","SGCXTALDATASET_PKEY"); else _g382.h["xtalDataSetId"] = "SGCXTALDATASET_PKEY";
+		if(__map_reserved.status != null) _g382.setReserved("status","STATUS"); else _g382.h["status"] = "STATUS";
+		if(__map_reserved.pathToCrystallographicPDB != null) _g382.setReserved("pathToCrystallographicPDB","PATHTOPDB"); else _g382.h["pathToCrystallographicPDB"] = "PATHTOPDB";
+		if(__map_reserved.pathToChemistsPDB != null) _g382.setReserved("pathToChemistsPDB","PATHTOBOUNDPDB"); else _g382.h["pathToChemistsPDB"] = "PATHTOBOUNDPDB";
+		if(__map_reserved.pathToMTZ != null) _g382.setReserved("pathToMTZ","PATHTOMTZ"); else _g382.h["pathToMTZ"] = "PATHTOMTZ";
+		if(__map_reserved.pathToXDSLog != null) _g382.setReserved("pathToXDSLog","PATHTOLOG"); else _g382.h["pathToXDSLog"] = "PATHTOLOG";
+		if(__map_reserved.estimatedEffort != null) _g382.setReserved("estimatedEffort","ESTEFFORT"); else _g382.h["estimatedEffort"] = "ESTEFFORT";
+		if(__map_reserved.proofingEffort != null) _g382.setReserved("proofingEffort","PROOFEFFORT"); else _g382.h["proofingEffort"] = "PROOFEFFORT";
+		if(__map_reserved.spaceGroup != null) _g382.setReserved("spaceGroup","SPACEGROUP"); else _g382.h["spaceGroup"] = "SPACEGROUP";
+		value381 = _g382;
+		if(__map_reserved.fields != null) _g381.setReserved("fields",value381); else _g381.h["fields"] = value381;
+		var value382;
+		var _g383 = new haxe.ds.StringMap();
+		if(__map_reserved.xtalModelId != null) _g383.setReserved("xtalModelId",false); else _g383.h["xtalModelId"] = false;
+		if(__map_reserved.id != null) _g383.setReserved("id",true); else _g383.h["id"] = true;
+		value382 = _g383;
+		if(__map_reserved.indexes != null) _g381.setReserved("indexes",value382); else _g381.h["indexes"] = value382;
+		var value383;
+		var _g384 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g384.setReserved("schema","SGC"); else _g384.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g384.setReserved("name","MODEL"); else _g384.h["name"] = "MODEL";
+		value383 = _g384;
+		if(__map_reserved.table_info != null) _g381.setReserved("table_info",value383); else _g381.h["table_info"] = value383;
+		var value384;
+		var _g385 = new haxe.ds.StringMap();
+		var value385;
+		var _g386 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g386.setReserved("field","xtalDataSetId"); else _g386.h["field"] = "xtalDataSetId";
+		if(__map_reserved["class"] != null) _g386.setReserved("class","saturn.core.domain.SgcXtalDataSet"); else _g386.h["class"] = "saturn.core.domain.SgcXtalDataSet";
+		if(__map_reserved.fk_field != null) _g386.setReserved("fk_field","id"); else _g386.h["fk_field"] = "id";
+		value385 = _g386;
+		_g385.set("xtalDataSet",value385);
+		value384 = _g385;
+		if(__map_reserved["fields.synthetic"] != null) _g381.setReserved("fields.synthetic",value384); else _g381.h["fields.synthetic"] = value384;
+		var value386;
+		var _g387 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g387.setReserved("alias","Xtal Model"); else _g387.h["alias"] = "Xtal Model";
+		value386 = _g387;
+		if(__map_reserved.options != null) _g381.setReserved("options",value386); else _g381.h["options"] = value386;
+		value380 = _g381;
+		if(__map_reserved["saturn.core.domain.SgcXtalModel"] != null) _g.setReserved("saturn.core.domain.SgcXtalModel",value380); else _g.h["saturn.core.domain.SgcXtalModel"] = value380;
+		var value387;
+		var _g388 = new haxe.ds.StringMap();
+		var value388;
+		var _g389 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g389.setReserved("id","PKEY"); else _g389.h["id"] = "PKEY";
+		if(__map_reserved.pdbId != null) _g389.setReserved("pdbId","PDBID"); else _g389.h["pdbId"] = "PDBID";
+		if(__map_reserved.counted != null) _g389.setReserved("counted","COUNTED"); else _g389.h["counted"] = "COUNTED";
+		if(__map_reserved.site != null) _g389.setReserved("site","SITE"); else _g389.h["site"] = "SITE";
+		if(__map_reserved.followup != null) _g389.setReserved("followup","FOLLOWUP"); else _g389.h["followup"] = "FOLLOWUP";
+		if(__map_reserved.xtalModelId != null) _g389.setReserved("xtalModelId","SGCMODEL_PKEY"); else _g389.h["xtalModelId"] = "SGCMODEL_PKEY";
+		if(__map_reserved.dateDeposited != null) _g389.setReserved("dateDeposited","DATEDEPOSITED"); else _g389.h["dateDeposited"] = "DATEDEPOSITED";
+		if(__map_reserved.depType != null) _g389.setReserved("depType","DEPTYPE"); else _g389.h["depType"] = "DEPTYPE";
+		value388 = _g389;
+		if(__map_reserved.fields != null) _g388.setReserved("fields",value388); else _g388.h["fields"] = value388;
+		var value389;
+		var _g390 = new haxe.ds.StringMap();
+		if(__map_reserved.pdbId != null) _g390.setReserved("pdbId",false); else _g390.h["pdbId"] = false;
+		if(__map_reserved.id != null) _g390.setReserved("id",true); else _g390.h["id"] = true;
+		value389 = _g390;
+		if(__map_reserved.indexes != null) _g388.setReserved("indexes",value389); else _g388.h["indexes"] = value389;
+		var value390;
+		var _g391 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g391.setReserved("schema","SGC"); else _g391.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g391.setReserved("name","DEPOSITION"); else _g391.h["name"] = "DEPOSITION";
+		value390 = _g391;
+		if(__map_reserved.table_info != null) _g388.setReserved("table_info",value390); else _g388.h["table_info"] = value390;
+		var value391;
+		var _g392 = new haxe.ds.StringMap();
+		var value392;
+		var _g393 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g393.setReserved("field","xtalModelId"); else _g393.h["field"] = "xtalModelId";
+		if(__map_reserved["class"] != null) _g393.setReserved("class","saturn.core.domain.SgcXtalModel"); else _g393.h["class"] = "saturn.core.domain.SgcXtalModel";
+		if(__map_reserved.fk_field != null) _g393.setReserved("fk_field","id"); else _g393.h["fk_field"] = "id";
+		value392 = _g393;
+		_g392.set("xtalModel",value392);
+		value391 = _g392;
+		if(__map_reserved["fields.synthetic"] != null) _g388.setReserved("fields.synthetic",value391); else _g388.h["fields.synthetic"] = value391;
+		var value393;
+		var _g394 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g394.setReserved("alias","Xtal Model"); else _g394.h["alias"] = "Xtal Model";
+		value393 = _g394;
+		if(__map_reserved.options != null) _g388.setReserved("options",value393); else _g388.h["options"] = value393;
+		value387 = _g388;
+		if(__map_reserved["saturn.core.domain.SgcXtalDeposition"] != null) _g.setReserved("saturn.core.domain.SgcXtalDeposition",value387); else _g.h["saturn.core.domain.SgcXtalDeposition"] = value387;
+		var value394;
+		var _g395 = new haxe.ds.StringMap();
+		var value395;
+		var _g396 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g396.setReserved("id","PKEY"); else _g396.h["id"] = "PKEY";
+		if(__map_reserved.xtalProjectId != null) _g396.setReserved("xtalProjectId","PROJECTID"); else _g396.h["xtalProjectId"] = "PROJECTID";
+		if(__map_reserved.dataPath != null) _g396.setReserved("dataPath","DATA_PATH"); else _g396.h["dataPath"] = "DATA_PATH";
+		if(__map_reserved.targetId != null) _g396.setReserved("targetId","SGCTARGET_PKEY"); else _g396.h["targetId"] = "SGCTARGET_PKEY";
+		value395 = _g396;
+		if(__map_reserved.fields != null) _g395.setReserved("fields",value395); else _g395.h["fields"] = value395;
+		var value396;
+		var _g397 = new haxe.ds.StringMap();
+		if(__map_reserved.xtalProjectId != null) _g397.setReserved("xtalProjectId",false); else _g397.h["xtalProjectId"] = false;
+		if(__map_reserved.id != null) _g397.setReserved("id",true); else _g397.h["id"] = true;
+		value396 = _g397;
+		if(__map_reserved.indexes != null) _g395.setReserved("indexes",value396); else _g395.h["indexes"] = value396;
+		var value397;
+		var _g398 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g398.setReserved("schema","SGC"); else _g398.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g398.setReserved("name","PROJECTS"); else _g398.h["name"] = "PROJECTS";
+		value397 = _g398;
+		if(__map_reserved.table_info != null) _g395.setReserved("table_info",value397); else _g395.h["table_info"] = value397;
+		var value398;
+		var _g399 = new haxe.ds.StringMap();
+		var value399;
+		var _g400 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g400.setReserved("field","targetId"); else _g400.h["field"] = "targetId";
+		if(__map_reserved["class"] != null) _g400.setReserved("class","saturn.core.domain.SgcTarget"); else _g400.h["class"] = "saturn.core.domain.SgcTarget";
+		if(__map_reserved.fk_field != null) _g400.setReserved("fk_field","id"); else _g400.h["fk_field"] = "id";
+		value399 = _g400;
+		_g399.set("target",value399);
+		value398 = _g399;
+		if(__map_reserved["fields.synthetic"] != null) _g395.setReserved("fields.synthetic",value398); else _g395.h["fields.synthetic"] = value398;
+		var value400;
+		var _g401 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g401.setReserved("alias","Xtal Model"); else _g401.h["alias"] = "Xtal Model";
+		if(__map_reserved.auto_activate != null) _g401.setReserved("auto_activate","3"); else _g401.h["auto_activate"] = "3";
+		value400 = _g401;
+		if(__map_reserved.options != null) _g395.setReserved("options",value400); else _g395.h["options"] = value400;
+		value394 = _g395;
+		if(__map_reserved["saturn.core.domain.SgcXtalProject"] != null) _g.setReserved("saturn.core.domain.SgcXtalProject",value394); else _g.h["saturn.core.domain.SgcXtalProject"] = value394;
+		var value401;
+		var _g402 = new haxe.ds.StringMap();
+		var value402;
+		var _g403 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g403.setReserved("id","PKEY"); else _g403.h["id"] = "PKEY";
+		if(__map_reserved.formId != null) _g403.setReserved("formId","FORMID"); else _g403.h["formId"] = "FORMID";
+		if(__map_reserved.phasingId != null) _g403.setReserved("phasingId","SGCPHASING_PKEY"); else _g403.h["phasingId"] = "SGCPHASING_PKEY";
+		if(__map_reserved.a != null) _g403.setReserved("a","A"); else _g403.h["a"] = "A";
+		if(__map_reserved.b != null) _g403.setReserved("b","B"); else _g403.h["b"] = "B";
+		if(__map_reserved.c != null) _g403.setReserved("c","C"); else _g403.h["c"] = "C";
+		if(__map_reserved.alpha != null) _g403.setReserved("alpha","ALPHA"); else _g403.h["alpha"] = "ALPHA";
+		if(__map_reserved.beta != null) _g403.setReserved("beta","BETA"); else _g403.h["beta"] = "BETA";
+		if(__map_reserved.gamma != null) _g403.setReserved("gamma","GAMMA"); else _g403.h["gamma"] = "GAMMA";
+		if(__map_reserved.lattice != null) _g403.setReserved("lattice","LATTICE"); else _g403.h["lattice"] = "LATTICE";
+		if(__map_reserved.latticeSymbol != null) _g403.setReserved("latticeSymbol","LATTICESYMBOL"); else _g403.h["latticeSymbol"] = "LATTICESYMBOL";
+		if(__map_reserved.spaceGroup != null) _g403.setReserved("spaceGroup","SPACEGROUP"); else _g403.h["spaceGroup"] = "SPACEGROUP";
+		value402 = _g403;
+		if(__map_reserved.fields != null) _g402.setReserved("fields",value402); else _g402.h["fields"] = value402;
+		var value403;
+		var _g404 = new haxe.ds.StringMap();
+		if(__map_reserved.formId != null) _g404.setReserved("formId",false); else _g404.h["formId"] = false;
+		if(__map_reserved.id != null) _g404.setReserved("id",true); else _g404.h["id"] = true;
+		value403 = _g404;
+		if(__map_reserved.indexes != null) _g402.setReserved("indexes",value403); else _g402.h["indexes"] = value403;
+		var value404;
+		var _g405 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g405.setReserved("schema","SGC"); else _g405.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g405.setReserved("name","XTAL_FORM"); else _g405.h["name"] = "XTAL_FORM";
+		value404 = _g405;
+		if(__map_reserved.table_info != null) _g402.setReserved("table_info",value404); else _g402.h["table_info"] = value404;
+		var value405;
+		var _g406 = new haxe.ds.StringMap();
+		var value406;
+		var _g407 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g407.setReserved("field","phasingId"); else _g407.h["field"] = "phasingId";
+		if(__map_reserved["class"] != null) _g407.setReserved("class","saturn.core.domain.SgcXtalPhasing"); else _g407.h["class"] = "saturn.core.domain.SgcXtalPhasing";
+		if(__map_reserved.fk_field != null) _g407.setReserved("fk_field","id"); else _g407.h["fk_field"] = "id";
+		value406 = _g407;
+		_g406.set("xtalPhasing",value406);
+		value405 = _g406;
+		if(__map_reserved["fields.synthetic"] != null) _g402.setReserved("fields.synthetic",value405); else _g402.h["fields.synthetic"] = value405;
+		var value407;
+		var _g408 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g408.setReserved("alias","Xtal Form"); else _g408.h["alias"] = "Xtal Form";
+		value407 = _g408;
+		if(__map_reserved.options != null) _g402.setReserved("options",value407); else _g402.h["options"] = value407;
+		value401 = _g402;
+		if(__map_reserved["saturn.core.domain.SgcXtalForm"] != null) _g.setReserved("saturn.core.domain.SgcXtalForm",value401); else _g.h["saturn.core.domain.SgcXtalForm"] = value401;
+		var value408;
+		var _g409 = new haxe.ds.StringMap();
+		var value409;
+		var _g410 = new haxe.ds.StringMap();
+		if(__map_reserved.id != null) _g410.setReserved("id","PKEY"); else _g410.h["id"] = "PKEY";
+		if(__map_reserved.phasingId != null) _g410.setReserved("phasingId","PHASINGID"); else _g410.h["phasingId"] = "PHASINGID";
+		if(__map_reserved.xtalDataSetId != null) _g410.setReserved("xtalDataSetId","SGCXTALDATASET_PKEY1"); else _g410.h["xtalDataSetId"] = "SGCXTALDATASET_PKEY1";
+		if(__map_reserved.phasingMethod != null) _g410.setReserved("phasingMethod","PHASINGMETHOD"); else _g410.h["phasingMethod"] = "PHASINGMETHOD";
+		if(__map_reserved.phasingConfidence != null) _g410.setReserved("phasingConfidence","CONFIDENCE"); else _g410.h["phasingConfidence"] = "CONFIDENCE";
+		if(__map_reserved.spaceGroup != null) _g410.setReserved("spaceGroup","SPACEGROUP"); else _g410.h["spaceGroup"] = "SPACEGROUP";
+		value409 = _g410;
+		if(__map_reserved.fields != null) _g409.setReserved("fields",value409); else _g409.h["fields"] = value409;
+		var value410;
+		var _g411 = new haxe.ds.StringMap();
+		if(__map_reserved.phasingId != null) _g411.setReserved("phasingId",false); else _g411.h["phasingId"] = false;
+		if(__map_reserved.id != null) _g411.setReserved("id",true); else _g411.h["id"] = true;
+		value410 = _g411;
+		if(__map_reserved.indexes != null) _g409.setReserved("indexes",value410); else _g409.h["indexes"] = value410;
+		var value411;
+		var _g412 = new haxe.ds.StringMap();
+		if(__map_reserved.schema != null) _g412.setReserved("schema","SGC"); else _g412.h["schema"] = "SGC";
+		if(__map_reserved.name != null) _g412.setReserved("name","XTAL_PHASING"); else _g412.h["name"] = "XTAL_PHASING";
+		value411 = _g412;
+		if(__map_reserved.table_info != null) _g409.setReserved("table_info",value411); else _g409.h["table_info"] = value411;
+		var value412;
+		var _g413 = new haxe.ds.StringMap();
+		var value413;
+		var _g414 = new haxe.ds.StringMap();
+		if(__map_reserved.field != null) _g414.setReserved("field","xtalDataSetId"); else _g414.h["field"] = "xtalDataSetId";
+		if(__map_reserved["class"] != null) _g414.setReserved("class","saturn.core.domain.SgcXtalDataSet"); else _g414.h["class"] = "saturn.core.domain.SgcXtalDataSet";
+		if(__map_reserved.fk_field != null) _g414.setReserved("fk_field","id"); else _g414.h["fk_field"] = "id";
+		value413 = _g414;
+		_g413.set("xtalDataSet",value413);
+		value412 = _g413;
+		if(__map_reserved["fields.synthetic"] != null) _g409.setReserved("fields.synthetic",value412); else _g409.h["fields.synthetic"] = value412;
+		var value414;
+		var _g415 = new haxe.ds.StringMap();
+		if(__map_reserved.alias != null) _g415.setReserved("alias","Xtal Phasing"); else _g415.h["alias"] = "Xtal Phasing";
+		value414 = _g415;
+		if(__map_reserved.options != null) _g409.setReserved("options",value414); else _g409.h["options"] = value414;
+		value408 = _g409;
+		if(__map_reserved["saturn.core.domain.SgcXtalPhasing"] != null) _g.setReserved("saturn.core.domain.SgcXtalPhasing",value408); else _g.h["saturn.core.domain.SgcXtalPhasing"] = value408;
 		this.models = _g;
 	}
 	,__class__: saturn.db.mapping.SGC
@@ -14685,7 +15323,11 @@ saturn.db.provider.GenericRDBMSProvider.prototype = $extend(saturn.db.DefaultPro
 	}
 	,_getByNamedQuery: function(queryId,parameters,clazz,cb) {
 		var _g = this;
-		if(!Object.prototype.hasOwnProperty.call(this.config.named_queries,queryId)) cb(null,"Query " + queryId + " not found "); else {
+		if(!Object.prototype.hasOwnProperty.call(this.config.named_queries,queryId)) {
+			this.debug("Hook is missing");
+			cb(null,"Query " + queryId + " not found ");
+		} else {
+			this.debug("Calling SQL query");
 			var sql = Reflect.field(this.config.named_queries,queryId);
 			var realParameters = [];
 			if((parameters instanceof Array) && parameters.__enum__ == null) {
@@ -15342,7 +15984,6 @@ saturn.db.provider.hooks.ExternalJsonHook.run = function(query,params,clazz,cb,h
 		} else {
 			var run = function() {
 				var inputJsonStr = JSON.stringify(config);
-				saturn.core.Util.debug(inputJsonStr);
 				js.Node.require("fs").writeFileSync(fh_input.path,inputJsonStr);
 				bindings.NodeTemp.open("output_json",function(err1,fh_output) {
 					if(err1 != null) {
@@ -15524,6 +16165,9 @@ saturn.db.query_lang.Token.prototype = {
 		}
 		return list;
 	}
+	,or: function() {
+		this.add(new saturn.db.query_lang.Or());
+	}
 	,__class__: saturn.db.query_lang.Token
 };
 saturn.db.query_lang.Operator = $hxClasses["saturn.db.query_lang.Operator"] = function(token) {
@@ -15557,6 +16201,14 @@ saturn.db.query_lang.Cast.__name__ = ["saturn","db","query_lang","Cast"];
 saturn.db.query_lang.Cast.__super__ = saturn.db.query_lang.Function;
 saturn.db.query_lang.Cast.prototype = $extend(saturn.db.query_lang.Function.prototype,{
 	__class__: saturn.db.query_lang.Cast
+});
+saturn.db.query_lang.CastAsInt = $hxClasses["saturn.db.query_lang.CastAsInt"] = function(token) {
+	saturn.db.query_lang.Function.call(this,[token]);
+};
+saturn.db.query_lang.CastAsInt.__name__ = ["saturn","db","query_lang","CastAsInt"];
+saturn.db.query_lang.CastAsInt.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.CastAsInt.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.CastAsInt
 });
 saturn.db.query_lang.ClassToken = $hxClasses["saturn.db.query_lang.ClassToken"] = function(clazz) {
 	this.setClass(clazz);
@@ -15848,6 +16500,17 @@ saturn.db.query_lang.Query.deserialiseToken = function(token) {
 		qToken.provider = null;
 	}
 };
+saturn.db.query_lang.Query.startsWith = function(value) {
+	var t = new saturn.db.query_lang.Like();
+	t.add(new saturn.db.query_lang.Value(value).concat("%"));
+	return t;
+};
+saturn.db.query_lang.Query.getByExample = function(provider,example,cb) {
+	var q = new saturn.db.query_lang.Query(provider);
+	q.addExample(example);
+	q.run(cb);
+	return q;
+};
 saturn.db.query_lang.Query.__super__ = saturn.db.query_lang.Token;
 saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.prototype,{
 	selectToken: null
@@ -15860,6 +16523,8 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 	,pageOn: null
 	,pageSize: null
 	,lastPagedRowValue: null
+	,results: null
+	,error: null
 	,setPageOnToken: function(t) {
 		this.pageOn = t;
 	}
@@ -16009,7 +16674,9 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 				}
 				if(fieldName == null) err = "Unable to determine value of last paged row"; else _g.setLastPagedRowValue(new saturn.db.query_lang.Value(Reflect.field(objs[objs.length - 1],fieldName)));
 			}
-			cb(objs,err);
+			_g.results = objs;
+			_g.error = err;
+			if(cb != null) cb(objs,err);
 		});
 	}
 	,getSelectClassList: function() {
@@ -16095,7 +16762,7 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 				}
 			}
 		} else this.getSelect().addToken(new saturn.db.query_lang.Field(clazz,"*"));
-		var fields = model.getFields();
+		var fields = model.getAttributes();
 		var hasPrevious = false;
 		this.getWhere().addToken(new saturn.db.query_lang.StartBlock());
 		var _g1 = 0;
@@ -16106,19 +16773,31 @@ saturn.db.query_lang.Query.prototype = $extend(saturn.db.query_lang.Token.protot
 			var value = Reflect.field(obj,field1);
 			if(value != null) {
 				if(hasPrevious) this.getWhere().addToken(new saturn.db.query_lang.And());
-				this.getWhere().addToken(new saturn.db.query_lang.Field(clazz,field1));
-				this.getWhere().addToken(new saturn.db.query_lang.Equals());
+				var fieldToken = new saturn.db.query_lang.Field(clazz,field1);
+				this.getWhere().addToken(fieldToken);
 				if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNull)) {
 					saturn.core.Util.print("Found NULL");
 					this.getWhere().addToken(new saturn.db.query_lang.IsNull());
-				} else if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNotNull)) this.getWhere().addToken(new saturn.db.query_lang.IsNotNull()); else {
-					saturn.core.Util.print("Found value" + Type.getClassName(value == null?null:js.Boot.getClass(value)));
-					this.getWhere().addToken(new saturn.db.query_lang.Value(value));
+				} else if(js.Boot.__instanceof(value,saturn.db.query_lang.IsNotNull)) this.getWhere().addToken(new saturn.db.query_lang.IsNotNull()); else if(js.Boot.__instanceof(value,saturn.db.query_lang.Operator)) this.getWhere().addToken(value); else {
+					this.getWhere().addToken(new saturn.db.query_lang.Equals());
+					if(js.Boot.__instanceof(value,saturn.db.query_lang.Token)) this.getWhere().addToken(value); else {
+						saturn.core.Util.print("Found value" + Type.getClassName(value == null?null:js.Boot.getClass(value)));
+						this.getWhere().addToken(new saturn.db.query_lang.Value(value));
+					}
 				}
 				hasPrevious = true;
 			}
 		}
 		this.getWhere().addToken(new saturn.db.query_lang.EndBlock());
+	}
+	,getResults: function() {
+		return this.results;
+	}
+	,hasResults: function() {
+		return this.results != null && this.results.length > 0;
+	}
+	,getError: function() {
+		return this.error;
 	}
 	,__class__: saturn.db.query_lang.Query
 });
@@ -16243,8 +16922,8 @@ saturn.db.query_lang.SQLVisitor.prototype = {
 					if(this.provider.getProviderType() == "SQLITE") sqlTranslation += "ltrim(" + nestedTranslation + ",'0'" + ")"; else sqlTranslation += "Trim( leading '0' from " + nestedTranslation + ")";
 				} else {
 					var funcName = "";
-					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Concat)) funcName = "CONCAT";
-					sqlTranslation += funcName + "( " + nestedTranslation + " )";
+					if(js.Boot.__instanceof(token,saturn.db.query_lang.Max)) funcName = "MAX"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Count)) funcName = "COUNT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Instr)) funcName = "INSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Substr)) funcName = "SUBSTR"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Length)) funcName = "LENGTH"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Concat)) funcName = "CONCAT"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.ToNumber)) funcName = "to_number"; else if(js.Boot.__instanceof(token,saturn.db.query_lang.CastAsInt)) funcName = "cast";
+					if(!js.Boot.__instanceof(token,saturn.db.query_lang.CastAsInt)) sqlTranslation += funcName + "( " + nestedTranslation + " )"; else sqlTranslation += funcName + "( " + nestedTranslation + " as int)";
 				}
 			} else if(js.Boot.__instanceof(token,saturn.db.query_lang.Select)) sqlTranslation += " SELECT " + nestedTranslation; else if(js.Boot.__instanceof(token,saturn.db.query_lang.Field)) {
 				var cToken1;
@@ -16397,6 +17076,14 @@ saturn.db.query_lang.Substr.__super__ = saturn.db.query_lang.Function;
 saturn.db.query_lang.Substr.prototype = $extend(saturn.db.query_lang.Function.prototype,{
 	__class__: saturn.db.query_lang.Substr
 });
+saturn.db.query_lang.ToNumber = $hxClasses["saturn.db.query_lang.ToNumber"] = function(token) {
+	saturn.db.query_lang.Function.call(this,[token]);
+};
+saturn.db.query_lang.ToNumber.__name__ = ["saturn","db","query_lang","ToNumber"];
+saturn.db.query_lang.ToNumber.__super__ = saturn.db.query_lang.Function;
+saturn.db.query_lang.ToNumber.prototype = $extend(saturn.db.query_lang.Function.prototype,{
+	__class__: saturn.db.query_lang.ToNumber
+});
 saturn.db.query_lang.Trim = $hxClasses["saturn.db.query_lang.Trim"] = function(value) {
 	saturn.db.query_lang.Function.call(this,[value]);
 };
@@ -16517,6 +17204,7 @@ saturn.server.plugins.core.AuthenticationPlugin.prototype = $extend(saturn.serve
 				}
 				db.set("USER_UUID: " + user.uuid,user.username);
 				var token = jwt.sign({ firstname : user.firstname, lastname : user.lastname, email : user.email, uuid : user.uuid, username : user.username, password : user.password},_g.config.jwt_secret,{ expiresIn : Std.string(_g.config.jwt_timeout) + "m"});
+				res.header("Set-Cookie","saturn_token=" + token);
 				res.send(200,{ token : token, full_name : user.firstname + " " + user.lastname, email : user.email, 'projects' : user.projects});
 				next();
 			},function(err) {
@@ -16865,6 +17553,264 @@ saturn.server.plugins.core.ProxyPlugin.prototype = $extend(saturn.server.plugins
 	}
 	,__class__: saturn.server.plugins.core.ProxyPlugin
 });
+saturn.server.plugins.core.RESTSocketWrapperPlugin = $hxClasses["saturn.server.plugins.core.RESTSocketWrapperPlugin"] = function(server,config) {
+	this.uuidToJobInfo = new haxe.ds.StringMap();
+	this.uuidToResponse = new haxe.ds.StringMap();
+	this.uuidToToken = new haxe.ds.StringMap();
+	this.uuidModule = js.Node.require("node-uuid");
+	saturn.server.plugins.core.BaseServerPlugin.call(this,server,config);
+	this.registerListeners();
+};
+saturn.server.plugins.core.RESTSocketWrapperPlugin.__name__ = ["saturn","server","plugins","core","RESTSocketWrapperPlugin"];
+saturn.server.plugins.core.RESTSocketWrapperPlugin.fetch_compound = function(path,req,res,next,handle_function) {
+	var command = "_remote_provider_._data_request_objects_namedquery";
+	var d = { };
+	var json = { };
+	if(Object.prototype.hasOwnProperty.call(req.params,"format") && req.params.format == "svg") {
+		json.action = "as_svg";
+		json.ctab_content = req.params.molblock;
+	}
+	d.queryId = "saturn.db.provider.hooks.ExternalJsonHook:Fetch";
+	d.parameters = haxe.Serializer.run([json]);
+	handle_function(path,req,res,next,command,d);
+};
+saturn.server.plugins.core.RESTSocketWrapperPlugin.__super__ = saturn.server.plugins.core.BaseServerPlugin;
+saturn.server.plugins.core.RESTSocketWrapperPlugin.prototype = $extend(saturn.server.plugins.core.BaseServerPlugin.prototype,{
+	uuidModule: null
+	,uuidToToken: null
+	,uuidToResponse: null
+	,uuidToJobInfo: null
+	,extractAuthenticationToken: function(req) {
+		var cookies = req.cookies;
+		if(cookies != null && cookies.saturn_token != null) return cookies.saturn_token; else return req.params.token;
+	}
+	,invalidAuthentication: function(req,res,next) {
+		res.status(403);
+		res.send("Bad token");
+		next();
+	}
+	,registerListeners: function() {
+		var _g = this;
+		this.saturn.getServer().post("/api/queue/:uuid",function(req1,res1,next1) {
+			var token1 = _g.extractAuthenticationToken(req1);
+			if(token1 == null) {
+				_g.invalidAuthentication(req1,res1,next1);
+				return;
+			}
+			var uuid1 = req1.params.uuid;
+			if(_g.uuidToToken.exists(uuid1)) {
+				if(_g.uuidToToken.get(uuid1) == token1) {
+					if(_g.uuidToResponse.exists(uuid1)) {
+						var response = _g.uuidToResponse.get(uuid1);
+						res1.status(200);
+						res1.send(response);
+						next1();
+					} else {
+						res1.status(102);
+						next1();
+					}
+				} else {
+					res1.status(403);
+					res1.send("Token/uuid missmatch expected " + _g.uuidToToken.get(uuid1) + " and you passed " + token1);
+					next1();
+				}
+			} else {
+				res1.status(403);
+				res1.send("Bad uuid");
+				next1();
+			}
+		});
+		var handle_function = function(path,req,res,next,command,json) {
+			_g.debug("In Function");
+			var token = _g.extractAuthenticationToken(req);
+			if(token == null) {
+				_g.invalidAuthentication(req,res,next);
+				return;
+			}
+			if(command == null && json == null) {
+				command = req.params.command;
+				json = js.Node.parse(req.params.json);
+				if(path == "/api/command/") {
+					if(command == "_remote_provider_._data_request_objects_namedquery") {
+						var d = { };
+						d.queryId = json.queryId;
+						d.parameters = haxe.Serializer.run(json.parameters);
+						json = d;
+					}
+				} else if(path == "/api/provider/command/") {
+					var d1 = { };
+					d1.queryId = command;
+					command = "_remote_provider_._data_request_objects_namedquery";
+					d1.parameters = haxe.Serializer.run(json.parameters);
+					json = d1;
+				}
+			}
+			var wait = "no";
+			if(Object.prototype.hasOwnProperty.call(req.params,"wait")) {
+				wait = req.params.wait;
+				_g.debug("Going to wait");
+				if(wait != "no" && wait != "yes") {
+					res.status(403);
+					res.send("Wait setting must be yes or no");
+					next();
+					return;
+				}
+			}
+			var uuid = _g.uuidModule.v4();
+			_g.uuidToToken.set(uuid,token);
+			res.header("Location","/api/queue/" + uuid);
+			if(wait == "no") {
+				res.status(202);
+				res.send();
+				next();
+			} else next();
+			var io = js.Node.require("socket.io-client");
+			var protocol = "ws";
+			if(_g.saturn.isEncrypted()) protocol = "wss";
+			var conStr = protocol + "://" + _g.saturn.getInternalConnectionHostName() + ":" + Std.string(_g.saturn.getServerConfig().port);
+			_g.debug("Connecting to " + conStr);
+			var socket = io.connect(conStr,{ port : 8091});
+			var openTime = new Date().getTime();
+			var status = new haxe.ds.StringMap();
+			if(__map_reserved.connected != null) status.setReserved("connected",false); else status.h["connected"] = false;
+			if(__map_reserved.disconnected != null) status.setReserved("disconnected",false); else status.h["disconnected"] = false;
+			socket.on("error",function(data) {
+				_g.respond(uuid,500,socket,wait,"Unknown error",status,res);
+			});
+			socket.on("authenticated",function(data1) {
+				_g.runCommand(socket,command,json,uuid);
+			});
+			socket.on("unauthorized",function(data2) {
+				_g.respond(uuid,403,socket,wait,"Unauthorised",status,res);
+			});
+			socket.on("receiveError",function(data3) {
+				_g.respond(uuid,200,socket,wait,data3,status,res);
+			});
+			socket.on("__response__",function(data4) {
+				_g.respond(uuid,200,socket,wait,data4,status,res);
+			});
+			socket.on("connect",function(data5) {
+				if(__map_reserved.connected != null) status.setReserved("connected",true); else status.h["connected"] = true;
+				socket.emit("authenticate",{ token : token});
+			});
+			var cleanUp = null;
+			cleanUp = function() {
+				var currentTime = new Date().getTime();
+				if(__map_reserved.disconnected != null?status.getReserved("disconnected"):status.h["disconnected"]) {
+				} else if((currentTime - openTime) / 1000 > 300) {
+					socket.disconnect();
+					if(__map_reserved.disconnected != null) status.setReserved("disconnected",true); else status.h["disconnected"] = true;
+					if(wait == "yes") {
+						_g.debug("Sending response");
+						res.status(200);
+						res.send("Connection time-out");
+					}
+				} else haxe.Timer.delay(cleanUp,10000);
+			};
+			cleanUp();
+		};
+		this.saturn.getServer().post("/api",function(req2,res2,next2) {
+			handle_function("/api/",req2,res2,next2);
+		});
+		this.saturn.getServer().post("/api/command/:command",function(req3,res3,next3) {
+			handle_function("/api/command/",req3,res3,next3);
+		});
+		this.saturn.getServer().post("/api/provider/command/:command",function(req4,res4,next4) {
+			handle_function("/api/provider/command/",req4,res4,next4);
+		});
+		if(Object.prototype.hasOwnProperty.call(this.config,"commands")) {
+			var commands = Reflect.field(this.config,"commands");
+			var _g1 = 0;
+			while(_g1 < commands.length) {
+				var command1 = commands[_g1];
+				++_g1;
+				var route = [command1.route];
+				var format_method_clazz = [command1.format_request_clazz];
+				var format_method_method = [command1.format_request_method];
+				var http_method = command1.http_method;
+				if(http_method == "POST") this.saturn.getServer().post(route[0],(function(format_method_method,format_method_clazz,route) {
+					return function(req5,res5,next5) {
+						var clazz = Type.resolveClass(format_method_clazz[0]);
+						(Reflect.field(clazz,format_method_method[0]))(route[0],req5,res5,next5,handle_function);
+					};
+				})(format_method_method,format_method_clazz,route)); else if(http_method == "PUT") this.saturn.getServer().put(route[0],(function(format_method_method,format_method_clazz,route) {
+					return function(req6,res6,next6) {
+						var clazz1 = Type.resolveClass(format_method_clazz[0]);
+						(Reflect.field(clazz1,format_method_method[0]))(route[0],req6,res6,next6,handle_function);
+					};
+				})(format_method_method,format_method_clazz,route)); else if(http_method == "DELETE") this.saturn.getServer().del(route[0],(function(format_method_method,format_method_clazz,route) {
+					return function(req7,res7,next7) {
+						var clazz2 = Type.resolveClass(format_method_clazz[0]);
+						(Reflect.field(clazz2,format_method_method[0]))(route[0],req7,res7,next7,handle_function);
+					};
+				})(format_method_method,format_method_clazz,route)); else if(http_method == "GET") this.saturn.getServer().get(route[0],(function(format_method_method,format_method_clazz,route) {
+					return function(req8,res8,next8) {
+						var clazz3 = Type.resolveClass(format_method_clazz[0]);
+						(Reflect.field(clazz3,format_method_method[0]))(route[0],req8,res8,next8,handle_function);
+					};
+				})(format_method_method,format_method_clazz,route));
+			}
+		}
+	}
+	,respond: function(uuid,statusCode,socket,wait,data,status,res) {
+		var remappedData = data;
+		if(Object.prototype.hasOwnProperty.call(data,"json")) {
+			if(Object.prototype.hasOwnProperty.call(data,"bioinfJobId")) remappedData = { 'uuid' : data.bioinfJobId};
+			if(Object.prototype.hasOwnProperty.call(data.json,"error")) remappedData.error = data.json.error;
+			if(Object.prototype.hasOwnProperty.call(data.json,"objects")) {
+				var objects = data.json.objects;
+				var returnKey = "result-set";
+				if(objects != null && objects.length > 0 && Object.prototype.hasOwnProperty.call(objects[0],"result-set")) objects = Reflect.field(objects[0],"result-set"); else if(objects != null && objects.length > 0 && Object.prototype.hasOwnProperty.call(objects[0],"refreshed_objects")) {
+					objects = Reflect.field(objects[0],"refreshed_objects");
+					returnKey = "refreshed-objects";
+				} else if(objects != null && objects.length > 0 && Object.prototype.hasOwnProperty.call(objects[0],"upload_set")) objects = Reflect.field(objects[0],"upload_set");
+				remappedData[returnKey] = objects;
+			} else {
+				var _g = 0;
+				var _g1 = Reflect.fields(data.json);
+				while(_g < _g1.length) {
+					var field = _g1[_g];
+					++_g;
+					Reflect.setField(remappedData,field,Reflect.field(data.json,field));
+				}
+			}
+		}
+		if(wait == "yes") {
+			this.debug("Sending response");
+			res.status(statusCode);
+			res.send(remappedData);
+		} else this.debug("Not sending response");
+		var value = remappedData;
+		this.uuidToResponse.set(uuid,value);
+		socket.disconnect();
+		status.set("disconnected",true);
+	}
+	,runCommand: function(socket,command,json,uuid) {
+		json.msgId = uuid;
+		json.bioinfJobId = uuid;
+		this.uuidToJobInfo.set(uuid,{ 'MSG' : command, 'JSON' : json});
+		this.debug("Sending command " + command);
+		socket.emit(command,json);
+	}
+	,__class__: saturn.server.plugins.core.RESTSocketWrapperPlugin
+});
+saturn.server.plugins.core.SATurnDefaultRESTRouter = $hxClasses["saturn.server.plugins.core.SATurnDefaultRESTRouter"] = function() {
+};
+saturn.server.plugins.core.SATurnDefaultRESTRouter.__name__ = ["saturn","server","plugins","core","SATurnDefaultRESTRouter"];
+saturn.server.plugins.core.SATurnDefaultRESTRouter.update_blastdb = function(path,req,res,next,handle_function) {
+	var command = "_blast_updater_";
+	if(!Object.prototype.hasOwnProperty.call(req.params,"database") || req.params.database == null) {
+		res.status(400);
+		res.send("Bad Request - database parameter missing");
+		next();
+	} else {
+		var jsonObj = { 'database' : req.params.database};
+		handle_function(path,req,res,next,command,jsonObj);
+	}
+};
+saturn.server.plugins.core.SATurnDefaultRESTRouter.prototype = {
+	__class__: saturn.server.plugins.core.SATurnDefaultRESTRouter
+};
 saturn.server.plugins.core.SocketPlugin = $hxClasses["saturn.server.plugins.core.SocketPlugin"] = function(server,config) {
 	saturn.server.plugins.core.BaseServerPlugin.call(this,server,config);
 	this.startSocketServer();
@@ -17048,16 +17994,17 @@ saturn.server.plugins.hooks.ChromoHubHooks.hookHasStructure = function(query,par
 	var st_percent_cond = " and s.percent_id IS NOT NULL ";
 	var _g1 = params[0].cutoff;
 	switch(_g1) {
-	case "best":
-		st_cutoff = "_best";
+	case "95%":
+		st_cutoff = "94.5";
 		break;
-	case "low":
-		st_cutoff = "_40";
+	case "95% or best":
+		st_cutoff = "40";
 		break;
-	default:
-		st_cutoff = "";
-		st_percent_cond += " and s.percent_id >= 94.5 ";
+	case "40%":
+		st_cutoff = "40";
+		break;
 	}
+	st_percent_cond += " and s.percent_id >" + st_cutoff + " ";
 	var xray_cond = "";
 	if(params[0].xray == "true") xray_cond = " and pdb.has_xray = 1 "; else xray_cond = "";
 	var st_family_or_genes = "";
@@ -17074,10 +18021,22 @@ saturn.server.plugins.hooks.ChromoHubHooks.hookHasStructure = function(query,par
 		st_family_or_genes = " ftj.target_id IN (" + placeholders.join(",") + ") ";
 		boundParameters = params[0].searchGenes;
 	}
+	var a = "";
 	if(params[0].st_select == "1") {
-		if(params[0].treeType == "gene") sql = "SELECT distinct d.target_id, null target_name_index, v.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray\tFROM structure_highlighted sh, structure s, domain_highlighted d, pdb, variant v, family_target_join ftj WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND dh.variant_index = v.variant_index and d.target_id=v.target_id and v.is_default=1 AND " + st_family_or_genes + " " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, target_name_index, v.variant_index ORDER BY d.target_id, target_name_index, v.variant_index"; else sql = "SELECT distinct d.target_id, d.name_index target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure_highlighted sh, structure s, family_target_join ftj, domain_highlighted d, pdb WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND on_tree=1 AND " + st_family_or_genes + " and d.target_id = ftj.target_id " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, d.name_index, d.variant_index ORDER BY d.target_id, d.name_index, d.variant_index";
-	} else if(params[0].treeType == "gene") sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, pdb, variant v WHERE " + st_family_or_genes + " and ftj.target_id = v.target_id and pdb.id=s.pdb_id and v.is_default=1 and v.pkey=s.variant_pkey " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY ftj.target_id, target_name_index, variant_index ORDER BY ftj.target_id, target_name_index, variant_index"; else sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE " + st_family_or_genes + " and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 and d.target_id = ftj.target_id" + st_type_cond + st_percent_cond + xray_cond + " GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
-	saturn.core.Util.debug(sql);
+		if(params[0].treeType == "gene") {
+			a = "1";
+			sql = "SELECT distinct d.target_id, null target_name_index, v.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray\tFROM structure_highlighted sh, structure s, domain_highlighted d, pdb, variant v, family_target_join ftj WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND dh.variant_index = v.variant_index and d.target_id=v.target_id and v.is_default=1 AND " + st_family_or_genes + " " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, target_name_index, v.variant_index ORDER BY d.target_id, target_name_index, v.variant_index";
+		} else {
+			a = "2";
+			sql = "SELECT distinct d.target_id, d.name_index target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure_highlighted sh, structure s, family_target_join ftj, domain_highlighted d, pdb WHERE sh.structure_pkey=s.pkey AND s.pdb_id=pdb.id AND sh.domain_highlighted_pkey=d.pkey AND on_tree=1 AND " + st_family_or_genes + " and d.target_id = ftj.target_id " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY d.target_id, d.name_index, d.variant_index ORDER BY d.target_id, d.name_index, d.variant_index";
+		}
+	} else if(params[0].treeType == "gene") {
+		a = "3";
+		sql = "SELECT distinct ftj.target_id, null target_name_index, variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, pdb, variant v WHERE " + st_family_or_genes + " and ftj.target_id = v.target_id and pdb.id=s.pdb_id and v.is_default=1 and v.pkey=s.variant_pkey " + st_type_cond + st_percent_cond + xray_cond + " GROUP BY ftj.target_id, target_name_index, variant_index ORDER BY ftj.target_id, target_name_index, variant_index";
+	} else {
+		a = "4";
+		sql = "SELECT distinct d.target_id, d.name_index as target_name_index, d.variant_index, max(pdb.is_sgc) as sgc, max(pdb.has_xray) as xray, ftj.family_id FROM structure s, family_target_join ftj, domain_highlighted d, pdb, variant v WHERE " + st_family_or_genes + " and d.target_id = v.target_id and d.variant_index = v.variant_index and v.pkey=s.variant_pkey and pdb.id=s.pdb_id and on_tree=1 and d.target_id = ftj.target_id" + st_type_cond + st_percent_cond + xray_cond + " GROUP BY target_id, target_name_index, d.variant_index ORDER BY target_id, target_name_index, d.variant_index";
+	}
 	provider.getConnection(null,function(err,connection) {
 		if(err != null) cb(null,err); else try {
 			connection.execute(sql,boundParameters,function(err1,results) {
@@ -19615,7 +20574,7 @@ saturn.server.plugins.socket.core.RemoteProviderPlugin.prototype = $extend(satur
 	,getByNamedQuery: function(data,provider,user,cb) {
 		var _g = this;
 		try {
-			this.debug("Start");
+			this.debug("Start " + Std.string(data.queryId));
 			var params = haxe.Unserializer.run(data.parameters);
 			this.debug("End");
 			if(data.queryId == "saturn.workflow") params[1].setRemote(true);
@@ -19623,6 +20582,7 @@ saturn.server.plugins.socket.core.RemoteProviderPlugin.prototype = $extend(satur
 			var clazz = null;
 			if(data.class_name != null) clazz = Type.resolveClass(data.class_name);
 			provider.getByNamedQuery(data.queryId,params,clazz,provider.getConfig().enable_cache,function(objs,err) {
+				_g.debug("Returning from named query " + Std.string(data.queryId));
 				var json = { };
 				saturn.client.core.CommonCore.releaseResource(provider);
 				json.error = err;
