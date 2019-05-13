@@ -31235,19 +31235,19 @@ a.x-color-picker-item:hover {
 	background: url('images/form/checkbox.gif');
 }
 
-#essentiality_crispr, #essentiality_rnai {
+#essentiality_crispr, #essentiality_rnai, #essentiality_crispr_sanger {
 	float: left;
 }
 
-#essentiality_crispr_cancer_score input, #essentiality_rnai_cancer_score input {
+#essentiality_crispr_cancer_score input, #essentiality_rnai_cancer_score input, #essentiality_crispr_sanger_cancer_score input {
 	width: 40px;
 }
 
-#essentiality_crispr_cancer_types .x-form-item-body, #essentiality_rnai_cancer_types .x-form-item-body {
+#essentiality_crispr_cancer_types .x-form-item-body, #essentiality_rnai_cancer_types .x-form-item-body, #essentiality_crispr_sanger_cancer_types .x-form-item-body {
 	max-width: 300px;
 }
 
-#essentiality_crispr_cancer_types input, #essentiality_rnai_cancer_types input {
+#essentiality_crispr_cancer_types input, #essentiality_rnai_cancer_types input, #essentiality_crispr_sanger_cancer_types input {
 	width: 255px;
 }
 

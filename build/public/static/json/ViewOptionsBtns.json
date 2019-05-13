@@ -557,7 +557,7 @@
             "label": "Essentiality in Cancer",
             "enabled": true,
             "isTitle": false,
-            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
             "annotCode": 27,
             "submenu": false,
             "popUpWindows": true,
@@ -639,6 +639,62 @@
                         "STOMACH",
                         "UPPER_AERODIGESTIVE_TRACT",
                         "URINARY_TRACT"
+                      ],
+                      "value": "All",
+                      "multiSelect": true
+                    },
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "CRISPR [Sanger] corrected log fold changes lower than",
+                      "margin": "0 5 0 0",
+                      "name": "essentiality_crispr_sanger",
+                      "id": "essentiality_crispr_sanger",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score_sanger",
+                      "id": "essentiality_crispr_sanger_cancer_score",
+                      "fieldLabel": "",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -0.5,
+                        -1,
+                        -2,
+                        -3
+                      ],
+                      "value": "-0.5"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "margin": "0 0 20 18",
+                      "name": "cancer_types_sanger",
+                      "id": "essentiality_crispr_sanger_cancer_types",
+                      "fieldLabel": "in cancer type",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "ALL",
+                        "Biliary Tract",
+                        "Bone",
+                        "Breast",
+                        "Central Nervous System",
+                        "Endometrium",
+                        "Esophagus",
+                        "Eye",
+                        "Haematopoietic and Lymphoid",
+                        "Head and Neck",
+                        "Kidney",
+                        "Large Intestine",
+                        "Lung",
+                        "Ovary",
+                        "Pancreas",
+                        "Peripheral Nervous System",
+                        "Prostate",
+                        "Skin",
+                        "Soft Tissue",
+                        "Stomach"
                       ],
                       "value": "All",
                       "multiSelect": true
@@ -848,6 +904,106 @@
                         "thyroid | carcinoma | anaplastic_carcinoma",
                         "upper_aerodigestive_tract | carcinoma | squamous_cell_carcinoma",
                         "urinary_tract | carcinoma | transitional_cell_carcinoma"
+                      ],
+                      "value": "All",
+                      "multiSelect": true
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+
+
+          {
+            "label": "Essentiality in Cancer - CRISPR (Sanger)",
+            "enabled": true,
+            "hidden": true,
+            "isTitle": false,
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "annotCode": 32,
+            "submenu": false,
+            "popUpWindows": true,
+            "hookName": "",
+            "shape": "cercle",
+            "color": [
+              {
+                "color": "#689aed",
+                "used": "false"
+              }
+            ],
+            "annotImg": [
+              "/static/annot/images/structuressgc.png",
+              "/static/annot/images/structuresothers.png"
+            ],
+            "legend": {
+              "image": "/static/annot/images/essential_cancer_rnai.png",
+              "text": "",
+              "clazz":"",
+              "method": ""
+            },
+            "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+            "familyMethod": "",
+            "hasMethod": "hasCancerEssentialRNAi",
+            "divMethod": "divCancerEssentialRNAi",
+            "windowsData": [
+              {
+                "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
+                "popMethod": "cancerEssentialRNAiFunction",
+                "form": {
+                  "items": [
+                    {
+                      "xtype": "checkboxfield",
+                      "boxLabel": "CRISPR [Sanger] corrected log fold changes lower than",
+                      "margin": "0 5 0 0",
+                      "name": "essentiality_crispr_sanger",
+                      "id": "essentiality_crispr_sanger",
+                      "inputValue": "1"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "name": "cancer_score_sanger",
+                      "id": "essentiality_crispr_sanger_cancer_score",
+                      "fieldLabel": "",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        -0.5,
+                        -1,
+                        -2,
+                        -3
+                      ],
+                      "value": "-0.5"
+                    },
+                    {
+                      "xtype": "combobox",
+                      "margin": "0 0 20 18",
+                      "name": "cancer_types_sanger",
+                      "id": "essentiality_crispr_sanger_cancer_types",
+                      "fieldLabel": "in cancer type",
+                      "labelSeparator": "",
+                      "queryMode": "local",
+                      "store": [
+                        "ALL",
+                        "Biliary Tract",
+                        "Bone",
+                        "Breast",
+                        "Central Nervous System",
+                        "Endometrium",
+                        "Esophagus",
+                        "Eye",
+                        "Haematopoietic and Lymphoid",
+                        "Head and Neck",
+                        "Kidney",
+                        "Large Intestine",
+                        "Lung",
+                        "Ovary",
+                        "Pancreas",
+                        "Peripheral Nervous System",
+                        "Prostate",
+                        "Skin",
+                        "Soft Tissue",
+                        "Stomach"
                       ],
                       "value": "All",
                       "multiSelect": true
