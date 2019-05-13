@@ -152,9 +152,18 @@ class SQLVisitor {
                         funcName = 'LENGTH';
                     }else if(Std.is(token, Concat)){
                         funcName = 'CONCAT';
+                    }else if(Std.is(token, ToNumber)){
+                        funcName = 'to_number';
+                    }else if(Std.is(token, CastAsInt)){
+                        funcName = 'cast';
                     }
 
-                    sqlTranslation += funcName + '( ' + nestedTranslation + ' )';
+                    if(!Std.is(token, CastAsInt)){
+                        sqlTranslation += funcName + '( ' + nestedTranslation + ' )';
+                    }else{
+                        sqlTranslation += funcName + '( ' + nestedTranslation + ' as int)';
+                    }
+
                 }
             }else if(Std.is(token, Select)){
                 sqlTranslation += ' SELECT ' + nestedTranslation;
