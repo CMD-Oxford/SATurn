@@ -93,7 +93,7 @@ class ExternalJsonHook {
                 // with real paths.  Silly callback set-up because of Node Async
                 var run = function(){
                     var inputJsonStr = js.Node.json.stringify(config);
-                    Util.debug(inputJsonStr);
+                    //Util.debug(inputJsonStr);
 
                     js.Node.fs.writeFileSync(fh_input.path, inputJsonStr);
 
