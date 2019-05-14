@@ -11,6 +11,7 @@
 --macro include('saturn.db.provider.hooks')
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -lib compiletime
 -lib phial
 -D CLIENT_SIDE
@@ -25,6 +26,7 @@
 --macro include('saturn.db.provider.hooks')
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -dce full
 -lib compiletime
 -lib phial
@@ -38,6 +40,7 @@
 -lib nodejs
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -lib compiletime
 -D SERVER_SIDE
 -D POSTGRES
@@ -68,6 +71,8 @@
 -D js-classic
 -D SCRIPT_ENGINE
 -D NODE
+-D no-inline
+
 --macro include('saturn.core.domain')
 --macro include('saturn.core.scarab')
 --macro include('saturn.db.mapping')
@@ -88,6 +93,7 @@
 -D SERVER_SIDE
 -D NODE_LATEST
 -D NODE
+-D no-inline
 --macro include('saturn.db.mapping.templates')
 --macro include('saturn.server.plugins.core')
 --macro include('saturn.server.plugins.socket.core')
