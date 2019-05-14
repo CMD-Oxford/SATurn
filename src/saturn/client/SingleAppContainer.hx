@@ -434,7 +434,7 @@ class SingleAppContainer {
 
         var itemslist = optionsToolBar.items;
 
-// remove the items
+        // remove the items
         itemslist.each(function(item,index,length){
             optionsToolBar.remove(item, false);
         });

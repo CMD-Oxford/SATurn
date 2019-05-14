@@ -29933,7 +29933,8 @@ a.x-color-picker-item:hover {
    border:1px #bbb solid!important;
    width:240px!important;
 }
- .x-helpingDiv a{
+ .x-helpingDiv a {
+	 cursor: pointer !important;
 	 color:#1c66e0!important;
 	 text-decoration:none!important;
  }

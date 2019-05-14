@@ -8,7 +8,7 @@
             "label": "Protein SubFamilies",
             "enabled": true,
             "isTitle":false,
-            "helpText":  "Sub-family classification based on <a href='https://doi.org/10.1371/journal.pone.0001487' style='word-break: break-all;'>https://doi.org/10.1371/journal.pone.0001487</a> and <a href='https://www-sciencedirect-com.myaccess.library.utoronto.ca/science/article/pii/S1097276507003619' style='word-break: break-all;'>https://www-sciencedirect-com.myaccess.library.utoronto.ca/science/article/pii/S1097276507003619</a>",
+            "helpText":  "Sub-family classification based on <a href='https://doi.org/10.1371/journal.pone.0001487' target='_blank' style='word-break: break-all;'>https://doi.org/10.1371/journal.pone.0001487</a> and <a href='https://www-sciencedirect-com.myaccess.library.utoronto.ca/science/article/pii/S1097276507003619' target='_blank' style='word-break: break-all;'>https://www-sciencedirect-com.myaccess.library.utoronto.ca/science/article/pii/S1097276507003619</a>",
             "annotCode":26,
             "submenu": false,
             "popUpWindows":false,
@@ -75,7 +75,7 @@
             ],
             "splitresults":false,
             "hasClass":"saturn.client.programs.chromohub.annotations.DomainAnnotation",
-            "familyMethod": "familyDomain",
+            "familyMethod": "",
             "hasMethod":"hasDomain",
             "divMethod":"divDomain"
           },
@@ -346,7 +346,7 @@
             "label": "Protein Levels in Tumors",
             "enabled": true,
             "isTitle":false,
-            "helpText":  "<b>Protein Levels in Tumors</b>: Staining profiles for proteins in human tumor tissue based on immunohistochemisty using tissue micro arrays. Data from The Human Protein Atlas version 18.  Data from The Human Protein Atlas version 18. <a href='www.proteinatlas.org' target='_blank'>www.proteinatlas.org</a> and DOI: DOI: 10.1126/science.aan2507",
+            "helpText":  "<b>Protein Levels in Tumors</b>: Staining profiles for proteins in human tumor tissue based on immunohistochemisty using tissue micro arrays. Data from The Human Protein Atlas version 18.  Data from The Human Protein Atlas version 18. <a href='https://www.proteinatlas.org/' target='_blank'>www.proteinatlas.org</a> and DOI: DOI: 10.1126/science.aan2507",
             "annotCode":25,
             "submenu": false,
             "popUpWindows":true,
@@ -557,7 +557,7 @@
             "label": "Essentiality in Cancer",
             "enabled": true,
             "isTitle": false,
-            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles' target='_blank'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/' target='_blank'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
             "annotCode": 27,
             "submenu": false,
             "popUpWindows": true,
@@ -591,7 +591,7 @@
                   "items": [
                     {
                       "xtype": "checkboxfield",
-                      "boxLabel": "CRISPR knock-out essentiality score lower than",
+                      "boxLabel": "CRISPR [Broad] knock-out essentiality score lower than",
                       "margin": "0 5 0 0",
                       "name": "essentiality_crispr",
                       "id": "essentiality_crispr",
@@ -701,7 +701,7 @@
                     },
                     {
                       "xtype": "checkboxfield",
-                      "boxLabel": "RNAi knock-down essentiality score lower than",
+                      "boxLabel": "RNAi [Broad] knock-down essentiality score lower than",
                       "margin": "0 5 5 0",
                       "name": "essentiality_rnai",
                       "id": "essentiality_rnai",
@@ -794,7 +794,7 @@
             "enabled": true,
             "hidden": true,
             "isTitle": false,
-            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/' target='_blank'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
             "annotCode": 31,
             "submenu": false,
             "popUpWindows": true,
@@ -920,7 +920,7 @@
             "enabled": true,
             "hidden": true,
             "isTitle": false,
-            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
+            "helpText": "<strong>Gene essentiality in cancer: </strong> derived from CRISPR knock-out in 341 [Broad] and 320 [Sanger] cell lines from 30 cancer types, and RNAi knock-down in 570 cancer cell lines from 46 cancer types. The gene is essential in a given cell line if the CRISPR Score &lt; -1.0 [Broad] or its corrected log fold change (i.e. average sgRNA representation at the beginning versus end of the experiment)  &lt; -0.5 [Sanger]. Similarly, lower RNAi scores (i.e Demeter2 scores), mean higher essentiality in cancer. Numbers shown are median values of essentiality scores for all cell lines representing a given cancer type. CRIPSR data from <a href='https://portals.broadinstitute.org/achilles'>https://portals.broadinstitute.org/achilles</a> (Meyers et al. Nature Genetics 2017. DOI: 10.1038/ng.3984) and <a href='https://score.depmap.sanger.ac.uk'>https://score.depmap.sanger.ac.uk</a> (Behan et al. Nature 2019.  DOI 10.1038/s41586-019-1103-9). RNAi/DEMETER2 data from <a href='https://depmap.org/R2-D2/' target='_blank'>https://depmap.org/R2-D2/</a> (McFarland et al. Nature Comm. 2018 DOI: 10.1038/s41467-018-06916-5)",
             "annotCode": 32,
             "submenu": false,
             "popUpWindows": true,
@@ -937,19 +937,19 @@
               "/static/annot/images/structuresothers.png"
             ],
             "legend": {
-              "image": "/static/annot/images/essential_cancer_rnai.png",
+              "image": "/static/annot/images/essential_cancer_crispr_logfc.png",
               "text": "",
               "clazz":"",
               "method": ""
             },
             "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
             "familyMethod": "",
-            "hasMethod": "hasCancerEssentialRNAi",
-            "divMethod": "divCancerEssentialRNAi",
+            "hasMethod": "hasCancerEssentialSanger",
+            "divMethod": "divCancerEssentialSanger",
             "windowsData": [
               {
                 "hasClass": "saturn.client.programs.chromohub.annotations.ProteinCancerEssentialAnnotation",
-                "popMethod": "cancerEssentialRNAiFunction",
+                "popMethod": "cancerEssentialSangerFunction",
                 "form": {
                   "items": [
                     {
@@ -1019,7 +1019,7 @@
             "label": "Protein Levels in Normal Tissues",
             "enabled": true,
             "isTitle": false,
-            "helpText": "<strong>Protein Levels in Normal Tissues:</strong> Expression profiles for proteins in human tissues based on immunohistochemisty using tissue micro arrays. Data from The Human Protein Atlas version 18. <a href='https://www.proteinatlas.org'>www.proteinatlas.org</a> and DOI: 10.1126/science.1260419.",
+            "helpText": "<strong>Protein Levels in Normal Tissues:</strong> Expression profiles for proteins in human tissues based on immunohistochemisty using tissue micro arrays. Data from The Human Protein Atlas version 18. <a href='https://www.proteinatlas.org' target='_blank'>www.proteinatlas.org</a> and DOI: 10.1126/science.1260419.",
             "annotCode": 28,
             "submenu": false,
             "popUpWindows": true,
