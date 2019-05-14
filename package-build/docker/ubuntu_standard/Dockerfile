@@ -3,7 +3,7 @@
 MAINTAINER David Damerell <david.damerell@sgc.ox.ac.uk>
 
 RUN apt-get update && \
-apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk
+apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1
 RUN useradd -ms /bin/bash saturn
 RUN pip install abifpy
 USER saturn
@@ -11,8 +11,10 @@ USER saturn
 #RUN cd /home/saturn && \
 #tar zxvf /tmp/saturn.tar.gz
 USER saturn
-RUN cd /home/saturn && \
-git clone https://github.com/ddamerell53/SATurn.git
+COPY . /home/saturn/SATurn
+USER root
+RUN chown -R saturn:users /home/saturn/SATurn
+USER saturn
 # Install & configure NodeJS
 RUN cd /home/saturn && \
 curl  https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh -o install.sh && chmod u+x install.sh && /bin/bash -c "./install.sh" && \ 
@@ -29,6 +31,7 @@ tar zxvf redis-4.0.12.tar.gz && \
 cd redis-4.0.12 && \
 make && \
 cd ../ && \
+rm redis -rf && \
 mv redis-4.0.12 redis 
 RUN cd /home/saturn/SATurn/build/bin/deployed_bin && \
 wget https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/GlycanBuilder.zip && \

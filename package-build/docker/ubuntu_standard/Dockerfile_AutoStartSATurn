@@ -3,7 +3,7 @@ FROM continuumio/anaconda3
 MAINTAINER David Damerell <david.damerell@sgc.ox.ac.uk>
 
 RUN apt-get update && \
-apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk
+apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1
 RUN useradd -ms /bin/bash saturn
 RUN pip install abifpy
 USER saturn
@@ -11,8 +11,11 @@ USER saturn
 #RUN cd /home/saturn && \
 #tar zxvf /tmp/saturn.tar.gz
 USER saturn
-RUN cd /home/saturn && \
-git clone https://github.com/ddamerell53/SATurn.git
+COPY . /home/saturn/SATurn
+USER root
+RUN chown -R saturn:users /home/saturn/SATurn
+USER saturn
+#git clone https://github.com/ddamerell53/SATurn.git
 # Install & configure NodeJS
 RUN cd /home/saturn && \
 curl  https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh -o install.sh && chmod u+x install.sh && /bin/bash -c "./install.sh" && \ 
@@ -29,17 +32,18 @@ tar zxvf redis-4.0.12.tar.gz && \
 cd redis-4.0.12 && \
 make && \
 cd ../ && \
+rm redis -rf && \
 mv redis-4.0.12 redis 
 RUN cd /home/saturn/SATurn/build/bin/deployed_bin && \
 wget https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/GlycanBuilder.zip && \
 unzip GlycanBuilder.zip && \
 rm GlycanBuilder.zip
 RUN cd /home/saturn/SATurn/build/bin/deployed_bin && \
-wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.8.1+-x64-linux.tar.gz && \
-tar zxvf ncbi-blast-2.8.1+-x64-linux.tar.gz && \
-mv ncbi-blast-2.8.1+/bin/* . && \
-rm -rf ncbi-blast-2.8.1+ && \
-rm ncbi-blast-2.8.1+-x64-linux.tar.gz && \
+wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.9.0+-x64-linux.tar.gz && \
+tar zxvf ncbi-blast-2.9.0+-x64-linux.tar.gz && \
+mv ncbi-blast-2.9.0+/bin/* . && \
+rm -rf ncbi-blast-2.9.0+ && \
+rm ncbi-blast-2.9.0+-x64-linux.tar.gz && \
 wget http://www.clustal.org/omega/clustalo-1.2.4-Ubuntu-x86_64 && \
 mv clustalo-1.2.4-Ubuntu-x86_64 clustalo && \
 chmod u+x clustalo && \
