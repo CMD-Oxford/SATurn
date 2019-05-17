@@ -173,8 +173,7 @@ class SGC {
                     'domainStopDelta' => 'DOMAINSTOPDELTA',
                     'containsPharmaDomain' => 'CONTAINSPHARMADOMAIN',
                     'domainSummaryLong' => 'DOMAINSUMMARYLONG',
-                    'impPI' => 'IMPPI',
-                    'alleleStatus' => 'ALLELE_STATUS'
+                    'impPI' => 'IMPPI'
                 ],
                 'defaults'=> [
                     'status' => 'In process'

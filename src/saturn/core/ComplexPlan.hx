@@ -174,7 +174,7 @@ class ComplexPlan extends Table{
                     var complexAllele = new SgcAllele();
                     complexAllele.elnId = eln;
                     complexAllele.alleleId = Reflect.field(row, 'Allele ID');
-                    complexAllele.alleleStatus = 'NA';
+                    complexAllele.status = 'NA';
                     complexAllele.complex = 'Yes';
                     complexAllele.entryClone = complexEntryClone;
 
@@ -221,7 +221,9 @@ class ComplexPlan extends Table{
                                 cb(err);
                             }
                         }, true);
-                    }
+                    }else{
+			cb(err);
+		    }	
                 }, true);
 
             }

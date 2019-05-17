@@ -829,7 +829,9 @@ class DefaultProvider implements Provider{
                 for(object in objs){
                     evictObject(object);
 
-                    attributeMaps.push(unbindObject(object));
+		    var a = unbindObject(object);
+
+                    attributeMaps.push(a);
                 }
 
                 _insert(attributeMaps,className,function(err : String){
@@ -1331,7 +1333,11 @@ class DefaultProvider implements Provider{
                 continue;
             }
 
+	    #if SATURN_PATCH
+            for(field in model.getFields()){
+	    #else
             for(field in model.getAttributes()){
+            #end
                 var value : Dynamic = Reflect.field(original, field);
 
                 var isObject = false;
@@ -1458,7 +1464,11 @@ class DefaultProvider implements Provider{
         // Iterate across ExtJS model
         for(model in models){
             // Iterate list of ExtJS model fields
+            #if SATURN_PATCH
+            for(field in modelDef.getFields()){
+            #else
             for(field in modelDef.getAttributes()){
+            #end
                 // Fields with a period are synthetic and need to be deconvoluted
                 if(field.indexOf('.') > -1){
                     var parts = field.split('.');
@@ -1535,7 +1545,11 @@ class DefaultProvider implements Provider{
                     var mappedModel = Type.createEmptyInstance(clazz);
 
                     // Iterate list of ExtJS model fields
+                    #if SATURN_PATCH
+                    for(field in modelDef.getFields()){
+                    #else
                     for(field in modelDef.getAttributes()){
+                    #end
                         // Fields with a period are synthetic and need to be deconvoluted
                         if(field.indexOf('.') > -1){
                             var parts = field.split('.');

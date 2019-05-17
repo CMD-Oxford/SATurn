@@ -5,7 +5,7 @@
     "debug": "^3.1.0",
     "fs-extra": "^5.0.0",
     "http-proxy": "^1.16.2",
-    "jsonwebtoken": "7.4.1",
+    "jsonwebtoken": "*",
     "ncbi-eutils": "^0.3.0",
     "needle": "^2.2.0",
     "node-uuid": "^1.4.8",
@@ -13,11 +13,13 @@
     "oracledb": "^2.3.0",
     "pg": "^7.4.1",
     "redis": "^2.8.0",
-    "restify": "4.3.1",
-    "restify-json-body-parser": "^0.1.2",
+    "restify": "*",
     "socket.io": "^2.0.4",
     "socketio-jwt": "^4.5.0",
     "split": "^1.0.1",
-    "temp": "^0.8.3"
+    "temp": "^0.8.3",
+    "sqlite3":"*",
+    "restify-cookies":"*",
+    "mysql2":"*"
   }
 }
