@@ -1,0 +1,4 @@
+title: $:/core/images/home-button
+tags: $:/tags/Image
+
+<svg class="tc-image-home-button tc-image-button" viewBox="0 0 24 24" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>

@@ -1,0 +1,10 @@
+{
+	"title": "$:/themes/bcse/material",
+	"name": "Material",
+	"author": "GreyLee",
+	"core-version": ">=5.0.0",
+	"plugin-type": "theme",
+	"description": "A theme that inpired by Material Design",
+	"dependents": ["$:/themes/tiddlywiki/vanilla"],
+	"list": "Acknowledgements"
+}

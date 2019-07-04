@@ -1,0 +1,105 @@
+title: $:/themes/bcse/material/palettes/Indigo
+name: Material Indigo
+description: Indigo color palette for Material theme
+tags: $:/tags/Palette
+type: application/x-tiddler-dictionary
+
+alert-background: #ffff8d
+alert-border: #ffff8d
+alert-highlight: #e51c23
+alert-muted-foreground: #ff9800
+background: #ffffff
+blockquote-bar: <<colour muted-foreground>>
+code-background: #eeeeee
+code-border: #dddddd
+code-foreground: #e91e63
+dirty-indicator: #e51c23
+download-background: #259b24
+download-foreground: <<colour background>>
+dragger-background: <<colour foreground>>
+dragger-foreground: <<colour background>>
+dropdown-background: <<colour background>>
+dropdown-border: <<colour muted-foreground>>
+dropdown-tab-background-selected: <<colour background>>
+dropdown-tab-background: #eeeeee
+dropzone-background: rgba(90, 241, 88, 0.8)
+external-link-background-hover: inherit
+external-link-background-visited: inherit
+external-link-background: inherit
+external-link-foreground-hover: #40c4ff
+external-link-foreground-visited: #01579b
+external-link-foreground: #03a9f4
+foreground: #333333
+message-background: #03a9f4
+message-border: #03a9f4
+message-foreground: #ffffff
+modal-backdrop: <<colour foreground>>
+modal-background: <<colour background>>
+modal-border: #999999
+modal-footer-background: #eeeeee
+modal-footer-border: #eeeeee
+modal-header-border: #eeeeee
+muted-foreground: #666666
+notification-background: #ffff8d
+notification-border: #ffff8d
+page-background: #eeeeee
+pre-background: <<colour code-background>>
+pre-border: <<colour code-border>>
+primary: #3f51b5
+sidebar-button-foreground: <<colour foreground>>
+sidebar-controls-foreground-hover: #000000
+sidebar-controls-foreground: <<colour sidebar-foreground>>
+sidebar-foreground-shadow: rgba(255, 255, 255, 0.8)
+sidebar-foreground: rgba(0, 0, 0, 0.5)
+sidebar-muted-foreground-hover: rgba(0, 0, 0, 0.67)
+sidebar-muted-foreground: rgba(0, 0, 0, 0.33)
+sidebar-tab-background-selected: <<colour page-background>>
+sidebar-tab-background: <<colour tab-background>>
+sidebar-tab-border-selected: <<colour tab-border-selected>>
+sidebar-tab-border: <<colour tab-border>>
+sidebar-tab-divider: <<colour tab-divider>>
+sidebar-tab-foreground-selected: <<colour tab-foreground-selected>>
+sidebar-tab-foreground: <<colour tab-foreground>>
+sidebar-tiddler-link-foreground-hover: #444444
+sidebar-tiddler-link-foreground: #999999
+static-alert-foreground: #aaaaaa
+tab-background-selected: <<colour background>>
+tab-background: #dddddd
+tab-border-selected: <<colour tab-border>>
+tab-border: <<colour tab-background>>
+tab-divider: <<colour tab-border>>
+tab-foreground-selected: <<colour tab-foreground>>
+tab-foreground: <<colour foreground>>
+table-border: #cccccc
+table-footer-background: #cccccc
+table-header-background: #cccccc
+tag-background: #ff4081
+tag-foreground: #ffffff
+tiddler-background: <<colour background>>
+tiddler-border: <<colour tiddler-background>>
+tiddler-controls-foreground-hover: #ffffff
+tiddler-controls-foreground-selected: rgba(255, 255, 255, 0.8)
+tiddler-controls-foreground: rgba(255, 255, 255, 0.5)
+tiddler-editor-background: #eeeeee
+tiddler-editor-border-image: <<colour tiddler-editor-background>>
+tiddler-editor-border: #cccccc
+tiddler-editor-fields-even: <<colour background>>
+tiddler-editor-fields-odd: <<colour background>>
+tiddler-info-background: #e8eaf6
+tiddler-info-border: transparent
+tiddler-info-tab-background: <<colour tiddler-info-background>>
+tiddler-link-background: <<colour background>>
+tiddler-link-foreground: <<colour primary>>
+tiddler-subtitle-foreground: rgba(255, 255, 255, 0.6)
+tiddler-title-foreground: #ffffff
+toolbar-new-button: 
+toolbar-options-button: 
+toolbar-save-button: 
+toolbar-info-button: 
+toolbar-edit-button: 
+toolbar-close-button: 
+toolbar-delete-button: 
+toolbar-cancel-button: 
+toolbar-done-button: 
+untagged-background: #999999
+very-muted-foreground: #999999

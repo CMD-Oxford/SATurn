@@ -1,0 +1,4 @@
+title: $:/core/images/tag-button
+tags: $:/tags/Image
+
+<svg class="tc-image-tag-button tc-image-button" viewBox="0 0 24 24" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><path d="M17.6 5.8c-.3-.5-.9-.8-1.6-.8H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h11c.7 0 1.3-.3 1.6-.8L22 12l-4.4-6.2z"/></svg>
