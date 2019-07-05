@@ -3,7 +3,7 @@
 MAINTAINER David Damerell <david.damerell@sgc.ox.ac.uk>
 
 RUN apt-get update && \
-apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1
+apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1 tcsh gnuplot
 RUN useradd -ms /bin/bash saturn
 RUN pip install abifpy
 USER saturn

@@ -1,17 +1,17 @@
 created: 20180301161348796
-modified: 20180424140740039
+modified: 20190704100004548
 title: SATurn Framework
 type: text/vnd.tiddlywiki
 
 <div class="welcome_content">
 <$link to="User Guide" class="welcome_button">User Guide</$link>
 <$link to="Internal: Developer Guide" class="welcome_button">Developer Guide</$link><br/>
-<h2>Last Updated on 24/4/18</h2>
+
 Please note that we are are currently in the process of migrating the internal SGC manuals to this public Wiki.  If you are reading the local copy of the manual distributed with SATurn you can find the latest online version <a href="https://ddamerell53.github.io/SATurn/">here</a>
 <h2>Downloads</h2>
 <div style="margin-top:10px">
 <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurn.exe">Windows</a>
- <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurnOSX.app.zip">OSX</a>
+ <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurnOSX.zip">OSX</a>
  <a href="https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/SATurnDeveloper.exe">Windows-Dev x86_64</a> 
 <a target="_blank" href="https://hub.docker.com/r/sgcit/saturn">Docker</a> ([[Instructions|Docker Instructions]])
 </div>

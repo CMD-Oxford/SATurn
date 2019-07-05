@@ -3,7 +3,7 @@ FROM continuumio/anaconda3
 MAINTAINER David Damerell <david.damerell@sgc.ox.ac.uk>
 
 RUN apt-get update && \
-apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1
+apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1 tcsh gnuplot
 RUN useradd -ms /bin/bash saturn
 RUN pip install abifpy
 USER saturn
@@ -14,6 +14,16 @@ USER saturn
 COPY . /home/saturn/SATurn
 USER root
 RUN chown -R saturn:users /home/saturn/SATurn
+#RUN apt-get install -y haxe
+#USER saturn
+#RUN mkdir /home/saturn/haxelib && haxelib setup /home/saturn/haxelib
+#RUN haxelib install jQueryExtern \
+#haxelib install compiletime \
+#haxelib install phial \
+#haxelib install nodejs \
+#haxelib git phial https://github.com/ddamerell53/phial.git
+#USER root
+#RUN cp /home/saturn/SATurn/src_haxe_patches/EReg.hx /usr/share/haxe/std/js/_std/
 USER saturn
 #git clone https://github.com/ddamerell53/SATurn.git
 # Install & configure NodeJS

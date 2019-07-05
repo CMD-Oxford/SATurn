@@ -1,0 +1,20 @@
+created: 20190705094555924
+modified: 20190705095246699
+title: Understanding the construct designer
+type: text/vnd.tiddlywiki
+
+The "Construct Designer" allows users to specify only the start and stop positions of constructs relatively to entry clones and specify the vectors they would like these regions to be cloned into and for SATurn to then generate alleles, primers, and constructs automatically.
+
+''Source:'' https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/ConstructDesigner.hx
+
+The class ConstructDesigner is a wrapper around [[BasicTableViewer|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/BasicTableViewer.hx]] which provides a simple way of integrating tables into a SATurn program.  The main purpose of the ConstructDesigner class is to initialise an instance of [[ConstructDesignTable|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/core/ConstructDesignTable.hx]] which contains the basic logic required to generate alleles, constructs, and primers.
+
+''Key Methods''
+
+generateids: Generates IDs automatically based on the IDs already taken within Scarab
+
+_fetchAll: Retrieves entities required to generate all of these entities - for example vectors and restriction site sequences
+
+_saveNew: Saves the entities to the SATurn database
+
+_calculateFromCache: Calculates all sequences required for these entities.  This method includes the term "Cache" because technically objects are first retrieved and placed into the SATurn client cache by _fetchAll and then when they are needed by this method they are retrieved from the cache.  The SATurn cache removes the need to needlessly fetch the same entity from the database or for the use of custom code to keep track of duplicates.

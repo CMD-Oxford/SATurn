@@ -1,0 +1,56 @@
+created: 20190704141817889
+modified: 20190705075129955
+title: Understanding the Allele Helper
+type: text/vnd.tiddlywiki
+
+The "Allele Helper" allows users to bulk validate and upload alleles/DNA inserts into the underlying database and calculates DNA and Protein sequences automatically for the user.
+
+''Source code'': https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/MultiAlleleHelper.hx
+
+This class extends from the [[TableHelper|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/TableHelper.hx]] class which provides a generic table component backed by the SATurn ORM.  Allowing for easy retrieval and display of entities from the database in table form along with providing a generic way to insert, update, and delete records without having to write custom code.
+
+Note that TableHelper is a standard SATurn program/plugin which extends from [[SimpleExtJSProgram|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/SimpleExtJSProgram.hx]]  which provides ExtJS specific implementations of methods required to render a SATurn program/plugin.
+
+The columns shown in the table and their names are defined as part of the ORM mapping - found [[here|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/db/mapping/SGC.hx]] - via the model parameter
+
+```
+'model' =>[
+    'Allele ID' => 'alleleId',
+    'Plate' => 'plate.plateName',
+    'Entry Clone ID' => 'entryClone.entryCloneId',
+    'Forward Primer ID' => 'forwardPrimer.primerId',
+    'Reverse Primer ID' => 'reversePrimer.primerId',
+    'DNA Sequence' => 'dnaSeq',
+    'Protein Sequence' => 'proteinSeq',
+    'Status' => 'status',
+    'Location' => 'location',
+    'Comments' => 'comments',
+    'ELN ID' => 'elnId',
+    'Date Record' => 'dateStamp',
+    'Person' => 'person',
+    'Plate Well' => 'plateWell',
+    'DNA Length' => 'dnaSeqLen',
+    'Complex' => 'complex',
+    'Domain Summary' => 'domainSummary',
+    'Domain  Start Delta' => 'domainStartDelta',
+    'Domain Stop Delta' => 'domainStopDelta',
+    'Contains Pharma Domain' => 'containsPharmaDomain',
+    'Domain Summary Long' => 'domainSummaryLong',
+    'IMP PI' => 'impPI',
+    '__HIDDEN__PKEY__' => 'id'
+]
+```
+
+Here we are mapping the names of the mode attributes as shown to the user to the names of the model attributes.  Note that the model attributes aren't the names of the database columns - although of course they could be configured as such.
+
+Note that the button shown at the bottom of the SATurn interface to launch the MultiAlleleHelper is configured in the method MultiAlleleHelper.getQuickLaunchItems (a static method)
+
+[img[DEV_PCR_PLATE_BUTTON.png]]
+
+''Key Methods''
+
+onFocus: This method is called when the tab representing this program in the SATurn central tab panel becomes the one with the focus.  This method is part of the standard [[Program|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/Program.hx]] definition which all programs must implement. For most programs all they need to do in the onFocus function is make sure they have set any toolbar buttons or menu items that are required.  The state of the central tab container area, which is the main work area for a program, is maintained for the program between tab switches and by SATurn.
+
+calculate: This is the method which validates primers and automatically generates PCR product DNA and Protein sequences.
+
+setActiveObject: This method is part of the standard Program definition and is called by SATurn when the user has requested that the entity being worked with is changed or if this is program instance is in the process of being initialised.  For example when a user types "ap-Biotech-plate1" into the search bar and selects the plate to load a new [[MultiAlleleHelperWO|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/core/MultiConstructHelperData.hx]] is created and stored in the workspace. 

@@ -1,0 +1,8 @@
+created: 20190705094240540
+modified: 20190705094411131
+title: Understanding the alignment viewer
+type: text/vnd.tiddlywiki
+
+The alignment viewer allows users to either select sequences to align from those already loaded into the SATurn workspace or to use existing FASTA files (File->Open or drag-and-drop).
+
+''Source code:'' https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/AlignmentViewer.hx

@@ -1,0 +1,12 @@
+created: 20190705091753442
+modified: 20190705093403698
+title: Understanding the sequencing viewer
+type: text/vnd.tiddlywiki
+
+The "ABITraceViewer" is able to read AB1 trace files and display these on-screen with automatic alignment to various sequence entities stored inside the SATurn database.
+
+''Source code:'' https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/ABITraceViewer.hx
+
+''Key Functions''
+
+processABIFile: Is called when a user either opens an AB1 file using the File->Browse method (Desktop version) or is dragged onto the SATurn interface (web-version).  This method sends the contents of the AB1 file back to NodeJS for converting into JSON.  The AB1 contents are converted by the server-side plugin [[ABIConverter|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/server/plugins/socket/ABIConverter.hx]] which calls the Python script [[ABIConverter.py|https://github.com/ddamerell53/SATurn/blob/master/src_python/ABIConverter.py]] which is deployed as bin/deployed/bin/ABIConverter.py.  Note that for Desktop versions of SATurn this script is deployed as a frozen Python executable.

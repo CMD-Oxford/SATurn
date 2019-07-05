@@ -18,7 +18,7 @@ import bindings.Ext.NodeSocket;
 import saturn.server.plugins.socket.core.BaseServerSocketPlugin;
 
 import com.dongxiguo.continuation.Continuation;
-@:build(com.dongxiguo.continuation.Continuation.cpsByMeta(":cps"))
+q@:build(com.dongxiguo.continuation.Continuation.cpsByMeta(":cps"))
 class THMMPlugin extends QueuePlugin {
     public function new(server : SaturnServer, config : Dynamic){
         super(server, config);

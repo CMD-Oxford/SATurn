@@ -1,0 +1,16 @@
+created: 20190705083136825
+modified: 20190705091042584
+title: Understanding the Complex Helper
+type: text/vnd.tiddlywiki
+
+The "Complex Helper" allows users to specify a list of constructs which they are going to use to co-express proteins and generate a single complex construct record into SATurn which users can use to associate with a clone record.
+
+''Source Code:'' https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/ComplexHelper.hx 
+
+The class ComplexHelper is a wrapper around [[BasicTableViewer|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/BasicTableViewer.hx]] which provides a simple way of integrating tables into a SATurn program.  The main purpose of the ComplexHelper class is to initialise an instance of [[ComplexPlan|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/core/ConstructPlan.hx]] which contains the basic logic required to validate and generate all of the dummy entities required to generate a complex construct.
+
+''Key Methods''
+
+ConstructPlan.save: Automatically inserts any dummy records which don't already exist
+
+ConstructPlan.generateIds: Automatically generates IDs for dummy records

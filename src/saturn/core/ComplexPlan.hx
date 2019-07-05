@@ -150,6 +150,7 @@ class ComplexPlan extends Table{
                     complexTargetObj.pi = targetObj.pi;
                     complexTargetObj.geneId = targetObj.geneId;
                     complexTargetObj.activeStatus = '10: Complex';
+                    complexTargetObj.complexOverride = '20f99f97-6e0d-46ba-8010-e4bd7880d591';
 
                     var complexComponents = [];
 
@@ -255,7 +256,7 @@ class ComplexPlan extends Table{
                     var constructId = Reflect.field(row, 'Construct ID 1');
                     var targetId = constructId.split('-')[0];
 
-                    var nextId = targetToNextId.get(targetId) + 1;
+                    var nextId = targetToNextId.get(targetId) ;
 
                     var complexTargetId = 'XX' + StringTools.lpad(Std.string(nextId),'0',2) + targetId;
 
@@ -264,7 +265,7 @@ class ComplexPlan extends Table{
                     Reflect.setField(row, 'Allele ID', complexTargetId + '-a001');
                     Reflect.setField(row, 'Construct ID', complexTargetId + '-c001');
 
-                    targetToNextId.set(targetId, nextId);
+                    targetToNextId.set(targetId, ++nextId);
                 }
 
                 cb(null);
@@ -283,7 +284,7 @@ class ComplexPlan extends Table{
 
             query.getSelect().add(new Field(clazz,'targetId').as('targetId'));
 
-            query.getWhere().add(new Field(clazz,'targetId').like(new Value('%').concat('TREM2A')));
+            query.getWhere().add(new Field(clazz,'targetId').like(new Value('%').concat(targetId)));
 
             query.run(function(targets : Array<Dynamic>, err : String){
                 if(err != null){
