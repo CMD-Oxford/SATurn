@@ -126,6 +126,7 @@ class ChromoHubAnnotationManager extends PhyloAnnotationManager{
                                 }
                                 if (b.annotCode == 27){
                                     showAnnotation(31,false);
+                                    showAnnotation(32,false);
                                 }
 
                                 container.clearOptionsToolBar();
@@ -1480,10 +1481,14 @@ class ChromoHubAnnotationManager extends PhyloAnnotationManager{
     function closeHelpingDiv(){
         var container=WorkspaceApplication.getApplication().getSingleAppContainer();
         var i=0;
-        for(i in 0...300000000){
+        //for(i in 0...300000000){
 
-        }
-        if(container.hideHelp==true) container.hideHelpingDiv();
+        //}
+
+        js.Browser.window.setTimeout(function() {
+            if(container.hideHelp==true) container.hideHelpingDiv();
+        }, 5000);
+
     }
 
     function prepareHelpingDiv(e: Dynamic, text:String){

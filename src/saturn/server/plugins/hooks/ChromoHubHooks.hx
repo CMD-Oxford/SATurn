@@ -1046,7 +1046,7 @@ class ChromoHubHooks {
                SELECT
                     distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
                FROM
-                    family_target_join ftj, variant v, essentiality_cancer ec
+                    family_target_join ftj, variant v, essentiality_cancer_crispr ec
                WHERE
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
@@ -1057,7 +1057,7 @@ class ChromoHubHooks {
                 SELECT
                     distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
                 FROM
-                    family_target_join ftj, variant v, essentiality_cancer ec
+                    family_target_join ftj, variant v, essentiality_cancer_crispr ec
                 WHERE
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
@@ -1118,7 +1118,7 @@ class ChromoHubHooks {
                 SELECT
                     distinct ftj.target_id, null name_index, v.variant_index, ec.median_score
                 FROM
-                    family_target_join ftj, variant v, essentiality_cancer ec
+                    family_target_join ftj, variant v, essentiality_cancer_rnai ec
                 WHERE
                     " + sqlFamilyOrListConstraint + " AND
                     ftj.target_id = v.target_id AND
@@ -1144,6 +1144,71 @@ class ChromoHubHooks {
 
 
         runBasicQuery(sql, boundParameters, cb);
+    }
+
+    public static function hookHasCancerEssentialSanger(query : String, params : Array<Dynamic>, clazz : String, cb : Dynamic->String->Void){
+        var familyOrListInfo = null;
+
+        try{
+            familyOrListInfo = generateFamilyOrListConstraint(params);
+        }catch(ex : saturn.util.HaxeException){
+            cb(null, ex.getMessage()); return;
+        }
+
+        var sqlFamilyOrListConstraint = familyOrListInfo.sql;
+        var boundParameters = familyOrListInfo.params;
+        var cancerTypes :Array<String> = params[0].cancer_types;
+        var cancerScore = params[0].cancer_score;
+
+        var sql : String = '';
+
+        var treeType = params[0].treeType;
+        if(treeType == 'gene'){
+            sql = "
+               SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score, t.uniprot
+               FROM
+                    target t, family_target_join ftj, variant v, essentiality_cancer_crispr_logfc ec
+               WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = t.id AND
+                    ftj.target_id = v.target_id AND
+                    ec.uniprot_id = t.uniprot AND
+                    v.is_default = 1
+               ";
+        }else{
+            sql = "
+                SELECT
+                    distinct ftj.target_id, null name_index, v.variant_index, ec.median_score, t.uniprot
+                FROM
+                    target t, family_target_join ftj, variant v, essentiality_cancer_crispr_logfc ec
+                WHERE
+                    " + sqlFamilyOrListConstraint + " AND
+                    ftj.target_id = t.id AND
+                    ftj.target_id = v.target_id AND
+                    ec.uniprot_id = t.uniprot AND
+                    v.is_default = 1
+            ";
+        }
+
+        if(cancerTypes[0] != 'All'){
+            var placeHolders = [];
+            for(cancerType in cancerTypes){
+                placeHolders.push('?');
+                boundParameters.push(cancerType);
+            }
+
+            sql += ' AND ec.tissue IN (' + placeHolders.join(',') + ')';
+        }
+
+        if(cancerScore != null){
+            sql += ' AND ec.median_score <= ?';
+            boundParameters.push(cancerScore);
+        }
+
+
+        runBasicQuery(sql, boundParameters, cb);
+
     }
 
     /**

@@ -70,6 +70,26 @@ class DomainAnnotation {
                 '</div>
                 ';
                 callBack(t);
+            }, function(failmessage){
+                WorkspaceApplication.getApplication().debug('Image map couldn\'t be accessed.');
+//If we have any problem with getting the image map, we show the image without hover functionality
+                var t = '<style type="text/css">
+                    .divMainDiv7  { }
+                    .divTitle{padding:5px; widht:100%!important; background-color:#dddee1; color:#6d6d6e!important; font-size:16px; margin-bottom:5px;}
+                    .divContent{padding:5px;widht:100%!important;}div
+                    .divMainDiv7  a{ text-decoration:none!important;}
+                    .divExtraInfo{padding:5px; widht:100%!important; font-size:10px; margin-top:5px;}
+
+                    .structureResult{padding:3px 10px ;}
+                    </style>
+                    <div class="divMainDiv7 ">
+                    <div class="divTitle">Domain Architecture  - '+screenData.target+'</div>
+                    <div class="divContent">'
+                + imgSrc +
+                '</div>
+                ';
+
+                callBack(t);
             });
         }
     }
