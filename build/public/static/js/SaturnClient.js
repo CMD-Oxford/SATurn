@@ -31069,7 +31069,7 @@ saturn.client.programs.plugins.TMHMMAnnotationPlugin.prototype = $extend(saturn.
 		saturn.client.BaseProgramPlugin.prototype.setProgram.call(this,program);
 		program.addSequenceChangeListener(this);
 		this.annotationId = program.addAnnotation("TM");
-		program.setAnnotationClass("TMHMM",saturn.client.programs.sequenceeditor.SVGAnnotationBlock);
+		program.setAnnotationClass("TM",saturn.client.programs.sequenceeditor.SVGAnnotationBlock);
 		program.setAnnotationPosition(this.annotationId,saturn.client.programs.sequenceeditor.AnnotationPosition.TOP);
 	}
 	,paintDomains: function(domains,sequence) {

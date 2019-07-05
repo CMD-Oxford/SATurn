@@ -18,7 +18,7 @@ import bindings.Ext.NodeSocket;
 import saturn.server.plugins.socket.core.BaseServerSocketPlugin;
 
 import com.dongxiguo.continuation.Continuation;
-q@:build(com.dongxiguo.continuation.Continuation.cpsByMeta(":cps"))
+@:build(com.dongxiguo.continuation.Continuation.cpsByMeta(":cps"))
 class THMMPlugin extends QueuePlugin {
     public function new(server : SaturnServer, config : Dynamic){
         super(server, config);
@@ -48,7 +48,7 @@ class THMMPlugin extends QueuePlugin {
         var outputFileName =  inputFileName+'.formatted';
 
         var cmd = './runsingle_tmhmm.sh';
-        var dir = 'bin/tmhmm/unix';
+        var dir = 'bin/deployed_bin/tmhmm/unix';
 
         if(Node.os.platform() == 'win32'){
             handleError(job,'TMHMM is not supported on Windows platform', done); return;

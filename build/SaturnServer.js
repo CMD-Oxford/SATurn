@@ -5234,10 +5234,10 @@ saturn.core.Stream.__name__ = ["saturn","core","Stream"];
 saturn.core.Stream.prototype = {
 	streamId: null
 	,write: function(content) {
-		saturn.core.Util.fs.write(this.streamId,content);
+		saturn.core.Util.fs.writeSync(this.streamId,content);
 	}
 	,end: function(cb) {
-		saturn.core.Util.fs.close(this.streamId,cb);
+		saturn.core.Util.fs.closeSync(this.streamId,cb);
 	}
 	,__class__: saturn.core.Stream
 };
@@ -18501,25 +18501,25 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 	,runConverter: function(job,done,__return) {
 		var _gthis = this;
 		var binaryData = new Buffer(job.data.abiFile,"base64");
-		var __afterVar_1 = function(err,binary_info) {
-			var __endIf_0 = function() {
-				var __afterVar_4 = function(err1) {
-					var __endIf_1 = function() {
-						var __afterVar_6 = function(err2,json_info) {
-							var __endIf_2 = function() {
+		var __afterVar_33 = function(err,binary_info) {
+			var __endIf_6 = function() {
+				var __afterVar_36 = function(err1) {
+					var __endIf_7 = function() {
+						var __afterVar_38 = function(err2,json_info) {
+							var __endIf_8 = function() {
 								var nodePath = js.Node.get_path().dirname(js.Node.get___filename());
 								var progName = "bin/deployed_bin/ABIConverter";
 								var args = [binary_info.path,json_info.path];
-								var __endIf_3 = function() {
+								var __endIf_9 = function() {
 									var proc = js.Node.get_child_process().spawn(progName,args);
 									proc.stderr.on("data",function(error) {
 									});
 									proc.stdout.on("data",function(error1) {
 									});
-									var __afterVar_13 = function(code) {
+									var __afterVar_45 = function(code) {
 										if(code == "0") {
 											js.Node.console.info("ABI parse complete");
-											var __afterVar_15 = function(err3,data) {
+											var __afterVar_47 = function(err3,data) {
 												if(err3 != null) {
 													_gthis.handleError(job,err3,done);
 													__return();
@@ -18529,26 +18529,26 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 													__return();
 												}
 											};
-											js.Node.get_fs().readFile(json_info.path + "_pruned_data.json",{ "encoding" : "utf8"},function(__parameter_16,__parameter_17) {
-												__afterVar_15(__parameter_16,__parameter_17);
+											js.Node.get_fs().readFile(json_info.path + "_pruned_data.json",{ "encoding" : "utf8"},function(__parameter_48,__parameter_49) {
+												__afterVar_47(__parameter_48,__parameter_49);
 											});
 										} else {
-											var __afterVar_131 = "An unexpected exception has occurred (" + _gthis.saturn.getStandardErrorCode() + ")";
-											_gthis.handleError(job,__afterVar_131,done);
+											var __afterVar_451 = "An unexpected exception has occurred (" + _gthis.saturn.getStandardErrorCode() + ")";
+											_gthis.handleError(job,__afterVar_451,done);
 											__return();
 										}
 									};
-									proc.on("close",function(__parameter_14) {
-										__afterVar_13(__parameter_14);
+									proc.on("close",function(__parameter_46) {
+										__afterVar_45(__parameter_46);
 									});
 									return;
 								};
 								if(js.Node.get_os().platform() == "win32") {
 									progName = "bin/deployed_bin/ABIConverter.exe";
 									args = [binary_info.path,json_info.path];
-									__endIf_3();
+									__endIf_9();
 								} else {
-									__endIf_3();
+									__endIf_9();
 								}
 								return;
 							};
@@ -18556,11 +18556,11 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 								_gthis.handleError(job,err2,done);
 								__return();
 							} else {
-								__endIf_2();
+								__endIf_8();
 							}
 						};
-						bindings.NodeTemp.open("abi_conversion_json_",function(__parameter_7,__parameter_8) {
-							__afterVar_6(__parameter_7,__parameter_8);
+						bindings.NodeTemp.open("abi_conversion_json_",function(__parameter_39,__parameter_40) {
+							__afterVar_38(__parameter_39,__parameter_40);
 						});
 						return;
 					};
@@ -18568,11 +18568,11 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 						_gthis.handleError(job,err1,done);
 						__return();
 					} else {
-						__endIf_1();
+						__endIf_7();
 					}
 				};
-				js.Node.get_fs().writeFile(binary_info.path,binaryData,function(__parameter_5) {
-					__afterVar_4(__parameter_5);
+				js.Node.get_fs().writeFile(binary_info.path,binaryData,function(__parameter_37) {
+					__afterVar_36(__parameter_37);
 				});
 				return;
 			};
@@ -18580,11 +18580,11 @@ saturn.server.plugins.socket.ABIConverter.prototype = $extend(saturn.server.plug
 				_gthis.handleError(job,err,done);
 				__return();
 			} else {
-				__endIf_0();
+				__endIf_6();
 			}
 		};
-		bindings.NodeTemp.open("abi_conversion_",function(__parameter_2,__parameter_3) {
-			__afterVar_1(__parameter_2,__parameter_3);
+		bindings.NodeTemp.open("abi_conversion_",function(__parameter_34,__parameter_35) {
+			__afterVar_33(__parameter_34,__parameter_35);
 		});
 	}
 	,__class__: saturn.server.plugins.socket.ABIConverter
@@ -19462,16 +19462,16 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 	,runTHMM: function(job,done,__return) {
 		var _gthis = this;
 		var jobId = _gthis.getJobId(job);
-		var __afterVar_19 = function(err,info) {
-			var __endIf_4 = function() {
+		var __afterVar_1 = function(err,info) {
+			var __endIf_0 = function() {
 				var buffer = new Buffer(job.data.fasta);
-				var __afterVar_23 = function(err1) {
-					var __endIf_5 = function() {
+				var __afterVar_5 = function(err1) {
+					var __endIf_1 = function() {
 						var inputFileName = info.path;
 						var outputFileName = inputFileName + ".formatted";
-						var __endIf_6 = function() {
+						var __endIf_2 = function() {
 							js.Node.console.log("H3: " + "./runsingle_tmhmm.sh");
-							var proc = js.Node.get_child_process().spawn("./runsingle_tmhmm.sh",[info.path,outputFileName],{ cwd : "bin/tmhmm/unix"});
+							var proc = js.Node.get_child_process().spawn("./runsingle_tmhmm.sh",[info.path,outputFileName],{ cwd : "bin/deployed_bin/tmhmm/unix"});
 							proc.stderr.on("data",function(error) {
 								js.Node.console.log(error.toString());
 							});
@@ -19479,26 +19479,26 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 								js.Node.console.log(error1.toString());
 							});
 							js.Node.console.log("H4");
-							var __afterVar_30 = function(code) {
+							var __afterVar_12 = function(code) {
 								if(code == "0") {
 									js.Node.console.log("H5");
 									var serveFileName = _gthis.saturn.getRelativePublicOuputFolder() + "/" + Std.string(_gthis.saturn.pathLib.basename(outputFileName));
 									var reportServeFileName = _gthis.saturn.getRelativePublicOuputURL() + "/" + Std.string(_gthis.saturn.pathLib.basename(outputFileName));
-									var __afterVar_34 = function(err2) {
-										var __endIf_7 = function() {
-											var __afterVar_36 = function(err_read,data) {
-												var __endIf_8 = function() {
-													var __afterVar_39 = function(err_temp,info1) {
-														var __endIf_9 = function() {
+									var __afterVar_16 = function(err2) {
+										var __endIf_3 = function() {
+											var __afterVar_18 = function(err_read,data) {
+												var __endIf_4 = function() {
+													var __afterVar_21 = function(err_temp,info1) {
+														var __endIf_5 = function() {
 															var buffer1 = new Buffer("<html><body><pre>" + data + "</pre></body></html>");
-															var __afterVar_43 = function(err_write) {
+															var __afterVar_25 = function(err_write) {
 																if(err_write != null) {
 																	_gthis.handleError(job,"An error has occurred writing the results file");
 																	__return();
 																} else {
 																	var htmlResultsFile = _gthis.saturn.getRelativePublicOuputFolder() + "/" + Std.string(_gthis.saturn.pathLib.basename(info1.path)) + ".html";
 																	var reportHtmlResultsFile = _gthis.saturn.getRelativePublicOuputURL() + "/" + Std.string(_gthis.saturn.pathLib.basename(info1.path)) + ".html";
-																	var __afterVar_47 = function(err3) {
+																	var __afterVar_29 = function(err3) {
 																		var socket = _gthis.getSocket(job);
 																		if(socket != null) {
 																			_gthis.sendJson(job,{ htmlTMHMMReport : reportHtmlResultsFile, rawReport : reportServeFileName},done);
@@ -19508,13 +19508,13 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 																			__return();
 																		}
 																	};
-																	bindings.NodeFSExtra.copy(info1.path,htmlResultsFile,function(__parameter_48) {
-																		__afterVar_47(__parameter_48);
+																	bindings.NodeFSExtra.copy(info1.path,htmlResultsFile,function(__parameter_30) {
+																		__afterVar_29(__parameter_30);
 																	});
 																}
 															};
-															js.Node.get_fs().writeFile(info1.path,buffer1,function(__parameter_44) {
-																__afterVar_43(__parameter_44);
+															js.Node.get_fs().writeFile(info1.path,buffer1,function(__parameter_26) {
+																__afterVar_25(__parameter_26);
 															});
 															return;
 														};
@@ -19522,11 +19522,11 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 															_gthis.handleError(job,"An error has occurred generating a temporary file for results",done);
 															__return();
 														} else {
-															__endIf_9();
+															__endIf_5();
 														}
 													};
-													bindings.NodeTemp.open("tmhmmQuery",function(__parameter_40,__parameter_41) {
-														__afterVar_39(__parameter_40,__parameter_41);
+													bindings.NodeTemp.open("tmhmmQuery",function(__parameter_22,__parameter_23) {
+														__afterVar_21(__parameter_22,__parameter_23);
 													});
 													return;
 												};
@@ -19534,11 +19534,11 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 													_gthis.handleError(job,"An error has occurred opening the results file",done);
 													__return();
 												} else {
-													__endIf_8();
+													__endIf_4();
 												}
 											};
-											js.Node.get_fs().readFile(serveFileName,null,function(__parameter_37,__parameter_38) {
-												__afterVar_36(__parameter_37,__parameter_38);
+											js.Node.get_fs().readFile(serveFileName,null,function(__parameter_19,__parameter_20) {
+												__afterVar_18(__parameter_19,__parameter_20);
 											});
 											return;
 										};
@@ -19546,19 +19546,19 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 											_gthis.handleError(job,"An error has occurred making the results file available",done);
 											__return();
 										} else {
-											__endIf_7();
+											__endIf_3();
 										}
 									};
-									bindings.NodeFSExtra.copy(outputFileName,serveFileName,function(__parameter_35) {
-										__afterVar_34(__parameter_35);
+									bindings.NodeFSExtra.copy(outputFileName,serveFileName,function(__parameter_17) {
+										__afterVar_16(__parameter_17);
 									});
 								} else {
 									_gthis.handleError(job,"PSIPRED has returned a non-zero exit status: " + code,done);
 									__return();
 								}
 							};
-							proc.on("close",function(__parameter_31) {
-								__afterVar_30(__parameter_31);
+							proc.on("close",function(__parameter_13) {
+								__afterVar_12(__parameter_13);
 							});
 							return;
 						};
@@ -19566,7 +19566,7 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 							_gthis.handleError(job,"TMHMM is not supported on Windows platform",done);
 							__return();
 						} else {
-							__endIf_6();
+							__endIf_2();
 						}
 						return;
 					};
@@ -19574,11 +19574,11 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 						_gthis.handleError(job,err1);
 						__return();
 					} else {
-						__endIf_5();
+						__endIf_1();
 					}
 				};
-				js.Node.get_fs().writeFile(info.path,buffer,function(__parameter_24) {
-					__afterVar_23(__parameter_24);
+				js.Node.get_fs().writeFile(info.path,buffer,function(__parameter_6) {
+					__afterVar_5(__parameter_6);
 				});
 				return;
 			};
@@ -19586,11 +19586,11 @@ saturn.server.plugins.socket.THMMPlugin.prototype = $extend(saturn.server.plugin
 				_gthis.handleError(job,err);
 				__return();
 			} else {
-				__endIf_4();
+				__endIf_0();
 			}
 		};
-		bindings.NodeTemp.open("tmhmmQuery",function(__parameter_20,__parameter_21) {
-			__afterVar_19(__parameter_20,__parameter_21);
+		bindings.NodeTemp.open("tmhmmQuery",function(__parameter_2,__parameter_3) {
+			__afterVar_1(__parameter_2,__parameter_3);
 		});
 	}
 	,__class__: saturn.server.plugins.socket.THMMPlugin
