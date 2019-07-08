@@ -48,7 +48,7 @@ class THMMPlugin extends QueuePlugin {
         var outputFileName =  inputFileName+'.formatted';
 
         var cmd = './runsingle_tmhmm.sh';
-        var dir = 'bin/tmhmm/unix';
+        var dir = 'bin/deployed_bin/tmhmm/unix';
 
         if(Node.os.platform() == 'win32'){
             handleError(job,'TMHMM is not supported on Windows platform', done); return;

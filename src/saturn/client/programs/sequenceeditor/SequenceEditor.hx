@@ -2198,9 +2198,3 @@ class SequenceRegion{
         return this.stopPosition;
     }
 }
-
-
-
-
-
-

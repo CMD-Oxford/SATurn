@@ -1,0 +1,4 @@
+title: $:/core/images/chevron-left
+tags: $:/tags/Image
+
+<svg class="tc-image-chevron-left tc-image-button" viewBox="0 0 24 24" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><path d="M15.4 7.4L14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/></svg>

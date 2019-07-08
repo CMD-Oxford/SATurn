@@ -1,0 +1,16 @@
+{
+  "name": "saturn",
+  "url" : "https://github.com/ddamerell53/SATurn",
+  "license": "Public",
+  "tags": ["bioinformatics"],
+  "description": "High-throughput molecular biology platform from the SGC ",
+  "version": "1.0.0",
+  "classPath": "src/",
+  "releasenote": "Initial release",
+  "contributors": ["ddamerell"],
+  "dependencies": {
+    "compiletime": "",
+    "continuation": "
+    "nodejs": ""
+  }
+}

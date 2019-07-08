@@ -1,0 +1,184 @@
+title: $:/themes/bcse/material/styles
+tags: [[$:/tags/Stylesheet]]
+
+\rules only filteredtranscludeinline transcludeinline macrodef macrocallinline
+
+/* Typography */
+
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic);
+@import url(http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic);
+
+html {
+	font-family: {{$:/themes/tiddlywiki/vanilla/settings/fontfamily}};
+}
+
+h1, h2, h3, h4, h5, h6 {
+	color: <<colour primary>>;
+	font-family: {{$:/themes/bcse/material/settings/header-fontfamily}};
+}
+
+a {
+	font-weight: inherit !important;
+}
+
+code,
+kbd,
+pre,
+samp {
+	font-family: {{$:/themes/bcse/material/settings/monospace-fontfamily}} !important;
+}
+
+textarea {
+	font-family: {{$:/themes/bcse/material/settings/text-editor-fontfamily}} !important;
+}
+
+/* Layout */
+
+.tc-tiddler-frame {
+	padding: 0 !important;
+}
+
+.tc-title {
+	display: block;
+	padding: 28px 42px 28px;
+}
+
+.tc-tiddler-info {
+	margin: 0 !important;
+}
+
+.tc-subtitle,
+.tc-tags-wrapper {
+	padding: 0 42px;
+}
+
+.tc-tiddler-body {
+	padding: 0 42px 28px;
+}
+
+.tc-keyboard {
+	padding: 28px 42px;
+}
+.tc-keyboard > .tc-keyboard {
+	padding: 0;
+}
+
+@media (max-width: 960px) {
+	.tc-sidebar-header > .tc-reveal {
+		padding: 28px;
+	}
+
+	.tc-story-river {
+		padding: 0 28px !important;
+	}
+}
+
+/* Colours */
+
+.tc-site-title {
+	color: <<colour primary>> !important;
+}
+
+.tc-title {
+	background: <<colour primary>>;
+}
+
+.tc-tiddler-edit-frame .tc-tiddler-controls button svg {
+	fill: <<colour sidebar-controls-foreground>> !important;
+}
+
+.tc-tiddler-edit-frame .tc-tiddler-controls button svg:hover {
+	fill: <<colour sidebar-controls-foreground-hover>> !important;
+}
+
+.tc-edit-texteditor {
+	color: <<colour foreground>> !important;
+}
+
+.tc-drop-down *:hover > svg {
+	fill: <<colour tiddler-link-background>> !important;
+}
+
+.tc-system-title-prefix {
+	color: <<colour tiddler-controls-foreground>> !important;
+}
+
+/* Images */
+
+button svg.tc-image-button,
+button .tc-image-button img {
+	height: 1.2em !important;
+	width: 1.2em !important;
+}
+
+.tc-tiddler-controls button svg,
+.tc-tiddler-controls button img {
+	height: 0.75em !important;
+}
+
+/* Decorations */
+
+.tc-tiddler-frame,
+.tc-block-dropdown,
+.tc-drop-down {
+	border: none !important;
+	border-radius: 2px;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+	transition: all .28s cubic-bezier(.4, 0, .2, 1);
+}
+
+.tc-tiddler-frame:hover,
+.tc-block-dropdown:hover,
+.tc-drop-down:hover {
+	box-shadow:  0 8px 17px 0 rgba(0, 0, 0, .2);
+}
+
+.tc-title {
+	border-radius: 2px 2px 0 0;
+}
+
+button.tc-tag-label, span.tc-tag-label {
+	padding: 0 .8em !important;
+	line-height: 1.6em !important;
+	border-radius: .8em !important;
+}
+
+/* Tiddler Info */
+
+.tc-tiddler-info {
+	padding: 0 !important;
+	border: none !important;
+}
+
+.tc-tiddler-info .tc-tab-set {
+	margin-top:-3px;
+}
+
+.tc-tiddler-info .tc-tab-buttons {
+	background-color: <<colour primary>>;
+	font-size: 1em;
+	padding: 0 2em;
+	margin: 0;
+}
+
+.tc-tiddler-info .tc-tab-buttons button {
+	color: <<colour tiddler-controls-foreground>>;
+	background-color: transparent;
+	font-family: {{$:/themes/bcse/material/settings/header-fontfamily}};
+	padding: 0 1em 1em;
+	border: none;
+	border-bottom: 2px solid transparent;
+	text-transform: uppercase;
+}
+
+.tc-tiddler-info .tc-tab-buttons button.tc-tab-selected {
+	background-color: inherit !important;
+	border: none !important;
+	border-bottom: 2px solid <<colour tag-background>> !important;
+	color: <<colour tiddler-title-foreground>>;
+}
+
+.tc-tiddler-info .tc-tab-content {
+	margin: 0 !important;
+	padding: 14px 42px;
+}

@@ -140,7 +140,9 @@ class SQLVisitor {
                     }
                 }else{
                     var funcName = '';
-                    if(Std.is(token, Max)){
+                    var specialCastAsInt = false;
+
+		            if(Std.is(token, Max)){
                         funcName = 'MAX';
                     }else if(Std.is(token, Count)){
                         funcName = 'COUNT';
@@ -152,9 +154,27 @@ class SQLVisitor {
                         funcName = 'LENGTH';
                     }else if(Std.is(token, Concat)){
                         funcName = 'CONCAT';
+                    }else if(Std.is(token, RegexpLike)){
+                        funcName = 'REGEXP_LIKE';
+                    }else if(Std.is(token, ToNumber)){
+                        if(provider.getProviderType() == 'MYSQL'){
+                            funcName = 'cast';
+                            specialCastAsInt = true;
+                        }else{
+                                        funcName = 'to_number';
+                        }
+
+                    }else if(Std.is(token, CastAsInt)){
+                        funcName = 'cast';
+			            specialCastAsInt = true;
                     }
 
-                    sqlTranslation += funcName + '( ' + nestedTranslation + ' )';
+                    if(!specialCastAsInt){
+                        sqlTranslation += funcName + '( ' + nestedTranslation + ' )';
+                    }else{
+                        sqlTranslation += funcName + '( ' + nestedTranslation + ' as int)';
+                    }
+
                 }
             }else if(Std.is(token, Select)){
                 sqlTranslation += ' SELECT ' + nestedTranslation;

@@ -75,7 +75,7 @@ class AnnotationEditorBlock {
         elem.blockNumber = blockNumber;
         bNum = blockNumber;
 
-        elem.classList.add(" molbio-sequenceeditor-block");
+        elem.classList.add("molbio-sequenceeditor-block");
 
         elem.style.dysplay = "inline-block";
 

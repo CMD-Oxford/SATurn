@@ -566,7 +566,7 @@ class DefaultProvider implements Provider{
         debug('In getByNamedQuery ' + cache);
         try{
             if(cache){
-                Util.debug('Looking for cached result');
+                debug('Looking for cached result');
                 var queries = namedQueryCache.get(queryId);
 
                 var serialParamString = Serializer.run(parameters);
@@ -576,7 +576,7 @@ class DefaultProvider implements Provider{
                 if(namedQueryCache.exists(crc)){
                     var qResults = namedQueryCache.get(crc).queryResults;
 
-                    Util.debug('Use cached result');
+                    debug('Use cached result');
 
                     callBack(qResults, null);
 
@@ -629,6 +629,7 @@ class DefaultProvider implements Provider{
                 }
             }else{
                 if(namedQueryHooks.exists(queryId)){
+                    debug('Hook is known');
                     var config = null;
 
                     if(namedQueryHookConfigs.exists(queryId)){
@@ -638,12 +639,13 @@ class DefaultProvider implements Provider{
                     debug('Calling hook');
                     namedQueryHooks.get(queryId)(queryId, parameters, clazz, privateCB, config);
                 }else{
+                    debug('Hook is not known');
                     _getByNamedQuery(queryId, parameters, clazz, privateCB);
                 }
             }
         }catch(ex : Dynamic){
-            callBack(null, 'An unexpected exception has occurred');
             debug(ex);
+            callBack(null, 'An unexpected exception has occurred');
         }
     }
 
@@ -827,7 +829,9 @@ class DefaultProvider implements Provider{
                 for(object in objs){
                     evictObject(object);
 
-                    attributeMaps.push(unbindObject(object));
+		    var a = unbindObject(object);
+
+                    attributeMaps.push(a);
                 }
 
                 _insert(attributeMaps,className,function(err : String){
@@ -1329,7 +1333,11 @@ class DefaultProvider implements Provider{
                 continue;
             }
 
+	    #if SATURN_PATCH
+            for(field in model.getFields()){
+	    #else
             for(field in model.getAttributes()){
+            #end
                 var value : Dynamic = Reflect.field(original, field);
 
                 var isObject = false;
@@ -1456,7 +1464,11 @@ class DefaultProvider implements Provider{
         // Iterate across ExtJS model
         for(model in models){
             // Iterate list of ExtJS model fields
+            #if SATURN_PATCH
+            for(field in modelDef.getFields()){
+            #else
             for(field in modelDef.getAttributes()){
+            #end
                 // Fields with a period are synthetic and need to be deconvoluted
                 if(field.indexOf('.') > -1){
                     var parts = field.split('.');
@@ -1533,7 +1545,11 @@ class DefaultProvider implements Provider{
                     var mappedModel = Type.createEmptyInstance(clazz);
 
                     // Iterate list of ExtJS model fields
+                    #if SATURN_PATCH
+                    for(field in modelDef.getFields()){
+                    #else
                     for(field in modelDef.getAttributes()){
+                    #end
                         // Fields with a period are synthetic and need to be deconvoluted
                         if(field.indexOf('.') > -1){
                             var parts = field.split('.');
@@ -1816,7 +1832,7 @@ class DefaultProvider implements Provider{
         #if SERVER_SIDE
         if(file_identifier == null){
             // Open a new temporary file
-            NodeTemp.open('upload_file', function(err, info){
+            NodeTemp.open_untracked('upload_file', function(err, info){
                 if(err != null){
                     cb(err, null);
                 }else{
@@ -1847,7 +1863,7 @@ class DefaultProvider implements Provider{
         }else{
             var client = SaturnServer.getDefaultServer().getRedisClient();
             client.get(file_identifier, function(err, filePath){
-                if(err != null){
+                if(err != null || filePath == null || filePath == ''){
                     cb(err, null);
                 }else{
                     var decodedContents = new NodeBuffer(contents, 'base64');

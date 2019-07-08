@@ -1,0 +1,4 @@
+title: $:/core/images/down-arrow
+tags: $:/tags/Image
+
+<svg class="tc-image-down-arrow tc-image-button" viewBox="0 0 24 24" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><path d="M16.6 8.6L12 13.2 7.4 8.6 6 10l6 6 6-6z"/></svg>

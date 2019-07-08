@@ -285,13 +285,13 @@ class Stream {
 
     public function write(content : String){
         #if NODE
-            Util.fs.write(streamId, content);
+            Util.fs.writeSync(streamId, content);
         #end
     }
 
     public function end(cb : String->Void){
         #if NODE
-            Util.fs.close(streamId, cb);
+            Util.fs.closeSync(streamId, cb);
         #end
     }
 }

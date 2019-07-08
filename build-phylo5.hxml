@@ -1,0 +1,37 @@
+
+-cp src
+-lib jQueryExtern
+-js build/public/static/js/ChromoHubClient.js
+--macro include('saturn.workflow')
+--macro include('saturn.client.programs.phylo')
+--macro include('saturn.client.programs.chromohub')
+--macro include('saturn.client.programs.chromohub.annotations')
+--macro include('saturn.core.domain.chromohub')
+--macro include('saturn.core.domain')
+-D js-classic
+-D  js-unflatten
+-D CHROMOHUB
+-D PHYLO5
+-lib compiletime
+-D CLIENT_SIDE
+-main saturn.app.ChromoHubClientLauncher
+
+--next
+
+-cp src
+-js build/SaturnServer.js
+-lib continuation
+-lib nodejs
+-lib compiletime
+-D js-classic
+-D SERVER_SIDE
+-D NODE
+-D SQLITE
+--macro include('saturn.db.mapping')
+--macro include('saturn.server.plugins.hooks')
+--macro include('saturn.server.plugins')
+--macro include('saturn.server.plugins.socket')
+--macro include('saturn.db.provider')
+--macro include('saturn.workflow')
+--macro include('saturn.core.domain.chromohub')
+-main saturn.app.SaturnServer

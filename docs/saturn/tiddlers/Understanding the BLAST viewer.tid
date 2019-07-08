@@ -1,0 +1,35 @@
+created: 20190705093625715
+modified: 20190705094026851
+title: Understanding the BLAST viewer
+type: text/vnd.tiddlywiki
+
+SATurn doesn't include a special BLAST viewer module but renders a BLAST report using the [[WebPageViewer|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/WebPageViewer.hx]] class.
+
+For example here is the method ProteinSequenceEditor.blastSequence performing the requested BLAST and loading the report into SATurn using the WebPageViewer
+
+```
+public function blastSequence(theSequence : String, database : String, blastName : String){
+    BioinformaticsServicesClient.getClient().sendBlastReportRequest(theSequence,blastName, database, function(response,error){
+        if(error == null){
+            var reportFile = response.json.reportFile;
+
+            var location : js.html.Location = js.Browser.window.location;
+
+            var dstURL = location.protocol+'//'+location.hostname+':'+location.port+'/'+reportFile;
+
+            var webPage : WebPage = new WebPage();
+            webPage.setURL(dstURL);
+
+            var w0 : WebPageWorkspaceObject = new WebPageWorkspaceObject(webPage, blastName);
+
+            js.Browser.window.console.log('Gekk');
+
+            getApplication().getWorkspace()._addObject(w0, true, true, 'BLAST');
+        }else{
+            getApplication().showMessage('BLAST Error', error);
+        }
+    });
+}
+```
+
+Note that we don't have to explicitly create a WebPageViewer instance instead we create a new WebPage object and add this to the SATurn workspace and ask SATurn to automatically open the WebPage viewer with the default viewer which is configured in the SATurn ORM mapping.

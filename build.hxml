@@ -11,10 +11,12 @@
 --macro include('saturn.db.provider.hooks')
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -lib compiletime
 -lib phial
 -D CLIENT_SIDE
 -D WORKSPACE_CLIENT_APP
+-D SATURN_PATCH
 -main saturn.app.SaturnClient
 --next
 
@@ -25,10 +27,12 @@
 --macro include('saturn.db.provider.hooks')
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -dce full
 -lib compiletime
 -lib phial
 -D CLIENT_SIDE
+-D SATURN_PATCH
 -main saturn.client.core.ClientCore
 
 --next
@@ -38,6 +42,7 @@
 -lib nodejs
 -D js-classic
 -D  js-unflatten
+-D no-inline
 -lib compiletime
 -D SERVER_SIDE
 -D POSTGRES
@@ -47,6 +52,7 @@
 -D NCBI_EUTILS
 -D NODE_LATEST
 -D ORACLE
+-D SATURN_PATCH
 --macro include('saturn.core.domain')
 --macro include('saturn.core.domain.oppf')
 --macro include('saturn.core.scarab')
@@ -68,6 +74,8 @@
 -D js-classic
 -D SCRIPT_ENGINE
 -D NODE
+-D no-inline
+
 --macro include('saturn.core.domain')
 --macro include('saturn.core.scarab')
 --macro include('saturn.db.mapping')
@@ -80,12 +88,15 @@
 --next
 -cp src
 -js build/chemireg.js
+-D js-classic
+-D  js-unflatten
 -lib continuation
 -lib nodejs
 -lib compiletime
 -D SERVER_SIDE
 -D NODE_LATEST
 -D NODE
+-D no-inline
 --macro include('saturn.db.mapping.templates')
 --macro include('saturn.server.plugins.core')
 --macro include('saturn.server.plugins.socket.core')

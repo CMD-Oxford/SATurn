@@ -29,6 +29,7 @@ class SgcTarget extends DNA{
     public var complexComments : String;
     public var eln : String;
     public var complex : String;
+    public var complexOverride : String;
 
     public function new(){
         super(null);

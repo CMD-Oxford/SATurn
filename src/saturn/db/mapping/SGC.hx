@@ -173,8 +173,7 @@ class SGC {
                     'domainStopDelta' => 'DOMAINSTOPDELTA',
                     'containsPharmaDomain' => 'CONTAINSPHARMADOMAIN',
                     'domainSummaryLong' => 'DOMAINSUMMARYLONG',
-                    'impPI' => 'IMPPI',
-                    'alleleStatus' => 'ALLELE_STATUS'
+                    'impPI' => 'IMPPI'
                 ],
                 'defaults'=> [
                     'status' => 'In process'
@@ -373,7 +372,8 @@ class SGC {
                     'Forward extension' => 'requiredForwardExtension',
                     'Reverse extension' => 'requiredReverseExtension',
                     'Restriction site 1' => 'res1.enzymeName',
-                    'Restriction site 2' => 'res2.enzymeName'
+                    'Restriction site 2' => 'res2.enzymeName',
+		    'Add Stop Codon' => 'addStopCodon'
                 ]
             ],
             'saturn.core.domain.SgcForwardPrimer'=>[
@@ -552,7 +552,8 @@ class SGC {
                     'pi' => 'PI',
                     'comments' => 'COMMENTS',
                     'complexComments' => 'COMPLEXCOMPONENTS',
-                    'complex' => 'COMPLEX'
+                    'complex' => 'COMPLEX',
+                    'complexOverride'=>'COMPLEXOVERRIDE'
                 ],
                 'indexes'=>[
                     'targetId'=>false,
@@ -922,11 +923,18 @@ class SGC {
                     'referent' => [ 'field' => 'labelId', 'class' => 'saturn.core.domain.Entity', 'fk_field' => 'id' ],
                 ]
             ],
-            'saturn.core.domain.XtalPlate'=>[
+            'saturn.core.domain.SgcXtalPlate'=>[
                 'fields'=>[
                     'id' => 'PKEY',
                     'barcode' => 'BARCODE',
-                    'purificationId' => 'SGCPURIFICATION_PKEY'
+                    'purificationId' => 'SGCPURIFICATION_PKEY',
+                    'location'=> 'LOCATION',
+                    'proteinState' =>'PROTEINSTATE',
+                    'plateStatus'=>'PLATESTATUS',
+                    'concentration'=>'CONCENTRATION',
+                    'dateCreated'=>'DATESTAMP',
+                    'person' => 'PERSON',
+                    'elnId' => 'ELNREF'
                 ],
                 'indexes'=>[
                     'barcode'=>false,
@@ -940,8 +948,26 @@ class SGC {
                     'purification' => [ 'field' => 'purificationId', 'class' => 'saturn.core.domain.SgcPurification', 'fk_field' => 'id']
                 ],
                 'options' => [
-                    'alias' => 'Xtal Plates'
-                ]
+                    'alias' => 'Xtal Plates',
+                    'auto_activate' => '3',
+                ],
+                'search' => [
+                    'barcode'=>true
+                ],
+                'model' => [
+                    'Barcode' => 'barcode',
+                    'Purification ID'=> 'purification.purificationId',
+                    'Location'=>'location',
+                    'Protein State'=>'proteinState',
+                    'Plate Status'=>'plateStatus',
+                    'Concentration'=>'concentration',
+                    'ELN ID' => 'elnId',
+                    'Date Created' => 'dateCreated',
+                    'Creator' => 'person'
+                ],
+                    'programs'=>[
+                    'saturn.client.programs.EmptyViewer' => true
+                ],
             ],
             'saturn.core.domain.StructureModel'=>[
                 'fields'=>[
@@ -1354,30 +1380,6 @@ class SGC {
                 ],
                 'search'=>[
                     'name' => true
-                ]
-            ],
-			 'saturn.core.domain.SgcXtalPlate'=>[
-                'fields'=>[
-                    'id' => 'PKEY',
-                    'barcode' => 'BARCODE',
-                    'purificationId' => 'SGCPURIFICATION_PKEY'
-                ],
-                'indexes'=>[
-                    'barcode'=>false,
-                    'id'=>true
-                ],
-                'table_info' => [
-                    'schema' => 'SGC',
-                    'name' => 'XTAL_PLATES'
-                ],
-                'fields.synthetic' => [
-                    'purification' => [ 'field' => 'purificationId', 'class' => 'saturn.core.domain.SgcPurification', 'fk_field' => 'id']
-                ],
-                'options' => [
-                    'alias' => 'Xtal Plates'
-                ],
-                'model' => [
-                    'Barcode' => 'barcode'
                 ]
             ],
             'saturn.core.domain.SgcXtbm'=>[

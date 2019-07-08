@@ -9,7 +9,10 @@
 	],
 	"build": {
         "index": [
-           "--rendertiddler", "$:/plugins/tiddlywiki/tiddlyweb/save/offline", "../../index.html", "text/plain"
+            "--rendertiddler",
+            "$:/core/save/all",
+            "../../index.html",
+            "text/plain"
         ],
         "externalimages": [
             "--savetiddlers",

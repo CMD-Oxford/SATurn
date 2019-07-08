@@ -1,2 +1,7 @@
-docker run -i -p 127.0.0.1:80:80 -p 127.0.0.1:443:443 -p 127.0.0.1:8888:8888 --name chemireg --link chemireg_postgres -d chemireg
-docker exec -i -t chemireg /bin/bash
+docker run -i --restart always -p 127.0.0.1:8091:8091 --name saturn -d saturn
+docker exec -i -t saturn /bin/bash
+
+
+export PATH=/opt/conda/bin:$PATH
+pip install git+https://github.com/ddamerell53/socketIO-client-2.0.3.git
+pip install ijson

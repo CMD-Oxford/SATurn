@@ -144,6 +144,18 @@ class SaturnServer {
             server = restify.createServer();
         }
 
+        var bunyan = Node.require('bunyan');
+        var process = Node.require('process');
+
+        server.on('after', restify.plugins.auditLogger({
+            log: bunyan.createLogger({
+                name: 'audit',
+                stream: process.stdout
+            }),
+            body: true,
+            event: 'after'
+        }));
+
         //below conflicts with GlycanBuilder
         //server.use(restify.plugins.bodyParser({mapParams: true}));
 
@@ -224,7 +236,7 @@ class SaturnServer {
     }
 
     @:cps public function loadServiceDefinition(){
-        var err : NodeErr, content : String = @await Node.fs.readFile(servicesFile,'utf8');
+        var err : NodeErr, content : String = @await Node.fs.readFile(servicesFile,{'encoding':'utf8'});
         if(err == null){
             serviceConfig = Node.json.parse(content);
 

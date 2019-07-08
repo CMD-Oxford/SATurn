@@ -638,8 +638,10 @@ class GenericRDBMSProvider extends DefaultProvider{
 
     override public function _getByNamedQuery(queryId : String, parameters : Dynamic, clazz : Class<Dynamic>, cb : Dynamic) : Void{
         if(!Reflect.hasField(config.named_queries,queryId)){
+            debug('Hook is missing');
             cb(null, 'Query ' + queryId + ' not found ');
         }else{
+            debug('Calling SQL query');
             var sql :String = Reflect.field(config.named_queries, queryId);
 
             var realParameters = new Array<Dynamic>();

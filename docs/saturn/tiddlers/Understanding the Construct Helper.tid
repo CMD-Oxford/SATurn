@@ -1,0 +1,53 @@
+created: 20190705080636560
+modified: 20190705081144876
+title: Understanding the Construct Helper
+type: text/vnd.tiddlywiki
+
+The "Construct Helper" allows users to bulk validate and upload constructs into the underlying database and calculates DNA and Protein sequences automatically for the user.
+
+''Source code'': https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/MultiConstructHelper.hx
+
+This class extends from the [[TableHelper|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/TableHelper.hx]] class which provides a generic table component backed by the SATurn ORM.  Allowing for easy retrieval and display of entities from the database in table form along with providing a generic way to insert, update, and delete records without having to write custom code.
+
+Note that TableHelper is a standard SATurn program/plugin which extends from [[SimpleExtJSProgram|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/SimpleExtJSProgram.hx]]  which provides ExtJS specific implementations of methods required to render a SATurn program/plugin.
+
+The columns shown in the table and their names are defined as part of the ORM mapping - found [[here|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/db/mapping/SGC.hx]] - via the model parameter
+
+```
+'model' => [
+    'Construct ID' => 'constructId',
+    'Construct Plate' => 'constructPlate.plateName',
+    'Well ID' => 'wellId',
+    'Vector ID' => 'vector.vectorId',
+    'Allele ID' => 'allele.alleleId',
+    'Status' => 'status',
+    'Protein Sequence' => 'proteinSeq',
+    'Expected Mass' => 'expectedMass',
+    'Restriction Site 1' => 'res1.enzymeName',
+    'Restriction Site 2' => 'res2.enzymeName',
+    'Protein Sequence (No Tag)' => 'proteinSeqNoTag',
+    'Expected Mass (No Tag)' => 'expectedMassNoTag',
+    'Construct DNA Sequence' => 'dnaSeq',
+    'Location' => 'location',
+    'ELN ID' => 'elnId',
+    'Construct Comments' => 'constructComments',
+    'Creator' => 'person',
+    'Construct Start' => 'constructStart',
+    'Construct Stop' => 'constructStop',
+    '__HIDDEN__PKEY__' => 'id'
+]
+```
+
+Here we are mapping the names of the mode attributes as shown to the user to the names of the model attributes.  Note that the model attributes aren't the names of the database columns - although of course they could be configured as such.
+
+Note that the button shown at the bottom of the SATurn interface to launch the MultiConstructHelper is configured in the method MultiConstructHelper.getQuickLaunchItems (a static method)
+
+[img[DEV_CONSTRUCT_PLATE_BUTTON.png]]
+
+''Key Methods''
+
+onFocus: This method is called when the tab representing this program in the SATurn central tab panel becomes the one with the focus.  This method is part of the standard [[Program|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/Program.hx]] definition which all programs must implement. For most programs all they need to do in the onFocus function is make sure they have set any toolbar buttons or menu items that are required.  The state of the central tab container area, which is the main work area for a program, is maintained for the program between tab switches and by SATurn.
+
+calculate: This is the method which validates ligations and automatically calculates MWs & Protein and DNA sequences
+
+setActiveObject: This method is part of the standard Program definition and is called by SATurn when the user has requested that the entity being worked with is changed or if this is program instance is in the process of being initialised.  For example when a user types "cp-Biotech-plate1" into the search bar and selects the plate to load a new [[MultiConstructHelperWO|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/core/MultiConstructHelperData.hx]] is created and stored in the workspace. 

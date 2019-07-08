@@ -1,0 +1,18 @@
+created: 20190705081435798
+modified: 20190705082656965
+title: Understanding the DNA Sequence Editor
+type: text/vnd.tiddlywiki
+
+The "DNA Sequence Editor" allows users to view DNA sequences and turn annotations tracks on and off and search for sequences and regions.
+
+''Source Code'' https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/DNASequenceEditor.hx
+
+Both the DNASequenceEditor and ProteinSequenceEditor classes extend from the [[SequenceEditor|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/programs/sequenceeditor/SequenceEditor.hx]] class which includes most the basic functionality required for a track based annotation editor.
+
+The DNASequenceEditor class only includes functionality which is specific to DNA
+
+''Key Methods''
+
+onFocus: This method is called when the tab representing this program in the SATurn central tab panel becomes the one with the focus.  This method is part of the standard [[Program|https://github.com/ddamerell53/SATurn/blob/master/src/saturn/client/Program.hx]] definition which all programs must implement. For most programs all they need to do in the onFocus function is make sure they have set any toolbar buttons or menu items that are required.  The state of the central tab container area, which is the main work area for a program, is maintained for the program between tab switches and by SATurn.
+
+setActiveObject: This method is part of the standard Program definition and is called by SATurn when the user has requested that the entity being worked with is changed or if this is program instance is in the process of being initialised.  

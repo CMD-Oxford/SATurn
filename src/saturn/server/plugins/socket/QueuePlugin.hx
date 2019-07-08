@@ -52,7 +52,7 @@ class QueuePlugin extends BaseServerSocketPlugin{
 
     }
 
-    override public function handleError(job, error, done=null){
+    override public function handleError(job, error : Dynamic, done=null){
         super.handleError(job, error, done);
     }
 }

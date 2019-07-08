@@ -8,12 +8,14 @@
 */
 
 package saturn.core.domain;
+import saturn.db.query_lang.ToNumber;
 import saturn.db.query_lang.Trim;
 import saturn.db.query_lang.Or;
 import saturn.db.query_lang.Max;
 import saturn.db.query_lang.Value;
 import saturn.db.query_lang.Field;
 import saturn.db.query_lang.Query;
+import saturn.db.query_lang.CastAsInt;
 import saturn.db.Provider;
 class SgcUtil {
     public function new() {
@@ -84,7 +86,7 @@ class SgcUtil {
         q2.getSelect().add(new Field(null, 'target','a').as('targetName'));
 
         //Select Max INT component using inner query
-        q2.getSelect().add(new Trim(new Max(new Field(null,'ID','a'))).as('lastId'));
+        q2.getSelect().add(new Trim(new Max(new ToNumber(new Field(null,'ID','a')))).as('lastId'));
 
         //Add inner query and alias as a
         q2.getFrom().add(q.as('a'));

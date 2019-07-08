@@ -371,7 +371,8 @@ class PSF {
                     'Forward extension' => 'requiredForwardExtension',
                     'Reverse extension' => 'requiredReverseExtension',
                     'Restriction site 1' => 'res1.enzymeName',
-                    'Restriction site 2' => 'res2.enzymeName'
+                    'Restriction site 2' => 'res2.enzymeName',
+		    'Add Stop Codon' => 'addStopCodon'
                 ]
             ],
             'saturn.core.domain.SgcForwardPrimer'=>[

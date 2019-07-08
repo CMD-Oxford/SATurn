@@ -1,0 +1,22 @@
+created: 20190705095413125
+modified: 20190705100608892
+title: Source code layout
+type: text/vnd.tiddlywiki
+
+The main source code folders and shown below with basic descriptions
+
+|!Folder|!Description|
+|src/saturn/app|Main SATurn application classes which include main function entry points|
+|src/saturn/client/|Base Directory for client-side classes|
+|src/saturn/client/core|Utility classes for client-side code|
+|src/saturn/client/program|Program classes directory|
+|src/saturn/core|Classes which can safely be shared between server and client code|
+|src/saturn/core/domain|Main entity classes|
+|src/saturn/db|Classes related to the ORM|
+|src/saturn/db/provider|Database specific provider implementation classes|
+|src/saturn/db/query_lang|Classes related to the ORM custom query framework|
+|src/saturn/scripts|Standalone scripts with their own main function entry points|
+|src/saturn/server|Starting directory for server-side classes|
+|src/saturn/server/plugins/core|Core server-side classes|
+|src/saturn/server/plugins/socket/|Base directory for Socket.IO classes|
+|src/saturn/server/plugins/socket/core|Classes which bring basic Socket.IO functionality into SATurn|

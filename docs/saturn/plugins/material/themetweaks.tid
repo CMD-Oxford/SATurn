@@ -1,0 +1,11 @@
+title: $:/themes/bcse/material/themetweaks
+tags: $:/tags/ControlPanel/Appearance
+caption: Material Tweaks
+
+You can tweak certain aspects of the ''Material'' theme.
+
+! Fonts
+
+* [[Header font family|$:/themes/bcse/material/settings/header-fontfamily]]: <$edit-text tiddler="$:/themes/bcse/material/settings/header-fontfamily" default="" tag="input"/>
+* [[Monospace font family|$:/themes/bcse/material/settings/monospace-fontfamily]]: <$edit-text tiddler="$:/themes/bcse/material/settings/monospace-fontfamily" default="" tag="input"/>
+* [[Text editor font family|$:/themes/bcse/material/settings/text-editor-fontfamily]]: <$edit-text tiddler="$:/themes/bcse/material/settings/text-editor-fontfamily" default="" tag="input"/>

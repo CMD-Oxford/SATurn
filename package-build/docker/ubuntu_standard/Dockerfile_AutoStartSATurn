@@ -1,0 +1,80 @@
+FROM continuumio/anaconda3
+
+MAINTAINER David Damerell <david.damerell@sgc.ox.ac.uk>
+
+RUN apt-get update && \
+apt-get install -y git vim build-essential libcap2-bin libcairo2 unzip procps python-pip default-jdk libaio1 tcsh gnuplot
+RUN useradd -ms /bin/bash saturn
+RUN pip install abifpy
+USER saturn
+#COPY saturn.tar.gz /tmp/saturn.tar.gz
+#RUN cd /home/saturn && \
+#tar zxvf /tmp/saturn.tar.gz
+USER saturn
+COPY . /home/saturn/SATurn
+USER root
+RUN chown -R saturn:users /home/saturn/SATurn
+#RUN apt-get install -y haxe
+#USER saturn
+#RUN mkdir /home/saturn/haxelib && haxelib setup /home/saturn/haxelib
+#RUN haxelib install jQueryExtern \
+#haxelib install compiletime \
+#haxelib install phial \
+#haxelib install nodejs \
+#haxelib git phial https://github.com/ddamerell53/phial.git
+#USER root
+#RUN cp /home/saturn/SATurn/src_haxe_patches/EReg.hx /usr/share/haxe/std/js/_std/
+USER saturn
+#git clone https://github.com/ddamerell53/SATurn.git
+# Install & configure NodeJS
+RUN cd /home/saturn && \
+curl  https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh -o install.sh && chmod u+x install.sh && /bin/bash -c "./install.sh" && \ 
+./install.sh
+ENV NVM_DIR /home/saturn/.nvm
+RUN . $NVM_DIR/nvm.sh && nvm install --lts && \
+nvm alias default lts/* && \
+cd /home/saturn/SATurn/build && \
+npm install
+ENV PATH="/opt/conda/bin/:${PATH}"
+RUN cd /home/saturn/SATurn/build/bin && \
+wget http://download.redis.io/releases/redis-4.0.12.tar.gz && \
+tar zxvf redis-4.0.12.tar.gz && \
+cd redis-4.0.12 && \
+make && \
+cd ../ && \
+rm redis -rf && \
+mv redis-4.0.12 redis 
+RUN cd /home/saturn/SATurn/build/bin/deployed_bin && \
+wget https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/GlycanBuilder.zip && \
+unzip GlycanBuilder.zip && \
+rm GlycanBuilder.zip
+RUN cd /home/saturn/SATurn/build/bin/deployed_bin && \
+wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.9.0+-x64-linux.tar.gz && \
+tar zxvf ncbi-blast-2.9.0+-x64-linux.tar.gz && \
+mv ncbi-blast-2.9.0+/bin/* . && \
+rm -rf ncbi-blast-2.9.0+ && \
+rm ncbi-blast-2.9.0+-x64-linux.tar.gz && \
+wget http://www.clustal.org/omega/clustalo-1.2.4-Ubuntu-x86_64 && \
+mv clustalo-1.2.4-Ubuntu-x86_64 clustalo && \
+chmod u+x clustalo && \
+wget http://www.clustal.org/download/current/clustalw-2.1-linux-x86_64-libcppstatic.tar.gz && \
+tar zxvf clustalw-2.1-linux-x86_64-libcppstatic.tar.gz && \
+rm clustalw-2.1-linux-x86_64-libcppstatic.tar.gz && \
+cp clustalw-2.1-linux-x86_64-libcppstatic/clustalw2 clustalw2 &&\
+rm -rf clustalw-2.1-linux-x86_64-libcppstatic/ 
+RUN cd /home/saturn/SATurn/build && \
+wget https://github.com/ddamerell53/SATurn/releases/download/v1.0-beta.6/databases.zip && \
+unzip databases.zip && \
+rm databases.zip
+RUN cp /home/saturn/SATurn/src_python/ABIConverter.py /home/saturn/SATurn/build/bin/deployed_bin/ABIConverter && \
+chmod u+x /home/saturn/SATurn/build/bin/deployed_bin/ABIConverter
+RUN chmod u+x /home/saturn/SATurn/build/rundebugsaturn.sh
+USER root
+#RUN setcap 'cap_net_bind_service=+ep' /home/saturn/SATurn/build/bin/node/bin/node
+USER saturn
+CMD sh /home/saturn/SATurn/build/rundockersaturn.sh
+
+
+
+
+

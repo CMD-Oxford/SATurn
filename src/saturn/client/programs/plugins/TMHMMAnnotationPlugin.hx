@@ -54,7 +54,7 @@ class TMHMMAnnotationPlugin extends BaseProgramPlugin<SequenceEditor> implements
         program.addSequenceChangeListener(this);
 
         annotationId = program.addAnnotation('TM');
-        program.setAnnotationClass('TMHMM',SVGAnnotationBlock);
+        program.setAnnotationClass('TM',SVGAnnotationBlock);
 
         program.setAnnotationPosition(annotationId, AnnotationPosition.TOP);
     }

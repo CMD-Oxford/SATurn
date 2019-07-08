@@ -1,5 +1,5 @@
 created: 20180301161035796
-modified: 20180424134007625
+modified: 20190705105513328
 title: Internal: Developer Guide
 type: text/vnd.tiddlywiki
 
@@ -13,3 +13,15 @@ type: text/vnd.tiddlywiki
 #[[Building standalone packages|Internal: Building standalone packages]]
 #[[Building QT application|Internal: Building QT application]]
 #[[Debugging standalone package]]
+# [[Source code layout]]
+# [[Key Classes]]
+# [[Program Guides]]
+## [[Allele/DNA Insert Helper|Understanding the Allele Helper]]
+## [[Construct Helper|Understanding the Construct Helper]] (separate to the construct design helper)
+## [[DNA Sequence Editor|Understanding the DNA Sequence Editor]]
+## [[Protein Sequence Editor|Understanding the Protein Sequence Editor]]
+## [[Complex Helper|Understanding the Complex Helper]]
+## [[Sequencing Viewer|Understanding the sequencing viewer]]
+## [[BLAST Viewer|Understanding the BLAST viewer]]
+## [[Alignment Viewer|Understanding the alignment viewer]]
+## [[Construct Designer|Understanding the construct designer]]
